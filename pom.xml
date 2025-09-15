@@ -57,6 +57,11 @@
 			<email>alercarper@alum.us.es</email>
 			<url>https://github.com/FQY7185-Alejandro</url>
 		</developer>
+		<developer>
+			<name>JGR9196</name>
+			<email>luicalcar@alum.us.es</email>
+			<url>https://github.com/JGR9196</url>
+		</developer>
 	</developers>
 
 	<dependencies>
