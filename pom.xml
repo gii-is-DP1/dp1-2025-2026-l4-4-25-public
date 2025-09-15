@@ -3,7 +3,7 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.us.dp1</groupId>
-	<artifactId>lx-xy-2425-game-name</artifactId>
+	<artifactId>l4-04-2425-Saboteur</artifactId>
 	<version>0.1.0.BUILD-SNAPSHOT</version>
 
 	<parent>
@@ -37,6 +37,11 @@
 	</properties>
 
 	<developers>
+		<developer>
+			<name>Carlos Borrego Ortiz</name>
+			<email>carborort@alum.us.es</email>
+			<url>https://github.com/Carlosbox2k</url>
+		</developer>
 		<developer>
 			<name>RHQ7780</name>
 			<email>diereycar@alum.us.es</email>
