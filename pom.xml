@@ -42,6 +42,11 @@
 			<email>carborort@alum.us.es</email>
 			<url>https://github.com/Carlosbox2k</url>
 		</developer>
+		<developer>
+			<name>RHQ7780</name>
+			<email>diereycar@alum.us.es</email>
+			<url>https://github.com/RHQ7780</url>
+		</developer>
 	</developers>
 
 	<dependencies>
