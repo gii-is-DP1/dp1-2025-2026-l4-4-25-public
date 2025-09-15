@@ -47,6 +47,11 @@
 			<email>diereycar@alum.us.es</email>
 			<url>https://github.com/RHQ7780</url>
 		</developer>
+		<developer>
+			<name>GBK4935</name>
+			<email>marayabla@alum.us.es</email>
+			<url>https://github.com/GBK4935</url>
+		</developer>
 	</developers>
 
 	<dependencies>
