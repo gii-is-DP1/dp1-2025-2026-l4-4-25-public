@@ -42,6 +42,11 @@
 			<email>japarejo@us.es</email>
 			<url>https://github.com/japarejo</url>
 		</developer>
+		<developer>
+			<name>FQY7185</name>
+			<email>alercarper@alum.us.es</email>
+			<url>https://github.com/FQY7185-Alejandro</url>
+		</developer>
 	</developers>
 
 	<dependencies>
