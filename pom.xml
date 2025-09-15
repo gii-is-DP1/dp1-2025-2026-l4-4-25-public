@@ -52,6 +52,11 @@
 			<email>marayabla@alum.us.es</email>
 			<url>https://github.com/GBK4935</url>
 		</developer>
+		<developer>
+			<name>FQY7185</name>
+			<email>alercarper@alum.us.es</email>
+			<url>https://github.com/FQY7185-Alejandro</url>
+		</developer>
 	</developers>
 
 	<dependencies>
