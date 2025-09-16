@@ -1,6 +1,7 @@
 import React from 'react';
 import '../App.css';
 import '../static/css/home/home.css'; 
+import logo from '../static/images/Foto_logo.jpg';
 
 export default function Home(){
     return(
