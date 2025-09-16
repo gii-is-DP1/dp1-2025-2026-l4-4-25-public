@@ -42,6 +42,26 @@
 			<email>carborort@alum.us.es</email>
 			<url>https://github.com/Carlosbox2k</url>
 		</developer>
+		<developer>
+			<name>RHQ7780</name>
+			<email>diereycar@alum.us.es</email>
+			<url>https://github.com/RHQ7780</url>
+		</developer>
+		<developer>
+			<name>GBK4935</name>
+			<email>marayabla@alum.us.es</email>
+			<url>https://github.com/GBK4935</url>
+		</developer>
+		<developer>
+			<name>FQY7185</name>
+			<email>alercarper@alum.us.es</email>
+			<url>https://github.com/FQY7185-Alejandro</url>
+		</developer>
+		<developer>
+			<name>JGR9196</name>
+			<email>luicalcar@alum.us.es</email>
+			<url>https://github.com/JGR9196</url>
+		</developer>
 	</developers>
 
 	<dependencies>
