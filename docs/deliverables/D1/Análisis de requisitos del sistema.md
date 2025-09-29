@@ -6,6 +6,18 @@
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** <!-- Nombre Apellidos (US-Id / correo @us.es) -->
 
+Alejandro Caro Pérez (FQY7185 / alecarper@alum.us.es)
+
+Lorenzo Valderrama Román (WRG8176 / lorvalrom@alum.us.es)
+
+Diego Rey Carmona (RHQ7780 / diereycar@alum.us.es)
+
+Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us.es)
+
+Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
+
+Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
+
 _Esta es una plantilla que sirve como guía para realizar este entregable. Por favor, mantén las mismas secciones y los contenidos que se indican para poder hacer su revisión más ágil._ 
 
 ## Introducción
