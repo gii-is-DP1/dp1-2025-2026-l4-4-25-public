@@ -12,7 +12,7 @@ _Esta es una plantilla que sirve como guía para realizar este entregable. Por f
 
 _En esta sección debes describir de manera general cual es la funcionalidad del proyecto a rasgos generales. ¿Qué valor puede aportar? ¿Qué objetivos pretendemos alcanzar con su implementación? ¿Cuántos jugadores pueden intervenir en una partida como máximo y como mínimo? ¿Cómo se desarrolla normalmente una partida?¿Cuánto suelen durar?¿Cuando termina la partida?¿Cuantos puntos gana cada jugador o cual es el criterio para elegir al vencedor?_
 
-[Enlace al vídeo de explicación de las reglas del juego / partida jugada por el grupo](https://www.youtube.com/watch?v=lwxIUdtN4aE)
+[Enlace al vídeo de explicación de las reglas del juego / partida jugada por el grupo]( https://www.youtube.com/watch?v=lwxIUdtN4aE)
 
 ## Tipos de Usuarios / Roles
 
