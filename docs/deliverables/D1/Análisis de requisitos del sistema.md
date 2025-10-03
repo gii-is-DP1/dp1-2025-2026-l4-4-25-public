@@ -82,4 +82,9 @@ El diagnóstico debe estar asociado a una enfermedad que es compatible con el ti
 
 _Muchas de las reglas del juego se transformarán en nuestro caso en reglas de negocio, por ejemplo, “la carta X solo podrá jugarse en la ronda Y si en la ronda anterior se jugó la carta Z”, o “en caso de que un jugador quede eliminado el turno cambia de sentido”_
 
+![prueba](D1_images/HU-2.png)
+
+
+
+
 
