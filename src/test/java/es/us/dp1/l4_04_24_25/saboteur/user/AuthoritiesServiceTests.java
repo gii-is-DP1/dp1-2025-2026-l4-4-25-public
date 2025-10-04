@@ -15,8 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+<<<<<<< HEAD
 import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
 import es.us.dp1.l4_04_24_25.saboteur.user.AuthoritiesService;
+=======
+>>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;

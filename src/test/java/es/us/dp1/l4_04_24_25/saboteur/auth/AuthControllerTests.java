@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+<<<<<<< HEAD
 import es.us.dp1.l4_04_24_25.saboteur.auth.AuthController;
 import es.us.dp1.l4_04_24_25.saboteur.auth.AuthService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.LoginRequest;
@@ -37,6 +38,13 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.jwt.JwtUtils;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.services.UserDetailsImpl;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
+=======
+import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.LoginRequest;
+import es.us.dp1.l4_04_24_25.saboteur.configuration.jwt.JwtUtils;
+import es.us.dp1.l4_04_24_25.saboteur.configuration.services.UserDetailsImpl;
+import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
+import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
+>>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;

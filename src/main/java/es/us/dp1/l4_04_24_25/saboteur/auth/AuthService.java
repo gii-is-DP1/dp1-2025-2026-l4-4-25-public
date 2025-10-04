@@ -9,11 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+<<<<<<< HEAD
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
+=======
+>>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
 import es.us.dp1.l4_04_24_25.saboteur.user.AuthoritiesService;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
+<<<<<<< HEAD
+=======
+import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
+>>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 
 @Service
 public class AuthService {
