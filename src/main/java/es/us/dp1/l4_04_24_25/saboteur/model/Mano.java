@@ -6,6 +6,7 @@ import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 
@@ -13,7 +14,12 @@ import jakarta.persistence.Table;
 @Table(name = "Mano")
 public class Mano extends BaseEntity{
 
+    //Relación 1 mano muchas cartas
     @OneToMany(mappedBy = "mano")
     private List<Carta> cartas = new ArrayList<>();
+
+    //Relación 1 mano 1 participante
+    @OneToOne(mappedBy = "mano")
+    private Participante participante;
 
 }

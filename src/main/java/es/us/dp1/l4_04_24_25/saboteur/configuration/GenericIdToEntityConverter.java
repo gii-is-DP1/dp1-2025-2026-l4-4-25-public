@@ -12,10 +12,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.support.DefaultConversionService;
-<<<<<<< HEAD
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
-=======
->>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 import org.springframework.stereotype.Component;
 
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;

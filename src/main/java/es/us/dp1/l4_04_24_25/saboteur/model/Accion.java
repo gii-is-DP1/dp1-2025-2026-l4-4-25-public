@@ -4,47 +4,27 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "Accion")
 public class Accion extends Carta {
 
     @Column(name = "nombreAccion")
 	@NotEmpty
-	protected String nombreAccion;
+	protected nombreAccion nombreAccion;
 
 	@Column(name = "valorEfecto")
 	@NotEmpty
-	protected String valorEfecto;
+	protected valorEfecto valorEfecto;
 
     
-	@Column(name = "objetoAfecta")
+	@Column(name = "objetoAfecta", nullable = false)
 	@NotEmpty
-	protected String objetoAfecta;
-
-    public String getNombreAccion() {
-		return this.nombreAccion;
-	}
-
-	public void setNombreAccion(String nombreAccion ) {
-		this.nombreAccion = nombreAccion;
-	}
-
-	public String getValorEfecto() {
-		return this.valorEfecto;
-	}
-
-	public void setValorEfecto(String valorEfecto) {
-		this.valorEfecto = valorEfecto;
-	}
-
-    public String getObjetoAfecta() {
-		return this.objetoAfecta;
-	}
-
-	public void setObjetoAfecta(String objetoAfecta) {
-		this.objetoAfecta = objetoAfecta;
-	}
+	protected boolean objetoAfecta;  //0 si afecta a un jugador, 1 si afecta al tablero
 
 
 

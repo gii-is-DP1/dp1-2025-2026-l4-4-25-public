@@ -10,6 +10,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 
 @MappedSuperclass
@@ -28,8 +29,10 @@ public class Jugador extends Usuario{
 
     private Integer pepitasAcumuladas = 0;
 
+    @Column(name = "esEspectador", nullable = false)
     private boolean esEspectador;
 
+    //Relacion de muchos a muchos con amigos
     @ManyToMany
     @JoinTable(
         name = "amistades",
@@ -40,7 +43,7 @@ public class Jugador extends Usuario{
 
 
 
-
+    //Relacion de muchos jugadores a muchos logros
     @ManyToMany
     @JoinTable(
         name = "logros",
@@ -49,6 +52,7 @@ public class Jugador extends Usuario{
     )
     private List<Logro> logros = new ArrayList<>();
 
+    //Relacion muchos jugadores observan una partida
     @ManyToOne
     @JoinColumn(name = "partida_id")
     private Partida partida;

@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -50,10 +51,9 @@ public class Participante extends Jugador{
     )
     private List<Jugador> perjudicaciones = new ArrayList<>();
 
-    //Relacion varios participantes juegan una partida
-    @ManyToOne
-    @JoinColumn(name = "partida_id")
-    private Partida partida;
+    //Relacion varios participantes juegan varias partidas
+    @ManyToMany(mappedBy = "participantes")
+    private List<Partida> partidas = new ArrayList<>();
 
     //Relación 1 participante gana 1 partida
     @OneToOne
@@ -64,6 +64,19 @@ public class Participante extends Jugador{
     @OneToOne
     @JoinColumn(name = "partida_creada_id")
     private Partida partidaCreada;
+
+    // Relación 1 participante 1 mano
+    @OneToOne
+    @JoinColumn(name = "mano_id")
+    private Mano mano;
+
+    //Relación 1 participante ocupa varias casillas
+    @OneToMany(mappedBy = "participante")
+    private List<Casillas> casillas = new ArrayList<>();
+
+    //Relación 1 participante varios mensajes
+    @OneToMany(mappedBy = "participante")
+    private List<Mensaje> mensajes = new ArrayList<>();
 
 
     //AÑADIR RELACIÓN CON MANO, CASILLAS, MENSAJE, PARTIDA (JUEGAN, CREA, GANA)

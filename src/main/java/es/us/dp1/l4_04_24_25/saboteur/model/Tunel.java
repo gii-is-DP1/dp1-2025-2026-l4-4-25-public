@@ -5,71 +5,37 @@ import jakarta.persistence.Entity;
 
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "Tunel")
 public class Tunel extends Carta {
 
-    @Column(name = "rotacion")
+    @Column(name = "rotacion", nullable = false)
 	@NotEmpty
 	protected boolean rotacion;
 
-	@Column(name = "arriba")
+	@Column(name = "arriba", nullable = false)
 	@NotEmpty
 	protected boolean arriba;
 
     
-	@Column(name = "abajo")
+	@Column(name = "abajo", nullable = false)
 	@NotEmpty
 	protected boolean abajo;
 
-    @Column(name = "derecha")
+    @Column(name = "derecha", nullable = false)
 	@NotEmpty
 	protected boolean derecha;
 
-    @Column(name = "izquierda")
+    @Column(name = "izquierda", nullable = false)
 	@NotEmpty
 	protected boolean izquierda;
 
-    public Boolean getRotacion() {
-		return this.rotacion;
-	}
-
-	public void setRotacion(Boolean rotacion ) {
-		this.rotacion = rotacion;
-	}
-
-	public Boolean getArriba() {
-		return this.arriba;
-	}
-
-	public void setArriba(Boolean arriba) {
-		this.arriba = arriba;
-	}
-
-    public Boolean getAbajo() {
-		return this.abajo;
-	}
-
-	public void setAbajo(Boolean abajo) {
-		this.abajo = abajo;
-	}
-
-    public Boolean getDerecha() {
-		return this.derecha;
-	}
-
-	public void setDerecha(Boolean derecha) {
-		this.derecha = derecha;
-	}
-
-    public Boolean getIzquierda() {
-		return this.izquierda;
-	}
-
-	public void setIzquierda(Boolean izquierda) {
-		this.izquierda = izquierda;
-	}
+   
 
 
 

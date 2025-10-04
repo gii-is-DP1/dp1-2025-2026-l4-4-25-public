@@ -5,11 +5,25 @@ import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+
 @Table(name = "Chat")
 public class Chat {
+
+    //Relacion 1 chat muchos mensajes
+    
     @OneToMany(mappedBy = "chat")
     private List<Mensaje> mensajes = new ArrayList<>();
+
+    //Relacion 1 chat 1 partida
+
+    @OneToOne(mappedBy = "chat")
+    private Partida partida;
 }

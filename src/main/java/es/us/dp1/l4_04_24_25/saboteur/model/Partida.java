@@ -12,7 +12,10 @@ import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 
 
 @Entity
@@ -24,8 +27,10 @@ public class Partida extends BaseEntity{
 
     private Duration tiempoTranscurrido = Duration.ZERO;
 
+    @Column(name = "estadoPartida", nullable = false)
     private estadoPartida estadoPartida;
 
+    @Column(unique = true, nullable = false)
     private String enlace;
 
     // Relacion varias partidas son gestionadas por varios administradores
@@ -37,9 +42,14 @@ public class Partida extends BaseEntity{
     @OneToMany(mappedBy = "partida")
     private List<Jugador> espectadores = new ArrayList<>();
 
-    //Relacion 1 partida es jugada por n participantes
+    //Relacion n partida es jugada por n participantes
 
-    @OneToMany(mappedBy = "partida")
+    @ManyToMany
+    @JoinTable(
+        name = "partida_participante",
+        joinColumns = @JoinColumn(name = "partida_id"),
+        inverseJoinColumns = @JoinColumn(name = "participante_id")
+    )
     private List<Participante> participantes = new ArrayList<>();
 
     //Relacion 1 partida es ganada por 1 participante
@@ -53,6 +63,10 @@ public class Partida extends BaseEntity{
     //Relacion 1 partida tiene 3 rondas
     @OneToMany(mappedBy = "partida")
     private List<Ronda> rondas = new ArrayList<>();
+
+    //Relacion 1 partida 1 chat
+    @OneToOne
+    private Chat chat;
 
 
     public void agregarRonda (Ronda ronda){

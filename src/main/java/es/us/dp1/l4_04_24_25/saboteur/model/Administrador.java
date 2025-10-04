@@ -41,6 +41,8 @@ public class Administrador extends Usuario {
     )
     private List<Logro> logrosGestionados = new ArrayList<>();
 
+
+    //RELACION -> ADMIN GESTIONA PARTIDA
     @ManyToMany
     @JoinTable(
         name = "administrador_partida",

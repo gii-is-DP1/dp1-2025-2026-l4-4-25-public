@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 package es.us.dp1.l4_04_24_25.saboteur.user;
-<<<<<<< HEAD
-
-=======
->>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;

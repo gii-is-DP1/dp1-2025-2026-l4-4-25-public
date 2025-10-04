@@ -6,38 +6,36 @@ import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name="Tablero")
 public class Tablero extends BaseEntity{
 
-    @OneToMany(mappedBy = "tablero")
-    private List<Casillas> casillas = new ArrayList<>();
     
     @Column(name = "base")
 	@NotEmpty
-	protected Integer base;
+	protected Integer base = 11;
 
 	@Column(name = "altura")
 	@NotEmpty
-	protected Integer altura;
+	protected Integer altura = 9;
 
-    public Integer getBase() {
-		return this.base;
-	}
 
-	public void setBase(Integer base ) {
-		this.base = base;
-	}
+	//Relación 1 tablero muchas casillas ocupadas
+	@OneToMany(mappedBy = "tablero")
+	private List<Casillas> ocupadas = new ArrayList<>();
 
-	public Integer getAltura() {
-		return this.altura;
-	}
+	//Relacion 1 tablero 1 ronda
+	@OneToOne(mappedBy = "tablero")
+	private Ronda ronda;
 
-	public void setCoordenadaY(Integer altura) {
-		this.altura = altura;
-	}
+   
 
 }

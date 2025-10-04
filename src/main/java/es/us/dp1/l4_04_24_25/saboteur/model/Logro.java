@@ -21,22 +21,26 @@ import lombok.Setter;
 public class Logro extends BaseEntity{
 
     @NotEmpty
-    @Column (unique = true)
+    @Column (unique = true, nullable = false)
     private String titulo;
 
     @NotEmpty
+    @Column(name = "descripcion", nullable = false)
     private String descripcion;
 
     private Integer puntuacion = 0; //Valor inicial es 0 si no se indica lo contrario
+
+    //Relacion muchos logros a un administrador que lo crea
 
     @ManyToOne
     @JoinColumn(name = "creador_id")
     private Administrador creador;
 
-
+    //Relacion muchos logros a muchos administradores que lo gestionan
     @ManyToMany(mappedBy = "logrosGestionados")
     private List<Administrador> administradores =  new ArrayList<>();
     
+    //Relacion muchos logros a muchos jugadores que lo han adquirido
     @ManyToMany(mappedBy = "logrosAdquiridos")
     private List<Jugador> jugadores = new ArrayList<>();
 

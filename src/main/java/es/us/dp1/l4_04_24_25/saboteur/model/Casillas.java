@@ -2,48 +2,41 @@ package es.us.dp1.l4_04_24_25.saboteur.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
 @Table(name="Casillas")
 @Entity
+@Getter
+@Setter
 public class Casillas extends BaseEntity{
     
-    @Column(name = "coordenadaX")
+    @Column(name = "coordenadaX", nullable = false)
 	@NotEmpty
 	protected Integer coordenadaX;
 
-	@Column(name = "coordenadaY")
+	@Column(name = "coordenadaY", nullable = false)
 	@NotEmpty
 	protected Integer coordenadaY;
 
-    @Column(name = "ocupacion")
+    @Column(name = "ocupacion", nullable = false)
 	@NotEmpty
-	protected Boolean ocupacion;
+	protected boolean ocupacion;
 
-    public Integer getCoordenadaX() {
-		return this.coordenadaX;
-	}
+	@Column(name = "tipo", nullable = false)
+	protected Tipo tipo;
 
-	public void setCoordenadaX(Integer coordenadaX ) {
-		this.coordenadaX = coordenadaX;
-	}
+	//Relación muchas casillas 1 participante
+	@ManyToOne
+	protected Participante participante;
 
-	public Integer getCoordenadaY() {
-		return this.coordenadaY;
-	}
+	//Relación muchas casillas 1 tablero
+	@ManyToOne
+	protected Tablero tablero;
 
-	public void setCoordenadaY(Integer coordenadaY) {
-		this.coordenadaY = coordenadaY;
-	}
-
-    public Boolean getOcupacion() {
-		return this.ocupacion;
-	}
-
-	public void setOcupacion(Boolean ocupacion) {
-		this.ocupacion = ocupacion;
-	}
 
 
 

@@ -19,10 +19,10 @@ import lombok.Setter;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "Usuario")
 public class Usuario extends BaseEntity {
-    @Column(name = "imagen")
+    @Column(name = "imagen", nullable = false)
     private String url;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     @NotEmpty
     private String nombreUsuario;
 
@@ -31,12 +31,14 @@ public class Usuario extends BaseEntity {
 
     @Temporal(TemporalType.DATE)
     @NotEmpty
+    @Column(name = "fechaNacimiento", nullable = false)
     private Date fechaNacimiento;
 
     @NotEmpty
+    @Column(name ="contrasena", nullable = false)
     private String contrasena;
 
-    @Column(unique=true)
+    @Column(unique=true, nullable = false)
     @NotEmpty
     private String correoElectronico;
 }

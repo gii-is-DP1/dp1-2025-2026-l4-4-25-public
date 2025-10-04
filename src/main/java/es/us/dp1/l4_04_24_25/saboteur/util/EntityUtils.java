@@ -19,10 +19,6 @@ package es.us.dp1.l4_04_24_25.saboteur.util;
 import java.util.Collection;
 
 import org.springframework.orm.ObjectRetrievalFailureException;
-<<<<<<< HEAD
-=======
-
->>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
 
 /**
@@ -31,11 +27,7 @@ import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
  *
  * @author Juergen Hoeller
  * @author Sam Brannen
-<<<<<<< HEAD
- * @see es.us.dp1.l4_04_24_25.saboteur.BaseEntity
-=======
  * @see es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity
->>>>>>> 934846e376131368950f7d9a4c9030f0447dd1f7
  * @since 29.10.2003
  */
 public abstract class EntityUtils {
