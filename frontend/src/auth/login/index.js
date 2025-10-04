@@ -26,7 +26,7 @@ export default function Login() {
       .then(function (data) {
         tokenService.setUser(data);
         tokenService.updateLocalAccessToken(data.token);
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       })
       .catch((error) => {         
         setMessage(error);
@@ -41,7 +41,7 @@ export default function Login() {
         ) : (
           <></>
         )}
-
+      
         <h1>Login</h1>
 
         <div className="auth-form-container">
@@ -51,10 +51,10 @@ export default function Login() {
             onSubmit={handleSubmit}
             numberOfColumns={1}
             listenEnterKey
-            buttonText="Login"
+            buttonText="Log in"
             buttonClassName="auth-button"
           />
+         </div>
         </div>
-      </div>
     );  
 }
