@@ -1,36 +1,88 @@
-.home-page-container{
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('../../images/home_background.jpg');
-    background-size: cover;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.home-page-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-image: 
+    url('../../images/home_background.jpg');
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.hero-div{
-    background-color: rgba(255, 255, 255, 0.3);
-    padding: 2rem;
-    border-radius: 25px;
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.hero-div {
+  padding: 3rem;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
-.hero-div h1{
-    font-size: 3rem;
-    font-weight: 700;
-    color: #2f324f;
-    text-align: center;
-    text-transform: uppercase;
+.hero-div button {
+  white-space: nowrap;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: auto;}
+
+.hero-div button:active {
+  transform: scale(0.95);}
+
+.hero-div button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(240, 199, 38, 0.8);}
+
+.hero-div .button-crear, /* Mismo formato de color y fondo en los botones */
+.hero-div .button-unirse,
+.hero-div .button-jugar,
+.bottom-left-button button,
+.top-right-buttons button {
+  background: #f1c40f;
+  color: #000;}
+
+.hero-div .button-crear {
+  margin-top: 580px;}
+
+.hero-div .button-unirse {
+  margin-top: 20px;}
+
+.top-right-buttons {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  z-index: 10;}
+
+
+.bottom-left-button {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10;}
+
+/* Animaciones para los botones */
+.top-right-buttons button,
+.bottom-left-button button {
+  white-space: nowrap;
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.hero-div h3{
-    text-align: center;
+.top-right-buttons button:hover,
+.bottom-left-button button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(240, 199, 38, 0.8);
 }

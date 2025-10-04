@@ -1,7 +1,11 @@
 # 📄Documento de análisis de requisitos del sistema📄
 **Asignatura:** Diseño y Pruebas (Grado en Ingeniería del Software, Universidad de Sevilla)  
 **Curso académico:** 2025/2026 
+<<<<<<< HEAD
+**Grupo/Equipo:** L4-04  
+=======
 **Grupo/Equipo:** L4-4  
+>>>>>>> 86f6165dbba000fdd9573fdde5d6a3e25816861e
 **Nombre del proyecto:** Saboteur 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** <!-- Nombre Apellidos (US-Id / correo @us.es) -->
@@ -12,7 +16,11 @@ Lorenzo Valderrama Román (WRG8176 / lorvalrom@alum.us.es)
 
 Diego Rey Carmona (RHQ7780 / diereycar@alum.us.es)
 
+<<<<<<< HEAD
+Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us.es)
+=======
 Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us)
+>>>>>>> 86f6165dbba000fdd9573fdde5d6a3e25816861e
 
 Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
 
@@ -21,8 +29,7 @@ Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 _Esta es una plantilla que sirve como guía para realizar este entregable. Por favor, mantén las mismas secciones y los contenidos que se indican para poder hacer su revisión más ágil._ 
 
 
-## 1️⃣ Introducción
-
+<<<<<<< HEAD
 El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y **gratuito**.
 Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona.
 Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio.
@@ -31,6 +38,31 @@ Una vez asignados los roles y las cartas de cada uno, los **buscadores de oro** 
 Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
 El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 
+
+Enlace al vídeo de explicación de las reglas del juego / partida jugada por el grupo](https://www.youtube.com/watch?v=lwxIUdtN4aE)
+=======
+## 1️⃣ Introducción
+
+El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y **gratuito**.
+Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona.
+Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio.
+Una vez asignados los roles y las cartas de cada uno, los **buscadores de oro** intentarán construir el camino hasta donde creen que están las **pepitas de oro** y los **saboteadores** tendrán que poner trabas para impedir que los buscadores puedan lograr su hazaña.
+>>>>>>> 86f6165dbba000fdd9573fdde5d6a3e25816861e
+
+Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
+El vencedor será el jugador que **más** pepitas de oro haya conseguido.
+
+<<<<<<< HEAD
+**1 · Administrador**: Rol que gestiona los logros, partidas, usuarios, estadisticas, etc.
+    
+**2 · Usuario**: Rol base de cualquier persona que entra en el juego, accesibilidad a toda la UI de Usuario, con posibilidad de jugar en partidas, ver sus propias estadisticas, etc.
+
+**2.1 · Espectador**: Tipo de rol de usuario que visualiza una partida, sin posibilidad de interactuar en la misma.
+
+**2.2 · Saboteur**: Tipo de rol de usuario que dentro de una partida se asigna de forma aleatoria en base a las Reglas de Negocios ya definidas, el papel de los mismos es de obstaculizar el paso y la jugabilidad de los Mineros, impidiendo así que llegan a la carta de las _pepitas de oro_.
+
+**2.3 · Minero**: Tipo de rol de usuario que dentro de una partida se asigna de forma aleatoria en base a las Reglas de Negocios ya definidas, el papel de los mismos es el de llegar a la carta pepitas de oro sin ser saboteados.
+=======
 
 #### · VIDEO EXPLICATIVO :
 
@@ -52,6 +84,7 @@ El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 >**3.1 · Saboteur**: Tipo de rol de usuario que dentro de una partida se asigna de forma aleatoria en base a las Reglas de Negocios ya definidas, el papel de los mismos es de obstaculizar el paso y la jugabilidad de los Mineros, impidiendo así que llegan a la carta de las _pepitas de oro_.
 
 >**3.2 · Minero**: Tipo de rol de usuario que dentro de una partida se asigna de forma aleatoria en base a las Reglas de Negocios ya definidas, el papel de los mismos es el de llegar a la carta pepitas de oro sin ser saboteados.
+>>>>>>> 86f6165dbba000fdd9573fdde5d6a3e25816861e
 
 
 
