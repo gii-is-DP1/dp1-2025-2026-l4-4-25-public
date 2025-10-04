@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotEmpty;
 @Table(name="Tablero")
 public class Tablero extends BaseEntity{
 
-    @OneToMany(mappedBy = "mano")
+    @OneToMany(mappedBy = "tablero")
     private List<Casillas> casillas = new ArrayList<>();
     
     @Column(name = "base")
