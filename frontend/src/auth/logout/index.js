@@ -16,16 +16,16 @@ const Logout = () => {
   }
 
   return (
-    <div className="auth-page-container">
-      <div className="auth-form-container">
-        <h2 className="text-center text-md">
+    <div className="auth-page-logout-container">
+      <div className="auth-form-logout-container">
+        <h2 className="text-center text-md logout-title">
           Are you sure you want to log out?
         </h2>
-        <div className="options-row">
-          <Link className="auth-button" to="/" style={{textDecoration: "none"}}>
+        <div className="options-row-logout">
+          <Link className="auth-logout-button" to="/lobby" style={{textDecoration: "none"}}> {/*OJO ---> to="/" me devuelve al HOME no tiene sentido*/}
             No
           </Link>
-          <button className="auth-button" onClick={() => sendLogoutRequest()}>
+          <button className="auth-logout-button" onClick={() => sendLogoutRequest()}>
             Yes
           </button>
         </div>

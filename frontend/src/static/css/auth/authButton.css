@@ -41,3 +41,33 @@
   background-color: var(--main-red-color) !important;
   box-shadow: 0px 15px 20px rgba(229, 46, 46, 0.4);
 }
+
+
+.auth-logout-button {
+  padding: 1.3em 3em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: bold;
+  color: #2e2e2e;
+  background: linear-gradient(145deg, #d4af37, #b8860b);
+  border: 2px solid #ffd700;;
+  border-radius: 45px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3),
+              inset 0px 2px 4px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+}
+
+.auth-logout-button:hover {
+  background: linear-gradient(145deg, #ffcc33, #b8860b); /* más brillante */
+  box-shadow: 0px 10px 20px rgba(255, 215, 0, 0.4);
+  color: #fff8dc; 
+  transform: translateY(-5px);
+}
+
+.auth-logout-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.4) inset;
+}
