@@ -19,3 +19,5 @@ INSERT INTO appusers(id,username,password,authority) VALUES (14,'GBK4935','$2a$1
 INSERT INTO appusers(id,username,password,authority) VALUES (2,'RHQ7780','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
 INSERT INTO appusers(id,username,password,authority) VALUES (15,'JGR9196','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
 INSERT INTO appusers(id,username,password,authority) VALUES (16,'WRG8176','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
+
+INSERT INTO appusers(id,username,password,authority) VALUES (17,'HKP3295','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
