@@ -2,15 +2,11 @@ import "../../static/css/auth/authButton.css";
 import "../../static/css/auth/authPage.css";
 import tokenService from "../../services/token.service";
 import FormGenerator from "../../components/formGenerator/formGenerator";
-import { registerFormOwnerInputs } from "./form/registerFormOwnerInputs";
-import { registerFormVetInputs } from "./form/registerFormVetInputs";
-import { registerFormClinicOwnerInputs } from "./form/registerFormClinicOwnerInputs";
+import { registerFormPlayer } from "./form/registerFormPlayer";
 import { useEffect, useRef, useState } from "react";
 
 export default function Register() {
-  let [type, setType] = useState(null);
   let [authority, setAuthority] = useState(null);
-  let [clinics, setClinics] = useState([]);
 
   const registerFormRef = useRef();
 
@@ -19,7 +15,6 @@ export default function Register() {
     let value = target.value;
     if (value === "Back") value = null;
     else setAuthority(value);
-    setType(value);
   }
 
   function handleSubmit({ values }) {
@@ -61,7 +56,7 @@ export default function Register() {
               else {
                 tokenService.setUser(data);
                 tokenService.updateLocalAccessToken(data.token);
-                window.location.href = "/dashboard";
+                window.location.href = "/";
               }
             })
             .catch((message) => {
@@ -73,18 +68,13 @@ export default function Register() {
         alert(message);
       });
   }  
-
-  if (type) {
     return (
       <div className="auth-page-container">
         <h1>Register</h1>
         <div className="auth-form-container">
           <FormGenerator
             ref={registerFormRef}
-            inputs={
-              type === "Player" ? registerFormOwnerInputs               
-              : registerFormClinicOwnerInputs
-            }
+            inputs={registerFormPlayer}
             onSubmit={handleSubmit}
             numberOfColumns={1}
             listenEnterKey
@@ -94,32 +84,6 @@ export default function Register() {
         </div>
       </div>
     );
-  } else {
-    return (
-      <div className="auth-page-container">
-        <div className="auth-form-container">
-          <h1>Register</h1>
-          <h2 className="text-center text-md">
-            What type of user will you be?
-          </h2>
-          <div className="options-row">
-            <button
-              className="auth-button"
-              value="Owner"
-              onClick={handleButtonClick}
-            >
-              Player
-            </button>
-            <button
-              className="auth-button"
-              value="Vet"
-              onClick={handleButtonClick}
-            >
-              Admin
-            </button>            
-          </div>
-        </div>
-      </div>
-    );
+
   }
-}
+

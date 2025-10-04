@@ -3,7 +3,7 @@ import { formValidators } from "../../../validators/formValidators";
 export const loginFormInputs = [
   {
     tag: "Username",
-    name: "username",
+    name: "nombreUsuario",
     type: "text",
     defaultValue: "",
     isRequired: true,
@@ -11,7 +11,7 @@ export const loginFormInputs = [
   },
   {
     tag: "Password",
-    name: "password",
+    name: "contrasena",
     type: "password",
     defaultValue: "",
     isRequired: true,

@@ -41,7 +41,7 @@ export default function Login() {
         ) : (
           <></>
         )}
-
+      
         <h1>Login</h1>
 
         <div className="auth-form-container">
@@ -51,10 +51,10 @@ export default function Login() {
             onSubmit={handleSubmit}
             numberOfColumns={1}
             listenEnterKey
-            buttonText="Login"
+            buttonText="Log in"
             buttonClassName="auth-button"
           />
+         </div>
         </div>
-      </div>
     );  
 }
