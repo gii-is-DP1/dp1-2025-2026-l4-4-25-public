@@ -2,32 +2,36 @@ import "../../static/css/auth/authButton.css";
 import "../../static/css/auth/authPage.css";
 import tokenService from "../../services/token.service";
 import FormGenerator from "../../components/formGenerator/formGenerator";
-import { registerFormOwnerInputs } from "./form/registerFormOwnerInputs";
-import { registerFormVetInputs } from "./form/registerFormVetInputs";
-import { registerFormClinicOwnerInputs } from "./form/registerFormClinicOwnerInputs";
+import { registerFormPlayer } from "./form/registerFormPlayer";
 import { useEffect, useRef, useState } from "react";
+import { Link } from 'react-router-dom';
+import defaultProfileImage from "../../static/images/default_profile.png"
+
 
 export default function Register() {
-  let [type, setType] = useState(null);
   let [authority, setAuthority] = useState(null);
-  let [clinics, setClinics] = useState([]);
 
   const registerFormRef = useRef();
-
+ /*
   function handleButtonClick(event) {
     const target = event.target;
     let value = target.value;
     if (value === "Back") value = null;
     else setAuthority(value);
-    setType(value);
   }
+  */
 
   function handleSubmit({ values }) {
 
     if(!registerFormRef.current.validate()) return;
-
-    const request = values;
-    request["authority"] = authority;
+    const profileImage = values.image?.[0] || defaultProfileImage;
+    const request = {
+      ...values,
+      image: profileImage,
+      authority: 2
+    };
+   
+    // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 
     fetch("/api/v1/auth/signup", {
@@ -61,7 +65,7 @@ export default function Register() {
               else {
                 tokenService.setUser(data);
                 tokenService.updateLocalAccessToken(data.token);
-                window.location.href = "/dashboard";
+                window.location.href = "/lobby";
               }
             })
             .catch((message) => {
@@ -73,18 +77,16 @@ export default function Register() {
         alert(message);
       });
   }  
-
-  if (type) {
     return (
       <div className="auth-page-container">
+        <Link to="/login">
+            <button className="auth-returnLogin-button"> Return to Login ➡️</button>
+        </Link>
         <h1>Register</h1>
         <div className="auth-form-container">
           <FormGenerator
             ref={registerFormRef}
-            inputs={
-              type === "Player" ? registerFormOwnerInputs               
-              : registerFormClinicOwnerInputs
-            }
+            inputs={registerFormPlayer}
             onSubmit={handleSubmit}
             numberOfColumns={1}
             listenEnterKey
@@ -94,32 +96,6 @@ export default function Register() {
         </div>
       </div>
     );
-  } else {
-    return (
-      <div className="auth-page-container">
-        <div className="auth-form-container">
-          <h1>Register</h1>
-          <h2 className="text-center text-md">
-            What type of user will you be?
-          </h2>
-          <div className="options-row">
-            <button
-              className="auth-button"
-              value="Owner"
-              onClick={handleButtonClick}
-            >
-              Player
-            </button>
-            <button
-              className="auth-button"
-              value="Vet"
-              onClick={handleButtonClick}
-            >
-              Admin
-            </button>            
-          </div>
-        </div>
-      </div>
-    );
+
   }
-}
+

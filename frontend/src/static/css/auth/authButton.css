@@ -2,11 +2,11 @@
   padding: 1.3em 3em;
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 2.5px;
+  letter-spacing: 2.5px;  
   font-weight: 500;
   color: #000;
-  background-color: #fff;
-  border: solid 2px var(--main-green-color);
+  background-color:gold;
+  border: solid 2px;
   border-radius: 45px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease 0s;
@@ -15,7 +15,7 @@
 }
 
 .auth-button:hover {
-  background-color: var(--main-green-color);
+  background-color: rgb(183, 154, 8);
   box-shadow: 0px 15px 20px rgba(46, 229, 157, 0.4);
   color: #fff;
   transform: translateY(-7px);
@@ -40,4 +40,79 @@
 .danger:hover{
   background-color: var(--main-red-color) !important;
   box-shadow: 0px 15px 20px rgba(229, 46, 46, 0.4);
+}
+
+
+.auth-logout-button {
+  padding: 1.3em 3em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: bold;
+  color: #2e2e2e;
+  background: linear-gradient(145deg, #d4af37, #b8860b);
+  border: 2px solid #ffd700;;
+  border-radius: 45px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3),
+              inset 0px 2px 4px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+}
+
+.auth-logout-button:hover {
+  background: linear-gradient(145deg, #ffcc33, #b8860b); /* más brillante */
+  box-shadow: 0px 10px 20px rgba(255, 215, 0, 0.4);
+  color: #fff8dc; 
+  transform: translateY(-5px);
+}
+
+.auth-logout-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.4) inset;
+}
+
+.auth-returnLogin-button {
+  padding: 1em 2.5em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+  color: #2e2e2e;
+  background-color: #f0f0f0; 
+  border: 2px solid #b8860b; 
+  border-radius: 45px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+.auth-returnLogin-button:hover {
+  background-color: #ffd700; /* dorado suave al pasar el mouse */
+  color: #fff; 
+  box-shadow: 0px 10px 20px rgba(46, 229, 157, 0.2);
+  transform: translateY(-5px);
+}
+
+.auth-returnLogin-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.2) inset;
+}
+
+.register-redirect {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 12px; 
+}
+
+.register-link {
+  color: #007bff;
+  font-weight: 600;
+  font-size: 12px; 
+}
+
+.register-link:hover {
+  text-decoration: underline;
+  color: #0056b3;
 }

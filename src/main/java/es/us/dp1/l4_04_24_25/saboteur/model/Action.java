@@ -1,0 +1,31 @@
+package es.us.dp1.l4_04_24_25.saboteur.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "Action")
+public class Action extends Card {
+
+    @Column(name = "nombreAccion")
+	@NotEmpty
+	protected nameAction nameAction;
+
+	@Column(name = "valorEfecto")
+	@NotEmpty
+	protected effectValue effectValue;
+
+    
+	@Column(name = "objetoAfecta", nullable = false)
+	@NotEmpty
+	protected boolean objectAffect;  //0 si afecta a un jugador, 1 si afecta al tablero
+
+
+
+}
