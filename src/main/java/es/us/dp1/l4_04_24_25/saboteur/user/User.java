@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -46,7 +45,6 @@ public class User extends BaseEntity {
     @NotEmpty
     private String correoElectronico;
 
-	@NotNull
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "authority")
 	Authorities authority;
