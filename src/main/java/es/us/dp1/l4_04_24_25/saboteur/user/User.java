@@ -1,5 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+import java.sql.Date;
+
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
