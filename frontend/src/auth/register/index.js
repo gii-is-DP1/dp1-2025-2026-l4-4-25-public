@@ -12,13 +12,14 @@ export default function Register() {
   let [authority, setAuthority] = useState(null);
 
   const registerFormRef = useRef();
-
+ /*
   function handleButtonClick(event) {
     const target = event.target;
     let value = target.value;
     if (value === "Back") value = null;
     else setAuthority(value);
   }
+  */
 
   function handleSubmit({ values }) {
 
@@ -26,10 +27,10 @@ export default function Register() {
     const profileImage = values.image?.[0] || defaultProfileImage;
     const request = {
       ...values,
-      authority,
-      image: profileImage
+      image: profileImage,
+      authority: 2
     };
-
+   
     // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 
@@ -64,7 +65,7 @@ export default function Register() {
               else {
                 tokenService.setUser(data);
                 tokenService.updateLocalAccessToken(data.token);
-                window.location.href = "/";
+                window.location.href = "/lobby";
               }
             })
             .catch((message) => {
