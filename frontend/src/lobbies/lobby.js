@@ -26,7 +26,10 @@ export default function Lobby(){
             </div>
 
             <div className="hero-div">
-                <button className="button-crear">📑CREATE GAME</button>   
+                <Link to="/CreateGame">
+                   <button className="button-crear">📑CREATE GAME</button>  
+                </Link>
+                 
                 <button className="button-unirse">📥JOIN A GAME</button>   
             </div>
             <div className="bottom-left-button">

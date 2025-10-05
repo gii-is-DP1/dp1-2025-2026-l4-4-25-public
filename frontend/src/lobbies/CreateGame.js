@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../static/css/lobbies/CrearPartida.css'; 
+import '../static/css/lobbies/CreateGame.css'; 
 
-const CrearPartida = () => {
+const CreateGame = () => {
   // const [numJugadores, setNumJugadores] = useState('3');
   // const [esPrivada, setEsPrivada] = useState(false);
 
@@ -10,7 +10,7 @@ const CrearPartida = () => {
     <div className="home-page-container">
       <div className="hero-div"> 
         <h1>Create Game</h1>
-        
+        <div className="creategame-card">
         <div className="form-group">
           <label>Number of players</label>
           <select
@@ -34,6 +34,7 @@ const CrearPartida = () => {
             <option value="12">12</option>
           </select>
         </div>
+        
 
         <div className="form-group privacy-toggle">
           <label>Privacidad</label>
@@ -74,9 +75,10 @@ const CrearPartida = () => {
                 <button className="button-small">❌CANCEL</button>
               </Link>
         </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default CrearPartida;
+export default CreateGame;
