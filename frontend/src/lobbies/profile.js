@@ -12,7 +12,7 @@ export default function Profile(){
             <div style={{ position: 'absolute', top: 0, left: 0, display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', zIndex: 10 }}>
                 <img src="/logo1-recortado.png" alt="logo" style={{ height: 95, width: 95 }} />
              </div>
-            <div className="top-right-buttons">
+            <div className="top-right-lobby-buttons">
                 <Link to="/logout">
                     <button className="button-logOut"> 🔴Log Out</button>
                 </Link>
@@ -37,7 +37,7 @@ export default function Profile(){
           <div className="profile-info">
             <h2> DIEGO_REY_CARMONA </h2>
             <div className="profile-buttons">
-              <h2> Te uniste en 2025  </h2>
+              <h2> Joined in 2025  </h2>
               <Link to="/profile/edit">
                 <button className="button-small">✏️ Edit Profile</button>
               </Link>

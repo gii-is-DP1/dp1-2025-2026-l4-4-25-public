@@ -1,25 +1,28 @@
-.home-page-container {
+.home-page-lobby-container {
   position: relative;
   width: 100%;
   height: 100vh;
   background-image: 
     url('../../images/home_background.jpg');
   background-size: cover;
+  background-position: center 60%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.hero-div {
+.hero-div-lobby {
   padding: 3rem;
   border-radius: 25px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 20px;
+  padding-top: 50vh;
 }
 
-.hero-div button {
+.hero-div-lobby button {
   white-space: nowrap;
   padding: 1rem 2rem;
   font-size: 1.2rem;
@@ -31,28 +34,28 @@
   transition: all 0.3s ease;
   width: auto;}
 
-.hero-div button:active {
+.hero-div-lobby button:active {
   transform: scale(0.95);}
 
-.hero-div button:hover {
+.hero-div-lobby button:hover {
   transform: scale(1.1);
   box-shadow: 0 0 20px rgba(240, 199, 38, 0.8);}
 
-.hero-div .button-crear, /* Mismo formato de color y fondo en los botones */
-.hero-div .button-unirse,
-.hero-div .button-jugar,
+.hero-div-lobby .button-crear, /* Mismo formato de color y fondo en los botones */
+.hero-div-lobby .button-unirse,
+.hero-div-lobby .button-jugar,
 .bottom-left-button button,
-.top-right-buttons button {
+.top-right-lobby-buttons button {
   background: #f1c40f;
   color: #000;}
 
-.hero-div .button-crear {
-  margin-top: 580px;}
+.hero-div-lobby .button-crear {
+  margin-top: 00;}
 
-.hero-div .button-unirse {
-  margin-top: 20px;}
+.hero-div-lobby .button-unirse {
+  margin-top: 0;}
 
-.top-right-buttons {
+.top-right-lobby-buttons {
   position: absolute;
   top: 0;
   right: 0;
@@ -69,7 +72,7 @@
   z-index: 10;}
 
 /* Animaciones para los botones */
-.top-right-buttons button,
+.top-right-lobby-buttons button,
 .bottom-left-button button {
   white-space: nowrap;
   display: inline-block;
@@ -81,7 +84,7 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.top-right-buttons button:hover,
+.top-right-lobby-buttons button:hover,
 .bottom-left-button button:hover {
   transform: scale(1.1);
   box-shadow: 0 0 20px rgba(240, 199, 38, 0.8);

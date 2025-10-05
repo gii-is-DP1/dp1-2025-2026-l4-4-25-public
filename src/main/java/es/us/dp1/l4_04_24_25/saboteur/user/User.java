@@ -1,5 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+import java.sql.Date;
+
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,7 +31,7 @@ public class User extends BaseEntity {
 	// @Temporal(TemporalType.DATE)
     @NotEmpty
     @Column(name = "birthdate", nullable = false)
-    private String birthDate;
+    private Date birthDate;
 
     @NotEmpty
     @Column(name ="password", nullable = false)

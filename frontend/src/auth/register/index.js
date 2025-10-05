@@ -4,6 +4,9 @@ import tokenService from "../../services/token.service";
 import FormGenerator from "../../components/formGenerator/formGenerator";
 import { registerFormPlayer } from "./form/registerFormPlayer";
 import { useEffect, useRef, useState } from "react";
+import { Link } from 'react-router-dom';
+import defaultProfileImage from "../../static/images/default_profile.png"
+
 
 export default function Register() {
   let [authority, setAuthority] = useState(null);
@@ -20,9 +23,14 @@ export default function Register() {
   function handleSubmit({ values }) {
 
     if(!registerFormRef.current.validate()) return;
+    const profileImage = values.image?.[0] || defaultProfileImage;
+    const request = {
+      ...values,
+      authority,
+      image: profileImage
+    };
 
-    const request = values;
-    request["authority"] = authority;
+    // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 
     fetch("/api/v1/auth/signup", {
@@ -70,6 +78,9 @@ export default function Register() {
   }  
     return (
       <div className="auth-page-container">
+        <Link to="/login">
+            <button className="auth-returnLogin-button"> Return to Login ➡️</button>
+        </Link>
         <h1>Register</h1>
         <div className="auth-form-container">
           <FormGenerator

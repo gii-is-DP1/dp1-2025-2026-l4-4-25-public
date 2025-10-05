@@ -72,6 +72,34 @@
   box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.4) inset;
 }
 
+.auth-returnLogin-button {
+  padding: 1em 2.5em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+  color: #2e2e2e;
+  background-color: #f0f0f0; 
+  border: 2px solid #b8860b; 
+  border-radius: 45px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+.auth-returnLogin-button:hover {
+  background-color: #ffd700; /* dorado suave al pasar el mouse */
+  color: #fff; 
+  box-shadow: 0px 10px 20px rgba(46, 229, 157, 0.2);
+  transform: translateY(-5px);
+}
+
+.auth-returnLogin-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.2) inset;
+}
+
 .register-redirect {
   text-align: center;
   margin-top: 25px;
