@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
@@ -31,12 +32,13 @@ public class User extends BaseEntity {
 	// @Temporal(TemporalType.DATE)
     @NotEmpty
     @Column(name = "birthdate", nullable = false)
-    private Date birthDate;
+    private String birthDate;
 
     @NotEmpty
     @Column(name ="password", nullable = false)
     private String password;
 
+	@Lob
 	@Column(name = "image", nullable = false)
     private String image;
 
