@@ -10,21 +10,21 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "Accion")
-public class Accion extends Carta {
+@Table(name = "Action")
+public class Action extends Card {
 
     @Column(name = "nombreAccion")
 	@NotEmpty
-	protected nombreAccion nombreAccion;
+	protected nameAction nameAction;
 
 	@Column(name = "valorEfecto")
 	@NotEmpty
-	protected valorEfecto valorEfecto;
+	protected effectValue effectValue;
 
     
 	@Column(name = "objetoAfecta", nullable = false)
 	@NotEmpty
-	protected boolean objetoAfecta;  //0 si afecta a un jugador, 1 si afecta al tablero
+	protected boolean objectAffect;  //0 si afecta a un jugador, 1 si afecta al tablero
 
 
 

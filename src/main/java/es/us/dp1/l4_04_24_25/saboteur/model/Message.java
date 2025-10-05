@@ -16,16 +16,16 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name="Mensaje")
-public class Mensaje extends BaseEntity{
+@Table(name="Message")
+public class Message extends BaseEntity{
 
     @NotEmpty
-    @Column(name = "texto", nullable = false)
-    private String texto;
+    @Column(name = "text", nullable = false)
+    private String text;
     
     //Relación muchos mensajes 1 participante
     @ManyToOne(optional = false)
-    private Participante participante;
+    private ActivePlayer activePlayer;
 
     //Relación muchos mensajes 1 chat
     @ManyToOne(optional = false)

@@ -14,28 +14,28 @@ import jakarta.persistence.JoinColumn;
 @Entity
 @Getter
 @Setter
-@Table(name = "Ronda")
-public class Ronda extends BaseEntity{
+@Table(name = "Round")
+public class Round extends BaseEntity{
 
-    private Duration tiempoTranscurrido = Duration.ZERO;
+    private Duration timeSpent = Duration.ZERO;
 
-    @Column(name = "cartasRestantes", nullable = false)
-    private Integer cartasRestantes;
+    @Column(name = "leftCards", nullable = false)
+    private Integer leftCards;
 
-    @Column(name = "rolGanador", nullable = false)
-    private boolean rolGanador;
+    @Column(name = "winnerRol", nullable = false)
+    private boolean winnerRol;
 
-    private Integer turno = 1;
+    private Integer turn = 1;
 
     //Relacion n rondas pertenecen a 1 partida
     @ManyToOne
-    @JoinColumn(name = "partida_id")
-    private Partida partida;
+    @JoinColumn(name = "game_id")
+    private Game game;
 
     //Relacion 1 ronda tiene 1 tablero
     @OneToOne
-    @JoinColumn(name = "tablero_id")
-    private Tablero tablero;
+    @JoinColumn(name = "board_id")
+    private Board board;
 
 
 

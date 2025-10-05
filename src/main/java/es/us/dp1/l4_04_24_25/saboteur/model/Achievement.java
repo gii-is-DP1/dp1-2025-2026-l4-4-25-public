@@ -17,32 +17,32 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "Logro")
-public class Logro extends BaseEntity{
+@Table(name = "Achievements")
+public class Achievement extends BaseEntity{
 
     @NotEmpty
     @Column (unique = true, nullable = false)
-    private String titulo;
+    private String tittle;
 
     @NotEmpty
     @Column(name = "descripcion", nullable = false)
-    private String descripcion;
+    private String description;
 
-    private Integer puntuacion = 0; //Valor inicial es 0 si no se indica lo contrario
+    private Integer score = 0; //Valor inicial es 0 si no se indica lo contrario
 
     //Relacion muchos logros a un administrador que lo crea
 
     @ManyToOne
-    @JoinColumn(name = "creador_id")
-    private Administrador creador;
+    @JoinColumn(name = "creator_id")
+    private Admin creator;
 
     //Relacion muchos logros a muchos administradores que lo gestionan
-    @ManyToMany(mappedBy = "logrosGestionados")
-    private List<Administrador> administradores =  new ArrayList<>();
+    @ManyToMany(mappedBy = "managedAchievements")
+    private List<Admin> admins =  new ArrayList<>();
     
     //Relacion muchos logros a muchos jugadores que lo han adquirido
-    @ManyToMany(mappedBy = "logrosAdquiridos")
-    private List<Jugador> jugadores = new ArrayList<>();
+    @ManyToMany(mappedBy = "accquiredAchievements")
+    private List<Player> players = new ArrayList<>();
 
 
 }

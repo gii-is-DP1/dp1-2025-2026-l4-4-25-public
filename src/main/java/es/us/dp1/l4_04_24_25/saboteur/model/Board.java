@@ -15,26 +15,26 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name="Tablero")
-public class Tablero extends BaseEntity{
+@Table(name="Board")
+public class Board extends BaseEntity{
 
     
     @Column(name = "base")
 	@NotEmpty
 	protected Integer base = 11;
 
-	@Column(name = "altura")
+	@Column(name = "heigth")
 	@NotEmpty
-	protected Integer altura = 9;
+	protected Integer heigth = 9;
 
 
 	//Relación 1 tablero muchas casillas ocupadas
-	@OneToMany(mappedBy = "tablero")
-	private List<Casillas> ocupadas = new ArrayList<>();
+	@OneToMany(mappedBy = "board")
+	private List<Square> busy = new ArrayList<>();
 
 	//Relacion 1 tablero 1 ronda
-	@OneToOne(mappedBy = "tablero")
-	private Ronda ronda;
+	@OneToOne(mappedBy = "board")
+	private Round round;
 
    
 

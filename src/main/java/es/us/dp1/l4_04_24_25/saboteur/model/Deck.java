@@ -11,15 +11,15 @@ import jakarta.persistence.Table;
 
 
 @Entity
-@Table(name = "Mano")
-public class Mano extends BaseEntity{
+@Table(name = "Deck")
+public class Deck extends BaseEntity{
 
     //Relación 1 mano muchas cartas
-    @OneToMany(mappedBy = "mano")
-    private List<Carta> cartas = new ArrayList<>();
+    @OneToMany(mappedBy = "deck")
+    private List<Card> cards = new ArrayList<>();
 
     //Relación 1 mano 1 participante
-    @OneToOne(mappedBy = "mano")
-    private Participante participante;
+    @OneToOne(mappedBy = "deck")
+    private ActivePlayer activePlayer;
 
 }

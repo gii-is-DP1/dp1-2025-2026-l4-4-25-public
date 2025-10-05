@@ -13,21 +13,21 @@
 	@Getter
 	@Setter
 	@Entity
-	@Table(name = "cartas")
+	@Table(name = "Cards")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	public class Carta extends BaseEntity {
+	public class Card extends BaseEntity {
 
-		@Column(name = "estado", nullable = false)
+		@Column(name = "status", nullable = false)
 		@NotEmpty
-		protected boolean estado;
+		protected boolean status;
 
-		@Column(name = "imagen", nullable = false)
+		@Column(name = "image", nullable = false)
 		@NotEmpty
-		protected String imagen;
+		protected String image;
 
 		//RELACION CARTA-MANO (N-1)
 		@ManyToOne
-		protected Mano mano;
+		protected Deck deck;
 
 
 

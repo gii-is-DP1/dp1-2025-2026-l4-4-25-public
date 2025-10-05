@@ -8,34 +8,34 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 
-@Table(name="Casillas")
+@Table(name="Squares")
 @Entity
 @Getter
 @Setter
-public class Casillas extends BaseEntity{
+public class Square extends BaseEntity{
     
-    @Column(name = "coordenadaX", nullable = false)
+    @Column(name = "coordinateX", nullable = false)
 	@NotEmpty
-	protected Integer coordenadaX;
+	protected Integer coordinateX;
 
-	@Column(name = "coordenadaY", nullable = false)
+	@Column(name = "coordinateY", nullable = false)
 	@NotEmpty
-	protected Integer coordenadaY;
+	protected Integer coordinateY;
 
-    @Column(name = "ocupacion", nullable = false)
+    @Column(name = "occupation", nullable = false)
 	@NotEmpty
-	protected boolean ocupacion;
+	protected boolean occupation;
 
-	@Column(name = "tipo", nullable = false)
-	protected Tipo tipo;
+	@Column(name = "type", nullable = false)
+	protected type type;
 
 	//Relación muchas casillas 1 participante
 	@ManyToOne
-	protected Participante participante;
+	protected ActivePlayer activePlayer;
 
 	//Relación muchas casillas 1 tablero
 	@ManyToOne
-	protected Tablero tablero;
+	protected Board board;
 
 
 

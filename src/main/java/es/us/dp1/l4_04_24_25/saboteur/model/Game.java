@@ -22,57 +22,57 @@ import jakarta.persistence.JoinTable;
 @Getter
 @Setter
 //@EqualsAndHashCode(of = "id")
-@Table(name = "Partida")
-public class Partida extends BaseEntity{
+@Table(name = "Game")
+public class Game extends BaseEntity{
 
-    private Duration tiempoTranscurrido = Duration.ZERO;
+    private Duration time = Duration.ZERO;
 
-    @Column(name = "estadoPartida", nullable = false)
-    private estadoPartida estadoPartida;
+    @Column(name = "gameStatus", nullable = false)
+    private gameStatus gameStatus;
 
     @Column(unique = true, nullable = false)
-    private String enlace;
+    private String link;
 
     // Relacion varias partidas son gestionadas por varios administradores
-    @ManyToMany(mappedBy = "partidasGestionadas")
-    private List<Administrador> administradores = new ArrayList<>();
+    @ManyToMany(mappedBy = "managedGames")
+    private List<Admin> admins = new ArrayList<>();
 
     // Relación 1 partidas son observadas por n jugador
 
-    @OneToMany(mappedBy = "partida")
-    private List<Jugador> espectadores = new ArrayList<>();
+    @OneToMany(mappedBy = "game")
+    private List<Player> watchers = new ArrayList<>();
 
     //Relacion n partida es jugada por n participantes
 
     @ManyToMany
     @JoinTable(
-        name = "partida_participante",
-        joinColumns = @JoinColumn(name = "partida_id"),
-        inverseJoinColumns = @JoinColumn(name = "participante_id")
+        name = "game_activePlayers",
+        joinColumns = @JoinColumn(name = "game_id"),
+        inverseJoinColumns = @JoinColumn(name = "activePlayer_id")
     )
-    private List<Participante> participantes = new ArrayList<>();
+    private List<ActivePlayer> activePlayers = new ArrayList<>();
 
     //Relacion 1 partida es ganada por 1 participante
-    @OneToOne(mappedBy = "partidaGanada")
-    private Participante ganador;
+    @OneToOne(mappedBy = "wonGame")
+    private ActivePlayer winner;
 
     //Relacion 1 partida es creada por 1 participante
-    @OneToOne(mappedBy = "partidaCreada")
-    private Participante creador;
+    @OneToOne(mappedBy = "createdGame")
+    private ActivePlayer creator;
 
     //Relacion 1 partida tiene 3 rondas
-    @OneToMany(mappedBy = "partida")
-    private List<Ronda> rondas = new ArrayList<>();
+    @OneToMany(mappedBy = "game")
+    private List<Round> rounds = new ArrayList<>();
 
     //Relacion 1 partida 1 chat
     @OneToOne
     private Chat chat;
 
 
-    public void agregarRonda (Ronda ronda){
-        if(rondas.size()<3){
-            rondas.add(ronda);
-            ronda.setPartida(this);
+    public void agregarRonda (Round ronda){
+        if(rounds.size()<3){
+            rounds.add(ronda);
+            ronda.setGame(this);
         } else{
             throw new IllegalStateException("Una partida no puede tener más de 3 rondas");
         }
