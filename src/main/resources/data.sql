@@ -1,6 +1,6 @@
 -- One admin user, named admin1 with passwor 4dm1n and authority admin
---INSERT INTO authorities(id,authority) VALUES (1,'ADMIN');
---INSERT INTO appusers(id,username,name,birthDate,password,image,email,authority) VALUES (1,'admin1','Bedilia Estrada','1990-05-12','$2a$10$nMmTWAhPTqXqLDJTag3prumFrAJpsYtroxf0ojesFYq0k4PmcbWUS','https://example.com/img/bedilia.png','bedilia@saboteur.es',1);
+INSERT INTO authorities(id,authority) VALUES (1,'ADMIN');
+INSERT INTO appusers(id,username,name,birthDate,password,image,email,authority) VALUES (1,'admin1','Bedilia Estrada','1990-05-12','$2a$10$nMmTWAhPTqXqLDJTag3prumFrAJpsYtroxf0ojesFYq0k4PmcbWUS','https://example.com/img/bedilia.png','bedilia@saboteur.es',1);
 
 -- Ten player users, named player1 with passwor 0wn3r
 INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');

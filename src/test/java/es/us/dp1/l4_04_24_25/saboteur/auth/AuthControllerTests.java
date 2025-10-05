@@ -91,11 +91,11 @@ class AuthControllerTests {
 		signupRequest = new SignupRequest();
 		signupRequest.setUsername("username");
 		signupRequest.setPassword("password");
-		signupRequest.setAddress("Address");
-		signupRequest.setCity("City");
-		signupRequest.setFirstName("Test");
-		signupRequest.setLastName("Test");
-		signupRequest.setTelephone("999999999");
+		signupRequest.setName("Name");
+		signupRequest.setBirthDate("2000-01-01");
+		signupRequest.setEmail("hola@gmail.com");
+		signupRequest.setImage("path/to/image");
+		
 		signupRequest.setAuthority("OWNER");
 
 		userDetails = new UserDetailsImpl(1, loginRequest.getUsername(), loginRequest.getPassword(),
