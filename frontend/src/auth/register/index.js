@@ -26,10 +26,10 @@ export default function Register() {
     const profileImage = values.image?.[0] || defaultProfileImage;
     const request = {
       ...values,
-      authority,
+      authority:2,
       image: profileImage
     };
-
+    console.log(request);
     // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 
@@ -64,7 +64,7 @@ export default function Register() {
               else {
                 tokenService.setUser(data);
                 tokenService.updateLocalAccessToken(data.token);
-                window.location.href = "/";
+                window.location.href = "/lobby";
               }
             })
             .catch((message) => {

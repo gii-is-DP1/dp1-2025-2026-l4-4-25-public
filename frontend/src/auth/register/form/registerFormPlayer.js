@@ -27,7 +27,7 @@ export const registerFormPlayer= [
   },
   {
     tag: "Date of birth",
-    name: "birthdate",
+    name: "birthDate",
     type: "date",
     defaultValue: "",
     isRequired: true,
@@ -44,9 +44,9 @@ export const registerFormPlayer= [
     {
     tag: "Profile image",
     name: "image",
-    type: "files",
+    type: "text",
     defaultValue: "",
     isRequired: false,
-    validators: [formValidators.notEmptyValidator],
+    validators: [],
   },
 ];
