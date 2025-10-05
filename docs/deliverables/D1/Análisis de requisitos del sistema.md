@@ -105,6 +105,11 @@ Las acciones principales del lobby se encuentran en la zona inferior central, de
 
 
 
+![prueba](D1_images/HU-2.png)
+
+
+
+
 
 ---
 

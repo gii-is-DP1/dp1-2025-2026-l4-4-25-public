@@ -1,0 +1,17 @@
+package es.us.dp1.l4_04_24_25.saboteur.model;
+
+public enum valorEfecto {
+
+    REPARAR_PICO,
+    REPARAR_VAGONETA,
+    REPARAR_LAMPARA,
+    DESTRUYE_PICO,
+    DESTRUYE_VAGONETA,
+    DESTRUYE_LAMPARA,
+    REPARAR_PICO_VAGONETA,
+    REPARAR_PICO_LAMPARA,
+    REPARAR_VAGONETA_LAMPARA,
+    DERRUMBA,
+    DESVELA
+    
+}
