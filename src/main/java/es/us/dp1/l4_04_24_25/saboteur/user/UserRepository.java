@@ -2,7 +2,6 @@ package es.us.dp1.l4_04_24_25.saboteur.user;
 
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -14,6 +13,7 @@ public interface UserRepository extends  CrudRepository<User, Integer>{
 
 	Boolean existsByUsername(String username);
 
+	@Override
 	Optional<User> findById(Integer id);
 
 	@Query("SELECT u FROM User u WHERE u.authority.authority = :auth")

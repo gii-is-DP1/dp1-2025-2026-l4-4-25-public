@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 
 @Table(name = "Chat")
-public class Chat {
+public class Chat extends BaseEntity {
 
     //Relacion 1 chat muchos mensajes
     

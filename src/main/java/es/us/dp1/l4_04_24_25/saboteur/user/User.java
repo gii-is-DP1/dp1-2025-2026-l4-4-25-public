@@ -1,7 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
-import java.util.Date;
-
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,8 +8,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,31 +15,32 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "appusers")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     @NotEmpty
-    private String nombreUsuario;
+    private String username;
 
+	@Column(name = "name", nullable = false)
     @NotEmpty
-    private String nombreApellido;
+    private String name;
 	
-	@Temporal(TemporalType.DATE)
+	// @Temporal(TemporalType.DATE)
     @NotEmpty
-    @Column(name = "fechaNacimiento", nullable = false)
-    private Date fechaNacimiento;
+    @Column(name = "birthdate", nullable = false)
+    private String birthDate;
 
     @NotEmpty
-    @Column(name ="contrasena", nullable = false)
-    private String contrasena;
+    @Column(name ="password", nullable = false)
+    private String password;
 
-	@Column(name = "imagen", nullable = false)
-    private String url;
+	@Column(name = "image", nullable = false)
+    private String image;
 
     @Column(unique=true, nullable = false)
     @NotEmpty
-    private String correoElectronico;
+    private String email;
 
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "authority")

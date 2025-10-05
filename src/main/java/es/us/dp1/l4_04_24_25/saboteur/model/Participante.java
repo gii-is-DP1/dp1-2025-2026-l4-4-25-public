@@ -3,18 +3,16 @@ package es.us.dp1.l4_04_24_25.saboteur.model;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import lombok.Getter;
 import lombok.Setter;
-import jakarta.persistence.JoinColumn;
 
 @Entity
 @Getter

@@ -15,10 +15,6 @@
  */
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
-import java.util.Optional;
-
-import jakarta.validation.Valid;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -28,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import jakarta.validation.Valid;
 
 @Service
 public class UserService {
@@ -49,7 +46,7 @@ public class UserService {
 	@Transactional(readOnly = true)
 	public User findUser(String username) {
 		return userRepository.findByUsername(username)
-				.orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+				.orElseThrow(() -> new ResourceNotFoundException("User", "Username", username));
 	}
 
 	@Transactional(readOnly = true)

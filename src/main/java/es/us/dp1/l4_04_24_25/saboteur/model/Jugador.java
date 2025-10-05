@@ -3,21 +3,22 @@ package es.us.dp1.l4_04_24_25.saboteur.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import es.us.dp1.l4_04_24_25.saboteur.user.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
 
-@MappedSuperclass
 @Getter
 @Setter
-@Table(name = "Jugador")
-public class Jugador extends Usuario{
+@Entity
+@Table(name = "jugadores")
+public class Jugador extends User{
 
     private Integer partidasJugadas = 0;
 
@@ -46,11 +47,11 @@ public class Jugador extends Usuario{
     //Relacion de muchos jugadores a muchos logros
     @ManyToMany
     @JoinTable(
-        name = "logros",
+        name = "logrosAdquiridos",
         joinColumns = @JoinColumn(name = "jugador_id"),
         inverseJoinColumns = @JoinColumn(name = "logro_id")
     )
-    private List<Logro> logros = new ArrayList<>();
+    private List<Logro> logrosAdquiridos = new ArrayList<>();
 
     //Relacion muchos jugadores observan una partida
     @ManyToOne
