@@ -1,28 +1,50 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+import java.util.Date;
+
 import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-
-import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "appusers")
 public class User extends BaseEntity {
+    @Column(unique = true, nullable = false)
+    @NotEmpty
+    private String nombreUsuario;
 
-	@Column(unique = true)
-	String username;
+    @NotEmpty
+    private String nombreApellido;
+	
+	@Temporal(TemporalType.DATE)
+    @NotEmpty
+    @Column(name = "fechaNacimiento", nullable = false)
+    private Date fechaNacimiento;
 
-	String password;
+    @NotEmpty
+    @Column(name ="contrasena", nullable = false)
+    private String contrasena;
+
+	@Column(name = "imagen", nullable = false)
+    private String url;
+
+    @Column(unique=true, nullable = false)
+    @NotEmpty
+    private String correoElectronico;
 
 	@NotNull
 	@ManyToOne(optional = false)
