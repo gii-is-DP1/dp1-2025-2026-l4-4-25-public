@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Alert } from "reactstrap";
+import { Link } from 'react-router-dom';
 import FormGenerator from "../../components/formGenerator/formGenerator";
 import tokenService from "../../services/token.service";
 import "../../static/css/auth/authButton.css";
@@ -26,7 +27,7 @@ export default function Login() {
       .then(function (data) {
         tokenService.setUser(data);
         tokenService.updateLocalAccessToken(data.token);
-        window.location.href = "/dashboard";
+        window.location.href = "/lobby";
       })
       .catch((error) => {         
         setMessage(error);
@@ -41,7 +42,7 @@ export default function Login() {
         ) : (
           <></>
         )}
-
+      
         <h1>Login</h1>
 
         <div className="auth-form-container">
@@ -51,10 +52,17 @@ export default function Login() {
             onSubmit={handleSubmit}
             numberOfColumns={1}
             listenEnterKey
-            buttonText="Login"
+            buttonText="Log in"
             buttonClassName="auth-button"
           />
+         </div>
+          <div className="register-redirect">
+            <p>Not registered yet? {" "}
+               <Link to="/register" className="register-link">
+                Sign up here
+              </Link>
+            </p>
+         </div>
         </div>
-      </div>
     );  
 }

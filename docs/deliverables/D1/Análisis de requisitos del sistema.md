@@ -105,6 +105,11 @@ Las acciones principales del lobby se encuentran en la zona inferior central, de
 
 
 
+![prueba](D1_images/HU-2.png)
+
+
+
+
 
 ---
 
@@ -389,11 +394,10 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 | "Como jugador, quiero que el sistema tenga un modo espectador para ver las partidas de otros jugadores sin jugar, siempre y cuando sea amigo de todos los jugadores de la partida. "
 |----| 
 |![Acceda al MockUp HD-43](D1_images/HU-43.png)|
-|En este caso, la interfaz de usuario permitirá al espectador observar la partida, pero con diferencias notables respecto a los jugadores que participan en ella: La interfaz no hará visible para el espectador los mazos del resto de jugadores, hará que pueda observar el chat pero no escribir en él y, obviamente, no le permitirá interactuar de ninguna forma en la partida (solo visionarla). 
-|
+|En este caso, la interfaz de usuario permitirá al espectador observar la partida, pero con diferencias notables respecto a los jugadores que participan en ella: La interfaz no hará visible para el espectador los mazos del resto de jugadores, hará que pueda observar el chat pero no escribir en él y, obviamente, no le permitirá interactuar de ninguna forma en la partida (solo visionarla).|
 
 
-### HU-44 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90)
+### HU-44 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90))
 | "Como jugador, quiero que el sistema tenga un chat entre los jugadores de la partida durante la misma para poder comentar en él con los demás jugadores suposiciones sobre quién puede/n ser el/los saboteador/es, jugadas colaborativas, etc." 
 |----| 
 |![Acceda al MockUp HD-44](D1_images/HU-44.png)|
@@ -406,7 +410,9 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 ## 4️⃣ Diagrama conceptual del sistema
 
 ![Acceda al Diagrama Conceptual](D1_images/Diagrama_conceptual.svg)
-> [ACCEDA AL ENLACE DE NUESTRO DIAGRAMA EN DRAW.IO PARA UNA MEJOR VISIÓN INTERACTIVA](https://app.diagrams.net/#G1iKzdVrxEugiz7iYnUBxZkghGzazHpXUN#%7B%22pageId%22%3A%22C5RBs43oDa-KdzZeNtuy%22%7D)
+> [ACCEDA AL ENLACE DE NUESTRO DIAGRAMA EN DRAW.IO PARA UNA MEJOR VISIÓN INTERACTIVA](https://drive.google.com/file/d/1iKzdVrxEugiz7iYnUBxZkghGzazHpXUN/view?usp=sharing)
+
+>💡 Para acceder correctamente al enlace es necesario estar registrado en Draw.io. Este enlace llevará a una pantalla de Google Drive en la que habrá que seleccionar la opción "Abrir con - Draw.io"
 
 ## 5️⃣ Reglas de Negocio
 _Hemos decidido **dividir** las Reglas de Negocio por varios bloques para facilitar su comprensión, ya que la mayoría de estas reglas tienen que ver a las reglas del juego de mesa real, pero es importante tener en cuenta las reglas de negocio enfocadas a la aplicación en sí. Los bloques tendrán la nomenclatura "BX" siendo "X" el número del bloque_

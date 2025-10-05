@@ -1,11 +1,63 @@
+body {
+  min-height: 100%;
+  width: 100%;
+  align-items: center;
+  background-image: url('../../images/home_background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .auth-page-container {
   height: 100%;
+  width: 70%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 5rem;
+  justify-content: space-evenly;
+  align-items: center;
+  background-color:rgb(255, 233, 181);
+  padding: 20px;
+
+}
+
+.auth-page-logout-container {
+  margin-top: 0;
+  height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  margin-top: 10rem;
   justify-content: space-evenly;
   align-items: center;
+
+  background-image: url('../../images/cave_image.jpeg'); 
+  background-size: cover;      
+  background-position: center; 
+  background-repeat: no-repeat; 
+}
+.logout-title {
+  color: #b8860b; /* dark goldenrod — dorado oscuro tipo pepita de oro */
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.auth-form-logout-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   
+  align-items: center;       
+  text-align: center;       
+  max-height: 800px;
+  max-width: 500px;
+  height: 90%;
+  width: 90%;
+  /* Fondo dorado translúcido */
+  background: rgba(184, 134, 11, 0.3); /* darkgoldenrod con 30% opacidad */
+  border: 2px solid rgba(218, 165, 32, 0.6); /* borde dorado suave */
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); /* brillo dorado sutil */
 }
 
 .auth-form-container{
@@ -25,6 +77,14 @@
   justify-content: space-evenly;
   align-items: center;
   width: 100%;
+  margin-top: 30px;
+}
+
+.options-row-logout {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  gap: 5rem;
   margin-top: 30px;
 }
 
