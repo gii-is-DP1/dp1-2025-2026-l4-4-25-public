@@ -29,7 +29,6 @@ export default function Register() {
       authority:2,
       image: profileImage
     };
-    console.log(request);
     // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 

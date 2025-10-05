@@ -44,7 +44,7 @@ export const registerFormPlayer= [
     {
     tag: "Profile image",
     name: "image",
-    type: "text",
+    type: "files",
     defaultValue: "",
     isRequired: false,
     validators: [],
