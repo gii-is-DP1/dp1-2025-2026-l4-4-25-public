@@ -31,7 +31,7 @@ public class User extends BaseEntity {
 	// @Temporal(TemporalType.DATE)
     @NotEmpty
     @Column(name = "birthdate", nullable = false)
-    private String birthDate;
+    private Date birthDate;
 
     @NotEmpty
     @Column(name ="password", nullable = false)

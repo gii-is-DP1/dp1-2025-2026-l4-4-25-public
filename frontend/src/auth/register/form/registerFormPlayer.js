@@ -19,7 +19,7 @@ export const registerFormPlayer= [
   },
   {
     tag: "Complete name",
-    name: "nombreApellido",
+    name: "name",
     type: "text",
     defaultValue: "",
     isRequired: true,
@@ -27,7 +27,7 @@ export const registerFormPlayer= [
   },
   {
     tag: "Date of birth",
-    name: "fechaNacimiento",
+    name: "birthdate",
     type: "date",
     defaultValue: "",
     isRequired: true,
@@ -35,7 +35,7 @@ export const registerFormPlayer= [
   },
   {
     tag: "Email",
-    name: "correoElectronico",
+    name: "email",
     type: "email",
     defaultValue: "",
     isRequired: true,
@@ -43,10 +43,10 @@ export const registerFormPlayer= [
   },
     {
     tag: "Profile image",
-    name: "imagen",
+    name: "image",
     type: "files",
     defaultValue: "",
-    isRequired: true,
+    isRequired: false,
     validators: [formValidators.notEmptyValidator],
   },
 ];
