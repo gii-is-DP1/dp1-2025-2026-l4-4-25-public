@@ -6,6 +6,7 @@ import AppNavbar from "./AppNavbar";
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
+import Profile from "./lobbies/profile";
 import Login from "./auth/login";
 import Logout from "./auth/logout";
 import tokenService from "./services/token.service";
@@ -51,7 +52,8 @@ function App() {
     if (role === "PLAYER") {
       ownerRoutes = (
         <>
-          
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
         </>)
     }    
   })

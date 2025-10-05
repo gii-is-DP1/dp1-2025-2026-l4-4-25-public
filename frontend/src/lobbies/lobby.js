@@ -20,6 +20,9 @@ export default function Lobby(){
                 <Link to="/logout">
                     <button className="button-logOut"> ➡️🚪Log Out</button>
                 </Link>
+                <Link to="/profile">
+                    <button className="button-logOut"> 👤Profile</button>
+                </Link>
             </div>
 
             <div className="hero-div">

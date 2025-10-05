@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Alert } from "reactstrap";
+import { Link } from 'react-router-dom';
 import FormGenerator from "../../components/formGenerator/formGenerator";
 import tokenService from "../../services/token.service";
 import "../../static/css/auth/authButton.css";
@@ -54,6 +55,13 @@ export default function Login() {
             buttonText="Log in"
             buttonClassName="auth-button"
           />
+         </div>
+          <div className="register-redirect">
+            <p>Not registered yet? {" "}
+               <Link to="/register" className="register-link">
+                Sign up here
+              </Link>
+            </p>
          </div>
         </div>
     );  

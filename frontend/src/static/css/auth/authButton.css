@@ -71,3 +71,20 @@
   transform: translateY(-1px);
   box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.4) inset;
 }
+
+.register-redirect {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 12px; 
+}
+
+.register-link {
+  color: #007bff;
+  font-weight: 600;
+  font-size: 12px; 
+}
+
+.register-link:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
