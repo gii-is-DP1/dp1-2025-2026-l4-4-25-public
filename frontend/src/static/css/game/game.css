@@ -1,0 +1,182 @@
+.board-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-image:  url('../../images/cave_image.jpeg');
+  color: white;
+  font-family: Arial, sans-serif;
+  overflow: hidden;}
+
+.logo-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;}
+.logo-img {
+  width: 90px;
+  height: 90px;}
+
+.player-cards {
+  position: absolute;
+  top: 10px;
+  left: 30%;
+  transform: translateX(-50%);
+  background: #2e2e2e;
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: left;
+  gap: 15px;}
+.cards-label {
+  font-weight: bold;
+  font-size: 14px;}
+.cards-list {
+  display: flex;
+  gap: 8px;}
+.card-slot {
+  width: 70px;
+  height: 100px;
+  background: #0198fd; /* Aqui iria cada carta....*/
+  border: 2px solid #00ee3b;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;}
+
+.my-role {
+  position: absolute;
+  top: 10px;
+  right: 510px;
+  transform: translateX(-50%);
+  background: #2e2e2e;
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: left;
+  gap: 15px;    
+}
+.logo-img {
+  width: 40px;              
+  height: auto;
+}
+
+.n-deck {
+  position: absolute;
+  top: 75px;
+  right: 650px;
+  transform: translateX(-50%);
+  background: #2e2e2e;
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: left;
+  gap: 15px;    
+}
+
+.time-card {
+  position: absolute;
+  top: 75px;
+  right: 515px;
+  transform: translateX(-50%);
+  background: #2e2e2e;
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: left;
+  gap: 15px;    
+}
+
+.round-box {
+  position: absolute;
+  top: 90px;
+  left: 20px;
+  background: #fdc200;
+  padding: 6px 10px;
+  color: black;
+  font-weight: bold;
+  font-size: 14px;}
+
+.board-grid {
+  position: absolute;
+  top: 150px;
+  left: 40%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(7, 100px);
+  grid-template-rows: repeat(5, 100px);
+  gap: 4px;
+  background: #2a2a2a;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #555;}
+.board-cell {
+  background: #555;
+  border: 1px solid #777;
+  border-radius: 5px;}
+
+.turn-box {
+  position: absolute;
+  bottom: 40px;
+  left: 10px;
+  color: black;
+  background: #fdc200;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: bold;
+  font-size: 12px;}
+
+.chat-box {
+  top:475px;
+  position: absolute;
+  bottom: 40px;
+  right: 10px;
+  width: 260px;
+  color: black;
+  height: 280px;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;}
+.chat-header {
+  text-align: center;
+  background: #ffffff;
+  padding: 6px;
+  color: black;
+  font-weight: bold;
+  border-bottom: 1px solid #ffffff;}
+.chat-messages {
+  flex: 1;
+  padding: 8px;
+  color: black;
+  font-size: 12px;
+  overflow-y: auto;}
+.chat-input {
+  border-top: 1px solid #ffffff;
+  padding: 6px;}
+.chat-input input {
+  width: 100%;
+  padding: 5px;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  color: black;
+  font-size: 12px;}
+
+
+.player1 { color: #ffcc00;}
+.player2 { color: #00aaff;}
+.player3 { color: #44ff44;}
+.player4 { color: #ff4444;}
+.player5 { color: #ff44e6;}
+.player6 { color: #9500da;}
+.player7 { color: #f8b600;}
+.player8 { color: #0011ff;}
+.player9 { color: #00a03d;}
+.player10 { color: #380d0d;}
+.player11 { color: #929b1e;}
+.player12 { color: #4c96db; }

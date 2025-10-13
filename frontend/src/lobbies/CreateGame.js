@@ -66,7 +66,9 @@ const CreateGame = () => {
 
         <div className="card-footer">
           <button>
-             ▶️START
+             <Link to="/board">
+                <button className="button-small">▶️START</button>
+              </Link>
           </button>
           <button>
              LINK
