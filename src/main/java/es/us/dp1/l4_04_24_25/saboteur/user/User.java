@@ -1,11 +1,8 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
+
 import java.sql.Date;
 
-import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
-=======
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,10 +10,7 @@ import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import jakarta.persistence.CascadeType;
->>>>>>> Stashed changes
-=======
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
->>>>>>> f054c2d60fe73883506daf5bb61e8ad48b16948e
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
