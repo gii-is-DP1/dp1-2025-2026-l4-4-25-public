@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import '../App.css';
-import '../static/css/home/home.css';
+import '../../App.css';
+import '../../static/css/lobbies/profile.css';
 import { Link } from 'react-router-dom';
-import tokenService from '../services/token.service';
+import tokenService from '../../services/token.service';
+import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
+import getIconImage from "../../util/getIconImage.js";
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -63,14 +65,16 @@ export default function Profile() {
             <div className="profile-overlay">
                 <div className="profile-header">
                     <img
-                        src="/logo1-recortado.png" //cambiar por user?.image || el default image que haya
+                        src= {user?.image || defaultProfileAvatar}
                         alt="Avatar"
                         className="profile-avatar"
                     />
                     <div className="profile-info">
                         <h2>{user?.username || 'Cargando...'}</h2>
                         <div className="profile-buttons">
-                            <h2>Joined in {user ? user.birthDate : ''}</h2>
+                            <h2>Joined in {user?.birthDate || ''}</h2>
+                        </div>
+                        <div className="profile-buttons">
                             <Link to="/profile/edit">
                                 <button className="button-small">✏️ Edit Profile</button>
                             </Link>

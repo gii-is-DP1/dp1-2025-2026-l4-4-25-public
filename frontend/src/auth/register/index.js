@@ -5,7 +5,7 @@ import FormGenerator from "../../components/formGenerator/formGenerator";
 import { registerFormPlayer } from "./form/registerFormPlayer";
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
-import defaultProfileImage from "../../static/images/default_profile.png"
+import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 
 
 export default function Register() {
@@ -24,7 +24,7 @@ export default function Register() {
   function handleSubmit({ values }) {
 
     if(!registerFormRef.current.validate()) return;
-    const profileImage = values.image?.[0] || defaultProfileImage;
+    const profileImage = values.image?.[0] || defaultProfileAvatar;
     const request = {
       ...values,
       image: profileImage,

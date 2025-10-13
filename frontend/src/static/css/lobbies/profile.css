@@ -1,0 +1,71 @@
+
+.profile-overlay {
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 90%;
+  height: 80%;
+  background-color: rgba(255, 230, 100, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 30px rgba(122, 110, 63, 0.5);
+  backdrop-filter: blur(40px);
+  text-align: center;
+}
+
+/* Cabecera del perfil: avatar + info */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Imagen de perfil */
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #f1c40f;
+  object-fit: cover;
+}
+
+/* Información del usuario */
+.profile-info h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* Contenedor de botones (fecha + editar) */
+.profile-buttons {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Botón de editar perfil */
+.button-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: none;
+  background-color: #f1c40f;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button-small:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(240, 199, 38, 0.8);
+}

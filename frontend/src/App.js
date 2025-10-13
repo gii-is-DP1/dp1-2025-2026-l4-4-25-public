@@ -6,7 +6,7 @@ import AppNavbar from "./AppNavbar";
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
-import Profile from "./lobbies/profile";
+import Profile from "./lobbies/profiles/profile";
 import Login from "./auth/login";
 import Logout from "./auth/logout";
 import tokenService from "./services/token.service";
