@@ -19,7 +19,8 @@ package es.us.dp1.l4_04_24_25.saboteur.util;
 import java.util.Collection;
 
 import org.springframework.orm.ObjectRetrievalFailureException;
-import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
+
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 
 /**
  * Utility methods for handling entities. Separate from the BaseEntity class mainly

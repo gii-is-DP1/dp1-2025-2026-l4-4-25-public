@@ -1,5 +1,8 @@
-package es.us.dp1.l4_04_24_25.saboteur.model;
+package es.us.dp1.l4_04_24_25.saboteur.round;
 
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.board.Board;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import java.time.Duration;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;

@@ -1,4 +1,5 @@
-package es.us.dp1.l4_04_24_25.saboteur.model;
+package es.us.dp1.l4_04_24_25.saboteur.achievements;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,10 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.model.Admin;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+
 
 @Entity
 @Getter

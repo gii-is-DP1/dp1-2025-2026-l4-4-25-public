@@ -1,5 +1,7 @@
-package es.us.dp1.l4_04_24_25.saboteur.model;
+package es.us.dp1.l4_04_24_25.saboteur.action;
 
+import es.us.dp1.l4_04_24_25.saboteur.card.Card;
+import es.us.dp1.l4_04_24_25.saboteur.card.effectValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
