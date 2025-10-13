@@ -14,6 +14,7 @@ import UserListAdmin from "./admin/users/UserListAdmin";
 import UserEditAdmin from "./admin/users/UserEditAdmin";
 import Lobby from "./lobbies/lobby"; 
 import CreateGame from "./lobbies/CreateGame";
+import ListGames from "./lobbies/ListGames";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -73,6 +74,7 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
+        <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
       </>
     )
   }

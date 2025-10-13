@@ -1,0 +1,59 @@
+.home-page-lobby-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-image: url('../../images/home_background.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.listgames-top-image {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  max-width: 800px;
+  height: auto;
+  z-index: 9999;
+  object-fit: contain;
+}
+
+.hero-div {
+  z-index: 10;
+}
+
+.listgames-card {
+  width: 700px;
+  height: 500px;
+  background-color: #FFF8E1;
+  right: 50%;
+  border: 2px solid #333;
+  align-self: center;
+  border-radius: 10px;
+}
+
+.top-right-lobby-buttons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.top-right-lobby-buttons button {
+  background: #f1c40f;
+  color: #000;
+  padding: 0.8rem 1.5rem;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.top-right-lobby-buttons button:hover {
+  transform: scale(1.1);
+}
