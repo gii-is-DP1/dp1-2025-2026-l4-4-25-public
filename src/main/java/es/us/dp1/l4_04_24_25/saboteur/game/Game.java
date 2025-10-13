@@ -12,6 +12,8 @@ import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -32,6 +34,7 @@ public class Game extends BaseEntity{
     private Duration time = Duration.ZERO;
 
     @Column(name = "gameStatus", nullable = false)
+    @Enumerated(EnumType.STRING)
     private gameStatus gameStatus;
 
     @Column(unique = true, nullable = false)
