@@ -3,6 +3,8 @@ package es.us.dp1.l4_04_24_25.saboteur.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
