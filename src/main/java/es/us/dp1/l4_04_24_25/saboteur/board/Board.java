@@ -1,5 +1,8 @@
-package es.us.dp1.l4_04_24_25.saboteur.model;
+package es.us.dp1.l4_04_24_25.saboteur.board;
 
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
+import es.us.dp1.l4_04_24_25.saboteur.square.Square;
 import java.util.ArrayList;
 import java.util.List;
 
