@@ -47,6 +47,6 @@ export const registerFormPlayer= [
     type: "files",
     defaultValue: "",
     isRequired: false,
-    validators: [],
+    validators: []
   },
 ];

@@ -1,4 +1,5 @@
-package es.us.dp1.l4_04_24_25.saboteur.model;
+package es.us.dp1.l4_04_24_25.saboteur.achievements;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
+<<<<<<< HEAD:src/main/java/es/us/dp1/l4_04_24_25/saboteur/model/Achievement.java
 <<<<<<< Updated upstream:src/main/java/es/us/dp1/l4_04_24_25/saboteur/model/Achievement.java
 =======
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
@@ -21,6 +23,12 @@ import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 
 >>>>>>> Stashed changes:src/main/java/es/us/dp1/l4_04_24_25/saboteur/achievements/Achievement.java
+=======
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.model.Admin;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+
+>>>>>>> f054c2d60fe73883506daf5bb61e8ad48b16948e:src/main/java/es/us/dp1/l4_04_24_25/saboteur/achievements/Achievement.java
 
 @Entity
 @Getter

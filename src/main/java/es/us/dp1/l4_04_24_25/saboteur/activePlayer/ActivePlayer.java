@@ -1,8 +1,13 @@
-package es.us.dp1.l4_04_24_25.saboteur.model;
+package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.message.Message;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.square.Square;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
