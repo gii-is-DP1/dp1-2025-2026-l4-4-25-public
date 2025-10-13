@@ -3,8 +3,6 @@ package es.us.dp1.l4_04_24_25.saboteur.configuration;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +10,10 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.support.DefaultConversionService;
-import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
 import org.springframework.stereotype.Component;
 
-import es.us.dp1.l4_04_24_25.saboteur.model.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import jakarta.persistence.EntityManager;
 
 @Component
 public final class GenericIdToEntityConverter implements ConditionalGenericConverter {
