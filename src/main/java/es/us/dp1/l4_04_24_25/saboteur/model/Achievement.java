@@ -13,6 +13,14 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
+<<<<<<< Updated upstream:src/main/java/es/us/dp1/l4_04_24_25/saboteur/model/Achievement.java
+=======
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.user.User;
+
+>>>>>>> Stashed changes:src/main/java/es/us/dp1/l4_04_24_25/saboteur/achievements/Achievement.java
 
 @Entity
 @Getter
@@ -34,11 +42,11 @@ public class Achievement extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
-    private Admin creator;
+    private User creator;
 
     //Relacion muchos logros a muchos administradores que lo gestionan
     @ManyToMany(mappedBy = "managedAchievements")
-    private List<Admin> admins =  new ArrayList<>();
+    private List<User> admins =  new ArrayList<>();
     
     //Relacion muchos logros a muchos jugadores que lo han adquirido
     @ManyToMany(mappedBy = "accquiredAchievements")

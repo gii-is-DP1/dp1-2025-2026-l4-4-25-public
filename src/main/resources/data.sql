@@ -6,6 +6,8 @@ INSERT INTO appusers(id,username,name,birthDate,password,image,email,authority) 
 INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
 INSERT INTO appusers(id,username,name,birthDate,password,image,email,authority) VALUES (4,'Carlosbox2k','Carlos Borrego Ortiz','2005-02-04','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/carlos.png', 'carlos@saboteur.es', 2);
 INSERT INTO appusers(id,username,name,birthDate,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2);
+
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds) values (null, 'CREATED', 1, false, 3, 'link', 0);
 --INSERT INTO appusers(id,nombreUsuario,nombreApellido,fechaNacimento,contrasena,url,correoElectronico,authority) VALUES (6,'player3','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
 --INSERT INTO appusers(id,nombreUsuario,nombreApellido,fechaNacimento,contrasena,url,correoElectronico,authority) VALUES (7,'player4','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
 --INSERT INTO appusers(id,nombreUsuario,nombreApellido,fechaNacimento,contrasena,url,correoElectronico,authority) VALUES (8,'player5','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);

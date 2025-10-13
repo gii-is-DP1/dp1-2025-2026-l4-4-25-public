@@ -20,20 +20,20 @@ public class Tunnel extends Card {
 
 	@Column(name = "up", nullable = false)
 	@NotEmpty
-	protected boolean up;
+	protected boolean up = false;
 
     
 	@Column(name = "down", nullable = false)
 	@NotEmpty
-	protected boolean down;
+	protected boolean down = false;
 
     @Column(name = "right", nullable = false)
 	@NotEmpty
-	protected boolean right;
+	protected boolean right = false;
 
     @Column(name = "left", nullable = false)
 	@NotEmpty
-	protected boolean left;
+	protected boolean left = false;
 
    
 
