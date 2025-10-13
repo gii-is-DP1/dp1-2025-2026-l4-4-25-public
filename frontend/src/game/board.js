@@ -74,7 +74,6 @@ export default function Board() {
         🔴 · TURNO DE CARLOSXX23
       </div>
 
- {/* Chat funcional */}
       <div className="chat-box">
         <div className="chat-header">TEXT CHAT</div>
 
