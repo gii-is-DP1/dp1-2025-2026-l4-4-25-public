@@ -45,6 +45,11 @@ public class User extends BaseEntity {
     @Column(name = "birthdate", nullable = false)
     private String birthDate;
 
+
+    @NotEmpty
+    @Column(name = "joined", nullable = false)
+    private String joined;
+
     @NotEmpty
     @Column(name ="password", nullable = false)
     private String password;
