@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../../App.css';
 import '../../static/css/lobbies/profile.css';
 import { Link } from 'react-router-dom';
-import tokenService from '../../services/token.service';
+import tokenService from '../../services/token.service.js';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 import getIconImage from "../../util/getIconImage.js";
 
@@ -75,7 +75,7 @@ export default function Profile() {
                             <h2>Joined in {user?.birthDate || ''}</h2>
                         </div>
                         <div className="profile-buttons">
-                            <Link to="/profile/edit">
+                            <Link to="/profile/editProfile">
                                 <button className="button-small">✏️ Edit Profile</button>
                             </Link>
                         </div>
