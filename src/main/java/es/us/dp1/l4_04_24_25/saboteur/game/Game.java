@@ -7,7 +7,26 @@ import java.util.List;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
-import es.us.dp1.l4_04_24_25.saboteur.model.Admin;
+
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
+import es.us.dp1.l4_04_24_25.saboteur.user.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import jakarta.persistence.Column;
@@ -29,17 +48,27 @@ import lombok.Setter;
 @Table(name = "Game")
 public class Game extends BaseEntity{
 
+    @jakarta.persistence.Convert(converter = DurationSecondsConverter.class)
+    @Column(name = "time_seconds", nullable = false)
     private Duration time = Duration.ZERO;
 
-    @Column(name = "gameStatus", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "game_status", nullable = false)
     private gameStatus gameStatus;
 
     @Column(unique = true, nullable = false)
     private String link;
 
+    @Column(nullable = false)
+    private boolean isPrivate;
+
+    @Column(nullable = false)
+
+    private Integer maxPlayers = 3;
+
     // Relacion varias partidas son gestionadas por varios administradores
     @ManyToMany(mappedBy = "managedGames")
-    private List<Admin> admins = new ArrayList<>();
+    private List<User> admins = new ArrayList<>();
 
     // Relación 1 partidas son observadas por n jugador
 
@@ -80,6 +109,11 @@ public class Game extends BaseEntity{
         } else{
             throw new IllegalStateException("Una partida no puede tener más de 3 rondas");
         }
+    }
+
+    
+    public boolean canAddPlayer(){
+        return this.activePlayers.size() < this.maxPlayers;
     }
 
 }
