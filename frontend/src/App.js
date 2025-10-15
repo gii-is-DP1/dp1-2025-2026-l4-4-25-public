@@ -6,13 +6,14 @@ import AppNavbar from "./AppNavbar";
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
-import Profile from "./lobbies/profile";
+import Profile from "./lobbies/profiles/Profile";
+import EditProfile from "./lobbies/profiles/EditProfile"; 
 import Login from "./auth/login";
 import Logout from "./auth/logout";
 import tokenService from "./services/token.service";
 import UserListAdmin from "./admin/users/UserListAdmin";
 import UserEditAdmin from "./admin/users/UserEditAdmin";
-import Lobby from "./lobbies/lobby"; 
+import Lobby from "./lobbies/Lobby"; 
 import CreateGame from "./lobbies/CreateGame";
 import ListGames from "./lobbies/ListGames";
 
@@ -48,7 +49,9 @@ function App() {
       adminRoutes = (
         <>
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
-          <Route path="/users/:username" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />          
+          <Route path="/users/:username" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/editProfile" element={<EditProfile />} />      
         </>)
     }
     if (role === "PLAYER") {
@@ -56,6 +59,8 @@ function App() {
         <>
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/editProfile" element={<EditProfile />} />
+
         </>)
     }    
   })

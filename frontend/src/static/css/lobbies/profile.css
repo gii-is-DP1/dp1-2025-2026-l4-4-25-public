@@ -1,0 +1,124 @@
+
+.profile-overlay {
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 90%;
+  height: 80%;
+  background-color: rgba(255, 230, 100, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 30px rgba(122, 110, 63, 0.5);
+  backdrop-filter: blur(40px);
+  text-align: center;
+}
+
+/* Cabecera del perfil: avatar + info */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Imagen de perfil */
+.profile-avatar {
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  border: 3px solid #f1c40f;
+  object-fit: cover;
+}
+
+/* Información del usuario */
+.profile-info h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* Contenedor de botones (fecha + editar) */
+.profile-buttons {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Botón de editar perfil */
+.button-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: none;
+  background-color: #f1c40f;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button-small:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(240, 199, 38, 0.8);
+}
+
+.edit-profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem; /* separación entre columnas */
+  margin-top: 6rem; /* para dejar espacio al logo */
+}
+
+.edit-profile-left,
+.edit-profile-right {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 2rem;
+  box-sizing: border-box; 
+}
+
+.edit-profile-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+}
+
+.edit-profile-right {
+  width: 50%; /* donde irá el formulario */
+}
+
+.profile-image-preview {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin-top: 1rem;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Contenedor de dropdown y input */
+.profile-image-options {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center; 
+    gap: 1rem; 
+    flex-wrap: wrap; 
+}
+
+.profile-image-options input[type="file"] {
+  width: 80%; /* ajustable, para que no se salga */
+}
+
+
+

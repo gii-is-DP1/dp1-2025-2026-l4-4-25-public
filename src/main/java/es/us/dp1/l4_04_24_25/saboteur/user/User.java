@@ -5,7 +5,7 @@ import java.sql.Date;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.time.LocalDateTime; 
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
@@ -44,6 +44,10 @@ public class User extends BaseEntity {
     @NotEmpty
     @Column(name = "birthdate", nullable = false)
     private String birthDate;
+
+
+    @Column(name = "joined", nullable = false, updatable = false)
+    private LocalDateTime joined = LocalDateTime.now(); 
 
     @NotEmpty
     @Column(name ="password", nullable = false)

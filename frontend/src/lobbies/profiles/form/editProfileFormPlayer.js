@@ -1,6 +1,6 @@
 import { formValidators } from "../../../validators/formValidators";
 
-export const registerFormPlayer= [
+export const editProfileFormPlayer= [
   {
     tag: "Username",
     name: "username",
@@ -40,15 +40,5 @@ export const registerFormPlayer= [
     defaultValue: "",
     isRequired: true,
     validators: [formValidators.notEmptyValidator],
-  },
-  /*
-    {
-    tag: "Profile image",
-    name: "image",
-    type: "files",
-    defaultValue: "",
-    isRequired: false,
-    validators: []
-  },
-  */
+  }
 ];
