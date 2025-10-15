@@ -4,9 +4,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
@@ -25,13 +24,13 @@ public class GameService {
         return game;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Game findGame(Integer id) {
         return gameRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Game","id",id));
         
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Iterable<Game> findAll(){
         return gameRepository.findAll();
     }
@@ -51,27 +50,27 @@ public class GameService {
         gameRepository.delete(toDelete);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Game findByLink(String link) {
         return gameRepository.findByLink(link).orElseThrow(()-> new ResourceNotFoundException("Game","link",link));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Game findByCreator(String creatorUsername) {
         return gameRepository.findByCreatorUsername(creatorUsername).orElseThrow(()-> new ResourceNotFoundException("Game","creator username",creatorUsername));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Iterable<Game> findAllByAdminUsername(String adminUsername) {
         return gameRepository.findAllByAdminUsername(adminUsername);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Iterable<Game> findAllPublicGames() {
         return gameRepository.findAllPublicGames();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Iterable<Game> findAllPrivateGames() {
         return gameRepository.findAllPrivateGames();
     }

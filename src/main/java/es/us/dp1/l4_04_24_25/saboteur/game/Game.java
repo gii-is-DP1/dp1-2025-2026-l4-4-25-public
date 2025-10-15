@@ -4,33 +4,23 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
-
+import es.us.dp1.l4_04_24_25.saboteur.chat.ChatDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.chat.ChatSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.Column;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
-import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
-import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
-import es.us.dp1.l4_04_24_25.saboteur.player.Player;
-import es.us.dp1.l4_04_24_25.saboteur.round.Round;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -77,6 +67,8 @@ public class Game extends BaseEntity{
 
     //Relacion n partida es jugada por n participantes
 
+    @JsonSerialize(contentUsing  = ActivePlayerSerializer.class)
+    @JsonDeserialize(contentUsing = ActivePlayerDeserializer.class)
     @ManyToMany
     @JoinTable(
         name = "game_activePlayers",
@@ -86,9 +78,13 @@ public class Game extends BaseEntity{
     private List<ActivePlayer> activePlayers = new ArrayList<>();
 
     //Relacion 1 partida es ganada por 1 participante
+    @JsonSerialize(using = ActivePlayerSerializer.class)
+    @JsonDeserialize(using = ActivePlayerDeserializer.class)
     @OneToOne(mappedBy = "wonGame")
     private ActivePlayer winner;
 
+    @JsonSerialize(using = ActivePlayerSerializer.class)
+    @JsonDeserialize(using = ActivePlayerDeserializer.class)
     //Relacion 1 partida es creada por 1 participante
     @OneToOne(mappedBy = "createdGame")
     private ActivePlayer creator;
@@ -98,6 +94,8 @@ public class Game extends BaseEntity{
     private List<Round> rounds = new ArrayList<>();
 
     //Relacion 1 partida 1 chat
+    @JsonDeserialize(using = ChatDeserializer.class)
+    @JsonSerialize(using = ChatSerializer.class)
     @OneToOne
     private Chat chat;
 

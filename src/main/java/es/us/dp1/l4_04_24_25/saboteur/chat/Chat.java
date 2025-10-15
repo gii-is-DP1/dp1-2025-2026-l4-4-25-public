@@ -22,11 +22,13 @@ public class Chat extends BaseEntity {
 
     //Relacion 1 chat muchos mensajes
     
+   
     @OneToMany(mappedBy = "chat")
     private List<Message> messages = new ArrayList<>();
 
     //Relacion 1 chat 1 partida
 
+    
     @OneToOne(mappedBy = "chat")
     private Game game;
 }
