@@ -37,6 +37,12 @@ public class Player extends User{
     @Column(name = "acquiredGoldNuggets", nullable = false)
     private Integer acquiredGoldNuggets = 0;
 
+    @Column(name = "peopleDamaged", nullable = false)
+    private Integer peopleDamaged = 0;
+
+    @Column(name = "peopleRepaired", nullable = false)
+    private Integer peopleRepaired = 0;
+
     @Column(name = "isWatcher", nullable = false)
     private boolean isWatcher;
 

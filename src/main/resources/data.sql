@@ -11,7 +11,7 @@ INSERT INTO chat (id) VALUES (1);
 
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds) values (1, 'CREATED', 1, false, 3, 'link', 0);
 
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher) VALUES (4, 0, 0, 0, 0, 0, false);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 0, 0, 0, 0, 0, false, 5, 3);
 
 
 

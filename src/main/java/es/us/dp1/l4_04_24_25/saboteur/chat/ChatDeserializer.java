@@ -1,4 +1,4 @@
-package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
+package es.us.dp1.l4_04_24_25.saboteur.chat;
 
 import java.io.IOException;
 
@@ -11,18 +11,18 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 @Component
-public class ActivePlayerDeserializer extends JsonDeserializer<ActivePlayer>{
+public class ChatDeserializer extends JsonDeserializer<Chat>{
 
     @Autowired
-    private ActivePlayerService activePlayerService;
+    private ChatService chatService;
 
     @Override
-    public ActivePlayer deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException{
-        ActivePlayer result = null;
+    public Chat deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException{
+        Chat result = null;
 
         try{
-            String activePlayerUsername = p.getText();
-            result = this.activePlayerService.findByUsername(activePlayerUsername);
+            Integer chatId = p.getIntValue();
+            result = chatService.findChat(chatId);
 
         } catch (Exception e){
             throw new IOException ("active player not found");

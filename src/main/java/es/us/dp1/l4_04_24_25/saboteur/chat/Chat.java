@@ -3,8 +3,6 @@ package es.us.dp1.l4_04_24_25.saboteur.chat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.message.Message;

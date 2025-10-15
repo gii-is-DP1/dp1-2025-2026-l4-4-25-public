@@ -1,7 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.message;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -10,6 +8,8 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
+import es.us.dp1.l4_04_24_25.saboteur.chat.ChatDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.chat.ChatSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
@@ -37,6 +37,8 @@ public class Message extends BaseEntity{
     private ActivePlayer activePlayer;
 
     //Relación muchos mensajes 1 chat
+    @JsonDeserialize(using = ChatDeserializer.class)
+    @JsonSerialize(using = ChatSerializer.class)
     @ManyToOne(optional = false)
     private Chat chat;
 
