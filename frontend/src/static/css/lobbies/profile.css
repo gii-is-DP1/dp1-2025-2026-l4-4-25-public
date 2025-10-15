@@ -29,8 +29,8 @@
 
 /* Imagen de perfil */
 .profile-avatar {
-  width: 100px;
-  height: 100px;
+  width: 230px;
+  height: 230px;
   border-radius: 50%;
   border: 3px solid #f1c40f;
   object-fit: cover;
@@ -69,3 +69,56 @@
   transform: scale(1.05);
   box-shadow: 0 0 10px rgba(240, 199, 38, 0.8);
 }
+
+.edit-profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem; /* separación entre columnas */
+  margin-top: 6rem; /* para dejar espacio al logo */
+}
+
+.edit-profile-left,
+.edit-profile-right {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 2rem;
+  box-sizing: border-box; 
+}
+
+.edit-profile-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+}
+
+.edit-profile-right {
+  width: 50%; /* donde irá el formulario */
+}
+
+.profile-image-preview {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin-top: 1rem;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Contenedor de dropdown y input */
+.profile-image-options {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center; 
+    gap: 1rem; 
+    flex-wrap: wrap; 
+}
+
+.profile-image-options input[type="file"] {
+  width: 80%; /* ajustable, para que no se salga */
+}
+
+
+

@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import getIconImage from "../../util/getIconImage"; 
-import { IoMdArrowDropdown} from "react-icons/io";
+// import { IoMdArrowDropdown} from "react-icons/io"; // Para hacer más vistosa la flecha del dropdown
 
 export default function Register() {
   let [authority, setAuthority] = useState(null);

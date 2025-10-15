@@ -13,8 +13,8 @@ export default function Profile() {
         username: "",
         password: "",
         email: "",
-        dateOfBirth: "",
-        profilePicture: "",
+        birthdate: "",
+        image: "",
         status: "",
         joined: ""
     });
@@ -72,14 +72,14 @@ export default function Profile() {
             <div className="profile-overlay">
                 <div className="profile-header">
                     <img
-                        src= {profile?.profilePicture || defaultProfileAvatar}
+                        src= {profile?.image || defaultProfileAvatar}
                         alt="Avatar"
                         className="profile-avatar"
                     />
                     <div className="profile-info">
                         <h2>{profile?.username || 'Cargando...'}</h2>
                         <div className="profile-buttons">
-                            <h2>Joined in {profile?.joined || ''}</h2>
+                            <h2>Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</h2>
                         </div>
                         <div className="profile-buttons">
                             <Link to="/profile/editProfile">
