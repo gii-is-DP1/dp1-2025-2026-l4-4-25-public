@@ -22,14 +22,19 @@ import lombok.Setter;
 @Table(name = "Player")
 public class Player extends User{
 
+    @Column(name = "playedGames", nullable = false)
     private Integer playedGames = 0;
 
+    @Column(name = "wonGames", nullable = false)
     private Integer wonGames = 0;
 
+    @Column(name = "destroyedPaths", nullable = false)
     private Integer destroyedPaths = 0;
 
+    @Column(name = "builtPaths", nullable = false)
     private Integer builtPaths = 0;
 
+    @Column(name = "acquiredGoldNuggets", nullable = false)
     private Integer acquiredGoldNuggets = 0;
 
     @Column(name = "isWatcher", nullable = false)
