@@ -85,7 +85,7 @@ public class PlayerRestController {
 
     @DeleteMapping(value = "{playerId}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<MessageResponse> delete(@PathVariable("playerId") int id) {
+    public ResponseEntity<MessageResponse> delete(@PathVariable("playerId") Integer id) {
         RestPreconditions.checkNotNull(playerService.findPlayer(id), "Player", "ID", id);
         playerService.deletePlayer(id);
         return new ResponseEntity<>(new MessageResponse("Player deleted!"), HttpStatus.OK);
