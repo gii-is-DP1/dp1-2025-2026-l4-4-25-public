@@ -9,38 +9,45 @@ import getIconImage from "../../util/getIconImage.js";
 const jwt = tokenService.getLocalAccessToken();
 
 export default function Profile() {
-    const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState({
+        username: "",
+        password: "",
+        email: "",
+        dateOfBirth: "",
+        profilePicture: "",
+        status: "",
+        joined: ""
+    });
 
     useEffect(() => {
-        // 1. Obtener los datos del usuario guardados en el login
-        const loggedInUser = tokenService.getUser();
-        if (!loggedInUser || !loggedInUser.id) {
-            console.error("No se encontró el ID del usuario.");
-            return;
-        }
+        const fetchProfile = async () => {
+            try {
+                const jwt = tokenService.getUser();
+                if (!jwt || !jwt.id){
+                    throw new Error("User ID not found")
+                }
+                
+                const userId = jwt.id;
+                const response = await fetch(`/api/v1/users/${userId}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`,
+                    },
+                });
+                const data = await response.json();
+                setProfile(data);
+                console.log(data);
+                //setOriginalUsername(data.username);
+                //setOriginalPassword(data.password);
 
-        // 2. Usar el ID para llamar al endpoint correcto
-        fetch(`/api/v1/users/${loggedInUser.id}`, {
-            headers: {
-                'Authorization': `Bearer ${jwt}`
+            } catch(error){
+                console.error("Error fetching profile:", error);
             }
-        })
-        .then(function (response) {
-            if (response.status === 200) {
-                return response.json();
-            } else {
-                return Promise.reject('Error fetching user data');
-            }
-        })
-        .then(function (data) {
-            setUser(data);
-            console.log("✅ Usuario cargado:", data);
-        })
-        .catch(function (error) {
-            console.error('There was a problem with the fetch operation:', error);
-        });
-        
-    }, []);
+        };
+
+        fetchProfile();
+    }, []); 
 
     return (
         <div className="home-page-container">
@@ -65,14 +72,14 @@ export default function Profile() {
             <div className="profile-overlay">
                 <div className="profile-header">
                     <img
-                        src= {user?.image || defaultProfileAvatar}
+                        src= {profile?.profilePicture || defaultProfileAvatar}
                         alt="Avatar"
                         className="profile-avatar"
                     />
                     <div className="profile-info">
-                        <h2>{user?.username || 'Cargando...'}</h2>
+                        <h2>{profile?.username || 'Cargando...'}</h2>
                         <div className="profile-buttons">
-                            <h2>Joined in {user?.birthDate || ''}</h2>
+                            <h2>Joined in {profile?.joined || ''}</h2>
                         </div>
                         <div className="profile-buttons">
                             <Link to="/profile/editProfile">
