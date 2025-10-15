@@ -26,16 +26,6 @@
   z-index: 10;
 }
 
-.listgames-card {
-  width: 700px;
-  height: 500px;
-  background-color: #FFF8E1;
-  right: 50%;
-  border: 2px solid #333;
-  align-self: center;
-  border-radius: 10px;
-}
-
 .top-right-lobby-buttons {
   position: absolute;
   top: 10px;
@@ -56,4 +46,49 @@
 
 .top-right-lobby-buttons button:hover {
   transform: scale(1.1);
+}
+
+.listgames-card {
+  width: 700px;
+  height: 500px;
+  background-color: #FFF8E1;
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: 20px;
+  overflow-y: auto; /* Para permitir el scroll si hay muchas partidas */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Espacio entre tarjetas */
+}
+
+.game-card {
+  background-color: #FDF5E6;
+  border: 1px solid #D2B48C;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.game-card h3 {
+  margin-top: 0;
+  color: #8B4513;
+}
+
+.game-card p {
+  margin: 5px 0;
+}
+
+.button-join-game {
+  background-color: #f1c40f;
+  color: #000;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.button-join-game:hover {
+  transform: scale(1.05);
 }

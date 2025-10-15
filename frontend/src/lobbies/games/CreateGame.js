@@ -1,19 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import tokenService from '../services/token.service';
+import tokenService from '../../services/token.service';
 import '../static/css/lobbies/CreateGame.css'; 
 
 const CreateGame = () => {
   const [numPlayers, setnumPlayers] = useState('3');
   const [isPrivate, setisPrivate] = useState(false);
+  const [player, setPlayer] = useState()
   const navigate = useNavigate(); 
+  const jwt = tokenService.getLocalAccessToken();
+
+  useEffect(() => {
+    const fetchPlayer = async () => {
+          try {
+            const loggedInUser = tokenService.getUser();
+          if (!loggedInUser || !loggedInUser.id) {
+            console.error("No se encontró el ID del usuario.");
+            return;
+        }
+            const response = await fetch(`/api/v1/users/${loggedInUser.id}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${jwt}`
+              }
+            });
+            console.log(response);
+            if (response.ok) {
+              const data = await response.json();
+              setPlayer(data);
+            } else {
+              console.error('Respuesta no OK:', response.status);
+              alert('Error al obtener la información del jugador.');
+            }
+          } catch (error) {
+            console.error('Hubo un problema con la petición fetch:', error);
+            alert('Error de red. No se pudo conectar con el servidor.');
+          }
+        };
+        fetchPlayer()
+        console.log(player)
+        
+
+  },[jwt])
 
   async function handleSubmit() {
+
+    
     
     const request = {
       maxPlayers: numPlayers, 
       private: isPrivate,                 
-      gameStatus: "CREATED",                      
+      gameStatus: "CREATED",  
+      creator: player                 
     };
 
     console.log('Enviando request:', request);
@@ -45,6 +84,8 @@ const CreateGame = () => {
       console.error('Hubo un problema con la petición fetch:', error);
       alert('Error de red. No se pudo conectar con el servidor.');
     }
+
+    
    
     
   }
