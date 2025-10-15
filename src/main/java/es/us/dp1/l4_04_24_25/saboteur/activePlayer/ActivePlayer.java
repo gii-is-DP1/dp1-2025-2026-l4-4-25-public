@@ -49,7 +49,7 @@ public class ActivePlayer extends Player{
     @ManyToMany
     @JoinTable(
         name = "damages",
-        joinColumns = @JoinColumn(name = "activlePlayer_id"),
+        joinColumns = @JoinColumn(name = "activePlayer_id"),
         inverseJoinColumns = @JoinColumn(name = "damagedActivePlayer_id")
     )
     private List<Player> damages = new ArrayList<>();
@@ -80,7 +80,4 @@ public class ActivePlayer extends Player{
     //Relación 1 participante varios mensajes
     @OneToMany(mappedBy = "activePlayer")
     private List<Message> messages = new ArrayList<>();
-
-
-    
 }

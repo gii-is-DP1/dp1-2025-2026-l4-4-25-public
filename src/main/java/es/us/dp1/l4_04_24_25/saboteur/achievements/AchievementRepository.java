@@ -1,14 +1,10 @@
 package es.us.dp1.l4_04_24_25.saboteur.achievements;
 
-import java.util.List;
-
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 
 public interface AchievementRepository extends CrudRepository<Achievement,Integer>{
 
-
+    /*
     // Para obtener los logros de un jugador a partir de su id
     @Query("SELECT a FROM Achievement a JOIN a.players p WHERE p.id = :playerId")
     List<Achievement> findAchievementsByPlayerId(@Param("playerId") Integer playerId);
@@ -24,7 +20,7 @@ public interface AchievementRepository extends CrudRepository<Achievement,Intege
     // Contar el número de logros de un jugador
     @Query("SELECT COUNT(a) FROM Achievement a JOIN a.players p WHERE p.id = :playerId")
     Integer countAchievementsByPlayerId(@Param("playerId") Integer playerId);
-
+    */
     
 
     
