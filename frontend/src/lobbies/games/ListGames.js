@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import '../App.css';
-import '../static/css/lobbies/ListGames.css'; 
+import '../../App.css';
+import '../../static/css/lobbies/games/ListGames.css'; 
 import { Link } from 'react-router-dom';
-import games from '../static/images/games.png'; 
+import games from '../../static/images/games.png'; 
 import tokenService from '../../services/token.service';
 export default function ListGames(){
    

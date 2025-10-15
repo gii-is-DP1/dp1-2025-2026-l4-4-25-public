@@ -1,7 +1,7 @@
 import React, { useState,useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import tokenService from '../../services/token.service';
-import '../static/css/lobbies/CreateGame.css'; 
+import '../../static/css/lobbies/games/CreateGame.css'; 
 
 const CreateGame = () => {
   const [numPlayers, setnumPlayers] = useState('3');
