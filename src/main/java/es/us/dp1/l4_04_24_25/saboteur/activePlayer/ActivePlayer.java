@@ -3,6 +3,8 @@ package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.message.Message;
@@ -49,7 +51,7 @@ public class ActivePlayer extends Player{
     @ManyToMany
     @JoinTable(
         name = "damages",
-        joinColumns = @JoinColumn(name = "activlePlayer_id"),
+        joinColumns = @JoinColumn(name = "activePlayer_id"),
         inverseJoinColumns = @JoinColumn(name = "damagedActivePlayer_id")
     )
     private List<Player> damages = new ArrayList<>();
@@ -64,6 +66,7 @@ public class ActivePlayer extends Player{
     private Game wonGame;
 
     //Relación 1 participante crea 1 partida
+    @JsonIgnore
     @OneToOne
     @JoinColumn(name = "createdGame_id")
     private Game createdGame;
