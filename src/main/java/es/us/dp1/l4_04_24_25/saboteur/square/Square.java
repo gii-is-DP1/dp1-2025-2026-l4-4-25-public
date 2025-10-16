@@ -32,9 +32,6 @@ public class Square extends BaseEntity{
 	@Column(name = "type", nullable = false)
 	protected type type;
 
-	//Relación muchas casillas 1 participante
-	@ManyToOne
-	protected ActivePlayer activePlayer;
 
 	//Relación muchas casillas 1 tablero
 	@ManyToOne
