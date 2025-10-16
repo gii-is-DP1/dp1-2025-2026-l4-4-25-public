@@ -39,7 +39,7 @@ export default function Register() {
       image: profileImage,
       authority: 2
     };
-   
+    
     // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 
@@ -60,6 +60,7 @@ export default function Register() {
             method: "POST",
             body: JSON.stringify(loginRequest),
           })
+
             .then(function (response) {
               if (response.status === 200) {
                 state = "200";
@@ -85,6 +86,7 @@ export default function Register() {
       .catch((message) => {
         alert(message);
       });
+
   }  
     return (
       <div className="auth-page-container">
@@ -128,4 +130,3 @@ export default function Register() {
     );
 
   }
-

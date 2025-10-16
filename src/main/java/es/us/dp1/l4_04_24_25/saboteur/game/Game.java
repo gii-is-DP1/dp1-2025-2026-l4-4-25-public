@@ -27,6 +27,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -52,6 +53,7 @@ public class Game extends BaseEntity{
     @Column(nullable = false)
     private boolean isPrivate;
 
+    @Max(value = 12, message = "El número máximo de jugadores no puede ser mayor de 12")
     @Column(nullable = false)
 
     private Integer maxPlayers = 3;

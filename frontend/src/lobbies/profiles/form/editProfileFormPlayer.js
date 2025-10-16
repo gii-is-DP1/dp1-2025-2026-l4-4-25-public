@@ -14,8 +14,8 @@ export const editProfileFormPlayer= [
     name: "password",
     type: "password",
     defaultValue: "",
-    isRequired: true,
-    validators: [formValidators.notEmptyValidator],
+    isRequired: false,
+    validators: [],
   },
   {
     tag: "Complete name",
