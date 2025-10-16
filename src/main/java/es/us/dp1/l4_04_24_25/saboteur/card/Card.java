@@ -9,7 +9,8 @@
 	import jakarta.persistence.ManyToOne;
 	import jakarta.persistence.Table;
 	import jakarta.validation.constraints.NotEmpty;
-	import lombok.Getter;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
 	import lombok.Setter;
 
 	@Getter
@@ -20,11 +21,11 @@
 	public class Card extends BaseEntity {
 
 		@Column(name = "status", nullable = false)
-		@NotEmpty
+		@NotNull
 		protected boolean status;
 
 		@Column(name = "image", nullable = false)
-		@NotEmpty
+		@NotNull
 		protected String image;
 
 		//RELACION CARTA-MANO (N-1)
