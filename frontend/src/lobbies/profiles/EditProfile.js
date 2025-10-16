@@ -151,7 +151,7 @@ export default function EditProfile() {
                 </div>
             </div>
             <div className="edit-profile-right">
-                {profileData ? (
+                {formInputs.length > 0 ? (
                     <FormGenerator
                     ref={editProfileFormRef}
                     inputs={formInputs}

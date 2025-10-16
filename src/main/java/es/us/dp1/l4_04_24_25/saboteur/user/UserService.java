@@ -22,7 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.security.crypto.password.PasswordEncoder; 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
@@ -30,10 +30,12 @@ import jakarta.validation.Valid;
 public class UserService {
 
 	private UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder; 
 
 	@Autowired
-	public UserService(UserRepository userRepository) {
+	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder; 
 
 	}
 
@@ -80,8 +82,17 @@ public class UserService {
 	@Transactional
 	public User updateUser(@Valid User user, Integer idToUpdate) {
     User toUpdate = findUser(idToUpdate);
-    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "createdAchievements", "managedAchievements", "managedGames", "users");
-    userRepository.save(toUpdate);
+    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password","createdAchievements", "managedAchievements", "managedGames", "users");
+    String newPassword = user.getPassword();
+
+	// Solo actualiza si el campo de la contraseña NO es nulo y NO está vacío
+	// Si está vacío se queda con el copyProperties del backend para password
+	if (newPassword != null && !newPassword.trim().isEmpty()){
+		//Hashear y establecer nueva contraseña
+		toUpdate.setPassword(passwordEncoder.encode(newPassword));
+	}
+	// Si el newPassword está vacío este if se ignora, y se mantiene la contraseña que había en la base de datos
+	userRepository.save(toUpdate);
     return toUpdate;
 }
 	@Transactional
