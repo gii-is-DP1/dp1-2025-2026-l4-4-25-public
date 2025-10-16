@@ -49,9 +49,7 @@ public class ActivePlayer extends Player{
     @JoinColumn(name = "deck_id")
     private Deck deck;
 
-    //Relación 1 participante ocupa varias casillas
-    @OneToMany(mappedBy = "activePlayer")
-    private List<Square> Squares = new ArrayList<>();
+    
 
     //Relación 1 participante varios mensajes
     @OneToMany(mappedBy = "activePlayer")
