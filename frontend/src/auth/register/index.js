@@ -39,7 +39,27 @@ export default function Register() {
       image: profileImage,
       authority: 2
     };
-   
+  const newRequest = {
+  
+  ...values,
+  image: profileImage,
+  authority: {
+    id: 2,
+    authority: "PLAYER"
+  },
+  playedGames: 0,
+  wonGames: 0,
+  destroyedPaths: 0,
+  builtPaths: 0,
+  acquiredGoldNuggets: 0,
+  peopleDamaged: 0,
+  peopleRepaired: 0,
+  friends: [],
+  accquiredAchievements: [],
+  game: 1,
+  watcher: false
+
+  }
     // request["authority"] = authority; // No hace falta unirlo si se añade a la construcción del objeto
     let state = "";
 
@@ -55,11 +75,19 @@ export default function Register() {
             password: request.password,
           };
 
+          // POST a la tabla PLAYERS (api/v1/players)
+          fetch("/api/v1/players", {
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+            body: JSON.stringify(newRequest),
+          })
+
           fetch("/api/v1/auth/signin", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify(loginRequest),
           })
+
             .then(function (response) {
               if (response.status === 200) {
                 state = "200";
@@ -85,6 +113,7 @@ export default function Register() {
       .catch((message) => {
         alert(message);
       });
+
   }  
     return (
       <div className="auth-page-container">

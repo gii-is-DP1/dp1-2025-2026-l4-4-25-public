@@ -43,10 +43,18 @@ export default function EditProfile() {
                 const data = await response.json();
                 setProfileData(data);
                 setProfileImage(data.image || defaultProfileAvatar);
-                const inputsWithInitialValues = editProfileFormPlayer.map(input => ({
-                    ...input,
-                    defaultValue: data[input.name] ?? ""
-                })); 
+                const inputsWithInitialValues = editProfileFormPlayer.map(input => {
+                    let defaultValue = data[input.name] ?? "";
+
+                    if (input.name === 'password'){
+                        defaultValue = ""; // Se muestra el campo inicial vacío y no el "hash" que se extrae del backend
+                    }
+                    return {
+                        ...input, 
+                        defaultValue: defaultValue
+                    };
+        
+                }); 
                 setFormInputs(inputsWithInitialValues);
                 console.log(data);
                 //setOriginalUsername(data.username);
@@ -75,7 +83,7 @@ export default function EditProfile() {
         try{
             const request = {
                 username: values.username,
-                password: values.password,
+                password: values.password, // OJO! --> Si esto no se modifica en el backend estaremos mandando una contraseña vacía
                 name: values.name,
                 email: values.email,
                 birthDate: values.birthDate, 

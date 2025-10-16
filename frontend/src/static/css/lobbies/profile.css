@@ -120,5 +120,45 @@
   width: 80%; /* ajustable, para que no se salga */
 }
 
+/*Para mostrar que eres Admin en el profile*/
+
+/* --- Estilo Premium para la Insignia de Administrador --- */
+.admin-badge {
+    /* Fondo con degradado dorado/amarillo */
+    background: linear-gradient(145deg, #f3e5ab 0%, #f1c40f 45%, #e6b800 100%);
+    
+    /* Fuente y texto */
+    color: #333; /* Color oscuro para contraste */
+    font-size: 1.5rem;
+    font-weight: 900; /* Extra bold */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.5rem 1.5rem; /* Relleno */
+    border-radius: 10px;
+    display: inline-block; /* Para que el padding y el tamaño funcionen bien */
+
+    /* Efectos 3D y Premium */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Borde ligero para el brillo */
+    box-shadow: 
+        0 4px 15px rgba(240, 199, 38, 0.7), /* Sombra exterior dorada/brillante */
+        inset 0 0 10px rgba(255, 255, 255, 0.8), /* Brillo interior */
+        inset 0 -5px 5px rgba(0, 0, 0, 0.2); /* Sombra para efecto de relieve (ligeramente levantado) */
+    
+    /* Efecto de inclinación para hacerlo más dinámico (opcional) */
+    transform: rotate(-3deg);
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Pequeño efecto al pasar el ratón */
+.admin-badge:hover {
+    transform: scale(1.05) rotate(-3deg);
+    cursor: default;
+}
+
+/* El texto del nombre de usuario también se ve premium para el admin */
+.profile-info h2.admin-username {
+    color: #f1c40f; 
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
 
 

@@ -4,7 +4,7 @@ import '../../static/css/lobbies/profile.css';
 import { Link } from 'react-router-dom';
 import tokenService from '../../services/token.service.js';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
-import getIconImage from "../../util/getIconImage.js";
+
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -16,7 +16,8 @@ export default function Profile() {
         birthdate: "",
         image: "",
         status: "",
-        joined: ""
+        joined: "",
+        authority: ""
     });
 
     useEffect(() => {
@@ -63,13 +64,22 @@ export default function Profile() {
                     <button className="button-logOut"> ➡️</button>
                 </Link>
             </div>
-            <div className="top-left-button">
-                <Link to="/profile">
-                    <button className="button-games-played">🎮 Games Played</button>
-                </Link>
-            </div>
+            
+            {profile.authority.authority !== 'ADMIN' && (
+                <div className="top-left-button">
+                    <Link to="/profile">
+                        <button className="button-games-played">🎮 Games Played</button>
+                    </Link>
+                </div>
+            )}
+    
 
             <div className="profile-overlay">
+                <div style={{marginBottom: '1rem' }}>
+                    {profile.authority.authority === 'ADMIN' && (
+                            <span className="admin-badge">⭐ ADMIN</span>
+                    )}
+                </div>
                 <div className="profile-header">
                     <img
                         src= {profile?.image || defaultProfileAvatar}
@@ -77,7 +87,7 @@ export default function Profile() {
                         className="profile-avatar"
                     />
                     <div className="profile-info">
-                        <h2>{profile?.username || 'Cargando...'}</h2>
+                        <h2 className={profile.authority.authority === 'ADMIN' ? "admin-username" : ""}>{profile?.username || 'Loading...'}</h2>
                         <div className="profile-buttons">
                             <h2>Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</h2>
                         </div>
