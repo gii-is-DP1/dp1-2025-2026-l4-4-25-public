@@ -49,7 +49,7 @@ public class User extends BaseEntity {
     @Column(name = "joined", nullable = false, updatable = false)
     private LocalDateTime joined = LocalDateTime.now(); 
 
-    @NotEmpty
+    //@NotEmpty // Se elimina el NotEmpty para gestionar la edición del perfil
     @Column(name ="password", nullable = false)
     private String password;
 
