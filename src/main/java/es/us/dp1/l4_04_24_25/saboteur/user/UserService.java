@@ -79,13 +79,11 @@ public class UserService {
 
 	@Transactional
 	public User updateUser(@Valid User user, Integer idToUpdate) {
-		User toUpdate = findUser(idToUpdate);
-		BeanUtils.copyProperties(user, toUpdate, "id");
-		userRepository.save(toUpdate);
-
-		return toUpdate;
-	}
-
+    User toUpdate = findUser(idToUpdate);
+    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "createdAchievements", "managedAchievements", "managedGames", "users");
+    userRepository.save(toUpdate);
+    return toUpdate;
+}
 	@Transactional
 	public void deleteUser(Integer id) {
 		User toDelete = findUser(id);

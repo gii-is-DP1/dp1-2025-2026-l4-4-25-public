@@ -30,8 +30,9 @@ export default function Lobby(){
                 <Link to="/CreateGame">
                    <button className="button-crear">📑CREATE GAME</button>  
                 </Link>
-                 
+                 <Link to="/ListGames">
                 <button className="button-unirse">📥JOIN A GAME</button>   
+                </Link>
             </div>
             <div className="bottom-left-button">
                 <button className="button-ranking">🏆RANKING</button>

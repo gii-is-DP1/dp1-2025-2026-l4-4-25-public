@@ -7,7 +7,7 @@
   height: 100vh;
   padding: 0;
   box-sizing: border-box;
-  background-image:  url('../../images/cave_image.jpeg');
+  background-image:  url('../../../images/cave_image.jpeg');
   background-size: cover;
   background-position: center;
   font-family: sans-serif;

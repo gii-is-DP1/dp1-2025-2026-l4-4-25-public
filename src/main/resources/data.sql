@@ -7,7 +7,24 @@ INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
 INSERT INTO appusers(id,username,name,birthDate,joined, password,image,email,authority) VALUES (4,'Carlosbox2k','Carlos Borrego Ortiz','2005-02-04','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/carlos.png', 'carlos@saboteur.es', 2);
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2);
 
-INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds) values (null, 'CREATED', 1, false, 3, 'link', 0);
+INSERT INTO chat (id) VALUES (1);
+
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds) values (1, 'CREATED', 1, false, 3, 'link', 0);
+
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 0, 0, 0, 0, 0, false, 5, 3);
+
+
+
+INSERT INTO deck (id) VALUES (1);
+
+INSERT INTO active_Player (candle_state, cart_state, created_game_id, deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 1, 1, 0, 4, false, true, null );
+
+INSERT INTO message (id, chat_id, text, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
+
+
+
+
+
 --INSERT INTO appusers(id,nombreUsuario,nombreApellido,fechaNacimento,contrasena,url,correoElectronico,authority) VALUES (6,'player3','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
 --INSERT INTO appusers(id,nombreUsuario,nombreApellido,fechaNacimento,contrasena,url,correoElectronico,authority) VALUES (7,'player4','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
 --INSERT INTO appusers(id,nombreUsuario,nombreApellido,fechaNacimento,contrasena,url,correoElectronico,authority) VALUES (8,'player5','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e',2);
