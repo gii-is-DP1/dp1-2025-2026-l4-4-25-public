@@ -105,6 +105,35 @@ body {
   margin-top: 30px;
 }
 
+/* Contenedor de selección de imagen de perfil */
+.profile-image-selector {
+    display: flex;
+    flex-direction: column; /* Label arriba, opciones abajo */
+    align-items: center; 
+    gap: 1rem; 
+    margin-bottom: 1rem;
+}
+
+/* Contenedor de dropdown y input */
+.profile-image-options {
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    justify-content: center; 
+    gap: 1rem; 
+    flex-wrap: wrap; 
+}
+
+/* Previsualización de la imagen */
+.profile-image-preview {
+    width: 120px; 
+    height: 120px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    border: 2px solid #ccc;
+}
+
+
 @media screen and (max-width: 768px) {
   .options-row {
     flex-direction: column;

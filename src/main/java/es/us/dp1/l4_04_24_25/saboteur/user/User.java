@@ -5,7 +5,7 @@ import java.sql.Date;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.time.LocalDateTime; 
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
@@ -46,11 +46,10 @@ public class User extends BaseEntity {
     private String birthDate;
 
 
-    @NotEmpty
-    @Column(name = "joined", nullable = false)
-    private String joined;
+    @Column(name = "joined", nullable = false, updatable = false)
+    private LocalDateTime joined = LocalDateTime.now(); 
 
-    @NotEmpty
+    //@NotEmpty // Se elimina el NotEmpty para gestionar la edición del perfil
     @Column(name ="password", nullable = false)
     private String password;
 

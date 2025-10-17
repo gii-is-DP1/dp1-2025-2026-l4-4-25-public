@@ -48,7 +48,7 @@ public class Game extends BaseEntity{
     private gameStatus gameStatus;
 
     @Column(unique = true, nullable = false)
-    private String link;
+    private String link = "";
 
     @Column(nullable = false)
     private boolean isPrivate;

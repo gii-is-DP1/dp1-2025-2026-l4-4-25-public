@@ -25,7 +25,7 @@ public class Deck extends BaseEntity{
     private List<Card> cards = new ArrayList<>();
 
     //Relación 1 mano 1 participante
-     @JsonSerialize(using = ActivePlayerSerializer.class)
+    @JsonSerialize(using = ActivePlayerSerializer.class)
     @JsonDeserialize(using = ActivePlayerDeserializer.class)
     @OneToOne(mappedBy = "deck")
     private ActivePlayer activePlayer;
