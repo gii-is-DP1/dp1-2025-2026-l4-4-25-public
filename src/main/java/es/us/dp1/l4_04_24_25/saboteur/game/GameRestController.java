@@ -99,7 +99,7 @@ class GameRestController {
         field.setAccessible(true);
 
         try {
-            
+
             // Caso especial de winner (ActivePlayer)
             if (field.getType().equals(ActivePlayer.class) && v instanceof String username) {
                 ActivePlayer activePlayer = activePlayerService.findByUsername(username);
@@ -115,7 +115,11 @@ class GameRestController {
 
                 ReflectionUtils.setField(field, game, activePlayer);
             } 
-            
+
+            if (field.getType().equals(gameStatus.class)){
+                ReflectionUtils.setField(field, game, gameStatus.valueOf((String) v));
+            }
+
             else {
                 ReflectionUtils.setField(field, game, v);
             }

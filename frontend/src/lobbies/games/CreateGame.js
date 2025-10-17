@@ -63,7 +63,7 @@ const CreateGame = () => {
             return;
         } //necesitamos el metodo findbyusername de player bien
         //mientras tanto lo buscamos por el id con el loggedinuser
-            const response = await fetch(`/api/v1/players/${loggedInUser.id}`, {
+            const response = await fetch(`/api/v1/players?username=${game.creator}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -98,7 +98,7 @@ const CreateGame = () => {
     const request = {
       gameStatus: "ONGOING",
      // link: "asdasdasdasdvfsdvgsrf",
-      maxPlayers: numPlayers,
+      maxPlayers: parseInt(numPlayers),
       activePlayers: [player],
       //meter todo el player
       //creator: player.username,
@@ -113,7 +113,7 @@ const CreateGame = () => {
 
     try {
       const response = await fetch(`/api/v1/games/${game.id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
