@@ -22,7 +22,7 @@ const CreateGame = () => {
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
-        }
+        } //corregido con el copy properties
            const request = {
           game : game.id
         }
@@ -54,18 +54,52 @@ const CreateGame = () => {
         patchchat()
         
         console.log('chat del creategame ', chat)
+
+        const fetchPlayer = async () => {
+          try {
+            const loggedInUser = tokenService.getUser();
+          if (!loggedInUser || !loggedInUser.id) {
+            console.error("No se encontró el ID del usuario.");
+            return;
+        } //necesitamos el metodo findbyusername de player bien
+        //mientras tanto lo buscamos por el id con el loggedinuser
+            const response = await fetch(`/api/v1/players/${loggedInUser.id}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${jwt}`
+              }
+            });
+            console.log(response);
+            if (response.ok) {
+              const data = await response.json();
+              setPlayer(data);
+            } else {
+              console.error('Respuesta no OK:', response.status);
+              alert('Error al obtener la información del jugador.');
+            }
+          } catch (error) {
+            console.error('Hubo un problema con la petición fetch:', error);
+            alert('Error de red. No se pudo conectar con el servidor.');
+          }
+        };
+        fetchPlayer()
+        
+
+        console.log("este es  el player", player)
         
         
 
   },[jwt])
 
   async function handleSubmit() {
-  
+    //necesitamos el patch de game
+    //el player  primero tiene  que esstar en la tabla activeplayers para poder meterlo en game-activeplayers
     const request = {
       gameStatus: "ONGOING",
      // link: "asdasdasdasdvfsdvgsrf",
       maxPlayers: numPlayers,
-      //activePlayers: [],
+      activePlayers: [player],
       //meter todo el player
       //creator: player.username,
       //chat: null,

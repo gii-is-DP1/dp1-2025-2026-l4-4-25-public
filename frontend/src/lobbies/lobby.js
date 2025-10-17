@@ -23,7 +23,7 @@ export default function Lobby(){
             console.error("No se encontró el ID del usuario.");
             return;
         }
-            const response = await fetch(`/api/v1/users/${loggedInUser.id}`, {
+            const response = await fetch(`/api/v1/players/${loggedInUser.id}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -46,7 +46,7 @@ export default function Lobby(){
         fetchPlayer()
         
 
-        console.log(player)
+        console.log("este es  el player", player)
         
 
   },[jwt])
