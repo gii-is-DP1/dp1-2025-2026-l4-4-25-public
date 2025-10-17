@@ -4,6 +4,8 @@ import '../static/css/home/home.css';
 import '../static/css/game/game.css'; 
 import CreateGame from '../lobbies/CreateGame';
 import { Link } from 'react-router-dom';
+import camino from '../game/images/camino-inicio.png';
+
 
 export default function Board() {
   const nPlayers=4; // Hasta que en CreateGame no ponga lo de seleccion de partida...
@@ -63,10 +65,11 @@ export default function Board() {
         🕓·ROUND 2/3 
       </div>
 
-
       <div className="board-grid">
         {[...Array(35)].map((_, i) => (
-          <div key={i} className="board-cell"></div>
+          <div key={i} className="board-cell">
+            {i === 15 && <img src={camino} alt="Imagen" />}
+          </div>
         ))}
       </div>
 

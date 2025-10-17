@@ -112,9 +112,12 @@
   background: #2a2a2a;
   padding: 8px;
   border-radius: 10px;
+  rotate: 180;
   border: 1px solid #555;}
 .board-cell {
   background: #555;
+  position: relative;
+  rotate: 180;
   border: 1px solid #777;
   border-radius: 5px;}
 
