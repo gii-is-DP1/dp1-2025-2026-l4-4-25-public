@@ -1,18 +1,116 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import '../App.css';
 import '../static/css/home/home.css';
 import '../static/css/game/game.css'; 
-import CreateGame from '../lobbies/CreateGame';
-import { Link } from 'react-router-dom';
-import camino from '../game/images/camino-inicio.png';
+import minerRol from '../game/cards-images/roles/minerRol.png';
+import saboteurRol from '../game/cards-images/roles/minerRol.png';
+// import getIdFromUrl from "../../util/getIdFromUrl";
+import tokenService from '../services/token.service.js';
 
+const jwt = tokenService.getLocalAccessToken();
 
 export default function Board() {
-  const nPlayers=4; // Hasta que en CreateGame no ponga lo de seleccion de partida...
+ 
   const ndeck=60;
+  const timeturn=60;
+  const idGame = 0; // Usar el getIdFromUrl
 
   const [message, setMessage] = useState([]); // UseState que almacenan los mensajes (Chat de texto)
   const [newMessage, setNewMessage] = useState('');
+  const [numRound, setNumRound] = useState('1'); 
+  const [currentPlayer, setCurrentPlayer] = useState(); // Nos ayudará para el NextTurn (saber el usuario que tiene el turno)
+  const [cont, setCont] = useState(timeturn); 
+  const [playerOrder, setPlayerOrder] = useState([]); // Lista de los jugadores ordenados por birthDate
+  const [playerRol, setPlayerRol] = useState({}); // Para los roles de saboteur y minero
+  const [activePlayer, setActivePlayer] = useState([]); // Lista de arrays de isactivePlayer
+  const nPlayers=setActivePlayer.length; // Total de jugadores en la partida
+
+ useEffect(() => {
+    const fetchPlayers = async () => {
+      try {
+        const response = await fetch(`/api/v1/players/byGameId?gameId=${idGame}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,}});
+        const data = await response.json();
+        if (data && data.length > 0) { // players > 0
+          const res =data.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
+          setPlayerOrder(res);
+          setCurrentPlayer(res[0].username);}
+      } catch (error) {
+        console.error(error);}};
+    fetchPlayers();
+  }, [idGame]);
+
+useEffect(() => {
+  const fetchActivePlayers = async () => {
+    try {
+      const response = await fetch(`/api/v1/games/${idGame}/activePlayers`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        }
+      });
+      const data = await response.json();
+      setActivePlayer(data);
+    } catch (error) {
+      console.error(error);}};
+    fetchActivePlayers();
+  }, [idGame]);
+
+const assignRolesGame = (activePlayers) => {
+  const roles = [];
+   // AUN POR DEFINIR, HABRÁ QUE HACER LAS CONDICIONES DE SI HAY X JUGADORES, HABRÁ Y E Z ROLES
+
+  const assignRolesPlayer = {};
+    activePlayers.array.forEach((player, index) => {
+      assignRolesPlayer[player.username] = roles[index];
+    });
+      setPlayerRol(assignRolesPlayer);
+    };
+
+const nextTurn = () => {
+    return null; // AUN POR DEFINIR
+  };
+
+ useEffect(() => {
+    const time = setInterval(() => {
+      setCont(p => {
+        if (p <= 1) {
+          nextTurn(); // Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
+          return timeturn;}
+        return p-1;});
+    }, 1000);
+    return () => clearInterval(time);
+  }, [currentPlayer, playerOrder]);
+
+  const formatTime = (s) => {
+    const min = Math.floor(s/60).toString().padStart(2, '0');
+    const sec = (s%60).toString().padStart(2, '0');
+    return `${min}:${sec}`;
+  };
+
+  useEffect(() => {
+    const fetchedRound = async () => {
+      try {
+        const response = await fetch(`/api/v1/rounds/byGame/${idGame}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          }
+        });
+        const data = await response.json();
+        if (data && data.roundNumber) {
+          setNumRound(data.roundNumber);}
+      } catch (error) {
+        console.error(error);
+      }};
+
+    fetchedRound();
+  }, [idGame]);
 
   let numCards = 0; // Iniciamos con 0 cartas, según los jugadores se repartirá x cartas
   if (nPlayers <= 5) {
@@ -49,7 +147,7 @@ export default function Board() {
       <div className="my-role">
         MY ROL :
         <div className="logo-img">
-          <img src="/logo1-recortado.png" alt="logo" className="logo-img"/> 
+         <img src={minerRol} alt="Miner Role" className="logo-img"/> 
         </div>
       </div>
 
@@ -57,24 +155,28 @@ export default function Board() {
         🎴{ndeck}
       </div>
 
+      <div className="n-discard">
+        📥Discard
+      </div>
+      
+
       <div className="time-card">
-        ⏰00.20s
+       ⏰ {formatTime(cont)}
       </div>
 
       <div className="round-box">
-        🕓·ROUND 2/3 
+        🕓·ROUND {numRound}/3 
       </div>
 
       <div className="board-grid">
         {[...Array(35)].map((_, i) => (
           <div key={i} className="board-cell">
-            {i === 15 && <img src={camino} alt="Imagen" />}
           </div>
         ))}
       </div>
 
       <div className="turn-box">
-        🔴 · TURNO DE CARLOSXX23
+        🔴 · TURNO DE {currentPlayer}
       </div>
 
       <div className="chat-box">

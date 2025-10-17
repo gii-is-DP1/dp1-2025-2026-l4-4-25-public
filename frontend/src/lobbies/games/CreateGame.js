@@ -144,7 +144,9 @@ const CreateGame = () => {
 
           <div className="card-footer">
             <button onClick={handleSubmit}>
+              <Link to="/board">
               ▶️START
+              </Link>
             </button>
             <button>
               LINK

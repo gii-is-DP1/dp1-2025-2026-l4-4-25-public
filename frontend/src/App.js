@@ -14,13 +14,9 @@ import tokenService from "./services/token.service";
 import UserListAdmin from "./admin/users/UserListAdmin";
 import UserEditAdmin from "./admin/users/UserEditAdmin";
 import Lobby from "./lobbies/lobby"; 
-<<<<<<< HEAD
-import CreateGame from "./lobbies/CreateGame";
-import Board from "./game/board";
-=======
 import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
->>>>>>> 78505fea3cecbea0599b7dfce72a88faf0f3ace9
+import Board from "./game/board";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -84,11 +80,8 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
-<<<<<<< HEAD
         <Route path="/board" element={<PrivateRoute><Board/></PrivateRoute>} />
-=======
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
->>>>>>> 78505fea3cecbea0599b7dfce72a88faf0f3ace9
       </>
     )
   }

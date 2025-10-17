@@ -51,7 +51,7 @@ public class PlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping("/search")
     public ResponseEntity<Player> findByUsername(@RequestParam String username){
         Player res;
         res = playerService.findByUsername(username);

@@ -16,6 +16,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -48,6 +50,10 @@ public class Round extends BaseEntity{
     @JoinColumn(name = "board_id")
     private Board board;
 
+    @Min(1)
+    @Max(3)
+    @Column(name = "round_number", nullable = false)
+    private Integer roundNumber; // Limitación de rondas a maximo 3
 
 
 }
