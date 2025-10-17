@@ -50,8 +50,8 @@ public class PlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping("byUsername")
-    public ResponseEntity<Player> findByUsername(String username){
+    @GetMapping("byUsername/{username}")
+    public ResponseEntity<Player> findByUsername(@PathVariable String username){
         Player res;
         res = playerService.findByUsername(username);
         return new ResponseEntity<>(res, HttpStatus.OK);
