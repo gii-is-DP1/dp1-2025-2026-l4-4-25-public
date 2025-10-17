@@ -50,6 +50,10 @@ export default function Profile() {
         fetchProfile();
     }, []); 
 
+    // Si los datos aún no han llegado, muestra esto y no continúes.
+    if (!profile) {
+        return <div>Loading profile...</div>;
+    }
     return (
         <div className="home-page-container">
 
@@ -64,7 +68,7 @@ export default function Profile() {
                     <button className="button-logOut"> ➡️</button>
                 </Link>
             </div>
-            
+
             {profile.authority.authority !== 'ADMIN' && (
                 <div className="top-left-button">
                     <Link to="/profile">
