@@ -17,6 +17,7 @@ import Lobby from "./lobbies/lobby";
 import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
 import Board from "./game/board";
+import Info from "./lobbies/info";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -59,6 +60,7 @@ function App() {
       ownerRoutes = (
         <>
           <Route path="/register" element={<Register />} />
+          <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
 

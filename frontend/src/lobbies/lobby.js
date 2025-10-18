@@ -8,7 +8,7 @@ export default function Lobby(){
         <div className="home-page-lobby-container">
 
             <div style={{ position: 'absolute', top: 0, left: 0, display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', zIndex: 10 }}>
-                <img src="/logo1-recortado.png" alt="logo" style={{ height: 95, width: 95 }} />
+                <img src="/logo1-recortado.png" alt="logo" style={{ height: 95, width: 100 }} />
              </div>
             <div className="top-right-lobby-buttons">
                 {/*<Link to="/register">
@@ -18,6 +18,7 @@ export default function Lobby(){
                     <button className="button-login">💻Login</button>
                 </Link>
                 */}
+                
                 <Link to="/logout">
                     <button className="button-logOut"> ➡️🚪Log Out</button>
                 </Link>
@@ -25,7 +26,11 @@ export default function Lobby(){
                     <button className="button-logOut"> 👤Profile</button>
                 </Link>
             </div>
-
+            <div className="button-info">
+                <Link to="/info">
+                    <button className="button-info"> ℹ️</button>
+                </Link>
+            </div>
             <div className="hero-div-lobby">
                 <Link to="/CreateGame">
                    <button className="button-crear">📑CREATE GAME</button>  

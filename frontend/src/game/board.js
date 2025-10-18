@@ -1,11 +1,13 @@
 import React, {useState, useEffect} from 'react';
 import '../App.css';
 import '../static/css/home/home.css';
+import { Link } from 'react-router-dom';
 import '../static/css/game/game.css'; 
 import minerRol from '../game/cards-images/roles/minerRol.png';
 import saboteurRol from '../game/cards-images/roles/minerRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
+import avatar from "../static/images/icons/1.jpeg"
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -15,15 +17,18 @@ export default function Board() {
   const timeturn=60;
   const idGame = 0; // Usar el getIdFromUrl
 
+  const [profileImage, setProfileImage] = useState(avatar);
   const [message, setMessage] = useState([]); // UseState que almacenan los mensajes (Chat de texto)
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState('1'); 
   const [currentPlayer, setCurrentPlayer] = useState(); // Nos ayudará para el NextTurn (saber el usuario que tiene el turno)
   const [cont, setCont] = useState(timeturn); 
-  const [playerOrder, setPlayerOrder] = useState([]); // Lista de los jugadores ordenados por birthDate
+  const [gameLog, setGameLog] = useState([]);
+  const [playerOrder, setPlayerOrder] = useState(['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
   const [playerRol, setPlayerRol] = useState({}); // Para los roles de saboteur y minero
   const [activePlayer, setActivePlayer] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayer.length; // Total de jugadores en la partida
+
 
  useEffect(() => {
     const fetchPlayers = async () => {
@@ -38,6 +43,8 @@ export default function Board() {
           const res =data.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
           setPlayerOrder(res);
           setCurrentPlayer(res[0].username);}
+          
+
       } catch (error) {
         console.error(error);}};
     fetchPlayers();
@@ -61,19 +68,20 @@ useEffect(() => {
   }, [idGame]);
 
 const assignRolesGame = (activePlayers) => {
-  const roles = [];
-   // AUN POR DEFINIR, HABRÁ QUE HACER LAS CONDICIONES DE SI HAY X JUGADORES, HABRÁ Y E Z ROLES
-
-  const assignRolesPlayer = {};
-    activePlayers.array.forEach((player, index) => {
-      assignRolesPlayer[player.username] = roles[index];
-    });
-      setPlayerRol(assignRolesPlayer);
+  return null; // AUN POR DEFINIR (Definir numeros de roles de cada tipo según los jugadores de la partida)
     };
 
 const nextTurn = () => {
     return null; // AUN POR DEFINIR
   };
+
+const deck = () => {
+    return null; // AUN POR DEFINIR, ESTA FUNCIÓN TIENE QUE IR RESTANDO CARTAS DEL MAZO SEGÚN SE VAYA ROBANDO/DESCARTANDO ¿CREAR OTRA FUNCIÓN QUE ASIGNE CARTA DE ESE MAZO A UN JUGADOR?
+};
+
+const addLog = (msg,type="info") => {
+  setGameLog(prev => [...prev, { msg,type }]);
+}; // Tendriamos que llamarlo en nextTurn
 
  useEffect(() => {
     const time = setInterval(() => {
@@ -128,13 +136,13 @@ const nextTurn = () => {
   };
 
   const cards = [...Array(numCards)].map((_, i) => (
-    <div key={i} className="card-slot">Cards {i + 1}</div>));
+    <button key={i} className="card-slot">Cards {i + 1}</button>));
 
   return (
     <div className="board-container">
 
       <div className="logo-container">
-        <img src="/logo1-recortado.png" alt="logo" className="logo-img"/>
+        <img src="/logo1-recortado.png" alt="logo" className="logo-img1"/>
       </div>
 
       <div className="player-cards">
@@ -155,10 +163,11 @@ const nextTurn = () => {
         🎴{ndeck}
       </div>
 
-      <div className="n-discard">
+      <button className="n-discard">
+        <Link to={deck}>
         📥Discard
-      </div>
-      
+        </Link>
+      </button>
 
       <div className="time-card">
        ⏰ {formatTime(cont)}
@@ -176,8 +185,39 @@ const nextTurn = () => {
       </div>
 
       <div className="turn-box">
-        🔴 · TURNO DE {currentPlayer}
+        🔴 · TURNO DE  {playerOrder[0]} {/* {currentPlayer} */}
       </div>
+
+      <div className="players-var">
+        {playerOrder.map((player, index) => (
+          <div key={index} className={`player-card player${index + 1}`}>
+            <div className="player-avatar">
+              <img src={player.profileImage || avatar} alt={player.username || player} />
+            </div>
+            <div className={`player-name player${index + 1}`}>
+              {player.username || player}
+            </div>
+            <div className="player-lint">{player.wins} 🔦 : 🟢</div>
+            <div className="player-vag">{player.wins} 🪨 : 🟢</div>
+            <div className="player-pic">{player.wins} ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
+            <div className="player-pep">{player.wins} 🪙 : 0</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="game-log">
+        <div className="game-log-header">💻 GAME LOG 💻</div>
+        <div className="game-log-messages">
+          {gameLog.length === 0 ? (
+            <p className="no-log">❕No actions yet...</p>
+          ) : (
+            gameLog.map((log, index) => (
+              <p key={index} className={`log-entry ${log.type}`}>
+                {log.msg}
+              </p> )))}
+        </div>
+      </div>
+
 
       <div className="chat-box">
         <div className="chat-header">TEXT CHAT</div>

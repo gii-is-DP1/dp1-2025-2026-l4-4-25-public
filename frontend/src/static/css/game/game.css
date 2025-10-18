@@ -11,9 +11,11 @@
   position: absolute;
   top: 10px;
   left: 10px;}
-.logo-img {
-  width: 90px;
-  height: 90px;}
+.logo-img1 {
+  position: absolute;
+  left: 25px;
+  width: 100px;
+  height: 100px;}
 
 .player-cards {
   position: absolute;
@@ -24,9 +26,14 @@
   border: 2px solid #555;
   border-radius: 8px;
   padding: 8px 16px;
-  display: flex;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex; 
   align-items: left;
   gap: 15px;}
+.n-cards:hover {
+  background: #ceaf25;
+  transform: scale(1.05);}
 .cards-label {
   font-weight: bold;
   font-size: 14px;}
@@ -46,8 +53,8 @@
 
 .my-role {
   position: absolute;
-  top: 10px;
-  right: 510px;
+  top: 150px;
+  left: 100px;
   transform: translateX(-50%);
   background: #2e2e2e;
   border: 2px solid #555;
@@ -64,13 +71,13 @@
 
 .n-deck {
   position: absolute;
-  top: 95px;
-  right: 650px;
+  top: 235px;
+  left: 155px;
   transform: translateX(-50%);
   background: #2e2e2e;
   border: 2px solid #555;
   border-radius: 8px;
-  padding: 8px 16px;
+  padding: 8px 5px;
   display: flex;
   align-items: left;
   gap: 15px;    
@@ -78,22 +85,31 @@
 
 .n-discard {
   position: absolute;
-  top: 80px;
-  left: 220px;
-  transform: translateX(-50%);
-  background: #4b452d;
+  top: 88px;
+  left: 170px;
+  background: #dabb40;
   border: 2px solid #c0af11;
-  border-radius: 6px;
-  padding: 7px 7px;
-  display: flex;
-  align-items: left;   
-}
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-family: Arial, sans-serif;  
+  color: rgb(0, 0, 0);                    
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;         
+  align-items: center;
+  justify-content: center;}
+.n-discard:hover {
+  background: #ceaf25;
+  transform: scale(1.05);}
+.n-discard a {
+  color: inherit;       
+  text-decoration: none;}
 
 
 .time-card {
   position: absolute;
-  top: 95px;
-  right: 515px;
+  top: 235px;
+  left: 70px;
   transform: translateX(-50%);
   background: #2e2e2e;
   border: 2px solid #555;
@@ -106,7 +122,7 @@
 
 .round-box {
   position: absolute;
-  top: 90px;
+  top: 110px;
   left: 20px;
   background: #fdc200;
   padding: 6px 10px;
@@ -116,7 +132,7 @@
 
 .board-grid {
   position: absolute;
-  top: 150px;
+  top: 180px;
   left: 40%;
   transform: translateX(-50%);
   display: grid;
@@ -154,18 +170,18 @@
   width: 260px;
   color: black;
   height: 280px;
-  background: #ffffff;
-  border: 1px solid #ffffff;
+  background: rgba(85, 85, 85, 0.7);
+  border: 1px solid #555;
   border-radius: 8px;
   display: flex;
   flex-direction: column;}
 .chat-header {
   text-align: center;
-  background: #ffffff;
+  background: rgba(85, 85, 85, 0.7);
   padding: 6px;
   color: black;
   font-weight: bold;
-  border-bottom: 1px solid #ffffff;}
+  border-bottom: 1px solid #777;}
 .chat-messages {
   flex: 1;
   padding: 8px;
@@ -173,13 +189,13 @@
   font-size: 12px;
   overflow-y: auto;}
 .chat-input {
-  border-top: 1px solid #ffffff;
+  border-top: 1px solid #555;
   padding: 6px;}
 .chat-input input {
   width: 100%;
   padding: 5px;
-  background: #ffffff;
-  border: 1px solid #ffffff;
+  background: rgba(85, 85, 85, 0.7);
+  border: 1px solid rgb(13, 14, 12);
   border-radius: 4px;
   color: black;
   font-size: 12px;}
@@ -197,3 +213,114 @@
 .player10 { color: #380d0d;}
 .player11 { color: #929b1e;}
 .player12 { color: #4c96db; }
+
+
+.players-var {
+  position: absolute;
+  right: 20px;
+  display: flex;
+  flex-wrap: nowrap; 
+  gap: 12px;
+  overflow-x: auto; 
+  padding: 10px;
+  max-width: 750px; 
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;}
+
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 120px;
+  height: 135px;
+  box-sizing: border-box;
+  background: #2e2e2e;
+  border: 1px solid #555;
+  border-radius: 10px;
+  padding: 8px; 
+  text-align: center;
+  color: white;
+  font-size: 11px;
+  transition: transform 0.2s ease, background 0.3s ease;
+  flex-shrink: 0;}
+
+.player-card:hover {
+  transform: scale(1.05);
+  background: #3b3b3b;}
+
+.player-avatar img {
+  width: 36px;  
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #999;
+  object-fit: cover;}
+
+.player-name {
+  margin-top: 4px;
+  font-weight: bold;
+  font-size: 12px;
+  word-wrap: break-word;
+  text-align: center;
+  max-width: 100%;}
+
+.player-lint,
+.player-vag,
+.player-pic,
+.player-pep {
+  margin-top: 2px;
+  line-height: 1.2;
+  width: 100%;}
+
+.player-wins,
+.player-pep {
+  color: rgb(255, 230, 0);
+  font-weight: bold;}
+
+.game-log {
+  position: absolute;
+  right: 30px; 
+  top: 42%;
+  transform: translateY(-50%);
+  width: 220px;
+  height: 280px;
+  background: rgba(20, 20, 20, 0.7);
+  border: 1px solid #555;
+  border-radius: 10px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 12px;
+  padding: 10px;
+}
+
+.game-log-header {
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 1px solid #777;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  color: #ffffff;}
+
+.game-log-messages {
+  margin: 0;
+  padding: 2px 0;}
+
+.log-entry.info {
+  color: #dcdcdc;}
+
+.log-entry.turn {
+  color: #00aaff;
+  font-weight: bold;}
+
+.log-entry.action {
+  color: #44ff44;}
+
+.log-entry.warning {
+  color: #f71000;}
+
+.no-log {
+  color: #888;
+  text-align: center;
+  margin-top: 20px;}
