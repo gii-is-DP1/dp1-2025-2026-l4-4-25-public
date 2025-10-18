@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,8 +51,8 @@ public class PlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping("byUsername")
-    public ResponseEntity<Player> findByUsername(String username){
+    @GetMapping("/search")
+    public ResponseEntity<Player> findByUsername(@RequestParam String username){
         Player res;
         res = playerService.findByUsername(username);
         return new ResponseEntity<>(res, HttpStatus.OK);

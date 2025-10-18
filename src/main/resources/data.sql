@@ -21,6 +21,8 @@ INSERT INTO active_Player (candle_state, cart_state, created_game_id, deck_id, g
 
 INSERT INTO message (id, chat_id, text, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
 
+INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, null,1);
+INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, null, 2);
 
 
 
