@@ -18,7 +18,9 @@ export default function Lobby(){
                     <button className="button-login">💻Login</button>
                 </Link>
                 */}
-                
+                <Link to="/users">
+                    <button className="button-logOut"> 📑Users</button>
+                </Link>
                 <Link to="/logout">
                     <button className="button-logOut"> ➡️🚪Log Out</button>
                 </Link>
