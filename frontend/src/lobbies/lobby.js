@@ -85,7 +85,7 @@ export default function Lobby(){
         setchat(newChat); 
         const randomPart = generateRandomLink(16);
         const fullLink = `https://saboteur.com/game/${randomPart}`;
-        setlink(link)
+        setlink(fullLink)
 
         const gameRequest = {
             gameStatus: "CREATED",
@@ -179,9 +179,7 @@ export default function Lobby(){
                 </Link>
             </div>
             <div className="hero-div-lobby">
-                <Link to="/CreateGame">
-                   <button className="button-crear">📑CREATE GAME</button>  
-                </Link>
+                    <button className="button-crear" onClick={handleSubmit}>📑CREATE GAME</button>
                  <Link to="/ListGames">
                 <button className="button-unirse">📥JOIN A GAME</button>   
                 </Link>

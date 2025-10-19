@@ -127,7 +127,7 @@ const CreateGame = () => {
         alert("¡Partida actualizada con éxito!");
         setpatchgame(newGame)
         console.log(newGame)
-        navigate(`/games/${newGame.id}`); 
+         // navigate(`/games/${newGame.id}`); 
       } else {
         const errorData = await response.json();
         alert(`Error al actualizar la partida: ${errorData.message}`);
@@ -196,15 +196,17 @@ const CreateGame = () => {
 
           <div className="card-footer">
             <button onClick={handleSubmit}>
-              <Link to="/board">
               ▶️START
-              </Link>
             </button>
             <button>
               LINK
             </button>
             <Link to="/lobby">
               <button className="button-small">❌CANCEL</button>
+            </Link>
+
+              <Link to="/board">
+              <button className="button-small"> TABLETO PRUEBAS</button>
             </Link>
           </div>
         </div>
