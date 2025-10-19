@@ -48,7 +48,7 @@ public class Game extends BaseEntity{
     private gameStatus gameStatus;
 
     @Column(unique = true, nullable = false)
-    private String link = "";
+    private String link;
 
     @Column(nullable = false)
     private boolean isPrivate;
@@ -114,6 +114,25 @@ public class Game extends BaseEntity{
     
     public boolean canAddPlayer(){
         return this.activePlayers.size() < this.maxPlayers;
+    }
+
+    public Game() {
+        super();
+    }
+
+    public Game(Duration time, gameStatus gameStatus, String link, boolean isPrivate, Integer maxPlayers, List<User> admins, List<Player> watchers, List<ActivePlayer> activePlayers, ActivePlayer winner, ActivePlayer creator, List<Round> rounds, Chat chat) {
+        this.time = time;
+        this.gameStatus = gameStatus;
+        this.link = link;
+        this.isPrivate = isPrivate;
+        this.maxPlayers = maxPlayers;
+        this.admins = admins;
+        this.watchers = watchers;
+        this.activePlayers = activePlayers;
+        this.winner = winner;
+        this.creator = creator;
+        this.rounds = rounds;
+        this.chat = chat;
     }
 
 }

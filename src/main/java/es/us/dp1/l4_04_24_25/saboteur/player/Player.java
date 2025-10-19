@@ -70,6 +70,4 @@ public class Player extends User{
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;
-
-  
 }

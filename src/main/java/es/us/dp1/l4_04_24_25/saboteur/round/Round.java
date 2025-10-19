@@ -47,7 +47,18 @@ public class Round extends BaseEntity{
     @OneToOne
     @JoinColumn(name = "board_id")
     private Board board;
+    
+    public Round() {
+        super();
+    }
 
-
+    public Round(Duration timeSpent, Integer leftCards, boolean winnerRol, Integer turn, Game game, Board board) {
+        this.timeSpent = timeSpent;
+        this.leftCards = leftCards;
+        this.winnerRol = winnerRol;
+        this.turn = turn;
+        this.game = game;
+        this.board = board;
+    }
 
 }

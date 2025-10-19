@@ -27,6 +27,9 @@ import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+
 @RestController
 @RequestMapping("/api/v1/games")
 @SecurityRequirement(name = "bearerAuth")
@@ -73,7 +76,20 @@ class GameRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Game> create(@RequestBody @Valid Game game) {
-        Game savedGame = gameService.saveGame(game);
+        Game savedGame = gameService.saveGame(new Game(
+            game.getTime(),
+            game.getGameStatus(),
+            game.getLink(),
+            game.isPrivate(),
+            game.getMaxPlayers(),
+            game.getAdmins(),
+            game.getWatchers(),
+            game.getActivePlayers(),
+            game.getWinner(),
+            game.getCreator(),
+            game.getRounds(),
+            game.getChat()
+        ));
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
     }
 
@@ -85,43 +101,41 @@ class GameRestController {
         return new ResponseEntity<>(this.gameService.updateGame(game, id), HttpStatus.OK);
     }
 
-   @PatchMapping(value = "{id}")
-
-
-    public ResponseEntity<Game> patchGame(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+   @PatchMapping(value = "{gameId}")
+    public ResponseEntity<Game> patchGame(@PathVariable("gameId") Integer id, @RequestBody Map<String, Object> updates) {
     Game game = gameService.findGame(id);
 
     updates.forEach((k, v) -> {
-        // Caso especial de isPrivate
         String fieldName = k.equals("private") ? "isPrivate" : k;
         Field field = ReflectionUtils.findField(Game.class, fieldName);
-        if (field == null) return;
+        if (field == null) {
+            return ;
+        }
         field.setAccessible(true);
 
+        
         try {
-            
-            // Caso especial de winner (ActivePlayer)
-            if (field.getType().equals(ActivePlayer.class) && v instanceof String username) {
-                ActivePlayer activePlayer = activePlayerService.findByUsername(username);
-
-            // Si ya hay un ganador, desvincular la partida ganada del jugador anterior
-            // y si el nuevo ganador no es null, vincular la partida ganada al nuevo ganador
-                if (game.getWinner() != null) {
-                     game.getWinner().setWonGame(null);
+            if (field.getType().equals(List.class) && (fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
+            List<String> names = (List<String>) v;
+            List<ActivePlayer> objectList = new ArrayList<>();
+            for (String name: names){
+                ActivePlayer activePlayer = activePlayerService.findByUsername(name);
+                objectList.add(activePlayer);
                 }
-                game.setWinner(activePlayer);
-                activePlayer.setWonGame(game);
+            ReflectionUtils.setField(field, game, objectList);
+            }
 
-
-                ReflectionUtils.setField(field, game, activePlayer);
-            } 
-            
-            else {
+            if (field.getType().isEnum()) {
+                var r = Enum.valueOf((Class<Enum>) field.getType(), v.toString());
+                ReflectionUtils.setField(field, game, r);
+            } else {
                 ReflectionUtils.setField(field, game, v);
             }
+           
         } catch (Exception e) {
-            throw new RuntimeException("Error setting field " + fieldName + ": " + e.getMessage(), e);
+            throw new RuntimeException("Error applying patch", e);
         }
+        
     });
 
     gameService.saveGame(game);
