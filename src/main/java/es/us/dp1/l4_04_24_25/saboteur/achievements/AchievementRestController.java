@@ -1,0 +1,71 @@
+package es.us.dp1.l4_04_24_25.saboteur.achievements;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/v1/achievements")
+@SecurityRequirement(name = "bearerAuth")
+public class AchievementRestController {
+
+    private final AchievementService achievementService;
+
+    @Autowired
+    public AchievementRestController(AchievementService achievementService) {
+        this.achievementService = achievementService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Achievement>> findAll(){
+
+        List<Achievement> res;
+        res = (List<Achievement>) achievementService.findAll();
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "{id}")
+    public ResponseEntity<Achievement> findById(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(achievementService.findAchievement(id), HttpStatus.OK);
+    }
+    
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Achievement> create(@RequestBody @Valid Achievement achievement) {
+        Achievement savedAchievement = achievementService.saveAchievement(achievement);
+        return new ResponseEntity<>(savedAchievement, HttpStatus.CREATED);
+    }
+
+
+    @PutMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Achievement> update(@PathVariable("id") Integer id, @RequestBody @Valid Achievement achievement){
+        RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
+        return new ResponseEntity<>(achievementService.updateAchievement(achievement, id), HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<MessageResponse> delete(@PathVariable("id") int id) {
+        RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
+        achievementService.deleteAchievement(id);
+        return new ResponseEntity<>(new MessageResponse("Achievement deleted!"), HttpStatus.OK);
+    }
+}

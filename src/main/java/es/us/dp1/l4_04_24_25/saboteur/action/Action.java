@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,16 +17,16 @@ import lombok.Setter;
 public class Action extends Card {
 
     @Column(name = "nombreAccion")
-	@NotEmpty
+	@NotNull
 	protected nameAction nameAction;
 
 	@Column(name = "valorEfecto")
-	@NotEmpty
+	@NotNull
 	protected effectValue effectValue;
 
     
 	@Column(name = "objetoAfecta", nullable = false)
-	@NotEmpty
+	@NotNull
 	protected boolean objectAffect;  //0 si afecta a un jugador, 1 si afecta al tablero
 
 
