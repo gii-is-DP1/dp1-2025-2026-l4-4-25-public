@@ -1,4 +1,4 @@
-package es.us.dp1.l4_04_24_25.saboteur.board;
+package es.us.dp1.l4_04_24_25.saboteur.round;
 
 import java.io.IOException;
 
@@ -10,25 +10,26 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
+
 @Component
-public class BoardDeserializer extends JsonDeserializer<Board> {
+public class RoundDeserializer extends JsonDeserializer<Round> {
 
     @Autowired
-    private BoardService boardService; 
+    private RoundService roundService; 
 
     @Override
-    public Board deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
-        Board result = null;
+    public Round deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
+        Round result = null;
 
         try {
             
-            Integer boardId = p.getIntValue();
+            Integer roundId = p.getIntValue();
             
-            result = boardService.findBoard(boardId);
+            result = roundService.findRound(roundId);
 
         } catch (Exception e) {
-           
-            throw new IOException("Board not found", e);
+            
+            throw new IOException("Round not found", e);
         }
 
         return result;

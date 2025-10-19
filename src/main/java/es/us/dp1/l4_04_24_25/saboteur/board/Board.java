@@ -6,12 +6,18 @@ import es.us.dp1.l4_04_24_25.saboteur.square.Square;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonManagedReference; 
+
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull; 
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,25 +26,27 @@ import lombok.Setter;
 @Setter
 @Table(name="Board")
 public class Board extends BaseEntity{
+    
+    public Board() {
+        super();
+    }
+
+    @Column(name = "base")
+    @NotNull 
+    protected Integer base = 11;
+
+    @Column(name = "heigth")
+    @NotNull 
+    protected Integer heigth = 9;
+
 
     
-    @Column(name = "base")
-	@NotEmpty
-	protected Integer base = 11;
+    @OneToMany(mappedBy = "board")
+    @JsonManagedReference 
+    private List<Square> busy = new ArrayList<>();
 
-	@Column(name = "heigth")
-	@NotEmpty
-	protected Integer heigth = 9;
-
-
-	//Relación 1 tablero muchas casillas ocupadas
-	@OneToMany(mappedBy = "board")
-	private List<Square> busy = new ArrayList<>();
-
-	//Relacion 1 tablero 1 ronda
-	@OneToOne(mappedBy = "board")
-	private Round round;
-
-   
-
+    @JsonSerialize(using = RoundSerializer.class)
+    @JsonDeserialize(using = RoundDeserializer.class)
+    @OneToOne(mappedBy = "board")
+    private Round round;
 }

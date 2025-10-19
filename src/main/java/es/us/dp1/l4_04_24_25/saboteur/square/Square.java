@@ -7,9 +7,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull; 
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Table(name="Squares")
 @Entity
@@ -18,28 +19,26 @@ import lombok.Setter;
 public class Square extends BaseEntity{
     
     @Column(name = "coordinateX", nullable = false)
-	@NotEmpty
-	protected Integer coordinateX;
+    @NotNull
+    protected Integer coordinateX;
 
-	@Column(name = "coordinateY", nullable = false)
-	@NotEmpty
-	protected Integer coordinateY;
+    @Column(name = "coordinateY", nullable = false)
+    @NotNull
+    protected Integer coordinateY;
 
     @Column(name = "occupation", nullable = false)
-	@NotEmpty
-	protected boolean occupation;
+    @NotNull 
+    protected boolean occupation;
 
-	@Column(name = "type", nullable = false)
-	protected type type;
+    @Column(name = "type", nullable = false)
+    @NotNull 
+    protected type type;
 
-
-	//Relación muchas casillas 1 tablero
-	@ManyToOne
-	protected Board board;
-
-
-
-
-
-
+    @JsonBackReference 
+    @ManyToOne
+    protected Board board;
+    
+    public Square() {
+        super();
+    }
 }
