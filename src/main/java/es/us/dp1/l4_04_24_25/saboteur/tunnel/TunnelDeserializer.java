@@ -1,4 +1,4 @@
-package es.us.dp1.l4_04_24_25.saboteur.board;
+package es.us.dp1.l4_04_24_25.saboteur.tunnel;
 
 import java.io.IOException;
 
@@ -11,24 +11,24 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 @Component
-public class BoardDeserializer extends JsonDeserializer<Board> {
+public class TunnelDeserializer extends JsonDeserializer<Tunnel> {
 
     @Autowired
-    private BoardService boardService; 
+    private TunnelService tunnelService;
 
     @Override
-    public Board deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
-        Board result = null;
+    public Tunnel deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
+        Tunnel result = null;
 
         try {
             
-            Integer boardId = p.getIntValue();
+            Integer tunnelId = p.getIntValue();
             
-            result = boardService.findBoard(boardId);
+            result = tunnelService.findTunnel(tunnelId);
 
         } catch (Exception e) {
            
-            throw new IOException("Board not found", e);
+            throw new IOException("Tunnel not found", e);
         }
 
         return result;

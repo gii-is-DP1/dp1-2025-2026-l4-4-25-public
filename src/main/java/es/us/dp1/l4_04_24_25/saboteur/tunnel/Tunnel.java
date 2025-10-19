@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,26 +15,26 @@ import lombok.Setter;
 @Table(name = "Tunnel")
 public class Tunnel extends Card {
 
-    @Column(name = "rotation", nullable = false)
-	@NotEmpty
-	protected boolean rotation;
+    @Column(name = "rotacion", nullable = false)
+	@NotNull
+	protected boolean rotacion;
 
-	@Column(name = "up", nullable = false)
-	@NotEmpty
-	protected boolean up = false;
+	@Column(name = "arriba", nullable = false)
+	@NotNull
+	protected boolean arriba = false;
 
     
-	@Column(name = "down", nullable = false)
-	@NotEmpty
-	protected boolean down = false;
+	@Column(name = "abajo", nullable = false)
+	@NotNull
+	protected boolean abajo = false;
 
-    @Column(name = "right", nullable = false)
-	@NotEmpty
-	protected boolean right = false;
+    @Column(name = "derecha", nullable = false)
+	@NotNull
+	protected boolean derecha = false;
 
-    @Column(name = "left", nullable = false)
-	@NotEmpty
-	protected boolean left = false;
+    @Column(name = "izquierda", nullable = false)
+	@NotNull
+	protected boolean izquierda = false;
 
    
 

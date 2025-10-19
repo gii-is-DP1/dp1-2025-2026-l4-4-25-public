@@ -75,7 +75,7 @@ const CreateGame = () => {
         const newGame = await response.json();
         alert("¡Partida creada con éxito!");
         console.log(newGame)
-         // navigate(`/games/${newGame.id}`); 
+        navigate(`/games/${newGame.id}`); 
       } else {
         const errorData = await response.json();
         alert(`Error al crear la partida: ${errorData.message}`);
@@ -144,7 +144,9 @@ const CreateGame = () => {
 
           <div className="card-footer">
             <button onClick={handleSubmit}>
+              <Link to="/board">
               ▶️START
+              </Link>
             </button>
             <button>
               LINK

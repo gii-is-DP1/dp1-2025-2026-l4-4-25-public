@@ -16,6 +16,8 @@ import UserEditAdmin from "./admin/users/UserEditAdmin";
 import Lobby from "./lobbies/lobby"; 
 import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
+import Board from "./game/board";
+import Info from "./lobbies/info";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -51,13 +53,15 @@ function App() {
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
           <Route path="/users/:username" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
           <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/editProfile" element={<EditProfile />} />      
+          <Route path="/info" element={<Info />} />
+          <Route path="/profile/editProfile" element={<EditProfile />} />  
         </>)
     }
     if (role === "PLAYER") {
       ownerRoutes = (
         <>
           <Route path="/register" element={<Register />} />
+          <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
 
@@ -79,6 +83,7 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
+        <Route path="/board" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
       </>
     )

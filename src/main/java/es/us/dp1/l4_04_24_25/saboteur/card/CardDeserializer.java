@@ -1,4 +1,4 @@
-package es.us.dp1.l4_04_24_25.saboteur.board;
+package es.us.dp1.l4_04_24_25.saboteur.card;
 
 import java.io.IOException;
 
@@ -11,24 +11,24 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 @Component
-public class BoardDeserializer extends JsonDeserializer<Board> {
+public class CardDeserializer extends JsonDeserializer<Card> {
 
+    
     @Autowired
-    private BoardService boardService; 
+    private CardService cardService; 
 
     @Override
-    public Board deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
-        Board result = null;
+    public Card deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
+        Card result = null;
 
         try {
             
-            Integer boardId = p.getIntValue();
+            Integer cardId = p.getIntValue();
             
-            result = boardService.findBoard(boardId);
+            result = cardService.findCard(cardId);
 
         } catch (Exception e) {
-           
-            throw new IOException("Board not found", e);
+            throw new IOException("Card not found", e);
         }
 
         return result;
