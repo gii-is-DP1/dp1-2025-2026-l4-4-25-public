@@ -296,3 +296,52 @@
 .github-link:hover {
     transform: scale(1.05);
     box-shadow: 0 0 10px rgba(0,0,0,0.3);}
+
+.friends-dropdown-container {
+    position: relative;
+    display: inline-block;}
+
+.friends-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 220px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 0.8rem;
+    z-index: 20;}
+
+.friends-dropdown h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;}
+
+.friend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.4rem 0;
+    font-size: 0.9rem;}
+
+.friend-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 0.3rem;}
+
+.friend-action {
+    width: 100%;
+    padding: 0.35rem;
+    margin-top: 0.3rem;
+    border: none;
+    background-color: #f0f0f0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: center;}
+
+.friend-action:hover {
+    background-color: #e0e0e0;}

@@ -324,3 +324,63 @@
   color: #888;
   text-align: center;
   margin-top: 20px;}
+
+
+  /* Sobre listar partidas (filtros) */
+
+.listgames-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 1rem;}
+
+.filters-panel {
+  width: 250px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 1rem;}
+
+.filters-panel h2 {
+  margin-bottom: 1rem;
+  text-align: center;}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;}
+
+.filter-group label {
+  font-weight: 600;
+  margin-bottom: 0.3rem;}
+
+.filter-group select,
+.filter-group input {
+  padding: 0.4rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;}
+
+.filter-clear-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #ff4558;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;}
+.filter-clear-btn:hover {
+  background-color: #c50014;}
+
+.listgames-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  flex-grow: 1;}
+
+.game-card {
+  flex: 1 1 250px;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);}
