@@ -14,8 +14,8 @@ export default function ListGames() {
     minPlayers: "",
     search: "",
   });
-
   const jwt = tokenService.getLocalAccessToken();
+
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -82,15 +82,21 @@ export default function ListGames() {
           ):(
             filteredGames.map((game) => (
               <div key={game.id} className="game-card">
-                <h3>🎮Game of {game.creator?.username || "Unknown"}</h3>
-                <p>🔁Status: {game.gameStatus}</p>
-                <p>👤Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
+                <h3>🎮Game of {game.id.username || "Unknown"}</h3>
+                <p>🖥️ ID: {game.id}</p>
+                <p>🔁 Status: {game.gameStatus}</p>
+                <p>👤 Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
                 <p>🌐 Privacy: {game.private ? "Private 🔒" : "Public 🔓"}</p>
                 <div className="game-card-footer">
                     {game.private ? (
+                     <Link to={"/board/" + game.id}>
                       <button className="button-join-game">📩REQUEST JOIN</button>
+                      </Link>
                     ):(
-                      <button className="button-join-game">📥JOIN</button>)}
+                      <Link to={"/board/" + game.id}>
+                      <button className="button-join-game">📥JOIN</button>
+                      </Link>
+                      )}
                   </div>
               </div>
               )))}
