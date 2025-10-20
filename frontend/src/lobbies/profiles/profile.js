@@ -71,7 +71,7 @@ export default function Profile() {
 
             {profile.authority.authority !== 'ADMIN' && (
                 <div className="top-left-button">
-                    <Link to="/profile">
+                    <Link to="/GamesPlayed">
                         <button className="button-games-played">🎮 Games Played</button>
                     </Link>
                 </div>

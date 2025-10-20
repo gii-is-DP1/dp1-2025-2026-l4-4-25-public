@@ -18,6 +18,7 @@ import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
 import Board from "./game/board";
 import Info from "./lobbies/info";
+import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -64,6 +65,7 @@ function App() {
           <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
+          <Route path="/GamesPlayed" element={<GamesPlayed />} />
 
         </>)
     }    

@@ -97,13 +97,8 @@ const CreateGame = () => {
     //el player  primero tiene  que esstar en la tabla activeplayers para poder meterlo en game-activeplayers
     const request = {
       gameStatus: "ONGOING",
-     // link: "asdasdasdasdvfsdvgsrf",
-      maxPlayers: parseInt(numPlayers),
-      activePlayers: [player.username],
-      //meter todo el player
-      creator: player.username,
-      //chat: null,
-      private: isPrivate
+      //maxPlayers: parseInt(numPlayers),
+      //activePlayers: [player.username]
     };
 
     console.log('Enviando request:', request);
@@ -127,7 +122,7 @@ const CreateGame = () => {
         alert("¡Partida actualizada con éxito!");
         setpatchgame(newGame)
         console.log(newGame)
-         // navigate(`/games/${newGame.id}`); 
+         navigate(`/board/${newGame.id}`); 
       } else {
         const errorData = await response.json();
         alert(`Error al actualizar la partida: ${errorData.message}`);
