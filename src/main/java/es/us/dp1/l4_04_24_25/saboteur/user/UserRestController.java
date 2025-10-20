@@ -17,7 +17,9 @@ package es.us.dp1.l4_04_24_25.saboteur.user;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.AccessDeniedException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedUserException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -77,12 +80,41 @@ class UserRestController {
 		return new ResponseEntity<>(userService.findByUsernameDTO(username), HttpStatus.OK);
 	}
 
-	@PostMapping
-	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<User> create(@RequestBody @Valid User user) {
-		User savedUser = userService.saveUser(user);
-		return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
-	}
+@PostMapping
+@ResponseStatus(HttpStatus.CREATED)
+public ResponseEntity<User> create(@RequestBody @Valid User user)
+        throws DataAccessException, DuplicatedUserException {
+
+    // Verificamos si ya existe un usuario con el mismo username
+    if (userService.existsUser(user.getUsername())) {
+        throw new DuplicatedUserException("A user with username '" + user.getUsername() + "' already exists");
+    }
+
+    // Verificamos si ya existe un usuario con el mismo email
+    List<UserDTO> existingUsers = userService.findAll();
+    boolean emailExists = existingUsers.stream()
+            .anyMatch(u -> u.getEmail().equalsIgnoreCase(user.getEmail()));
+
+    if (emailExists) {
+        throw new DuplicatedUserException("A user with email '" + user.getEmail() + "' already exists");
+    }
+
+    // Creamos un nuevo usuario limpio
+
+	System.out.println(">>> Password original del JSON: " + user.getPassword());
+    User newUser = new User();
+	
+    BeanUtils.copyProperties(user, newUser, "id");
+
+    // Encriptamos la contraseña (el UserService ya la vuelve a procesar si es necesario)
+   	newUser.setPassword(user.getPassword());
+
+    // Guardamos el nuevo usuario
+    User savedUser = this.userService.saveUser(newUser);
+
+    // Devolvemos la respuesta con estado CREATED (201)
+    return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+}
 
 	@PutMapping(value = "{userId}")
 	@ResponseStatus(HttpStatus.OK)

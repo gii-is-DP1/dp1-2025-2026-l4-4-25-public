@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
@@ -29,7 +30,7 @@ import lombok.Setter;
 @Table(name = "appusers")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class User extends BaseEntity {
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     @NotEmpty
     private String username;
 
@@ -46,7 +47,8 @@ public class User extends BaseEntity {
     @Column(name = "joined", nullable = false, updatable = false)
     private LocalDateTime joined = LocalDateTime.now(); 
 
-    @JsonIgnore
+   // @JsonIgnore
+   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     //@NotEmpty // Se elimina el NotEmpty para gestionar la edición del perfil
     @Column(name ="password", nullable = false)
     private String password;
@@ -55,7 +57,7 @@ public class User extends BaseEntity {
 	@Column(name = "image", nullable = false)
     private String image;
 
-    @Column(unique=true, nullable = false)
+    @Column(nullable = false)
     @NotEmpty
     private String email;
 
