@@ -1,24 +1,69 @@
 import React, { useState,useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import tokenService from '../../services/token.service';
 import '../../static/css/lobbies/games/CreateGame.css'; 
 
+
 const CreateGame = () => {
+  const location = useLocation();
+  const [game, setGame] = useState(location.state?.game);
+  const [chat,setchat] = useState()
   const [numPlayers, setnumPlayers] = useState('3');
   const [isPrivate, setisPrivate] = useState(false);
   const [player, setPlayer] = useState()
+  const[patchgame,setpatchgame]  = useState()
   const navigate = useNavigate(); 
   const jwt = tokenService.getLocalAccessToken();
 
   useEffect(() => {
-    const fetchPlayer = async () => {
+    const patchchat = async () => {
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
+        } //corregido con el copy properties
+           const request = {
+          game : game.id
         }
-            const response = await fetch(`/api/v1/users/${loggedInUser.id}`, {
+            const response = await fetch(`/api/v1/chats/${game.chat}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(request),
+      });
+            console.log(response);
+            if (response.ok) {
+              const data = await response.json();
+              console.log('chat del creategame ', data)
+              setchat(data);
+            } else {
+              console.error('Respuesta no OK:', response.status);
+              alert('Error al obtener la chat del jugador.');
+            }
+          } catch (error) {
+            console.error('Hubo un problema con la petición fetch:', error);
+            alert('Error de red. No se pudo conectar con el servidor.');
+          }
+        };
+        console.log('game del navigate', game)
+        console.log('chat del navigate', game.chat)
+
+        patchchat()
+        
+        console.log('chat del creategame ', chat)
+
+        const fetchPlayer = async () => {
+          try {
+            const loggedInUser = tokenService.getUser();
+          if (!loggedInUser || !loggedInUser.id) {
+            console.error("No se encontró el ID del usuario.");
+            return;
+        } //necesitamos el metodo findbyusername de player bien
+        //mientras tanto lo buscamos por el id con el loggedinuser
+            const response = await fetch(`/api/v1/players?username=${game.creator}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -39,20 +84,26 @@ const CreateGame = () => {
           }
         };
         fetchPlayer()
-        console.log(player)
+        
+
+        console.log("este es  el player", player)
+        
         
 
   },[jwt])
 
   async function handleSubmit() {
-
-    
-    
+    //necesitamos el patch de game
+    //el player  primero tiene  que esstar en la tabla activeplayers para poder meterlo en game-activeplayers
     const request = {
-      maxPlayers: numPlayers, 
-      private: isPrivate,                 
-      gameStatus: "CREATED",  
-      creator: player                 
+      gameStatus: "ONGOING",
+     // link: "asdasdasdasdvfsdvgsrf",
+      maxPlayers: parseInt(numPlayers),
+      activePlayers: [player],
+      //meter todo el player
+      //creator: player.username,
+      //chat: null,
+      private: isPrivate
     };
 
     console.log('Enviando request:', request);
@@ -61,8 +112,8 @@ const CreateGame = () => {
     const jwt = tokenService.getLocalAccessToken();
 
     try {
-      const response = await fetch("/api/v1/games", {
-        method: "POST",
+      const response = await fetch(`/api/v1/games/${game.id}`, {
+        method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
@@ -73,12 +124,13 @@ const CreateGame = () => {
 
       if (response.ok) {
         const newGame = await response.json();
-        alert("¡Partida creada con éxito!");
+        alert("¡Partida actualizada con éxito!");
+        setpatchgame(newGame)
         console.log(newGame)
-        navigate(`/games/${newGame.id}`); 
+         // navigate(`/games/${newGame.id}`); 
       } else {
         const errorData = await response.json();
-        alert(`Error al crear la partida: ${errorData.message}`);
+        alert(`Error al actualizar la partida: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
@@ -144,15 +196,17 @@ const CreateGame = () => {
 
           <div className="card-footer">
             <button onClick={handleSubmit}>
-              <Link to="/board">
               ▶️START
-              </Link>
             </button>
             <button>
               LINK
             </button>
             <Link to="/lobby">
               <button className="button-small">❌CANCEL</button>
+            </Link>
+
+              <Link to="/board">
+              <button className="button-small"> TABLETO PRUEBAS</button>
             </Link>
           </div>
         </div>

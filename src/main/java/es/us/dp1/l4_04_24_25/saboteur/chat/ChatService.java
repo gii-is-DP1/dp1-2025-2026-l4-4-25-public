@@ -38,7 +38,7 @@ public class ChatService {
     @Transactional
     public Chat updateChat(Chat chat, Integer idToUpdate){
         Chat toUpdate = findChat(idToUpdate);
-        BeanUtils.copyProperties(chat, toUpdate,"id");
+        BeanUtils.copyProperties(chat, toUpdate,"id","game");
         chatRepository.save(toUpdate);
         return toUpdate;
     }

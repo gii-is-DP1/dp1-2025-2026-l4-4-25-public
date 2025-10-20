@@ -82,15 +82,15 @@ export default function ListGames() {
           ):(
             filteredGames.map((game) => (
               <div key={game.id} className="game-card">
-                <h3>🎮Game of {game.creator?.username || "Desconocido"}</h3>
+                <h3>🎮Game of {game.creator?.username || "Unknown"}</h3>
                 <p>🔁Status: {game.gameStatus}</p>
                 <p>👤Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
-                <p>🌐 Privacy: {game.private ? "Privada 🔒" : "Pública 🔓"}</p>
+                <p>🌐 Privacy: {game.private ? "Private 🔒" : "Public 🔓"}</p>
                 <div className="game-card-footer">
                     {game.private ? (
-                      <button className="button-join-game">📩Solicitar Unirse</button>
+                      <button className="button-join-game">📩REQUEST JOIN</button>
                     ):(
-                      <button className="button-join-game">📥Unirse</button>)}
+                      <button className="button-join-game">📥JOIN</button>)}
                   </div>
               </div>
               )))}

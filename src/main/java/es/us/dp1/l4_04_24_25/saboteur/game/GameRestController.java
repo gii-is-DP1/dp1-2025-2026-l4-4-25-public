@@ -115,23 +115,41 @@ class GameRestController {
 
         
         try {
-            if (field.getType().equals(List.class) && (fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
-            List<String> names = (List<String>) v;
-            List<ActivePlayer> objectList = new ArrayList<>();
-            for (String name: names){
-                ActivePlayer activePlayer = activePlayerService.findByUsername(name);
-                objectList.add(activePlayer);
+            // Handle lists of usernames -> convert to List<ActivePlayer>
+            if ((field.getType().equals(List.class) || List.class.isAssignableFrom(field.getType())) && (fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
+                List<String> names = (List<String>) v;
+                List<ActivePlayer> objectList = new ArrayList<>();
+                for (String name: names){
+                    ActivePlayer ap = activePlayerService.findByUsername(name);
+                    objectList.add(ap);
                 }
-            ReflectionUtils.setField(field, game, objectList);
+                ReflectionUtils.setField(field, game, objectList);
             }
+            // Caso especial de winner (ActivePlayer) representado por nombre de usuario
+            else if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
+                ActivePlayer ap = activePlayerService.findByUsername(username);
 
-            if (field.getType().isEnum()) {
-                var r = Enum.valueOf((Class<Enum>) field.getType(), v.toString());
-                ReflectionUtils.setField(field, game, r);
-            } else {
+                
+            // Si ya hay un ganador, desvincular la partida ganada del jugador anterior
+            // y si el nuevo ganador no es null, vincular la partida ganada al nuevo ganador
+                if (game.getWinner() != null) {
+                     game.getWinner().setWonGame(null);
+                }
+                game.setWinner(ap);
+                ap.setWonGame(game);
+
+                ReflectionUtils.setField(field, game, ap);
+            }
+            // Enum handling (e.g., gameStatus)
+            else if (field.getType().isEnum() && v instanceof String) {
+                @SuppressWarnings({"rawtypes", "unchecked"})
+                Enum enumValue = Enum.valueOf((Class) field.getType(), (String) v);
+                ReflectionUtils.setField(field, game, enumValue);
+            }
+            else {
                 ReflectionUtils.setField(field, game, v);
             }
-           
+            
         } catch (Exception e) {
             throw new RuntimeException("Error applying patch", e);
         }
