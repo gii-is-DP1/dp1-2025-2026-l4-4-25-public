@@ -1,7 +1,10 @@
 package es.us.dp1.l4_04_24_25.saboteur.player;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,12 +27,17 @@ public class PlayerDTO{
     private Integer peopleDamaged;
     private Integer peopleRepaired;
     private boolean isWatcher;
+    private List<String> friends;
+    private List<Achievement> achievements;
+    private Game game;
+    
 
     public PlayerDTO() {
     }
 
     public PlayerDTO(String username, String name, String birthDate, LocalDateTime joined, String image, String email, String authority, 
-            Integer playedGames, Integer wonGames, Integer destroyedPaths, Integer builtPaths, Integer acquiredGoldNuggets, Integer peopleDamaged, Integer peopleRepaired, boolean isWatcher) {
+            Integer playedGames, Integer wonGames, Integer destroyedPaths, Integer builtPaths, Integer acquiredGoldNuggets, Integer peopleDamaged, 
+            Integer peopleRepaired, boolean isWatcher, List<String> friends, List<Achievement> achievements, Game game) {
         this.username = username;
         this.name = name;
         this.birthDate = birthDate;
@@ -45,7 +53,8 @@ public class PlayerDTO{
         this.peopleDamaged = peopleDamaged;
         this.peopleRepaired = peopleRepaired;
         this.isWatcher = isWatcher;
-
-
+        this.friends = friends;
+        this.achievements = achievements;
+        this.game = game;
     }
 }
