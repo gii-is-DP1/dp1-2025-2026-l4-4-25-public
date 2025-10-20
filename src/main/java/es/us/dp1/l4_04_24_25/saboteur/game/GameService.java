@@ -60,11 +60,12 @@ public class GameService {
         return gameRepository.findByCreatorUsername(creatorUsername).orElseThrow(()-> new ResourceNotFoundException("Game","creator username",creatorUsername));
     }
 
+    /* 
     @Transactional(readOnly = true)
     public Iterable<Game> findAllByAdminUsername(String adminUsername) {
         return gameRepository.findAllByAdminUsername(adminUsername);
     }
-
+*/
     @Transactional(readOnly = true)
     public Iterable<Game> findAllPublicGames() {
         return gameRepository.findAllPublicGames();

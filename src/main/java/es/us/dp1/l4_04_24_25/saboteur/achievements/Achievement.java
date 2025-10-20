@@ -45,11 +45,14 @@ public class Achievement extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "creator_id")
     private User creator;
+    
 
+    /* 
     //Relacion muchos logros a muchos administradores que lo gestionan
     @ManyToMany(mappedBy = "managedAchievements")
     private List<User> admins =  new ArrayList<>();
-    
+    */
+
     //Relacion muchos logros a muchos jugadores que lo han adquirido
     @ManyToMany(mappedBy = "accquiredAchievements")
     private List<Player> players = new ArrayList<>();
