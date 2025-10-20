@@ -1,24 +1,21 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
 
-import java.sql.Date;
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime; 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
-import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import jakarta.persistence.CascadeType;
-import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -49,6 +46,7 @@ public class User extends BaseEntity {
     @Column(name = "joined", nullable = false, updatable = false)
     private LocalDateTime joined = LocalDateTime.now(); 
 
+    @JsonIgnore
     //@NotEmpty // Se elimina el NotEmpty para gestionar la edición del perfil
     @Column(name ="password", nullable = false)
     private String password;
