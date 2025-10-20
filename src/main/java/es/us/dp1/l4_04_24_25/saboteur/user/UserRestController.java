@@ -17,8 +17,6 @@ package es.us.dp1.l4_04_24_25.saboteur.user;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +35,7 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.AccessDeniedException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -53,12 +52,12 @@ class UserRestController {
 	}
 
 	@GetMapping
-	public ResponseEntity<List<User>> findAll(@RequestParam(required = false) String auth) {
-		List<User> res;
+	public ResponseEntity<List<UserDTO>> findAll(@RequestParam(required = false) String auth) {
+		List<UserDTO> res;
 		if (auth != null) {
-			res = (List<User>) userService.findAllByAuthority(auth);
+			res = (List<UserDTO>) userService.findAllByAuthority(auth);
 		} else
-			res = (List<User>) userService.findAll();
+			res = (List<UserDTO>) userService.findAll();
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
@@ -69,8 +68,13 @@ class UserRestController {
 	}
 
 	@GetMapping(value = "{id}")
-	public ResponseEntity<User> findById(@PathVariable("id") Integer id) {
-		return new ResponseEntity<>(userService.findUser(id), HttpStatus.OK);
+	public ResponseEntity<UserDTO> findById(@PathVariable("id") Integer id) {
+		return new ResponseEntity<>(userService.findUserDTO(id), HttpStatus.OK);
+	}
+
+	@GetMapping("byUsername")
+	public ResponseEntity<UserDTO> findByUsername(@RequestParam String username) {
+		return new ResponseEntity<>(userService.findByUsernameDTO(username), HttpStatus.OK);
 	}
 
 	@PostMapping
@@ -98,4 +102,15 @@ class UserRestController {
 			throw new AccessDeniedException("You can't delete yourself!");
 	}
 
+	@DeleteMapping(value = "{username}")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<MessageResponse> deleteByUsername(@PathVariable("username") String username) {
+		RestPreconditions.checkNotNull(userService.findByUsername(username), "User", "USERNAME", username);
+		User user = userService.findByUsername(username);
+		if (userService.findCurrentUser().getId() != user.getId()) {
+			userService.deleteUser(user.getId());
+			return new ResponseEntity<>(new MessageResponse("User deleted!"), HttpStatus.OK);
+		} else
+			throw new AccessDeniedException("You can't delete yourself!");
+	}
 }

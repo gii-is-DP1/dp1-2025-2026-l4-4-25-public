@@ -14,12 +14,12 @@ public class UserDTO{
     private LocalDateTime joined;
     private String image;
     private String email;
-    private Authorities authority;
+    private String authority;
 
     public UserDTO() {
     }
 
-    public UserDTO(String username, String name, String birthDate, LocalDateTime joined, String image, String email, Authorities authority) {
+    public UserDTO(String username, String name, String birthDate, LocalDateTime joined, String image, String email, String authority) {
         this.username = username;
         this.name = name;
         this.birthDate = birthDate;

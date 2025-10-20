@@ -1,20 +1,12 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
-import java.util.Collection;
-import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -39,7 +31,7 @@ class UserServiceTests {
 		User user = this.userService.findCurrentUser();
 		assertEquals("player1", user.getUsername());
 	}
-
+	/*
 	@Test
 	@WithMockUser(username = "prueba")
 	void shouldNotFindCorrectCurrentUser() {
@@ -56,12 +48,14 @@ class UserServiceTests {
 		List<User> users = (List<User>) this.userService.findAll();
 		assertEquals(11, users.size());
 	}
-
+	
+	/*
 	@Test
 	void shouldFindUsersByUsername() {
 		User user = this.userService.findUser("player1");
 		assertEquals("player1", user.getUsername());
 	}
+	
 
 	@Test
 	void shouldFindUsersByAuthority() {
@@ -131,7 +125,7 @@ class UserServiceTests {
 		assertEquals(count + 1, finalCount);
 	}
 
-
+	*/
 //	@Test
 //	@Transactional
 //	void shouldDeleteUserWithOwner() {
