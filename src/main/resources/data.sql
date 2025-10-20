@@ -24,6 +24,27 @@ INSERT INTO message (id, chat_id, text, active_player_id) values ( 1, 1, 'Welcom
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, null, 2);
 
+INSERT INTO board (id, base, heigth) VALUES (1, 11, 9);
+INSERT INTO board (id, base, heigth) VALUES (2, 11, 9);
+
+
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
+VALUES (101, 1, 4, TRUE, 0, 1);
+
+INSERT INTO cards (id, deck_id, status, image) 
+VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
+
+INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
+VALUES (200, 0, FALSE, 0);
+
+INSERT INTO cards (id, deck_id, status, image) 
+VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');
+
+INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
+VALUES (201, FALSE, TRUE, TRUE, FALSE, FALSE);
+
+--INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
+--VALUES (4, 1, 4, TRUE, 'PATH', 1);
 
 
 
