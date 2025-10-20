@@ -3,10 +3,12 @@ package es.us.dp1.l4_04_24_25.saboteur.deck;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize; // Nuevo Import
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.annotation.JsonManagedReference; // Nuevo Import
 
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
@@ -33,6 +35,7 @@ public class Deck extends BaseEntity{
     private List<Card> cards = new ArrayList<>();
 
     @JsonSerialize(using = ActivePlayerSerializer.class)
+    @JsonDeserialize(using = ActivePlayerDeserializer.class)
     @OneToOne(mappedBy = "deck")
     private ActivePlayer activePlayer;
 }

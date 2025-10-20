@@ -55,7 +55,8 @@ public class RoundRestController {
             round.isWinnerRol(),
             round.getTurn(),
             round.getGame(),
-            round.getBoard()
+            round.getBoard(),
+            round.getRoundNumber()
         ));
         return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
