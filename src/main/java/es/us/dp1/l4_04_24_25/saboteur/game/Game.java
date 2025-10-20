@@ -17,6 +17,7 @@ import es.us.dp1.l4_04_24_25.saboteur.chat.ChatSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,10 +59,11 @@ public class Game extends BaseEntity{
 
     private Integer maxPlayers = 3;
 
+    /* 
     // Relacion varias partidas son gestionadas por varios administradores
     @ManyToMany(mappedBy = "managedGames")
     private List<User> admins = new ArrayList<>();
-
+*/
     // Relación 1 partidas son observadas por n jugador
 
     @OneToMany(mappedBy = "game")
@@ -92,13 +94,13 @@ public class Game extends BaseEntity{
     private ActivePlayer creator;
 
     //Relacion 1 partida tiene 3 rondas
-    @OneToMany(mappedBy = "game")
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Round> rounds = new ArrayList<>();
 
     //Relacion 1 partida 1 chat
     @JsonDeserialize(using = ChatDeserializer.class)
     @JsonSerialize(using = ChatSerializer.class)
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Chat chat;
 
 
@@ -120,13 +122,12 @@ public class Game extends BaseEntity{
         super();
     }
 
-    public Game(Duration time, gameStatus gameStatus, String link, boolean isPrivate, Integer maxPlayers, List<User> admins, List<Player> watchers, List<ActivePlayer> activePlayers, ActivePlayer winner, ActivePlayer creator, List<Round> rounds, Chat chat) {
+    public Game(Duration time, gameStatus gameStatus, String link, boolean isPrivate, Integer maxPlayers, List<Player> watchers, List<ActivePlayer> activePlayers, ActivePlayer winner, ActivePlayer creator, List<Round> rounds, Chat chat) {
         this.time = time;
         this.gameStatus = gameStatus;
         this.link = link;
         this.isPrivate = isPrivate;
         this.maxPlayers = maxPlayers;
-        this.admins = admins;
         this.watchers = watchers;
         this.activePlayers = activePlayers;
         this.winner = winner;

@@ -10,7 +10,7 @@ const CreateGame = () => {
   const [chat,setchat] = useState()
   const [numPlayers, setnumPlayers] = useState('3');
   const [isPrivate, setisPrivate] = useState(false);
-  const [player, setPlayer] = useState()
+  const [player, setPlayer] = useState([])
   const[patchgame,setpatchgame]  = useState()
   const navigate = useNavigate(); 
   const jwt = tokenService.getLocalAccessToken();
@@ -99,9 +99,9 @@ const CreateGame = () => {
       gameStatus: "ONGOING",
      // link: "asdasdasdasdvfsdvgsrf",
       maxPlayers: parseInt(numPlayers),
-      activePlayers: [player],
+      activePlayers: [player.username],
       //meter todo el player
-      //creator: player.username,
+      creator: player.username,
       //chat: null,
       private: isPrivate
     };
@@ -205,9 +205,6 @@ const CreateGame = () => {
               <button className="button-small">❌CANCEL</button>
             </Link>
 
-              <Link to="/board">
-              <button className="button-small"> TABLETO PRUEBAS</button>
-            </Link>
           </div>
         </div>
       </div>

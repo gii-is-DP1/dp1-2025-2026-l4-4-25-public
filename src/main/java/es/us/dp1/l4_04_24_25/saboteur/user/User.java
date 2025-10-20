@@ -77,7 +77,7 @@ public class User extends BaseEntity {
 		}
 		return cond;
 	}
-
+/* 
 	//RELACION CON USUARIOS
     @ManyToMany
     @JoinTable(
@@ -86,11 +86,12 @@ public class User extends BaseEntity {
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> users = new ArrayList<>();
-
+*/
     //RELACION -> ADMIN CREA LGORO
     @OneToMany (mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true) //CASCADE ES PARA QUE CUALQIUER ACCIÓN SOBRE EL PADRE (EL ADMIN) SE APLIQUE TAMBIEN SOBRE SU HIJO (LOGRO)
     private List<Achievement> createdAchievements = new ArrayList<>();
 
+    /* 
     //RELACION -> ADMIN EDITA LOGRO
     @ManyToMany
     @JoinTable(
@@ -109,5 +110,5 @@ public class User extends BaseEntity {
         inverseJoinColumns = @JoinColumn(name = "game_id")
     )
     private List<Game> managedGames = new ArrayList<>();
-
+*/
 }

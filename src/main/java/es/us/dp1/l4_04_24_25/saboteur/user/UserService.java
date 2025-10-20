@@ -64,7 +64,9 @@ public class UserService {
 		newPlayer.setAccquiredAchievements(new ArrayList<>());
 		newPlayer.setWatcher(false);
 
-		return playerRepository.save(newPlayer); // Se guarda el player (extiende de User por lo que estamos devolviendo un objeto User)
+		playerRepository.save(newPlayer);
+		
+		return userRepository.save(user); // Se guarda el player (extiende de User por lo que estamos devolviendo un objeto User)
 
 
 	}

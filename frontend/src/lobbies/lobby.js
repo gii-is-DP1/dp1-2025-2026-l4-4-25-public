@@ -185,7 +185,9 @@ export default function Lobby(){
                 </Link>
             </div>
             <div className="bottom-left-button">
+                <Link to="/Ranking">
                 <button className="button-ranking">🏆RANKING</button>
+                </Link>
              </div>
         </div>
     )
