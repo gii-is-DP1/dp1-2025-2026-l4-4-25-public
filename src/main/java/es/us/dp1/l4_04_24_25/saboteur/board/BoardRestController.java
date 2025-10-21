@@ -3,7 +3,10 @@ package es.us.dp1.l4_04_24_25.saboteur.board;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
@@ -19,7 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -30,10 +37,12 @@ import jakarta.validation.Valid;
 public class BoardRestController {
 
     private final BoardService boardService;
+    
 
     @Autowired
-    public BoardRestController(BoardService boardService) {
+    public BoardRestController(BoardService boardService, RoundService roundService, ObjectMapper objectMapper) {
         this.boardService = boardService;
+    
     }
 
     @GetMapping
@@ -50,15 +59,12 @@ public class BoardRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     
-    public ResponseEntity<Board> create(@Valid @RequestBody Board board) {
+    public ResponseEntity<Board> create(@Valid @RequestBody Board board) throws DataAccessException{
         
         Board newBoard = new Board();
-        newBoard.setBase(board.getBase());
-        newBoard.setHeigth(board.getHeigth());
-        newBoard.setBusy(board.getBusy());
-        newBoard.setRound(board.getRound());
-        
-        Board savedBoard = boardService.saveBoard(newBoard);
+        Board savedBoard;
+        BeanUtils.copyProperties(board, newBoard,"id");
+        savedBoard = this.boardService.saveBoard(newBoard);
         return new ResponseEntity<>(savedBoard, HttpStatus.CREATED);
     }
 
@@ -69,40 +75,29 @@ public class BoardRestController {
         return new ResponseEntity<>(this.boardService.updateBoard(board, id), HttpStatus.OK);
     }
 
-    @PatchMapping(value = "{id}")
-    @ResponseStatus(HttpStatus.OK)
     
-    public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
-        Board board = boardService.findBoard(id);
 
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(Board.class, k);
-            
-            if (field == null) return; 
-            
-            field.setAccessible(true);
+    @PatchMapping(value = "{id}")
+@ResponseStatus(HttpStatus.OK)
+public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+    Board board = boardService.findBoard(id);
 
-            try {
-                
-                if (field.getType().equals(Integer.class)) {
-                    ReflectionUtils.setField(field, board, (Integer) v);
-                }
-                
-                else if (k.equals("round") && v instanceof Map) {
-                    
-                }
-                else {
-                    ReflectionUtils.setField(field, board, v);
-                }
+    updates.forEach((k, v) -> {
+        Field field = ReflectionUtils.findField(Board.class, k);
+        if (field == null) return;
+        field.setAccessible(true);
 
-            } catch (Exception e) {
-                throw new RuntimeException("Error applying patch to field " + k, e);
-            }
-        });
+        try {
+                ReflectionUtils.setField(field, board, v);
+        } catch (Exception e) {
+            throw new RuntimeException("Error applying patch to field " + k, e);
+        }
+    });
 
-        boardService.saveBoard(board);
-        return ResponseEntity.ok(board);
-    }
+    boardService.saveBoard(board);
+    return ResponseEntity.ok(board);
+}
+
 
 
     @DeleteMapping(value = "{id}")

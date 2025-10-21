@@ -163,7 +163,7 @@ class GameRestController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("gameId") int id) {
         RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
-        if (gameService.findGame(id).getGameStatus().equals("CREATED"))
+        if (gameService.findGame(id).getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED")))
             gameService.deleteGame(id);
         else
             throw new IllegalStateException("You can't delete an ongoing or finished game!");
