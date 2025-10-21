@@ -25,6 +25,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -90,7 +91,7 @@ public class Game extends BaseEntity{
     @JsonSerialize(using = ActivePlayerSerializer.class)
     @JsonDeserialize(using = ActivePlayerDeserializer.class)
     //Relacion 1 partida es creada por 1 participante
-    @OneToOne(mappedBy = "createdGame")
+    @ManyToOne
     private ActivePlayer creator;
 
     //Relacion 1 partida tiene 3 rondas

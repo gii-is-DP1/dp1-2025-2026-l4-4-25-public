@@ -67,10 +67,7 @@ public class ActivePlayerService {
         return activePlayerRepository.findByPickaxeState(cartState);
     }
 
-    @Transactional(readOnly = true)
-    public ActivePlayer findCreatorByGameId(Integer gameId) {
-        return activePlayerRepository.findCreatorByGameId(gameId).orElseThrow(()-> new ResourceNotFoundException("GameId","id",gameId));
-    }
+    
 
     /*
     @Transactional(readOnly = true)
