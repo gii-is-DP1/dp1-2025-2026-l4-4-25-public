@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,11 +48,13 @@ class UserRestController {
 
 	private final UserService userService;
 	private final AuthoritiesService authService;
+	 private final PasswordEncoder encoder;
 
 	@Autowired
-	public UserRestController(UserService userService, AuthoritiesService authService) {
+	public UserRestController(UserService userService, AuthoritiesService authService, PasswordEncoder encoder) {
 		this.userService = userService;
 		this.authService = authService;
+		this.encoder = encoder;
 	}
 
 	@GetMapping
@@ -101,13 +104,12 @@ public ResponseEntity<User> create(@RequestBody @Valid User user)
 
     // Creamos un nuevo usuario limpio
 
-	System.out.println(">>> Password original del JSON: " + user.getPassword());
     User newUser = new User();
 	
     BeanUtils.copyProperties(user, newUser, "id");
 
     // Encriptamos la contraseña (el UserService ya la vuelve a procesar si es necesario)
-   	newUser.setPassword(user.getPassword());
+   	newUser.setPassword(encoder.encode(user.getPassword()));
 
     // Guardamos el nuevo usuario
     User savedUser = this.userService.saveUser(newUser);

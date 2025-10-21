@@ -30,11 +30,11 @@ import lombok.Setter;
 @Table(name = "appusers")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class User extends BaseEntity {
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     @NotEmpty
     private String username;
 
-	@Column(name = "name", nullable = false)
+	@Column( name = "name", nullable = false)
     @NotEmpty
     private String name;
 	
@@ -57,7 +57,7 @@ public class User extends BaseEntity {
 	@Column(name = "image", nullable = false)
     private String image;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     @NotEmpty
     private String email;
 

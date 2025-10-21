@@ -2,9 +2,12 @@ package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +20,15 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedActivePlayerException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedPlayerException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedUserException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerDTO;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.user.UserDTO;
+import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -27,10 +39,16 @@ import jakarta.validation.Valid;
 class ActivePlayerRestController {
 
     private final ActivePlayerService activePlayerService;
+    private final PlayerService playerService;
+    private final UserService userService;
+    private final PasswordEncoder encoder;
 
     @Autowired
-    public ActivePlayerRestController(ActivePlayerService activePlayerService) {
+    public ActivePlayerRestController(ActivePlayerService activePlayerService, PlayerService playerService, UserService userService, PasswordEncoder encoder) {
         this.activePlayerService = activePlayerService;
+        this.encoder = encoder;
+        this.userService = userService;
+        this.playerService = playerService;
     }
 
     @GetMapping
@@ -52,7 +70,7 @@ class ActivePlayerRestController {
         res = (List<ActivePlayer>) activePlayerService.findByRol(rol);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    /*
+    /* 
     @GetMapping("byGameId")
     public ResponseEntity<List<ActivePlayer>> findByGameId(@RequestParam Integer gameId){
         List<ActivePlayer> res;
@@ -104,12 +122,92 @@ class ActivePlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
     */
-
+/* 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ActivePlayer> create(@RequestBody @Valid ActivePlayer activePlayer) {
         ActivePlayer savedActivePlayer = activePlayerService.saveActivePlayer(activePlayer);
         return new ResponseEntity<ActivePlayer>(savedActivePlayer, HttpStatus.CREATED);
+    }
+*/
+
+@PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<ActivePlayer> createPlayer(@RequestBody @Valid Player activePlayer)
+    throws DataAccessException, DuplicatedPlayerException, DuplicatedUserException, DuplicatedActivePlayerException {
+       
+    
+        //VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO USERNAME
+        if (activePlayerService.existsActivePlayer(activePlayer.getUsername())){
+        throw new DuplicatedActivePlayerException("An activePlayer with username '" + activePlayer.getUsername() + "' already exists");
+         }
+
+
+         // VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO EMAIL
+         List<ActivePlayer> existingActivePlayers = activePlayerService.findAll();
+         boolean emailExistsActivePlayer = existingActivePlayers.stream()
+            .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
+
+         if (emailExistsActivePlayer) {
+          throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
+          }
+        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        try {
+            playerService.findByUsername(activePlayer.getUsername());
+            throw new DuplicatedPlayerException("Username already exists: " + activePlayer.getUsername());
+        } catch (ResourceNotFoundException e) {
+       
+        }
+
+        //VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO USERNAME
+        if (userService.existsUser(activePlayer.getUsername())) {
+        throw new DuplicatedUserException("A user with username '" + activePlayer.getUsername() + "' already exists");
+         }
+
+         // VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO EMAIL
+         List<UserDTO> existingUsers = userService.findAll();
+         boolean emailExists = existingUsers.stream()
+            .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
+
+         if (emailExists) {
+          throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
+          }
+        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        try {
+            playerService.findByUsername(activePlayer.getUsername());
+            throw new DuplicatedPlayerException("Username already exists: " + activePlayer.getUsername());
+        } catch (ResourceNotFoundException e) {
+       
+        }
+
+        //VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO EMAIL
+        List<PlayerDTO> existingPlayers = playerService.findAll();
+        boolean emailExistsPlayer = existingPlayers.stream()
+            .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
+
+        if (emailExistsPlayer) {
+            throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
+        }
+
+    
+        ActivePlayer newActivePlayer = new ActivePlayer();
+        ActivePlayer savedActivePlayer;
+
+       
+        BeanUtils.copyProperties(activePlayer, newActivePlayer, "id");
+
+       
+       
+            
+            newActivePlayer.setPassword(encoder.encode(activePlayer.getPassword()));
+        
+
+       
+        savedActivePlayer = this.activePlayerService.saveActivePlayer(newActivePlayer);
+
+        
+        return new ResponseEntity<>(savedActivePlayer, HttpStatus.CREATED);
+
     }
 
     @PutMapping(value = "{id}")
