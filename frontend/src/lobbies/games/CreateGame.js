@@ -102,7 +102,7 @@ const CreateGame = () => {
       gameStatus: "CREATED",
       private: isPrivate,
       maxPlayers: parseInt(numPlayers),
-      //activePlayers: [player.username]
+      activePlayers: [player.username]
     };
 
     console.log('Enviando request:', request);
@@ -156,7 +156,7 @@ const CreateGame = () => {
       const newGame = await response.json();
       setpatchgame(newGame);
       alert("¡Partida iniciada con éxito!");
-      navigate(`/board/${newGame.id}`); 
+      navigate(`/board/${newGame.id}`, { state: { game: newGame } });
     } else {
       const errorData = await response.json();
       alert(`Error al iniciar la partida: ${errorData.message}`);
@@ -179,8 +179,8 @@ const CreateGame = () => {
 
     if (response.ok) {
       const newGame = await response.json();
-      alert("Partida eliminar");
-      navigate(`/board/${newGame.id}`); 
+      alert("Partida eliminada");
+      navigate("/lobby");
     } else {
       const errorData = await response.json();
       alert(`Error al eliminar la partida: ${errorData.message}`);
@@ -190,6 +190,17 @@ const CreateGame = () => {
     alert('No se pudo conectar con el servidor');
   }
 
+  }
+  async function handleCopyLink() {
+    console.log("Link", game.link)
+    const linkToCopy = game.link;
+    try {
+      await navigator.clipboard.writeText(linkToCopy);
+      alert("¡Enlace copiado al portapapeles!");
+    } catch (err) {
+      console.error('Error al copiar el enlace: ', err);
+      alert('No se pudo copiar el enlace.');
+    }
   }
 
   return (
@@ -253,10 +264,9 @@ const CreateGame = () => {
                 <>
                   <button onClick={handleSubmit}>📑 SAVE CHANGES</button>
                   <button onClick={handleStart}>▶️ START</button>
-                  <button>🔗 LINK</button>
-                  <Link to="/lobby">
+                  <button onClickCapture={handleCopyLink}>🔗 LINK</button>
                     <button onClick={handleCancel}>❌ CANCEL</button>
-                  </Link>
+                  
                 </>
               ) : (
                 <Link to="/lobby">
