@@ -90,5 +90,21 @@
 }
 
 .button-join-game:hover {
-  transform: scale(1.05);
-}
+  transform: scale(1.05);}
+
+.filter-friends-btn {
+  background-color: #f0f0f0;
+  border: 2px solid #ccc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;}
+
+.filter-friends-btn:hover {
+  background-color: #e0e0e0;}
+
+.filter-friends-btn.active {
+  background-color: #4caf50;
+  color: white;
+  border-color: #3e8e41;}

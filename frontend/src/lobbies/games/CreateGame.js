@@ -14,8 +14,12 @@ const CreateGame = () => {
   const[patchgame,setpatchgame]  = useState()
   const navigate = useNavigate(); 
   const jwt = tokenService.getLocalAccessToken();
+  const loggedInUser = tokenService.getUser();
+  const isCreator = game?.creator === loggedInUser?.username;
+
 
   useEffect(() => {
+     if (!game) return;
     const patchchat = async () => {
           try {
             const loggedInUser = tokenService.getUser();
@@ -50,12 +54,11 @@ const CreateGame = () => {
         };
         console.log('game del navigate', game)
         console.log('chat del navigate', game.chat)
-
         patchchat()
         
-        console.log('chat del creategame ', chat)
 
         const fetchPlayer = async () => {
+          console.log('chat del creategame ', chat)
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
@@ -90,20 +93,16 @@ const CreateGame = () => {
         
         
 
-  },[jwt])
+  },[jwt, game])
 
   async function handleSubmit() {
     //necesitamos el patch de game
     //el player  primero tiene  que esstar en la tabla activeplayers para poder meterlo en game-activeplayers
     const request = {
-      gameStatus: "ONGOING",
-     // link: "asdasdasdasdvfsdvgsrf",
+      gameStatus: "CREATED",
+      private: isPrivate,
       maxPlayers: parseInt(numPlayers),
-      activePlayers: [player.username],
-      //meter todo el player
-      creator: player.username,
-      //chat: null,
-      private: isPrivate
+      //activePlayers: [player.username]
     };
 
     console.log('Enviando request:', request);
@@ -127,7 +126,7 @@ const CreateGame = () => {
         alert("¡Partida actualizada con éxito!");
         setpatchgame(newGame)
         console.log(newGame)
-         // navigate(`/games/${newGame.id}`); 
+         //navigate(`/board/${newGame.id}`); 
       } else {
         const errorData = await response.json();
         alert(`Error al actualizar la partida: ${errorData.message}`);
@@ -136,10 +135,61 @@ const CreateGame = () => {
       console.error('Hubo un problema con la petición fetch:', error);
       alert('Error de red. No se pudo conectar con el servidor.');
     }
+  }
 
-    
-   
-    
+  async function handleStart() {
+  const request = {
+    gameStatus: "ONGOING", 
+  };
+
+  try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "PATCH",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}` 
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (response.ok) {
+      const newGame = await response.json();
+      setpatchgame(newGame);
+      alert("¡Partida iniciada con éxito!");
+      navigate(`/board/${newGame.id}`); 
+    } else {
+      const errorData = await response.json();
+      alert(`Error al iniciar la partida: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo conectar con el servidor');
+  }
+}
+
+  async function handleCancel() {
+    try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}` 
+      },
+    });
+
+    if (response.ok) {
+      const newGame = await response.json();
+      alert("Partida eliminar");
+      navigate(`/board/${newGame.id}`); 
+    } else {
+      const errorData = await response.json();
+      alert(`Error al eliminar la partida: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo conectar con el servidor');
+  }
+
   }
 
   return (
@@ -147,6 +197,7 @@ const CreateGame = () => {
       <div className="hero-div"> 
         <h1>Create Game</h1>
         <div className="creategame-card">
+          {isCreator && (
           <div className="form-group">
             <label>Number of players</label>
             <select
@@ -167,21 +218,24 @@ const CreateGame = () => {
               <option value="12">12</option>
             </select>
           </div>
+            )}
           
+          {isCreator && (
           <div className="form-group privacy-toggle">
             <label>Privacity</label>
             <div className="toggle-switch">
-              <span>Private / Public </span>
+              <span>{isPrivate ? "Private" : "Public"}</span>
               <label className="switch">
                 <input
                   type="checkbox"
-                  checked={!isPrivate}
+                  checked={isPrivate}
                   onChange={() => setisPrivate(!isPrivate)}
                 />
                 <span className="slider round"></span>
               </label>
             </div>
           </div>
+            )}
 
           <div className="form-group add-friends-section">
             <label>Invite friends</label>
@@ -194,18 +248,28 @@ const CreateGame = () => {
             </div>
           </div>
 
-          <div className="card-footer">
-            <button onClick={handleSubmit}>
-              ▶️START
-            </button>
-            <button>
-              LINK
-            </button>
-            <Link to="/lobby">
-              <button className="button-small">❌CANCEL</button>
-            </Link>
-
-          </div>
+            <div className="card-footer">
+              {isCreator ? (
+                <>
+                  <button onClick={handleSubmit}>📑 SAVE CHANGES</button>
+                  <button onClick={handleStart}>▶️ START</button>
+                  <button>🔗 LINK</button>
+                  <Link to="/lobby">
+                    <button onClick={handleCancel}>❌ CANCEL</button>
+                  </Link>
+                </>
+              ) : (
+                <Link to="/lobby">
+                  <button className="button-small">🚪 EXIT LOBBY</button>
+                </Link>
+              )}
+                {!isCreator && (
+                    <div className="waiting-piece">
+                      <div className="spinner"></div>
+                      <span>WAITING ...</span>
+                    </div>
+                  )}
+            </div>    
         </div>
       </div>
     </div>

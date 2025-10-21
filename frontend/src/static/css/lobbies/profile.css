@@ -1,26 +1,33 @@
-
 .profile-overlay {
   position: absolute;
-  top: 10%;
+  top: 15%;
   left: 5%;
   width: 90%;
-  height: 80%;
-  background-color: rgba(255, 230, 100, 0.3);
+  height: 60%;
+  background-color: rgba(184, 211, 219, 0.582);
   border-radius: 20px;
   padding: 2rem;
   z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  justify-content: center;
+  justify-content: right; 
   align-items: center;
   box-shadow: 0 0 30px rgba(122, 110, 63, 0.5);
   backdrop-filter: blur(40px);
   text-align: center;
 }
 
+.profile-bottom-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+
 /* Cabecera del perfil: avatar + info */
 .profile-header {
+  color:#e6b800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,6 +64,7 @@
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
   border-radius: 8px;
+  justify-content: space-between;
   border: none;
   background-color: #f1c40f;
   color: #000;
@@ -64,6 +72,7 @@
   font-weight: bold;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 
 .button-small:hover {
   transform: scale(1.05);

@@ -43,6 +43,8 @@
 
 .hero-div-lobby .button-crear, /* Mismo formato de color y fondo en los botones */
 .hero-div-lobby .button-unirse,
+.hero-div-lobby .button-users,
+.hero-div-lobby .button-edit,
 .hero-div-lobby .button-jugar,
 .bottom-left-button button,
 .top-right-lobby-buttons button {
@@ -53,6 +55,12 @@
   margin-top: 00;}
 
 .hero-div-lobby .button-unirse {
+  margin-top: 0;}
+
+  .hero-div-lobby .button-users {
+  margin-top: 0;}
+
+  .hero-div-lobby .button-edit {
   margin-top: 0;}
 
 .top-right-lobby-buttons {

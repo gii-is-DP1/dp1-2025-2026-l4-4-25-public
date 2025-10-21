@@ -1,0 +1,86 @@
+.games-history-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image:  url('../../images/cave_image.jpeg');
+  color: white;
+  min-height: 100vh;
+  padding-bottom: 50px;}
+
+.games-history-header {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-bottom: 3px solid #222;}
+
+.games-history-title {
+  font-size: 2rem;
+  margin: 30px 0;
+  color: #ffdd57;}
+
+.games-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 90%;
+  max-width: 1000px;}
+
+.no-games {
+  font-size: 1.2rem;
+  text-align: center;
+  color: #ccc;}
+
+.game-history-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1c2331;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(194, 172, 172, 0.4);
+  transition: transform 0.2s ease;}
+
+.game-history-card:hover {
+  transform: translateY(-4px);
+  background: #222b3a;}
+
+.creator-section {
+  flex-shrink: 0;}
+
+.creator-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #ffdd57;
+  object-fit: cover;}
+
+.game-info {
+  flex: 1;
+  margin-left: 20px;}
+
+.creator-name {
+  color: #ffd118;}
+
+.game-id {
+  color: #aaa;
+  font-size: 0.9rem;}
+
+.players-details {
+  margin-top: 8px;}
+
+.players-details summary {
+  cursor: pointer;
+  color: #69b3ff;}
+
+.players-details ul {
+  list-style: none;
+  padding-left: 10px;
+  margin-top: 5px;}
+
+.players-details li {
+  font-size: 0.95rem;
+  margin: 2px 0;}
+
+.game-actions {
+  margin-left: 20px;}
+
