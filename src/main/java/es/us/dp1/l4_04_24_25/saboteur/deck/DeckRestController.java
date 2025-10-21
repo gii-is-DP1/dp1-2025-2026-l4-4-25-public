@@ -2,6 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.deck;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
-import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -49,9 +49,7 @@ public class DeckRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Deck> create(@Valid @RequestBody Deck deck) {
         Deck newDeck = new Deck();
-        newDeck.setActivePlayer(deck.getActivePlayer()); 
-        newDeck.setCards(deck.getCards()); 
-
+        BeanUtils.copyProperties(deck, newDeck, "id");
         Deck savedDeck = deckService.saveDeck(newDeck);
         return new ResponseEntity<>(savedDeck, HttpStatus.CREATED);
     }

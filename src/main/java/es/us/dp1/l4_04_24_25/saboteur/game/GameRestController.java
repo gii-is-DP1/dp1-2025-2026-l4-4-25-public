@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedLinkException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -74,14 +76,14 @@ class GameRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Game> create(@RequestBody @Valid Game game) {
+    public ResponseEntity<Game> create(@RequestBody @Valid Game game) throws DuplicatedLinkException, EmptyActivePlayerListException {
         Game newGame = new Game();
         BeanUtils.copyProperties(game, newGame, "id", "time", "gameStatus", "chat", "watchers", "rounds" );
         if (newGame.getActivePlayers() == null || newGame.getActivePlayers().isEmpty()) {
             throw new IllegalArgumentException("A game must have at least one active player (the creator).");
         }
         if (gameService.existsByLink(newGame.getLink())) {
-            throw new IllegalArgumentException("A game with the same link already exists.");
+            throw new EmptyActivePlayerListException("A game with the same link already exists.");
         }
         Game savedGame = gameService.saveGame(newGame);
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
@@ -123,7 +125,6 @@ class GameRestController {
             else if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
                 ActivePlayer ap = activePlayerService.findByUsername(username);
 
-                
             // Si ya hay un ganador, desvincular la partida ganada del jugador anterior
             // y si el nuevo ganador no es null, vincular la partida ganada al nuevo ganador
                 if (game.getWinner() != null) {
@@ -158,7 +159,7 @@ class GameRestController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("gameId") int id) {
         RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
-        if (gameService.findGame(id).getGameStatus().equals("CREATED"))
+        if (gameService.findGame(id).getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED")))
             gameService.deleteGame(id);
         else
             throw new IllegalStateException("You can't delete an ongoing or finished game!");
