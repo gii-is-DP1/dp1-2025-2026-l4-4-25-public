@@ -37,6 +37,10 @@ export default function Profile() {
                         Authorization: `Bearer ${jwt}`,
                     },
                 });
+                // Comprobar que la respuesta es válida
+                if(!response.ok){
+                    throw new Error("Could not fetch profile. User might not exist");
+                }
                 const data = await response.json();
                 setProfile(data);
                 console.log(data);
@@ -45,6 +49,7 @@ export default function Profile() {
 
             } catch(error){
                 console.error("Error fetching profile:", error);
+                setProfile(null);
             }
         };
 
