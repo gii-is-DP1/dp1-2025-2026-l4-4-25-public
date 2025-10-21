@@ -111,7 +111,7 @@ class GameRestController {
 
         
         try {
-            
+            /*
             // Handle lists of usernames -> convert to List<ActivePlayer>
             if ((fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
                 List<String> names = (List<String>) v;
@@ -121,7 +121,7 @@ class GameRestController {
                     objectList.add(ap);
                 }
                 ReflectionUtils.setField(field, game, objectList);
-            }
+            }*/
             // Caso especial de winner (ActivePlayer) representado por nombre de usuario
             if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
                 ActivePlayer ap = activePlayerService.findByUsername(username);
