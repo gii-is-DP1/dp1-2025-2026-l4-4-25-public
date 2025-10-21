@@ -167,6 +167,31 @@ const CreateGame = () => {
   }
 }
 
+  async function handleCancel() {
+    try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}` 
+      },
+    });
+
+    if (response.ok) {
+      const newGame = await response.json();
+      alert("Partida eliminar");
+      navigate(`/board/${newGame.id}`); 
+    } else {
+      const errorData = await response.json();
+      alert(`Error al eliminar la partida: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo conectar con el servidor');
+  }
+
+  }
+
   return (
     <div className="home-page-container">
       <div className="hero-div"> 
@@ -230,7 +255,7 @@ const CreateGame = () => {
                   <button onClick={handleStart}>▶️ START</button>
                   <button>🔗 LINK</button>
                   <Link to="/lobby">
-                    <button className="button-small">❌ CANCEL</button>
+                    <button onClick={handleCancel}>❌ CANCEL</button>
                   </Link>
                 </>
               ) : (
