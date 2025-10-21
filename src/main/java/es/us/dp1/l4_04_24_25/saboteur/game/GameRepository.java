@@ -5,8 +5,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
-
 public interface GameRepository extends CrudRepository<Game, Integer> {
 
     @Override
@@ -16,7 +14,7 @@ public interface GameRepository extends CrudRepository<Game, Integer> {
 
     Optional<Game> findByCreatorUsername(String creatorUsername);
 
-    
+    Boolean existsByLink(String link);
 /* 
    // Buscar todas las partidas gestionadas por un administrador específico
     @Query("SELECT g FROM Game g JOIN g.admins a WHERE a.username = :adminUsername")

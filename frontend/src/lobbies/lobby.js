@@ -38,9 +38,10 @@ export default function Lobby(){
                 "Authorization": `Bearer ${jwt}`
               }
             });
-            console.log(response);
+            console.log("response del player", response);
             if (response.ok) {
               const data = await response.json();
+              console.log("respone 2",data)
               setPlayer(data);
             } else {
               console.error('Respuesta no OK:', response.status);
@@ -70,23 +71,9 @@ export default function Lobby(){
   },[jwt])
 
     async function handleSubmit() {
+         console.log("este es  el player", player)
         const jwt = tokenService.getLocalAccessToken();
         try {
-            const chatResponse = await fetch("/api/v1/chats", {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${jwt}` 
-                },
-                body: JSON.stringify({ message: "" }), });
-            if (!chatResponse.ok) { 
-                const errorData = await chatResponse.json();
-                alert(`Error al crear el chat: ${errorData.message}`);
-                return;}
-        const newChat = await chatResponse.json();
-        alert("Chat creado con éxito!");
-        console.log("Chat creado:", newChat);
-        setchat(newChat); 
         const randomPart = generateRandomLink(16);
         const fullLink = `https://saboteur.com/game/${randomPart}`;
         setlink(fullLink)
@@ -96,8 +83,8 @@ export default function Lobby(){
             link: fullLink, 
             maxPlayers: 3,
             creator: player.username,
-            chat: newChat.id, 
-            private: false
+            private: false,
+            activePlayers:[player.username]
         };
 
         console.log('Enviando solicitud de partida:', gameRequest);

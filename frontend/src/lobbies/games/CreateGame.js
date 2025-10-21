@@ -55,9 +55,10 @@ const CreateGame = () => {
         console.log('game del navigate', game)
         console.log('chat del navigate', game.chat)
         patchchat()
-        console.log('chat del creategame ', chat)
+        
 
         const fetchPlayer = async () => {
+          console.log('chat del creategame ', chat)
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
@@ -99,7 +100,7 @@ const CreateGame = () => {
     //el player  primero tiene  que esstar en la tabla activeplayers para poder meterlo en game-activeplayers
     const request = {
       gameStatus: "CREATED",
-      isPrivate: isPrivate,
+      private: isPrivate,
       maxPlayers: parseInt(numPlayers),
       //activePlayers: [player.username]
     };
@@ -139,8 +140,6 @@ const CreateGame = () => {
   async function handleStart() {
   const request = {
     gameStatus: "ONGOING", 
-    isPrivate: isPrivate,
-    maxPlayers: parseInt(numPlayers),
   };
 
   try {
@@ -167,6 +166,31 @@ const CreateGame = () => {
     alert('No se pudo conectar con el servidor');
   }
 }
+
+  async function handleCancel() {
+    try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}` 
+      },
+    });
+
+    if (response.ok) {
+      const newGame = await response.json();
+      alert("Partida eliminar");
+      navigate(`/board/${newGame.id}`); 
+    } else {
+      const errorData = await response.json();
+      alert(`Error al eliminar la partida: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo conectar con el servidor');
+  }
+
+  }
 
   return (
     <div className="home-page-container">
@@ -231,7 +255,7 @@ const CreateGame = () => {
                   <button onClick={handleStart}>▶️ START</button>
                   <button>🔗 LINK</button>
                   <Link to="/lobby">
-                    <button className="button-small">❌ CANCEL</button>
+                    <button onClick={handleCancel}>❌ CANCEL</button>
                   </Link>
                 </>
               ) : (

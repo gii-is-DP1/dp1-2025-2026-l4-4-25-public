@@ -2,6 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.card;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,8 @@ public class CardRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Card> create(@RequestBody @Valid Card card) {
+        Card newCard = new Card();
+        BeanUtils.copyProperties(card, newCard, "id");
         Card savedCard = cardService.saveCard(card);
         return new ResponseEntity<>(savedCard, HttpStatus.CREATED);
     }
