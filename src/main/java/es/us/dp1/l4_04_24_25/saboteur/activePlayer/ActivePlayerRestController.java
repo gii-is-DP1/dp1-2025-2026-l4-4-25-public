@@ -86,12 +86,7 @@ class ActivePlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping("creatorByGameId") 
-    public ResponseEntity<ActivePlayer> findCreatorByGameId(@RequestParam Integer gameId){
-        ActivePlayer res;
-        res = activePlayerService.findCreatorByGameId(gameId);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
+   
 
     @GetMapping("byPickaxeState")
     public ResponseEntity<List<ActivePlayer>> findByPickaxeState(@RequestParam Boolean pickaxeState){
@@ -122,14 +117,7 @@ class ActivePlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
     */
-/* 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ActivePlayer> create(@RequestBody @Valid ActivePlayer activePlayer) {
-        ActivePlayer savedActivePlayer = activePlayerService.saveActivePlayer(activePlayer);
-        return new ResponseEntity<ActivePlayer>(savedActivePlayer, HttpStatus.CREATED);
-    }
-*/
+
 
 @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

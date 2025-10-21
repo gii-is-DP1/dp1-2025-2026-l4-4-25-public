@@ -39,10 +39,9 @@ public class ActivePlayer extends Player{
     @JoinColumn(name = "wonGame_id")
     private Game wonGame;
 
-    //Relación 1 participante crea 1 partida
-    @OneToOne
-    @JoinColumn(name = "createdGame_id")
-    private Game createdGame;
+    //Relación 1 participante crea n partidas
+    @OneToMany (mappedBy = "creator")
+    private List<Game> createdGames = new ArrayList<>();
 
     // Relación 1 participante 1 mano
     @OneToOne
