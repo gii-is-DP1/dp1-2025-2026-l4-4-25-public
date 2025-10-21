@@ -13,10 +13,7 @@ public interface ActivePlayerRepository extends CrudRepository<ActivePlayer, Int
 
     Iterable<ActivePlayer> findByRol(boolean rol);
 
-    // Para obtener el creador de una partida
-    @Query("SELECT ap.createdGame.creator FROM ActivePlayer ap WHERE ap.createdGame.id = :gameId")
-    Optional<ActivePlayer> findCreatorByGameId(Integer gameId);
-
+ 
     //@Query("SELECT ap FROM ActivePlayer ap WHERE ap.wonGame.id = :gameId")
     //Optional<ActivePlayer> findWinnerByGameId(Integer gameId);
 

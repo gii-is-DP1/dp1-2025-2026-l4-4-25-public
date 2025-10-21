@@ -2,7 +2,9 @@ package es.us.dp1.l4_04_24_25.saboteur.action;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -69,8 +71,11 @@ public class ActionRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Action> create(@RequestBody @Valid Action action) {
-        Action savedAction = actionService.saveAction(action);
+    public ResponseEntity<Action> create(@RequestBody @Valid Action action) throws DataAccessException{
+        Action newAction = new Action();
+        Action savedAction;
+        BeanUtils.copyProperties(action, newAction, "id");
+        savedAction = this.actionService.saveAction(newAction);
         return new ResponseEntity<>(savedAction, HttpStatus.CREATED);
     }
 

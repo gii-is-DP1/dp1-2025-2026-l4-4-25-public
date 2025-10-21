@@ -4,7 +4,7 @@ public enum nameAction {
 
     REPAIR,
     DESTROY,
-    OVERTHOW,
+    OVERTHROW,
     REVEAL
     
 }

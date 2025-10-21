@@ -2,7 +2,9 @@ package es.us.dp1.l4_04_24_25.saboteur.achievements;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedAchievementException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedActivePlayerException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -48,8 +52,15 @@ public class AchievementRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Achievement> create(@RequestBody @Valid Achievement achievement) {
-        Achievement savedAchievement = achievementService.saveAchievement(achievement);
+    public ResponseEntity<Achievement> create(@RequestBody @Valid Achievement achievement) throws DataAccessException, DuplicatedAchievementException {
+        
+        Achievement newachievement = new Achievement();
+        Achievement savedAchievement;
+        BeanUtils.copyProperties(achievement, newachievement, "id");
+        if (achievementService.existsByTittle(achievement.getTittle())){
+            throw new DuplicatedActivePlayerException("An achievement with tittle '" + achievement.getTittle() + "' already exists");
+        }
+        savedAchievement = this.achievementService.saveAchievement(newachievement);
         return new ResponseEntity<>(savedAchievement, HttpStatus.CREATED);
     }
 
