@@ -111,6 +111,7 @@ class GameRestController {
 
         
         try {
+            /*
             // Handle lists of usernames -> convert to List<ActivePlayer>
             if ((field.getType().equals(List.class) || List.class.isAssignableFrom(field.getType())) && (fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
                 List<String> names = (List<String>) v;
@@ -120,11 +121,11 @@ class GameRestController {
                     objectList.add(ap);
                 }
                 ReflectionUtils.setField(field, game, objectList);
-            }
+            }*/
             // Caso especial de winner (ActivePlayer) representado por nombre de usuario
-            else if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
+            if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
                 ActivePlayer ap = activePlayerService.findByUsername(username);
-
+            
             // Si ya hay un ganador, desvincular la partida ganada del jugador anterior
             // y si el nuevo ganador no es null, vincular la partida ganada al nuevo ganador
                 if (game.getWinner() != null) {

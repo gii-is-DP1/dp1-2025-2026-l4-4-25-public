@@ -3,6 +3,7 @@ package es.us.dp1.l4_04_24_25.saboteur.board;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,17 +74,15 @@ public class BoardRestController {
     @ResponseStatus(HttpStatus.OK)
     
     public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+        RestPreconditions.checkNotNull(boardService.findBoard(id), "Board", "ID", id);
         Board board = boardService.findBoard(id);
 
         updates.forEach((k, v) -> {
             Field field = ReflectionUtils.findField(Board.class, k);
-            
-            if (field == null) return; 
-            
+            if (field == null) return;
             field.setAccessible(true);
-
             try {
-                
+        
                 if (field.getType().equals(Integer.class)) {
                     ReflectionUtils.setField(field, board, (Integer) v);
                 }
@@ -94,7 +93,6 @@ public class BoardRestController {
                 else {
                     ReflectionUtils.setField(field, board, v);
                 }
-
             } catch (Exception e) {
                 throw new RuntimeException("Error applying patch to field " + k, e);
             }

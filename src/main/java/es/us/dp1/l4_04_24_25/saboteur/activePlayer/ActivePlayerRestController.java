@@ -202,6 +202,7 @@ class ActivePlayerRestController {
         ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
         updates.forEach((k, v) -> {
             Field field = ReflectionUtils.findField(ActivePlayer.class, k);
+            if (field == null) return; 
             ReflectionUtils.makeAccessible(field);
             ReflectionUtils.setField(field, activePlayer, v);
         });
