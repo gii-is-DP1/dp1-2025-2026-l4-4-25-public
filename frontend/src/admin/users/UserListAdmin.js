@@ -13,7 +13,7 @@ const jwt = tokenService.getLocalAccessToken();
 export default function UserListAdmin() {
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
-  const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
+  // const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
   const [users, setUsers] = useFetchState(
     [],
     `/api/v1/users`,
@@ -29,8 +29,8 @@ export default function UserListAdmin() {
         <div className="user-table-cell">
           <img
             src={
-              user.profileImage && user.profileImage.startsWith("http")
-                ? user.profileImage  
+              user.image 
+                ? user.image  
                 : defaultProfileAvatar 
             }
             alt={`${user.username} avatar`}
@@ -38,7 +38,7 @@ export default function UserListAdmin() {
           />
         </div>
       </td>
-      <td data-label="Nombre">
+      <td data-label="Username">
         <div className="user-table-cell">
           <span className="cell-value">{user.username}</span>
         </div>
@@ -54,7 +54,7 @@ export default function UserListAdmin() {
           </span>
         </div>
       </td>
-      <td data-label="Acciones">
+      <td data-label="Actions">
         <div className="user-table-cell">
           <ButtonGroup className="user-actions">
             <Button
@@ -95,11 +95,11 @@ export default function UserListAdmin() {
 
   return (
     <div className="admin-page-container">
-      <h1 className="admin-page-title">Panel de Gestión de Usuarios</h1>
+      <h1 className="admin-page-title">User Management Panel</h1>
       {alerts.map((a) => a.alert)}
       {modal}
       <Button color="success" tag={Link} to="/users/new" className="add-user-btn">
-        👤Agregar Usuario
+        👤Add User
       </Button>
 
       <div className="user-table-container">
@@ -107,9 +107,9 @@ export default function UserListAdmin() {
           <thead>
             <tr>
               <th>Avatar</th>
-              <th>Nombre</th>
+              <th>Username</th>
               <th>Rol</th>
-              <th>Acciones</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>{userList}</tbody>
