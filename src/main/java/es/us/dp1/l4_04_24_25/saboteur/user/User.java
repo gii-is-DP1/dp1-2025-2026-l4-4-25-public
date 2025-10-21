@@ -1,24 +1,22 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
 
-import java.sql.Date;
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime; 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
-import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import jakarta.persistence.CascadeType;
-import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -32,7 +30,7 @@ import lombok.Setter;
 @Table(name = "appusers")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class User extends BaseEntity {
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     @NotEmpty
     private String username;
 
@@ -49,6 +47,8 @@ public class User extends BaseEntity {
     @Column(name = "joined", nullable = false, updatable = false)
     private LocalDateTime joined = LocalDateTime.now(); 
 
+   // @JsonIgnore
+   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     //@NotEmpty // Se elimina el NotEmpty para gestionar la edición del perfil
     @Column(name ="password", nullable = false)
     private String password;
@@ -57,7 +57,7 @@ public class User extends BaseEntity {
 	@Column(name = "image", nullable = false)
     private String image;
 
-    @Column(unique=true, nullable = false)
+    @Column(nullable = false)
     @NotEmpty
     private String email;
 
@@ -77,7 +77,7 @@ public class User extends BaseEntity {
 		}
 		return cond;
 	}
-
+/* 
 	//RELACION CON USUARIOS
     @ManyToMany
     @JoinTable(
@@ -86,11 +86,12 @@ public class User extends BaseEntity {
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> users = new ArrayList<>();
-
+*/
     //RELACION -> ADMIN CREA LGORO
     @OneToMany (mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true) //CASCADE ES PARA QUE CUALQIUER ACCIÓN SOBRE EL PADRE (EL ADMIN) SE APLIQUE TAMBIEN SOBRE SU HIJO (LOGRO)
     private List<Achievement> createdAchievements = new ArrayList<>();
 
+    /* 
     //RELACION -> ADMIN EDITA LOGRO
     @ManyToMany
     @JoinTable(
@@ -109,5 +110,5 @@ public class User extends BaseEntity {
         inverseJoinColumns = @JoinColumn(name = "game_id")
     )
     private List<Game> managedGames = new ArrayList<>();
-
+*/
 }

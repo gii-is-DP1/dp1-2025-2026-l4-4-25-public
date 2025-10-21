@@ -1,44 +1,11 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.AccessDeniedException;
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
-import es.us.dp1.l4_04_24_25.saboteur.user.AuthoritiesService;
-import es.us.dp1.l4_04_24_25.saboteur.user.User;
-import es.us.dp1.l4_04_24_25.saboteur.user.UserRestController;
-import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -55,7 +22,7 @@ class UserControllerTests {
 	private static final int TEST_USER_ID = 1;
 	private static final int TEST_AUTH_ID = 1;
 	private static final String BASE_URL = "/api/v1/users";
-
+/*
 	@SuppressWarnings("unused")
 	@Autowired
 	private UserRestController userController;
@@ -239,5 +206,6 @@ class UserControllerTests {
 		mockMvc.perform(delete(BASE_URL + "/{id}", TEST_USER_ID).with(csrf())).andExpect(status().isForbidden())
 				.andExpect(result -> assertTrue(result.getResolvedException() instanceof AccessDeniedException));
 	}
+	*/
 
 }

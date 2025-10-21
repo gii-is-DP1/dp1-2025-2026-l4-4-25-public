@@ -14,8 +14,11 @@ export default function ListGames() {
     minPlayers: "",
     search: "",
   });
+  const [friendLs, setFriendLs] = useState([]); 
+  const [onlyFriend, setOnlyFriend] = useState(false);
 
   const jwt = tokenService.getLocalAccessToken();
+
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -42,6 +45,19 @@ export default function ListGames() {
     fetchGames();
   }, [jwt]);
 
+   useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        const response = await fetch("/api/v1/friends", {
+          headers: { Authorization: `Bearer ${jwt}` },});
+        if (response.ok) {
+          const data = await response.json();
+          setFriendLs(data);}
+      } catch (error) {
+        console.error("Error al obtener amigos:",error);}};
+    fetchFriends();
+  }, [jwt]);
+
   const handleFilter = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));};
@@ -63,8 +79,13 @@ export default function ListGames() {
         (g) =>
           g.creator?.username?.toLowerCase().includes(term) ||
           g.id?.toString().includes(term));}
+    if (onlyFriend && friendLs.length > 0) {
+      const friendUsernames = friendLs.map((f) =>
+        f.username?.toLowerCase());
+      filtered = filtered.filter((g) =>
+        friendUsernames.includes(g.creator?.username?.toLowerCase()));}
     setFilteredGames(filtered);
-  }, [filters, gamesList]);
+  }, [filters, gamesList, onlyFriend, friendLs]);
 
   return (
     <div className="home-page-lobby-container">
@@ -82,15 +103,27 @@ export default function ListGames() {
           ):(
             filteredGames.map((game) => (
               <div key={game.id} className="game-card">
-                <h3>🎮Game of {game.creator?.username || "Unknown"}</h3>
-                <p>🔁Status: {game.gameStatus}</p>
-                <p>👤Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
+                <h3>🎮 Game of {game.creator || "Unknown"}</h3>
+                <p>🖥️ ID: {game.id}</p>
+                <p>🔁 Status: {game.gameStatus}</p>
+                <p>👤 Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p> 
                 <p>🌐 Privacy: {game.private ? "Private 🔒" : "Public 🔓"}</p>
                 <div className="game-card-footer">
-                    {game.private ? (
+                  {game.gameStatus === "CREATED" ? (
+                    game.private ? (
+                     <Link to={"/board/" + game.id}>
                       <button className="button-join-game">📩REQUEST JOIN</button>
+                      </Link>
                     ):(
-                      <button className="button-join-game">📥JOIN</button>)}
+                      <Link to={"/CreateGame/" + game.id}>
+                      <button className="button-join-game">📥JOIN</button>
+                      </Link>
+                      )
+                    ):(
+                      <Link to={"/board/" + game.id}>
+                      <button className="button-join-game">👁️‍🗨️SPECTATE</button> {/* Hay que poner que de el rol espectador para que tenga limitado el acceso en muchos aspectos en la partida */}
+                      </Link>
+                    )}               
                   </div>
               </div>
               )))}
@@ -118,7 +151,7 @@ export default function ListGames() {
           </div>
 
           <div className="filter-group">
-            <label>👤Minimun of Players:</label>
+            <label>👤Active Players / Game:</label>
             <input
               type="number"
               name="minPlayers"
@@ -136,13 +169,19 @@ export default function ListGames() {
               onChange={handleFilter}
               placeholder="For ID of game"/>
           </div>
-
-          <button
-            className="filter-clear-btn"
-            onClick={() =>
-              setFilters({privacy:"", status:"", minPlayers:"", search:"" })}>
-            Limpiar filtros
-          </button>
+          <div>
+            <button
+              className={`filter-friends-btn ${onlyFriend ? "active" : ""}`}
+              onClick={() => setOnlyFriend((prev) => !prev)}>
+              {onlyFriend ? "✅ Friends Games" : "👥 Show Only Friends Games"}
+            </button>
+          </div>
+            <button
+              className="filter-clear-btn"
+              onClick={() =>
+                setFilters({privacy:"", status:"", minPlayers:"", search:"" })}>
+              Limpiar filtros
+            </button>
         </div>
       </div>
     </div>

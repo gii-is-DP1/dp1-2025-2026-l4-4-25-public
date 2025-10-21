@@ -16,19 +16,21 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.crypto.password.PasswordEncoder; 
+
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import jakarta.validation.Valid;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
+import jakarta.validation.Valid;
 
 
 
@@ -49,27 +51,20 @@ public class UserService {
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
-		// Rellenar tabla Player
-		Player newPlayer = new Player();
-		BeanUtils.copyProperties(user, newPlayer);
-
-		newPlayer.setPlayedGames(5);
-        newPlayer.setWonGames(0);
-        newPlayer.setDestroyedPaths(0);
-        newPlayer.setBuiltPaths(0);
-        newPlayer.setAcquiredGoldNuggets(0);
-		newPlayer.setPeopleDamaged(0);
-		newPlayer.setPeopleRepaired(0);
-		newPlayer.setFriends(new ArrayList<>());
-		newPlayer.setAccquiredAchievements(new ArrayList<>());
-		newPlayer.setWatcher(false);
-
-		return playerRepository.save(newPlayer); // Se guarda el player (extiende de User por lo que estamos devolviendo un objeto User)
-
+		
+		return userRepository.save(user); 
 	}
 
 	@Transactional(readOnly = true)
-	public User findUser(String username) {
+	public UserDTO findByUsernameDTO(String username) {
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new ResourceNotFoundException("User", "Username", username));
+		return new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority());
+	}
+
+	@Transactional(readOnly = true)
+	public User findByUsername(String username) {
 		return userRepository.findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User", "Username", username));
 	}
@@ -80,13 +75,33 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
+	public UserDTO findUserDTO(Integer id) {
+		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+		return new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority());
+	}
+	@Transactional(readOnly = true)
 	public User findCurrentUser() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth == null)
 			throw new ResourceNotFoundException("Nobody authenticated!");
-		else
+		else {
 			return userRepository.findByUsername(auth.getName())
 					.orElseThrow(() -> new ResourceNotFoundException("User", "Username", auth.getName()));
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public UserDTO findCurrentUserDTO() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null)
+			throw new ResourceNotFoundException("Nobody authenticated!");
+		else {
+			User currentUser = userRepository.findByUsername(auth.getName())
+					.orElseThrow(() -> new ResourceNotFoundException("User", "Username", auth.getName()));
+			return new UserDTO(currentUser.getUsername(), currentUser.getName(), currentUser.getBirthDate(),
+				currentUser.getJoined(), currentUser.getImage(), currentUser.getEmail(), currentUser.getAuthority().getAuthority());
+		}
 	}
 
 	public Boolean existsUser(String username) {
@@ -94,12 +109,24 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public Iterable<User> findAll() {
-		return userRepository.findAll();
+	public List<UserDTO> findAll() {
+		Iterable<User> users =userRepository.findAll();
+		List<UserDTO> res = new ArrayList<>();
+		for (User user : users) {
+			res.add(new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority()));
+		}
+		return res;
 	}
 
-	public Iterable<User> findAllByAuthority(String auth) {
-		return userRepository.findAllByAuthority(auth);
+	public List<UserDTO> findAllByAuthority(String auth) {
+		Iterable<User> users = userRepository.findAllByAuthority(auth);
+		List<UserDTO> res = new ArrayList<>();
+		for (User user : users) {
+			res.add(new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority()));
+		}
+		return res;
 	}
 
 	@Transactional
@@ -123,6 +150,4 @@ public class UserService {
 		User toDelete = findUser(id);
 		this.userRepository.delete(toDelete);
 	}
-
-
 }

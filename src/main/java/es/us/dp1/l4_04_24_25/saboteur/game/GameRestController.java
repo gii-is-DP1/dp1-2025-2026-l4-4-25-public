@@ -82,7 +82,6 @@ class GameRestController {
             game.getLink(),
             game.isPrivate(),
             game.getMaxPlayers(),
-            game.getAdmins(),
             game.getWatchers(),
             game.getActivePlayers(),
             game.getWinner(),

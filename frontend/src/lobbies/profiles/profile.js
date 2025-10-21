@@ -9,6 +9,7 @@ import defaultProfileAvatar from "../../static/images/icons/default_profile_avat
 const jwt = tokenService.getLocalAccessToken();
 
 export default function Profile() {
+    const [isAdmin, setisAdmin] = useState(false);
     const [profile, setProfile] = useState({
         username: "",
         password: "",
@@ -50,6 +51,16 @@ export default function Profile() {
         fetchProfile();
     }, []); 
 
+    useEffect(() => {
+        const jwt = tokenService.getLocalAccessToken();
+        if (jwt) {
+        try {
+            const p=JSON.parse(atob(jwt.split('.')[1]));
+            setisAdmin(p.authorities?.includes("ADMIN")||false);
+        } catch (error) {
+            console.error(error);}}
+    }, []);
+
     // Si los datos aún no han llegado, muestra esto y no continúes.
     if (!profile) {
         return <div>Loading profile...</div>;
@@ -69,9 +80,9 @@ export default function Profile() {
                 </Link>
             </div>
 
-            {profile.authority.authority !== 'ADMIN' && (
+            {!isAdmin && (
                 <div className="top-left-button">
-                    <Link to="/profile">
+                    <Link to="/GamesPlayed">
                         <button className="button-games-played">🎮 Games Played</button>
                     </Link>
                 </div>
@@ -80,7 +91,7 @@ export default function Profile() {
 
             <div className="profile-overlay">
                 <div style={{marginBottom: '1rem' }}>
-                    {profile.authority.authority === 'ADMIN' && (
+                    {isAdmin && (
                             <span className="admin-badge">⭐ ADMIN</span>
                     )}
                 </div>
@@ -93,12 +104,20 @@ export default function Profile() {
                     <div className="profile-info">
                         <h2 className={profile.authority.authority === 'ADMIN' ? "admin-username" : ""}>{profile?.username || 'Loading...'}</h2>
                         <div className="profile-buttons">
-                            <h2>Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</h2>
-                        </div>
-                        <div className="profile-buttons">
+                            <button className="button-small">🏠Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</button>
                             <Link to="/profile/editProfile">
                                 <button className="button-small">✏️ Edit Profile</button>
                             </Link>
+                            {!isAdmin && (
+                                <div className="profile-bottom-buttons">
+                                <Link to="/achievement">
+                                     <button className="button-small">🏆 Achievement</button>
+                                </Link>
+                                <Link to="/stats">
+                                     <button className="button-small">📊 Stats</button>
+                                </Link>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
