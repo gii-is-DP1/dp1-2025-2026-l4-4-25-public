@@ -9,6 +9,7 @@ import defaultProfileAvatar from "../../static/images/icons/default_profile_avat
 const jwt = tokenService.getLocalAccessToken();
 
 export default function Profile() {
+    const [isAdmin, setisAdmin] = useState(false);
     const [profile, setProfile] = useState({
         username: "",
         password: "",
@@ -50,6 +51,16 @@ export default function Profile() {
         fetchProfile();
     }, []); 
 
+    useEffect(() => {
+        const jwt = tokenService.getLocalAccessToken();
+        if (jwt) {
+        try {
+            const p=JSON.parse(atob(jwt.split('.')[1]));
+            setisAdmin(p.authorities?.includes("ADMIN")||false);
+        } catch (error) {
+            console.error(error);}}
+    }, []);
+
     // Si los datos aún no han llegado, muestra esto y no continúes.
     if (!profile) {
         return <div>Loading profile...</div>;
@@ -69,7 +80,7 @@ export default function Profile() {
                 </Link>
             </div>
 
-            {profile.authority.authority !== 'ADMIN' && (
+            {!isAdmin && (
                 <div className="top-left-button">
                     <Link to="/GamesPlayed">
                         <button className="button-games-played">🎮 Games Played</button>
@@ -80,7 +91,7 @@ export default function Profile() {
 
             <div className="profile-overlay">
                 <div style={{marginBottom: '1rem' }}>
-                    {profile.authority.authority === 'ADMIN' && (
+                    {isAdmin && (
                             <span className="admin-badge">⭐ ADMIN</span>
                     )}
                 </div>

@@ -42,7 +42,7 @@ export default function GamesHistory() {
           gamesList.map((game) => (
             <div key={game.id} className="game-history-card">
               <div className="creator-section">
-                <img src={game.creator?.avatarUrl || ""}
+                <img src={game.creatorr?.avatarUrl || ""}
                   alt="Avatar creador"
                   className="creator-avatar"/>
               </div>
@@ -50,7 +50,7 @@ export default function GamesHistory() {
                 <h2>
                   🎮 Game of {" "}
                   <span className="creator-name">
-                    {game.creator?.username || "Desconocido"}
+                    {game.creator || "Desconocido"}
                   </span>{" "}
                   <span className="game-id">(ID: {game.id})</span>
                 </h2>
@@ -58,14 +58,14 @@ export default function GamesHistory() {
                 <p>
                   👥 Players:{" "}
                   <b>
-                    {game.players?.length || 0}
+                    {game.maxPlayers || 0}
                   </b>
                 </p>
 
                 <p>
                   ⭐ Winner:{" "}
                   <b>
-                    {game.winner?.username ||"Sin determinar"}
+                    {game.winner?.username}
                   </b>
                 </p>
 
