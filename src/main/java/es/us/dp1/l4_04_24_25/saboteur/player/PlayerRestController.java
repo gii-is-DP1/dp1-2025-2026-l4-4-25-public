@@ -123,10 +123,7 @@ public class PlayerRestController {
 
        
        
-            newPlayer.setUsername(player.getUsername());
-            newPlayer.setEmail(player.getEmail());
-            newPlayer.setName(player.getName());
-            newPlayer.setAuthority(player.getAuthority());
+    
             newPlayer.setPassword(encoder.encode(player.getPassword()));
         
 

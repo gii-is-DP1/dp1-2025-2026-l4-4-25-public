@@ -1,5 +1,8 @@
 package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -21,14 +24,23 @@ public class ActivePlayerService {
     }
 
     @Transactional(readOnly = true)
-    public Iterable<ActivePlayer> findAll(){
-        return activePlayerRepository.findAll();
+    public List<ActivePlayer> findAll(){
+        Iterable<ActivePlayer> activePlayer =  activePlayerRepository.findAll();
+        List<ActivePlayer> res = new ArrayList<>();
+        for (ActivePlayer a : activePlayer){
+            res.add(a);
+        }
+        return res;
     }
 
     @Transactional(readOnly = true)
     public ActivePlayer findActivePlayer(Integer id) {
         return activePlayerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("ActivePlayer","id",id));
     }
+
+   public Boolean existsActivePlayer(String username) {
+		return activePlayerRepository.existsByUsername(username);
+	}
 
     @Transactional(readOnly = true)
     public ActivePlayer findByUsername(String username) {
