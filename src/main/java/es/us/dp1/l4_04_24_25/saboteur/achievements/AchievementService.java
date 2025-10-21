@@ -26,6 +26,10 @@ public class AchievementService {
         return achievement;
     }
 
+    public boolean existsByTittle (String tittle){
+        return achievementRepository.existsByTittle(tittle);
+    }
+    
     @Transactional(readOnly = true)
     public Achievement findAchievement(Integer id) {
         return achievementRepository.findById(id)

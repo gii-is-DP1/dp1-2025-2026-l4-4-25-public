@@ -9,17 +9,17 @@ INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,auth
 
 INSERT INTO chat (id) VALUES (1);
 
-INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds) values (1, 'CREATED', 1, false, 3, 'link', 0);
-
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 0, 0, 0, 0, 0, false, 5, 3);
 
 
 
 INSERT INTO deck (id) VALUES (1);
 
-INSERT INTO active_Player (candle_state, cart_state, created_game_id, deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 1, 1, 0, 4, false, true, null );
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 1,  0, 4, false, true, null );
 
 INSERT INTO message (id, chat_id, text, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
+
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 'link', 0, 4);
 
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, null, 2);
@@ -34,8 +34,8 @@ VALUES (101, 1, 4, TRUE, 0, 1);
 INSERT INTO cards (id, deck_id, status, image) 
 VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 
-INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
-VALUES (200, 0, FALSE, 0);
+--INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
+--VALUES (200, 0, FALSE, 0);
 
 INSERT INTO cards (id, deck_id, status, image) 
 VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');

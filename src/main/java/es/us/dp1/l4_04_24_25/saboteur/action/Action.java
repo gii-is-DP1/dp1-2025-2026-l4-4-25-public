@@ -4,8 +4,9 @@ import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.effectValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,10 +17,12 @@ import lombok.Setter;
 @Table(name = "Action")
 public class Action extends Card {
 
+	@Enumerated(EnumType.STRING)
     @Column(name = "nombreAccion")
 	@NotNull
 	protected nameAction nameAction;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "valorEfecto")
 	@NotNull
 	protected effectValue effectValue;
