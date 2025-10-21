@@ -26,7 +26,8 @@ import es.us.dp1.l4_04_24_25.saboteur.configuration.jwt.JwtUtils;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.services.UserDetailsImpl;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import org.springframework.security.authentication.BadCredentialsException;
 
 
@@ -39,14 +40,16 @@ public class AuthController {
 	private final UserService userService;
 	private final JwtUtils jwtUtils;
 	private final AuthService authService;
+	private final ActivePlayerService activePlayerService;
 
 	@Autowired
 	public AuthController(AuthenticationManager authenticationManager, UserService userService, JwtUtils jwtUtils,
-			AuthService authService) {
+			AuthService authService, ActivePlayerService activePlayerService) {
 		this.userService = userService;
 		this.jwtUtils = jwtUtils;
 		this.authenticationManager = authenticationManager;
 		this.authService = authService;
+		this.activePlayerService = activePlayerService; 
 	}
 
 	@PostMapping("/signin")
@@ -77,7 +80,7 @@ public class AuthController {
 	
 	@PostMapping("/signup")	
 	public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-		if (userService.existsUser(signUpRequest.getUsername()).equals(true)) {
+		if (activePlayerService.existsActivePlayer(signUpRequest.getUsername()).equals(true)) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
 		}
 		authService.createUser(signUpRequest);
