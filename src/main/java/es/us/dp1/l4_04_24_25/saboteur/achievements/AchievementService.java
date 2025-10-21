@@ -54,5 +54,4 @@ public class AchievementService {
         Achievement toDelete = findAchievement(id);
         achievementRepository.delete(toDelete);
     }
-
 }

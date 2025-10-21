@@ -15,13 +15,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonManagedReference; 
+import com.fasterxml.jackson.annotation.JsonIgnore; 
 
 @Getter
 @Setter
 @Entity
 @Table(name = "Player")
 public class Player extends User{
-
+    
     @Column(name = "playedGames", nullable = false)
     private Integer playedGames = 0;
 
@@ -46,7 +48,8 @@ public class Player extends User{
     @Column(name = "isWatcher", nullable = false)
     private boolean isWatcher;
 
-    //Relacion de muchos a muchos con amigos
+    
+    @JsonIgnore 
     @ManyToMany
     @JoinTable(
         name = "friends",
@@ -56,8 +59,8 @@ public class Player extends User{
     private List<Player> friends = new ArrayList<>();
 
 
-
-    //Relacion de muchos jugadores a muchos logros
+    // Lado Manager para Achievement
+    @JsonManagedReference 
     @ManyToMany
     @JoinTable(
         name = "accquiredAchievements",
@@ -66,7 +69,7 @@ public class Player extends User{
     )
     private List<Achievement> accquiredAchievements = new ArrayList<>();
 
-    //Relacion muchos jugadores observan una partida
+    // Relacion muchos jugadores observan una partida
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;
