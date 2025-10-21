@@ -49,9 +49,10 @@ export default function Lobby(){
                 "Authorization": `Bearer ${jwt}`
               }
             });
-            console.log(response);
+            console.log("response del player", response);
             if (response.ok) {
               const data = await response.json();
+              console.log("respone 2",data)
               setPlayer(data);
             } else {
               console.error('Respuesta no OK:', response.status);
@@ -62,10 +63,11 @@ export default function Lobby(){
             alert('Error de red. No se pudo conectar con el servidor.');}
         };
         fetchPlayer()
-        console.log("este es  el player", player)
+       
   },[jwt])
 
     async function handleSubmit() {
+         console.log("este es  el player", player)
         const jwt = tokenService.getLocalAccessToken();
         try {
             const chatResponse = await fetch("/api/v1/chats", {
@@ -74,7 +76,7 @@ export default function Lobby(){
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${jwt}` 
                 },
-                body: JSON.stringify({ message: "" }), });
+                body: JSON.stringify({}), });
             if (!chatResponse.ok) { 
                 const errorData = await chatResponse.json();
                 alert(`Error al crear el chat: ${errorData.message}`);
