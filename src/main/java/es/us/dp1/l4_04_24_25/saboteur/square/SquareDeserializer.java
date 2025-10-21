@@ -1,4 +1,4 @@
-package es.us.dp1.l4_04_24_25.saboteur.board;
+package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.io.IOException;
 
@@ -11,24 +11,23 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 @Component
-public class BoardDeserializer extends JsonDeserializer<Board> {
+public class SquareDeserializer extends JsonDeserializer<Square> {
 
     @Autowired
-    private BoardService boardService; 
+    private SquareService squareService; 
 
     @Override
-    public Board deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
-        Board result = null;
+    public Square deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
+        Square result = null;
 
         try {
-           
-            Integer boardId = p.getIntValue();
             
-            result = boardService.findBoard(boardId);
+            Integer squareId = p.getIntValue();
+            
+            result = squareService.findSquare(squareId);
 
         } catch (Exception e) {
-            
-            throw new IOException("Board not found", e);
+            throw new IOException("Square not found", e);
         }
 
         return result;

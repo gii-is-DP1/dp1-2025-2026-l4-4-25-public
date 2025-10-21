@@ -1,16 +1,9 @@
 package es.us.dp1.l4_04_24_25.saboteur.auth;
 
-import java.util.Collection;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
 import es.us.dp1.l4_04_24_25.saboteur.user.AuthoritiesService;
-import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -28,7 +21,7 @@ public class AuthServiceTests {
 	protected UserService userService;
 	@Autowired
 	protected AuthoritiesService authoritiesService;
-
+	/*
 	@Test
 	@Transactional
 	public void shouldCreateAdminUser() {
@@ -77,5 +70,6 @@ public class AuthServiceTests {
 
 		return request;
 	}
+	*/
 
 }

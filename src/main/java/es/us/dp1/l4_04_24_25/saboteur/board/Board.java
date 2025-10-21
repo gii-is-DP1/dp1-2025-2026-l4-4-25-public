@@ -26,11 +26,7 @@ import lombok.Setter;
 @Setter
 @Table(name="Board")
 public class Board extends BaseEntity{
-    
-    public Board() {
-        super();
-    }
-
+ 
     @Column(name = "base")
     @NotNull 
     protected Integer base = 11;
@@ -39,8 +35,6 @@ public class Board extends BaseEntity{
     @NotNull 
     protected Integer heigth = 9;
 
-
-    
     @OneToMany(mappedBy = "board")
     @JsonManagedReference 
     private List<Square> busy = new ArrayList<>();
