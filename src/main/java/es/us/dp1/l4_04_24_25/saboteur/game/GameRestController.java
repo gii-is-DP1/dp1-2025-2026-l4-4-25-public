@@ -1,9 +1,11 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +28,6 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/v1/games")
@@ -76,19 +75,15 @@ class GameRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Game> create(@RequestBody @Valid Game game) {
-        Game savedGame = gameService.saveGame(new Game(
-            game.getTime(),
-            game.getGameStatus(),
-            game.getLink(),
-            game.isPrivate(),
-            game.getMaxPlayers(),
-            game.getWatchers(),
-            game.getActivePlayers(),
-            game.getWinner(),
-            game.getCreator(),
-            game.getRounds(),
-            game.getChat()
-        ));
+        Game newGame = new Game();
+        BeanUtils.copyProperties(game, newGame, "id", "time", "gameStatus", "chat", "watchers", "rounds" );
+        if (newGame.getActivePlayers() == null || newGame.getActivePlayers().isEmpty()) {
+            throw new IllegalArgumentException("A game must have at least one active player (the creator).");
+        }
+        if (gameService.existsByLink(newGame.getLink())) {
+            throw new IllegalArgumentException("A game with the same link already exists.");
+        }
+        Game savedGame = gameService.saveGame(newGame);
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
     }
 

@@ -2,6 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.chat;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +56,9 @@ public class ChatRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Chat> createChat(@RequestBody @Valid Chat chat){
-        Chat savedChat = chatService.saveChat(chat);
+        Chat newChat = new Chat();
+        BeanUtils.copyProperties(chat, newChat, "id");
+        Chat savedChat = chatService.saveChat(newChat);
         return new ResponseEntity<Chat>(savedChat,HttpStatus.CREATED);
     }
 
