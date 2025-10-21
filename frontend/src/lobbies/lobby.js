@@ -111,7 +111,7 @@ export default function Lobby(){
             const newGame = await gameResponse.json();
             alert("¡Partida creada con éxito!");
             console.log("Partida creada:", newGame);
-            navigate('/CreateGame', { state: { game: newGame } });
+            navigate('/CreateGame/' + newGame.id , { state: { game: newGame } });
         } else {
             const errorData = await gameResponse.json();
             alert(`Error al crear la partida: ${errorData.message}`);

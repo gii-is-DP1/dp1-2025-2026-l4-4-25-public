@@ -84,7 +84,7 @@ function App() {
         <Route path="/lobby" element={<PrivateRoute><Lobby /></PrivateRoute>} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
+        <Route path="/CreateGame/:id" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
       </>

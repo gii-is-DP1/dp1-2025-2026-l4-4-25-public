@@ -115,7 +115,7 @@ export default function ListGames() {
                       <button className="button-join-game">📩REQUEST JOIN</button>
                       </Link>
                     ):(
-                      <Link to={"/board/" + game.id}>
+                      <Link to={"/CreateGame/" + game.id}>
                       <button className="button-join-game">📥JOIN</button>
                       </Link>
                       )
@@ -151,7 +151,7 @@ export default function ListGames() {
           </div>
 
           <div className="filter-group">
-            <label>👤Minimun of Players:</label>
+            <label>👤Active Players / Game:</label>
             <input
               type="number"
               name="minPlayers"

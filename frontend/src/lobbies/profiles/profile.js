@@ -104,12 +104,20 @@ export default function Profile() {
                     <div className="profile-info">
                         <h2 className={profile.authority.authority === 'ADMIN' ? "admin-username" : ""}>{profile?.username || 'Loading...'}</h2>
                         <div className="profile-buttons">
-                            <h2>Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</h2>
-                        </div>
-                        <div className="profile-buttons">
+                            <button className="button-small">🏠Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</button>
                             <Link to="/profile/editProfile">
                                 <button className="button-small">✏️ Edit Profile</button>
                             </Link>
+                            {!isAdmin && (
+                                <div className="profile-bottom-buttons">
+                                <Link to="/achievement">
+                                     <button className="button-small">🏆 Achievement</button>
+                                </Link>
+                                <Link to="/stats">
+                                     <button className="button-small">📊 Stats</button>
+                                </Link>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
