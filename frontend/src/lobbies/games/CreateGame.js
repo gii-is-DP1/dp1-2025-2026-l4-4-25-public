@@ -156,7 +156,7 @@ const CreateGame = () => {
       const newGame = await response.json();
       setpatchgame(newGame);
       alert("¡Partida iniciada con éxito!");
-      navigate(`/board/${newGame.id}`); 
+      navigate(`/board/${newGame.id}`, { state: { game: newGame } });
     } else {
       const errorData = await response.json();
       alert(`Error al iniciar la partida: ${errorData.message}`);

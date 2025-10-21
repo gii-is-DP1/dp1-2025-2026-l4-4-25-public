@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import '../App.css';
 import '../static/css/home/home.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import '../static/css/game/game.css'; 
 import minerRol from '../game/cards-images/roles/minerRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
@@ -11,12 +11,14 @@ import avatar from "../static/images/icons/1.jpeg"
 const jwt = tokenService.getLocalAccessToken();
 
 export default function Board() {
+   const location = useLocation();
  
   const ndeck=60;
   const timeturn=60;
   const idGame = 0; // Usar el getIdFromUrl
 
   const [profileImage, setProfileImage] = useState(avatar);
+  const [game, setGame] = useState(location.state?.game);
   const [message, setMessage] = useState([]); // UseState que almacenan los mensajes (Chat de texto)
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState('1'); 
@@ -25,14 +27,15 @@ export default function Board() {
   const [gameLog, setGameLog] = useState([]);
   const [playerOrder, setPlayerOrder] = useState(['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
   const [playerRol, setPlayerRol] = useState({}); // Para los roles de saboteur y minero
-  const [activePlayer, setActivePlayer] = useState([]); // Lista de arrays de isactivePlayer
-  const nPlayers=setActivePlayer.length; // Total de jugadores en la partida
+  const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
+  const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
 
 
  useEffect(() => {
+  console.log("game", game)
     const fetchPlayers = async () => {
       try {
-        const response = await fetch(`/api/v1/players/byGameId?gameId=${idGame}`, {
+        const response = await fetch(`/api/v1/players/byGameId?gameId=${game.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -47,12 +50,25 @@ export default function Board() {
       } catch (error) {
         console.error(error);}};
     fetchPlayers();
-  }, [idGame]);
+    //los demas es pa prueba
+    setActivePlayers([...(game?.activePlayers || []), 'Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']);
+    
+    async function handlerounds() {
+      const irounds = game.rounds.length
+      if(irounds <=0){
+        setNumRound(1)
+      }
+    }
+    handlerounds()
+   
+  }, [game.id]);
 
+/*
 useEffect(() => {
+  
   const fetchActivePlayers = async () => {
     try {
-      const response = await fetch(`/api/v1/games/${idGame}/activePlayers`, {
+      const response = await fetch(`/api/v1/games/${game.id}/activePlayers`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +80,9 @@ useEffect(() => {
     } catch (error) {
       console.error(error);}};
     fetchActivePlayers();
-  }, [idGame]);
+  }, [game.id]);
+  */
+ //NO HACE FALTA LO COGEMOS DE NAVIGATE 
 
 const assignRolesGame = (activePlayers) => {
   return null; // AUN POR DEFINIR (Definir numeros de roles de cada tipo según los jugadores de la partida)
@@ -98,11 +116,13 @@ const addLog = (msg,type="info") => {
     const sec = (s%60).toString().padStart(2, '0');
     return `${min}:${sec}`;
   };
+  // console.log("activeplayers", activePlayers)
 
+  /*
   useEffect(() => {
     const fetchedRound = async () => {
       try {
-        const response = await fetch(`/api/v1/rounds/byGame/${idGame}`, {
+        const response = await fetch(`/api/v1/rounds/byGame/${game.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -117,7 +137,9 @@ const addLog = (msg,type="info") => {
       }};
 
     fetchedRound();
-  }, [idGame]);
+  }, [game.id]);
+  */
+ //NO HACE FALTA COGEMOS LAS RONDAS DEL NAVIGATE
 
   let numCards = 0; // Iniciamos con 0 cartas, según los jugadores se repartirá x cartas
   if (nPlayers <= 5) {
@@ -188,18 +210,18 @@ const addLog = (msg,type="info") => {
       </div>
 
       <div className="players-var">
-        {playerOrder.map((player, index) => (
+        {activePlayers.map((activePlayers, index) => (
           <div key={index} className={`player-card player${index + 1}`}>
             <div className="player-avatar">
-              <img src={player.profileImage || avatar} alt={player.username || player} />
+              <img src={activePlayers.profileImage || avatar} alt={activePlayers.username || activePlayers} />
             </div>
             <div className={`player-name player${index + 1}`}>
-              {player.username || player}
+              {activePlayers.username || activePlayers}
             </div>
-            <div className="player-lint">{player.wins} 🔦 : 🟢</div>
-            <div className="player-vag">{player.wins} 🪨 : 🟢</div>
-            <div className="player-pic">{player.wins} ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
-            <div className="player-pep">{player.wins} 🪙 : 0</div>
+            <div className="player-lint">{activePlayers.wins} 🔦 : 🟢</div>
+            <div className="player-vag">{activePlayers.wins} 🪨 : 🟢</div>
+            <div className="player-pic">{activePlayers.wins} ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
+            <div className="player-pep">{activePlayers.wins} 🪙 : 0</div>
           </div>
         ))}
       </div>
