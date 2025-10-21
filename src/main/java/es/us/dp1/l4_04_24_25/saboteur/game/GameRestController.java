@@ -1,7 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedLinkException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
@@ -85,6 +85,9 @@ class GameRestController {
         if (gameService.existsByLink(newGame.getLink())) {
             throw new EmptyActivePlayerListException("A game with the same link already exists.");
         }
+        Chat chat = new Chat();
+        chat.setGame(newGame);
+        newGame.setChat(chat);
         Game savedGame = gameService.saveGame(newGame);
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
     }
@@ -104,12 +107,8 @@ class GameRestController {
     updates.forEach((k, v) -> {
         String fieldName = k.equals("private") ? "isPrivate" : k;
         Field field = ReflectionUtils.findField(Game.class, fieldName);
-        if (field == null) {
-            return ;
-        }
+        if (field == null) return ;
         field.setAccessible(true);
-
-        
         try {
             /*
             // Handle lists of usernames -> convert to List<ActivePlayer>
