@@ -9,13 +9,19 @@ INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,auth
 
 INSERT INTO chat (id) VALUES (1);
 
+-- Jugadores por defecto
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 0, 0, 0, 0, 0, false, 5, 3);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (5, 0, 0, 0, 0, 0, false, 5, 3);
 
 
 
 INSERT INTO deck (id) VALUES (1);
+INSERT INTO deck (id) VALUES (2);
+
 
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 1,  0, 4, false, true, null );
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 2,  0, 5, false, true, null );
+
 
 INSERT INTO message (id, chat_id, text, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
 

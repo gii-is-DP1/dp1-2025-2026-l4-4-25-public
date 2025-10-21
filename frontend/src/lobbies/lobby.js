@@ -24,17 +24,6 @@ export default function Lobby(){
     ]);
 
     useEffect(() => {
-        const jwt = tokenService.getLocalAccessToken();
-        if (jwt) {
-        try {
-            const p=JSON.parse(atob(jwt.split('.')[1]));
-            setisAdmin(p.authorities?.includes("ADMIN")||false);
-        } catch (error) {
-            console.error(error);}}
-    }, []);
-
-    
-    useEffect(() => {
     const fetchPlayer = async () => {
           try {
             const loggedInUser = tokenService.getUser();
@@ -59,10 +48,25 @@ export default function Lobby(){
             }
           } catch (error) {
             console.error('Hubo un problema con la petición fetch:', error);
-            alert('Error de red. No se pudo conectar con el servidor.');}
+            alert('Error de red. No se pudo conectar con el servidor.');
+            }
         };
-        fetchPlayer()
-        console.log("este es  el player", player)
+
+        let admin = false;
+        try {
+            const p = JSON.parse(atob(jwt.split('.')[1]));
+            admin = p.authorities?.includes("ADMIN") || false;
+            setisAdmin(admin);
+        } catch (error) {
+            console.error(error);
+            return; 
+        }
+
+        // Solo buscar los datos del jugador si el usuario NO es un admin
+        if (!admin) {
+            fetchPlayer();
+            console.log("este es  el player", player)
+        }
   },[jwt])
 
     async function handleSubmit() {
