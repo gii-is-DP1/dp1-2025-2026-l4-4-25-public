@@ -66,7 +66,6 @@ public class UserService {
 
 		return playerRepository.save(newPlayer); // Se guarda el player (extiende de User por lo que estamos devolviendo un objeto User)
 
-
 	}
 
 	@Transactional(readOnly = true)
