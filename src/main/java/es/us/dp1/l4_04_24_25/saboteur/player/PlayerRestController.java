@@ -23,7 +23,6 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedPlayerException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedUserException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserDTO;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
