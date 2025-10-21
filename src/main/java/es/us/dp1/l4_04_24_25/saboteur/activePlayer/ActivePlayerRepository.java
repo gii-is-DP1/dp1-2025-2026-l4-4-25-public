@@ -29,4 +29,6 @@ public interface ActivePlayerRepository extends CrudRepository<ActivePlayer, Int
 
     Iterable<ActivePlayer> findByCartState(boolean cartState);
 
+    boolean existsByUsername (String username);
+
 } 

@@ -51,24 +51,8 @@ public class UserService {
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
-		// Rellenar tabla Player
-		Player newPlayer = new Player();
-		BeanUtils.copyProperties(user, newPlayer);
-
-		newPlayer.setPlayedGames(5);
-        newPlayer.setWonGames(0);
-        newPlayer.setDestroyedPaths(0);
-        newPlayer.setBuiltPaths(0);
-        newPlayer.setAcquiredGoldNuggets(0);
-		newPlayer.setPeopleDamaged(0);
-		newPlayer.setPeopleRepaired(0);
-		newPlayer.setFriends(new ArrayList<>());
-		newPlayer.setAccquiredAchievements(new ArrayList<>());
-		newPlayer.setWatcher(false);
-
-		playerRepository.save(newPlayer);
 		
-		return userRepository.save(user); // Se guarda el player (extiende de User por lo que estamos devolviendo un objeto User)
+		return userRepository.save(user); 
 	}
 
 	@Transactional(readOnly = true)

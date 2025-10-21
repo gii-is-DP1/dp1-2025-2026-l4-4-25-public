@@ -21,7 +21,11 @@ public class BoardService {
 
     @Transactional
     public Board saveBoard(@Valid Board board) {
-
+        
+        if (board.getRound() != null) {
+            board.getRound().setBoard(board);
+        }
+        
         boardRepository.save(board);
         return board;
     }
@@ -52,7 +56,8 @@ public class BoardService {
         Board toDelete = findBoard(id);
         boardRepository.delete(toDelete);
     }
-
+    
+    
     @Transactional(readOnly = true)
     public List<Board> findByBase(Integer base) {
         return boardRepository.findByBase(base);
