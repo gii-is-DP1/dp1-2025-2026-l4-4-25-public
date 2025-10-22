@@ -4,6 +4,7 @@ import '../static/css/home/home.css';
 import { Link, useLocation } from 'react-router-dom';
 import '../static/css/game/game.css'; 
 import minerRol from '../game/cards-images/roles/minerRol.png';
+import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
 import avatar from "../static/images/icons/1.jpeg"
@@ -25,7 +26,7 @@ export default function Board() {
   const [cont, setCont] = useState(timeturn); 
   const [gameLog, setGameLog] = useState([]);
   const [playerOrder, setPlayerOrder] = useState(['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
-  const [playerRol, setPlayerRol] = useState({}); // Para los roles de saboteur y minero
+  const [playerRol, setPlayerRol] = useState([]); // Para los roles de saboteur y minero
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
 
@@ -126,9 +127,44 @@ useEffect(() => {
   */
  //NO HACE FALTA LO COGEMOS DE NAVIGATE 
 
-const assignRolesGame = (activePlayers) => {
-  return null; // AUN POR DEFINIR (Definir numeros de roles de cada tipo según los jugadores de la partida)
-    };
+const loggedInUser = tokenService.getUser();
+
+const assignRolesGame = () => {
+  const n = activePlayers.length;
+  let numSaboteur = 0;
+  let numMiner = 0;
+  if(n===1){numSaboteur = 1; numMiner = 3;}
+  else if(n===4){numSaboteur = 1; numMiner = 3;}
+  else if(n===5){numSaboteur = 2; numMiner = 3;}
+  else if(n===6){numSaboteur = 2; numMiner = 4;}
+  else if(n===7){numSaboteur = 3; numMiner = 4;}
+  else if(n===8){numSaboteur = 3; numMiner = 5;}
+  else if(n===9){numSaboteur = 4; numMiner = 5;}
+  else if(n===10){numSaboteur = 4; numMiner = 6;}
+  else if(n===11){numSaboteur = 5; numMiner = 6;}
+  else if(n===12){numSaboteur = 5; numMiner = 7;}
+
+  const sArray = (array) => {
+  const res = [...array];
+  for (let i = res.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i + 1));
+    [res[i], res[j]] = [res[j], res[i]];}
+  return res;};
+
+  const sPlayers = sArray(activePlayers);
+  const roles = sPlayers.map((p, i) => ({
+    username: p.username || p,
+    role: i<numSaboteur ? 'SABOTEUR':'MINER',
+    roleImg: i<numSaboteur ? saboteurRol:minerRol}));
+  return roles;};
+
+useEffect(() => {
+  if(activePlayers.length > 0){
+    console.log(playerRol)
+    const rolesAssigned = assignRolesGame(activePlayers);
+    setPlayerRol(rolesAssigned); }
+}, [activePlayers]);
+
 
 const nextTurn = () => {
     return null; // AUN POR DEFINIR
@@ -216,9 +252,16 @@ const addLog = (msg,type="info") => {
       </div>
 
       <div className="my-role">
-        MY ROL :
+        MY ROLE:
         <div className="logo-img">
-         <img src={minerRol} alt="Miner Role" className="logo-img"/> 
+      <img 
+        src={Array.isArray(playerRol) 
+              ? playerRol.find(p => p.username === loggedInUser.username)?.roleImg || minerRol
+              : minerRol
+            } 
+        alt="My Role" 
+        className="logo-img"
+      />
         </div>
       </div>
 
