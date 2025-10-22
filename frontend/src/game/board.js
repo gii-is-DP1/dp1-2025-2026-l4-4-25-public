@@ -15,7 +15,6 @@ export default function Board() {
  
   const ndeck=60;
   const timeturn=60;
-  const idGame = 0; // Usar el getIdFromUrl
 
   const [profileImage, setProfileImage] = useState(avatar);
   const [game, setGame] = useState(location.state?.game);
@@ -33,6 +32,7 @@ export default function Board() {
 
  useEffect(() => {
   console.log("game", game)
+  /*
     const fetchPlayers = async () => {
       try {
         const response = await fetch(`/api/v1/players/byGameId?gameId=${game.id}`, {
@@ -49,19 +49,61 @@ export default function Board() {
 
       } catch (error) {
         console.error(error);}};
-    fetchPlayers();
+        */
+    //fetchPlayers();
     //los demas es pa prueba
     setActivePlayers([...(game?.activePlayers || []), 'Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']);
     
+
+const fetchPlayerByUsername = async (username) => {
+  try {
+    const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+    if (response.ok) {
+              const data = await response.json();
+              console.log('players', data)
+              return data
+            } else {
+              console.error('Respuesta no OK:', response.status);
+              alert('Error al obtener el jugador.');
+            }
+          } catch (error) {
+            console.error('Hubo un problema con la petición fetch:', error);
+            alert('Error de red. No se pudo conectar con el servidor.');
+          }
+};
+
+
+
+
     async function handlerounds() {
       const irounds = game.rounds.length
       if(irounds <=0){
         setNumRound(1)
       }
     }
+    async function sortplayers(){
+      if (activePlayers.length > 0) { // players > 0
+          const res =activePlayers.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
+          setPlayerOrder(res);
+          setCurrentPlayer(res[0].username);}
+          else if(activePlayers.length===1){
+            setCurrentPlayer(activePlayers[0])
+
+          }  
+    }
+
     handlerounds()
-   
+    sortplayers()
+   console.log(currentPlayer)
   }, [game.id]);
+
+  
 
 /*
 useEffect(() => {
@@ -116,7 +158,7 @@ const addLog = (msg,type="info") => {
     const sec = (s%60).toString().padStart(2, '0');
     return `${min}:${sec}`;
   };
-  // console.log("activeplayers", activePlayers)
+  //console.log("activeplayers", activePlayers)
 
   /*
   useEffect(() => {
@@ -206,7 +248,7 @@ const addLog = (msg,type="info") => {
       </div>
 
       <div className="turn-box">
-        🔴 · TURNO DE  {playerOrder[0]} {/* {currentPlayer} */}
+        🔴 · TURNO DE {currentPlayer}
       </div>
 
       <div className="players-var">
@@ -218,10 +260,10 @@ const addLog = (msg,type="info") => {
             <div className={`player-name player${index + 1}`}>
               {activePlayers.username || activePlayers}
             </div>
-            <div className="player-lint">{activePlayers.wins} 🔦 : 🟢</div>
-            <div className="player-vag">{activePlayers.wins} 🪨 : 🟢</div>
-            <div className="player-pic">{activePlayers.wins} ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
-            <div className="player-pep">{activePlayers.wins} 🪙 : 0</div>
+            <div className="player-lint"> 🔦 : 🟢</div>
+            <div className="player-vag">🪨 : 🟢</div> 
+            <div className="player-pic"> ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
+            <div className="player-pep"> 🪙 : {activePlayers.wins}</div>
           </div>
         ))}
       </div>

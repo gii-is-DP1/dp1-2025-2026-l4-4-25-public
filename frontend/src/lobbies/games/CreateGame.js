@@ -102,7 +102,7 @@ const CreateGame = () => {
       gameStatus: "CREATED",
       private: isPrivate,
       maxPlayers: parseInt(numPlayers),
-      activePlayers: [player.username]
+      //activePlayers: [player.username]
     };
 
     console.log('Enviando request:', request);
