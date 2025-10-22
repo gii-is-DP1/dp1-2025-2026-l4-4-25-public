@@ -239,22 +239,20 @@ const handleExpelPlayer = (usernameToExpel) => {
           </div>
           )}
           <div className="active-players-section">
-            <h2>Players in the game ({game.activePlayers.length}/{game.maxPlayers})</h2>
+            <h2>Players : ({game.activePlayers.length}/{game.maxPlayers})</h2>
             <div className="active-players-list">
               {game.activePlayers.map((username, index) => (
                 <div key={index} className="player-card">
                   <div className="player-avatar">
                     <img
-                      src={`https://via.placeholder.com/40/007BFF/FFFFFF?text=${username[0]}`}
                       alt={username}
                     />
                   </div>
                   <div className="player-name">{username}</div>
-                  {isCreator && username !== game.creator && (
+                  {isCreator && username!==game.creator && (
                     <button
                       className="expel-player-btn"
-                      onClick={() => handleExpelPlayer(username)}
-                    >
+                      onClick={() => handleExpelPlayer(username)}>
                       ❌ expulsar
                     </button>
                   )}
