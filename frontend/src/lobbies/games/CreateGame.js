@@ -20,6 +20,73 @@ const CreateGame = () => {
 
   useEffect(() => {
      if (!game) return;
+     // Función para unirse a la partida
+     const joinGame = async () => {
+      console.log("Intentando unirse a la partida como invitado...");
+      try {
+        //Obtenemos el username del usuario actual
+        const currentUser = tokenService.getUser();
+        if(!currentUser || !currentUser.username) {
+          alert("No se pudo identificar al usuario para unirse")
+          navigate("/lobby");
+          return;
+        }
+        // Traemos la última versión de la partida
+        const gameResponse = await fetch(`/api/v1/games/${game.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+        });
+        if(!gameResponse.ok){
+          alert("Error al cargar los datos de la partida");
+          navigate("/ListGames");
+          return;
+        }
+
+        const currentGame = await gameResponse.json();
+        // Obtenemos la lista de players de la partida
+        const activePlayerList = currentGame.activePlayers || [];
+        // Evaluamos si el usuario actual está en la partida
+        const amIAlreadyIn = activePlayerList.some(p=> p.username === currentUser.username);
+        
+        if(amIAlreadyIn){
+          console.log("Ya estás en la partida");
+          setGame(currentGame);
+          return;
+        }
+        // Si no está en la lista
+        const newActivePlayer = {
+          username: currentUser.username
+        };
+
+        const updatedActivePlayerList = [...activePlayerList, newActivePlayer];
+
+        // Hacemos el PATCH al Game con la lista ya actualizada
+        const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwt}`
+          },
+          body: JSON.stringify({activePlayers: updatedActivePlayerList}),
+        });
+
+        if(patchResponse.ok){
+          const updatedGame = await patchResponse.json();
+          setGame(updatedGame); 
+          console.log("Unido a la partida con éxito")
+        }else{
+          alert("Error al intentar unirse a la partida");
+          navigate("/ListGames");
+        }
+      } catch(error){
+        console.error("Error en el proceso de unirse:", error);
+        alert(error.message);
+        navigate("/ListGames");
+      }
+    }; 
     const patchchat = async () => {
           try {
             const loggedInUser = tokenService.getUser();
@@ -28,7 +95,7 @@ const CreateGame = () => {
             return;
         } //corregido con el copy properties
            const request = {
-          game : game.id
+              game : game.id
         }
             const response = await fetch(`/api/v1/chats/${game.chat}`, {
         method: "PUT",
@@ -52,13 +119,11 @@ const CreateGame = () => {
             alert('Error de red. No se pudo conectar con el servidor.');
           }
         };
+
         console.log('game del navigate', game)
         console.log('chat del navigate', game.chat)
-        patchchat()
         
-
         const fetchPlayer = async () => {
-          console.log('chat del creategame ', chat)
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
@@ -86,14 +151,17 @@ const CreateGame = () => {
             alert('Error de red. No se pudo conectar con el servidor.');
           }
         };
-        fetchPlayer()
         
+        patchchat();
+        fetchPlayer();
+        
+        if(!isCreator){
+          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
+        }
 
-        console.log("este es  el player", player)
-        
-        
-
-  },[jwt, game])
+  },[jwt, game, isCreator, navigate])
+  
+  console.log('chat del creategame ', chat)
 
   async function handleSubmit() {
     //necesitamos el patch de game
