@@ -102,6 +102,7 @@ class GameRestController {
 
    @PatchMapping(value = "{gameId}")
     public ResponseEntity<Game> patchGame(@PathVariable("gameId") Integer id, @RequestBody Map<String, Object> updates) {
+    RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
     Game game = gameService.findGame(id);
 
     updates.forEach((k, v) -> {

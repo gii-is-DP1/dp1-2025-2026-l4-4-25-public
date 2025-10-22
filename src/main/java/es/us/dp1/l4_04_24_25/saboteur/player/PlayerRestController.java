@@ -61,7 +61,7 @@ public class PlayerRestController {
 
     @GetMapping("byUsername")
     public ResponseEntity<PlayerDTO> findByUsername(@RequestParam String username){
-        PlayerDTO res = playerService.findByUsername(username);
+        PlayerDTO res = playerService.findByUsernameDTO(username);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
