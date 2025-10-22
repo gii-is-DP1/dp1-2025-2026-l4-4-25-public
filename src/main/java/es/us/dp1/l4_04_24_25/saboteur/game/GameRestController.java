@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
@@ -38,11 +41,13 @@ class GameRestController {
 
     private final GameService gameService;
     private final ActivePlayerService activePlayerService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public GameRestController(GameService gameService, ActivePlayerService activePlayerService) {
+    public GameRestController(GameService gameService, ActivePlayerService activePlayerService, ObjectMapper objectMapper) {
         this.gameService = gameService;
         this.activePlayerService = activePlayerService;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -101,61 +106,12 @@ class GameRestController {
     }
 
    @PatchMapping(value = "{gameId}")
-    public ResponseEntity<Game> patchGame(@PathVariable("gameId") Integer id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<Game> patchGame(@PathVariable("gameId") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException {
     RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
     Game game = gameService.findGame(id);
-
-    updates.forEach((k, v) -> {
-        String fieldName = k.equals("private") ? "isPrivate" : k;
-        Field field = ReflectionUtils.findField(Game.class, fieldName);
-        if (field == null) {
-            throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
-        }
-        field.setAccessible(true);
-        try {
-            /*
-            // Handle lists of usernames -> convert to List<ActivePlayer>
-            if ((fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
-                List<String> names = (List<String>) v;
-                List<ActivePlayer> objectList = new ArrayList<>();
-                for (String name: names){
-                    ActivePlayer ap = activePlayerService.findByUsername(name);
-                    objectList.add(ap);
-                }
-                ReflectionUtils.setField(field, game, objectList);
-            }*/
-            // Caso especial de winner (ActivePlayer) representado por nombre de usuario
-            if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
-                ActivePlayer ap = activePlayerService.findByUsername(username);
-            
-            // Si ya hay un ganador, desvincular la partida ganada del jugador anterior
-            // y si el nuevo ganador no es null, vincular la partida ganada al nuevo ganador
-                if (game.getWinner() != null) {
-                     game.getWinner().setWonGame(null);
-                }
-                game.setWinner(ap);
-                ap.setWonGame(game);
-
-                ReflectionUtils.setField(field, game, ap);
-            }
-            // Enum handling (e.g., gameStatus)
-            else if (field.getType().isEnum() && v instanceof String) {
-                @SuppressWarnings({"rawtypes", "unchecked"})
-                Enum enumValue = Enum.valueOf((Class) field.getType(), (String) v);
-                ReflectionUtils.setField(field, game, enumValue);
-            }
-            else {
-                ReflectionUtils.setField(field, game, v);
-            }
-            
-        } catch (Exception e) {
-            throw new RuntimeException("Error applying patch", e);
-        }
-        
-    });
-
-    gameService.saveGame(game);
-    return ResponseEntity.ok(game);
+    Game gamePatched = objectMapper.updateValue(game, updates);
+    gameService.saveGame(gamePatched);
+    return ResponseEntity.ok(gamePatched);
 }
 
     @DeleteMapping(value = "{gameId}")

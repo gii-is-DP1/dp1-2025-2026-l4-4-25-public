@@ -84,7 +84,9 @@ public class BoardRestController {
 
         updates.forEach((k, v) -> {
             Field field = ReflectionUtils.findField(Board.class, k);
-            if (field == null) return;
+            if (field == null) {
+                throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
+            }
             field.setAccessible(true);
             try {
         
