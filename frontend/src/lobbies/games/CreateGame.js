@@ -18,6 +18,9 @@ const CreateGame = () => {
   const isCreator = game?.creator === loggedInUser?.username;
 
 
+  
+
+
   useEffect(() => {
     console.log("Entrando al useEffect. Valor de game:", game);
      if (!game) return;
@@ -84,18 +87,30 @@ const CreateGame = () => {
         navigate("/ListGames");
       }
     }; 
-    const patchchat = async () => {
+    
+        
+        if(!isCreator){
+          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
+        }
+
+  },[])
+  
+  useEffect(()=>{
+    const postFirstMessage = async () => {
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
         } //corregido con el copy properties
+        const msg = "Bienvenido a Saboteur"
            const request = {
-              game : game.id
+              content: msg,
+              activePlayer: game.creator,
+              chat:game.chat
         }
-            const response = await fetch(`/api/v1/chats/${game.chat}`, {
-        method: "PUT",
+            const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
@@ -109,7 +124,7 @@ const CreateGame = () => {
               setchat(data);
             } else {
               console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener la chat del jugador.');
+              alert('Error al obtener el mensaje del jugador.');
             }
           } catch (error) {
             console.error('Hubo un problema con la petición fetch:', error);
@@ -151,15 +166,10 @@ const CreateGame = () => {
           }
         };
         
-        patchchat();
+        postFirstMessage();
         fetchPlayer();
-        
-        if(!isCreator){
-          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
-        }
-
-  },[jwt, game, navigate])
-
+  },[])
+  
   console.log('chat del creategame ', chat)
 
   async function handleSubmit() {
@@ -269,6 +279,14 @@ const CreateGame = () => {
       alert('No se pudo copiar el enlace.');
     }
   }
+const handleExpelPlayer = (usernameToExpel) => {
+  setGame(prevGame => ({
+    ...prevGame,
+    activePlayers: prevGame.activePlayers.filter(
+      username => username !== usernameToExpel
+    ),
+  }));
+};
 
   return (
     <div className="home-page-container">
@@ -296,8 +314,29 @@ const CreateGame = () => {
               <option value="12">12</option>
             </select>
           </div>
-            )}
-          
+          )}
+          <div className="active-players-section">
+            <h2>Players : ({game?.activePlayers?.length}/{game?.maxPlayers})</h2>
+            <div className="active-players-list">
+              {game?.activePlayers.map((username, index) => (
+                <div key={index} className="player-card">
+                  <div className="player-avatar">
+                    <img
+                      alt={username}
+                    />
+                  </div>
+                  <div className="player-name">{username}</div>
+                  {isCreator && username!==game.creator && (
+                    <button
+                      className="expel-player-btn"
+                      onClick={() => handleExpelPlayer(username)}>
+                      ❌ expulsar
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
           {isCreator && (
           <div className="form-group privacy-toggle">
             <label>Privacity</label>
@@ -315,17 +354,18 @@ const CreateGame = () => {
           </div>
             )}
 
-          <div className="form-group add-friends-section">
-            <label>Invite friends</label>
-            <div className="friends-list">
-              <div className="add-friend-button">
-                <button>
-                  <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
-                </button>
-              </div>
+        <div className="form-group add-friends-section">
+          <label>Invite friends</label>
+          <div className="friends-list">
+            <div className="add-friend-button">
+              <button>
+                <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
+              </button>
             </div>
           </div>
-
+        </div>
+        {game && game.activePlayers?.length > 0 && (
+          <div className="active-players-section"></div>)}
             <div className="card-footer">
               {isCreator ? (
                 <>
