@@ -88,25 +88,25 @@ public class PlayerRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Player> createPlayer(@RequestBody @Valid Player player)
     throws DataAccessException, DuplicatedPlayerException, DuplicatedUserException {
-        //VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO USERNAME
+        
         if (userService.existsUser(player.getUsername())) {
         throw new DuplicatedUserException("A user with username '" + player.getUsername() + "' already exists");
          }
-         // VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO EMAIL
+         
          List<UserDTO> existingUsers = userService.findAll();
          boolean emailExists = existingUsers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(player.getEmail()));
          if (emailExists) {
           throw new DuplicatedUserException("A user with email '" + player.getEmail() + "' already exists");
           }
-        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        
         try {
             playerService.findByUsername(player.getUsername());
             throw new DuplicatedPlayerException("Username already exists: " + player.getUsername());
         } catch (ResourceNotFoundException e) {
        
         }
-        //VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO EMAIL
+        
         List<PlayerDTO> existingPlayers = playerService.findAll();
         boolean emailExistsPlayer = existingPlayers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(player.getEmail()));

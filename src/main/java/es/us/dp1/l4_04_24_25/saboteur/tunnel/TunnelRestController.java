@@ -2,7 +2,9 @@ package es.us.dp1.l4_04_24_25.saboteur.tunnel;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -46,8 +48,11 @@ public class TunnelRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Tunnel> create(@RequestBody @Valid Tunnel tunnel) {
-        Tunnel savedTunnel = tunnelService.saveTunnel(tunnel);
+    public ResponseEntity<Tunnel> create(@RequestBody @Valid Tunnel tunnel) throws DataAccessException{
+        Tunnel newTunnel = new Tunnel();
+        Tunnel savedTunnel;
+        BeanUtils.copyProperties(tunnel, newTunnel);
+        savedTunnel = this.tunnelService.saveTunnel(newTunnel);
         return new ResponseEntity<>(savedTunnel, HttpStatus.CREATED);
     }
 

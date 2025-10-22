@@ -4,7 +4,10 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import es.us.dp1.l4_04_24_25.saboteur.square.type; 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -52,16 +56,16 @@ public class SquareRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     
-    public ResponseEntity<Square> create(@RequestBody @Valid Square square) {
+    public ResponseEntity<Square> create(@RequestBody @Valid Square square) throws DataAccessException, DuplicatedSquareException {
         
+        if(squareService.existsByCoordinateXAndCoordinateY(square.getCoordinateX(), square.getCoordinateY())){
+            throw new DuplicatedSquareException("A square with coordinateX '" + square.getCoordinateX() + "' and coordinateY '" + square.getCoordinateY() + "' already exists");
+        }
+            
         Square newSquare = new Square();
-        newSquare.setCoordinateX(square.getCoordinateX());
-        newSquare.setCoordinateY(square.getCoordinateY());
-        newSquare.setOccupation(square.isOccupation());
-        newSquare.setType(square.getType());
-        newSquare.setBoard(square.getBoard()); 
-
-        Square savedSquare = squareService.saveSquare(newSquare);
+        Square savedSquare;
+        BeanUtils.copyProperties(square, newSquare, "id");
+        savedSquare = this.squareService.saveSquare(newSquare);
         return new ResponseEntity<>(savedSquare, HttpStatus.CREATED);
     }
 
@@ -137,11 +141,12 @@ public class SquareRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
     
+
     @GetMapping("byCoordinates")
-    public ResponseEntity<List<Square>> findByCoordinates(
+    public ResponseEntity<Square> findByCoordinates(
         @RequestParam Integer coordinateX, 
         @RequestParam Integer coordinateY) {
-        List<Square> res = squareService.findByCoordinates(coordinateX, coordinateY);
+        Square res = squareService.findByCoordinates(coordinateX, coordinateY);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

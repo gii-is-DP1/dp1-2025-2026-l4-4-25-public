@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,10 +48,11 @@ public class CardRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Card> create(@RequestBody @Valid Card card) {
+    public ResponseEntity<Card> create(@RequestBody @Valid Card card) throws DataAccessException {
         Card newCard = new Card();
-        BeanUtils.copyProperties(card, newCard, "id");
-        Card savedCard = cardService.saveCard(card);
+        Card savedCard;
+        BeanUtils.copyProperties(card, newCard, "id" );
+        savedCard = this.cardService.saveCard(newCard);
         return new ResponseEntity<>(savedCard, HttpStatus.CREATED);
     }
 
