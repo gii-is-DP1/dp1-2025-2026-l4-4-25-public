@@ -116,7 +116,7 @@ export default function ListGames() {
                           <button className="button-join-game">📩REQUEST JOIN</button>
                         </Link>
                       ) : (
-                        <Link to={"/CreateGame/" + game.id} state={{ game: game }}>
+                        <Link to={"/CreateGame/" + game.id} state={{ game }}>
                           <button className="button-join-game">📥JOIN</button>
                         </Link>
                       )
