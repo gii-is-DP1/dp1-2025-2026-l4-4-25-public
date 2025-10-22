@@ -31,78 +31,73 @@ export default function Board() {
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
 
 
- useEffect(() => {
-  console.log("game", game)
-  /*
-    const fetchPlayers = async () => {
-      try {
-        const response = await fetch(`/api/v1/players/byGameId?gameId=${game.id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,}});
+useEffect(() => {
+  // console.log("game", game)
+
+  const fetchPlayerByUsername = async (username) => {
+    try {
+      const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
         const data = await response.json();
-        if (data && data.length > 0) { // players > 0
-          const res =data.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
-          setPlayerOrder(res);
-          setCurrentPlayer(res[0].username);}
-          
-
-      } catch (error) {
-        console.error(error);}};
-        */
-    //fetchPlayers();
-    //los demas es pa prueba
-    setActivePlayers([...(game?.activePlayers || []), 'Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']);
-    
-
-const fetchPlayerByUsername = async (username) => {
-  try {
-    const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
-      },
-    });
-    if (response.ok) {
-              const data = await response.json();
-              console.log('players', data)
-              return data
-            } else {
-              console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener el jugador.');
-            }
-          } catch (error) {
-            console.error('Hubo un problema con la petición fetch:', error);
-            alert('Error de red. No se pudo conectar con el servidor.');
-          }
-};
-
-
-
-
-    async function handlerounds() {
-      const irounds = game.rounds.length
-      if(irounds <=0){
-        setNumRound(1)
+        // console.log('players', data)
+        return data;
+      } else {
+        console.error('Respuesta no OK:', response.status);
+        alert('Error al obtener el jugador.');
       }
+    } catch (error) {
+      console.error('Hubo un problema con la petición fetch:', error);
+      alert('Error de red. No se pudo conectar con el servidor.');
     }
-    async function sortplayers(){
-      if (activePlayers.length > 0) { // players > 0
-          const res =activePlayers.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
-          setPlayerOrder(res);
-          setCurrentPlayer(res[0].username);}
-          else if(activePlayers.length===1){
-            setCurrentPlayer(activePlayers[0])
+  };
 
-          }  
+  const loadActivePlayers = async () => {
+    const initialPlayers = game?.activePlayers || [];
+    //prueba
+    const usernames = ['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia'];
+    //prueba
+    const mockPlayers = usernames.map((username, index) => ({
+      username,
+      birthDate: new Date(1990 + index, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(), 
+      profileImage: avatar, 
+      wins: Math.floor(Math.random() * 10), 
+    }));
+    const fetchedPlayers = await Promise.all(initialPlayers.map(username => fetchPlayerByUsername(username)));
+    const validPlayers = fetchedPlayers.filter(player => player !== null); 
+    setActivePlayers([...validPlayers, ...mockPlayers]); 
+  };
+
+  loadActivePlayers();
+
+  async function handlerounds() {
+    const irounds = game?.rounds?.length || 0;
+    if (irounds <= 0) {
+      setNumRound(1);
     }
+  }
 
-    handlerounds()
-    sortplayers()
-   console.log(currentPlayer)
-  }, [game.id]);
+  handlerounds();
+
+  
+}, []);
+useEffect(() => {
+  if (activePlayers.length > 1) {
+    const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate)); 
+    setPlayerOrder(res);
+    setCurrentPlayer(res[0].username);
+  } else if (activePlayers.length === 1) {
+    setCurrentPlayer(activePlayers[0].username || activePlayers[0]);
+  }
+
+  console.log("activeplayer", activePlayers);
+  console.log("player", currentPlayer);
+}, [activePlayers]);
 
   
 
