@@ -18,8 +18,11 @@ const CreateGame = () => {
   const isCreator = game?.creator === loggedInUser?.username;
 
 
+  
+
+
   useEffect(() => {
-     if (!game) return;
+    console.log("busco el game",game)
      // Función para unirse a la partida
      const joinGame = async () => {
       console.log("Intentando unirse a la partida como invitado...");
@@ -57,11 +60,9 @@ const CreateGame = () => {
           return;
         }
         // Si no está en la lista
-        const newActivePlayer = {
-          username: currentUser.username
-        };
+        
 
-        const updatedActivePlayerList = [...activePlayerList, newActivePlayer];
+        const updatedActivePlayerList = [...activePlayerList, currentUser.username];
 
         // Hacemos el PATCH al Game con la lista ya actualizada
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
@@ -87,18 +88,30 @@ const CreateGame = () => {
         navigate("/ListGames");
       }
     }; 
-    const patchchat = async () => {
+    
+        
+        if(!isCreator){
+          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
+        }
+
+  },[])
+  
+  useEffect(()=>{
+    const postFirstMessage = async () => {
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
         } //corregido con el copy properties
+        const msg = "Bienvenido a Saboteur"
            const request = {
-              game : game.id
+              content: msg,
+              activePlayer: game.creator,
+              chat:game.chat
         }
-            const response = await fetch(`/api/v1/chats/${game.chat}`, {
-        method: "PUT",
+            const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
@@ -112,7 +125,7 @@ const CreateGame = () => {
               setchat(data);
             } else {
               console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener la chat del jugador.');
+              alert('Error al obtener el mensaje del jugador.');
             }
           } catch (error) {
             console.error('Hubo un problema con la petición fetch:', error);
@@ -152,14 +165,9 @@ const CreateGame = () => {
           }
         };
         
-        patchchat();
+        postFirstMessage();
         fetchPlayer();
-        
-        if(!isCreator){
-          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
-        }
-
-  },[jwt, game, isCreator, navigate])
+  },[])
   
   console.log('chat del creategame ', chat)
 
