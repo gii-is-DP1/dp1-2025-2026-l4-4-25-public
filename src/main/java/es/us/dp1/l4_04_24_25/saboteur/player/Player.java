@@ -3,7 +3,12 @@ package es.us.dp1.l4_04_24_25.saboteur.player;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.Column;
@@ -58,6 +63,8 @@ public class Player extends User{
 
 
     //Relacion de muchos jugadores a muchos logros
+    @JsonSerialize(contentUsing = AchievementSerializer.class)
+    @JsonDeserialize(contentUsing = AchievementDeserializer.class)
     @ManyToMany
     @JoinTable(
         name = "accquiredAchievements",

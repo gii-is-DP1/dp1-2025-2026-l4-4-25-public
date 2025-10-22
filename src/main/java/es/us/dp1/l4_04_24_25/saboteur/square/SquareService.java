@@ -1,6 +1,8 @@
 package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,10 @@ public class SquareService {
         squareRepository.delete(toDelete);
     }
 
+    @Transactional (readOnly = true)
+    public Optional<Square>  findById(Integer id){
+        return squareRepository.findById(id);
+    }
     @Transactional(readOnly = true)
     public List<Square> findByOccupation(boolean occupation) {
         return squareRepository.findByOccupation(occupation);
@@ -63,7 +69,12 @@ public class SquareService {
     }
 
     @Transactional(readOnly = true)
-    public List<Square> findByCoordinates(Integer coordinateX, Integer coordinateY) {
+    public Square findByCoordinates(Integer coordinateX, Integer coordinateY) {
         return squareRepository.findByCoordinateXAndCoordinateY(coordinateX, coordinateY);
     }
+
+   public boolean existsByCoordinateXAndCoordinateY (Integer coordinateX, Integer coordinateY){
+        return squareRepository.existsByCoordinateXAndCoordinateY(coordinateX, coordinateY);
+    }
+        
 }

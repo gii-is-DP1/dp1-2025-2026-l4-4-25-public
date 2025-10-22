@@ -88,12 +88,10 @@ class UserRestController {
 public ResponseEntity<User> create(@RequestBody @Valid User user)
         throws DataAccessException, DuplicatedUserException {
 
-    // Verificamos si ya existe un usuario con el mismo username
     if (userService.existsUser(user.getUsername())) {
         throw new DuplicatedUserException("A user with username '" + user.getUsername() + "' already exists");
     }
 
-    // Verificamos si ya existe un usuario con el mismo email
     List<UserDTO> existingUsers = userService.findAll();
     boolean emailExists = existingUsers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(user.getEmail()));
@@ -102,19 +100,10 @@ public ResponseEntity<User> create(@RequestBody @Valid User user)
         throw new DuplicatedUserException("A user with email '" + user.getEmail() + "' already exists");
     }
 
-    // Creamos un nuevo usuario limpio
-
     User newUser = new User();
-	
     BeanUtils.copyProperties(user, newUser, "id");
-
-    // Encriptamos la contraseña (el UserService ya la vuelve a procesar si es necesario)
    	newUser.setPassword(encoder.encode(user.getPassword()));
-
-    // Guardamos el nuevo usuario
     User savedUser = this.userService.saveUser(newUser);
-
-    // Devolvemos la respuesta con estado CREATED (201)
     return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
 }
 
