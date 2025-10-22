@@ -19,6 +19,7 @@ const CreateGame = () => {
 
 
   useEffect(() => {
+    console.log("Entrando al useEffect. Valor de game:", game);
      if (!game) return;
      // Función para unirse a la partida
      const joinGame = async () => {
@@ -56,12 +57,8 @@ const CreateGame = () => {
           setGame(currentGame);
           return;
         }
-        // Si no está en la lista
-        const newActivePlayer = {
-          username: currentUser.username
-        };
 
-        const updatedActivePlayerList = [...activePlayerList, newActivePlayer];
+        const updatedActivePlayerList = [...activePlayerList, currentUser.username];
 
         // Hacemos el PATCH al Game con la lista ya actualizada
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
@@ -129,8 +126,10 @@ const CreateGame = () => {
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
-        } //necesitamos el metodo findbyusername de player bien
+        } 
+        //necesitamos el metodo findbyusername de player bien
         //mientras tanto lo buscamos por el id con el loggedinuser
+        
             const response = await fetch(`/api/v1/players?username=${game.creator}`, {
               method: "GET",
               headers: {
@@ -159,8 +158,8 @@ const CreateGame = () => {
           joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
         }
 
-  },[jwt, game, isCreator, navigate])
-  
+  },[jwt, game, navigate])
+
   console.log('chat del creategame ', chat)
 
   async function handleSubmit() {
