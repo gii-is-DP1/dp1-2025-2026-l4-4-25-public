@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState,useRef, useEffect} from 'react';
 import '../App.css';
 import '../static/css/home/home.css';
 import { Link, useLocation } from 'react-router-dom';
@@ -25,7 +25,7 @@ export default function Board() {
   const [currentPlayer, setCurrentPlayer] = useState(); // Nos ayudará para el NextTurn (saber el usuario que tiene el turno)
   const [cont, setCont] = useState(timeturn); 
   const [gameLog, setGameLog] = useState([]);
-  const [playerOrder, setPlayerOrder] = useState(['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
+  const [playerOrder, setPlayerOrder] = useState([]); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
   const [playerRol, setPlayerRol] = useState([]); // Para los roles de saboteur y minero
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
@@ -87,16 +87,12 @@ useEffect(() => {
   
 }, []);
 useEffect(() => {
-  if (activePlayers.length > 1) {
+  if(activePlayers.length > 1){
     const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate)); 
     setPlayerOrder(res);
     setCurrentPlayer(res[0].username);
-  } else if (activePlayers.length === 1) {
-    setCurrentPlayer(activePlayers[0].username || activePlayers[0]);
+    console.log('ORDEN ACTUALIZADO', res);
   }
-
-  console.log("activeplayer", activePlayers);
-  console.log("player", currentPlayer);
 }, [activePlayers]);
 
   
@@ -162,22 +158,52 @@ useEffect(() => {
 
 
 const nextTurn = () => {
-    return null; // AUN POR DEFINIR
-  };
+  if (playerOrder.length === 0) return;
+  const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+  const nextIndex = (currentIndex + 1) % playerOrder.length; 
+  setCurrentPlayer(playerOrder[nextIndex].username);
+  setCont(timeturn); 
+  addLog(`Its turn of ${playerOrder[nextIndex].username}`); 
+};
+
 
 const deck = () => {
     return null; // AUN POR DEFINIR, ESTA FUNCIÓN TIENE QUE IR RESTANDO CARTAS DEL MAZO SEGÚN SE VAYA ROBANDO/DESCARTANDO ¿CREAR OTRA FUNCIÓN QUE ASIGNE CARTA DE ESE MAZO A UN JUGADOR?
 };
 
+const numPep = () => {
+    return 0; // PEPITAS TOTALES, SIRVE PARA LAS ESTADISTICAS
+};
+
+const statePic = () => {
+    return "🟢"; // ESTADO PICO, SIRVE PARA LAS ESTADISTICAS
+};
+
+const stateVag = () => {
+    return "🟢"; // ESTADO VAGONETA, SIRVE PARA LAS ESTADISTICAS
+};
+
+const stateLint = () => {
+    return "🟢"; // ESTADO LINTERNA, SIRVE PARA LAS ESTADISTICAS
+};
+
+const repartoCartas = () => {
+    return null; 
+};
 const addLog = (msg,type="info") => {
   setGameLog(prev => [...prev, { msg,type }]);
-}; // Tendriamos que llamarlo en nextTurn
+}; 
+
+const messagesEndRef = useRef(null);
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({behavior:'smooth'});
+}, [gameLog]); 
 
  useEffect(() => {
     const time = setInterval(() => {
       setCont(p => {
         if (p <= 1) {
-          nextTurn(); // Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
+          nextTurn(); // YA DEFINIDO. Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
           return timeturn;}
         return p-1;});
     }, 1000);
@@ -298,10 +324,10 @@ const addLog = (msg,type="info") => {
             <div className={`player-name player${index + 1}`}>
               {activePlayers.username || activePlayers}
             </div>
-            <div className="player-lint"> 🔦 : 🟢</div>
-            <div className="player-vag">🪨 : 🟢</div> 
-            <div className="player-pic"> ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
-            <div className="player-pep"> 🪙 : {activePlayers.wins}</div>
+            <div className="player-lint"> 🔦 : 🟢 {/*stateLint*/}</div>
+            <div className="player-vag">🪨 : 🟢 {/*stateVag*/}</div> 
+            <div className="player-pic"> ⛏️ : 🟢 {/*statePic*/} </div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
+            <div className="player-pep"> 🪙 : 0 {/*numPep*/} </div>
           </div>
         ))}
       </div>
@@ -316,6 +342,7 @@ const addLog = (msg,type="info") => {
               <p key={index} className={`log-entry ${log.type}`}>
                 {log.msg}
               </p> )))}
+              <div ref={messagesEndRef} />
         </div>
       </div>
 

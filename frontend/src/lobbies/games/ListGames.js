@@ -111,20 +111,12 @@ export default function ListGames() {
                 <div className="game-card-footer">
                   {game.gameStatus === "CREATED" ? (
                     game.private ? (
-                      <button
-                        className="button-join-game"
-                        disabled={game.activePlayers.length >= game.maxPlayers} 
-                        title={game.activePlayers.length >= game.maxPlayers ? "Game: FULL" : ""}>
-                        📩 REQUEST JOIN
-                      </button>
+                     <Link to={"/CreateGame/" + game.id}>
+                          <button className="button-join-game">📩 REQUEST JOIN </button> 
+                      </Link>
                     ) : (
                       <Link to={"/CreateGame/" + game.id}>
-                        <button
-                          className="button-join-game"
-                          disabled={game.activePlayers.length >= game.maxPlayers} 
-                          title={game.activePlayers.length >= game.maxPlayers ? "Game: Full" : ""}>
-                          📥 JOIN
-                        </button>
+                          <button className="button-join-game">📥 JOIN</button> 
                       </Link>
                     )
                   ) : (

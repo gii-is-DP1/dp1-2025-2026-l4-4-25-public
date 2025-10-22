@@ -239,9 +239,9 @@ const handleExpelPlayer = (usernameToExpel) => {
           </div>
           )}
           <div className="active-players-section">
-            <h2>Players : ({game.activePlayers.length}/{game.maxPlayers})</h2>
+            <h2>Players : ({game?.activePlayers?.length}/{game?.maxPlayers})</h2>
             <div className="active-players-list">
-              {game.activePlayers.map((username, index) => (
+              {game?.activePlayers.map((username, index) => (
                 <div key={index} className="player-card">
                   <div className="player-avatar">
                     <img
