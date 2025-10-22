@@ -82,7 +82,9 @@ public class ChatRestController {
         Chat chat = chatService.findChat(id);
         updates.forEach((k, v) -> {
             Field field = ReflectionUtils.findField(Chat.class, k);
-            if (field == null) return;
+            if (field == null) {
+                throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
+            }
             field.setAccessible(true);
             try {
                 ReflectionUtils.setField(field, chat, v);

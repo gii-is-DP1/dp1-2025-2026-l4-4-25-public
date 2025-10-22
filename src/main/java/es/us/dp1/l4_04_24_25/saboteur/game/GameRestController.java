@@ -108,7 +108,9 @@ class GameRestController {
     updates.forEach((k, v) -> {
         String fieldName = k.equals("private") ? "isPrivate" : k;
         Field field = ReflectionUtils.findField(Game.class, fieldName);
-        if (field == null) return ;
+        if (field == null) {
+            throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
+        }
         field.setAccessible(true);
         try {
             /*
