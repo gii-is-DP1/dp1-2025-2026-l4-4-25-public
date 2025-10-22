@@ -111,19 +111,27 @@ export default function ListGames() {
                 <div className="game-card-footer">
                   {game.gameStatus === "CREATED" ? (
                     game.private ? (
-                     <Link to={"/board/" + game.id}>
-                      <button className="button-join-game">📩REQUEST JOIN</button>
-                      </Link>
-                    ):(
+                      <button
+                        className="button-join-game"
+                        disabled={game.activePlayers.length >= game.maxPlayers} 
+                        title={game.activePlayers.length >= game.maxPlayers ? "Game: FULL" : ""}>
+                        📩 REQUEST JOIN
+                      </button>
+                    ) : (
                       <Link to={"/CreateGame/" + game.id}>
-                      <button className="button-join-game">📥JOIN</button>
+                        <button
+                          className="button-join-game"
+                          disabled={game.activePlayers.length >= game.maxPlayers} 
+                          title={game.activePlayers.length >= game.maxPlayers ? "Game: Full" : ""}>
+                          📥 JOIN
+                        </button>
                       </Link>
-                      )
-                    ):(
-                      <Link to={"/board/" + game.id}>
-                      <button className="button-join-game">👁️‍🗨️SPECTATE</button> {/* Hay que poner que de el rol espectador para que tenga limitado el acceso en muchos aspectos en la partida */}
-                      </Link>
-                    )}               
+                    )
+                  ) : (
+                    <Link to={"/board/" + game.id}>
+                      <button className="button-join-game">👁️‍🗨️ SPECTATE</button>
+                    </Link>
+                  )}             
                   </div>
               </div>
               )))}
