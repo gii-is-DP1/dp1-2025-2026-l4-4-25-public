@@ -27,6 +27,8 @@ export default function Board() {
   const [playerOrder, setPlayerOrder] = useState(['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
   const [playerRol, setPlayerRol] = useState({}); // Para los roles de saboteur y minero
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
+  const [selectedCard,setSelectedCard] = useState()
+
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
 
 
@@ -80,11 +82,9 @@ useEffect(() => {
       setNumRound(1);
     }
   }
-
   handlerounds();
-
-  
 }, []);
+
 useEffect(() => {
   if (activePlayers.length > 1) {
     const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate)); 
@@ -194,7 +194,14 @@ const addLog = (msg,type="info") => {
   };
 
   const cards = [...Array(numCards)].map((_, i) => (
-    <button key={i} className="card-slot">Cards {i + 1}</button>));
+    <button 
+      key={i} 
+      className={`card-slot ${selectedCard === i ? 'selected' : ''}`} // Agrega clase condicional
+      onClick={() => setSelectedCard(selectedCard === i ? null : i)} // Selecciona/deselecciona al clic
+    >
+      Cards {i + 1}
+    </button>
+  ));
 
   return (
     <div className="board-container">

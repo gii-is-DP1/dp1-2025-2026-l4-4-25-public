@@ -278,6 +278,14 @@ const CreateGame = () => {
       alert('No se pudo copiar el enlace.');
     }
   }
+const handleExpelPlayer = (usernameToExpel) => {
+  setGame(prevGame => ({
+    ...prevGame,
+    activePlayers: prevGame.activePlayers.filter(
+      username => username !== usernameToExpel
+    ),
+  }));
+};
 
   return (
     <div className="home-page-container">
@@ -305,8 +313,29 @@ const CreateGame = () => {
               <option value="12">12</option>
             </select>
           </div>
-            )}
-          
+          )}
+          <div className="active-players-section">
+            <h2>Players : ({game?.activePlayers?.length}/{game?.maxPlayers})</h2>
+            <div className="active-players-list">
+              {game?.activePlayers.map((username, index) => (
+                <div key={index} className="player-card">
+                  <div className="player-avatar">
+                    <img
+                      alt={username}
+                    />
+                  </div>
+                  <div className="player-name">{username}</div>
+                  {isCreator && username!==game.creator && (
+                    <button
+                      className="expel-player-btn"
+                      onClick={() => handleExpelPlayer(username)}>
+                      ❌ expulsar
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
           {isCreator && (
           <div className="form-group privacy-toggle">
             <label>Privacity</label>
@@ -324,17 +353,18 @@ const CreateGame = () => {
           </div>
             )}
 
-          <div className="form-group add-friends-section">
-            <label>Invite friends</label>
-            <div className="friends-list">
-              <div className="add-friend-button">
-                <button>
-                  <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
-                </button>
-              </div>
+        <div className="form-group add-friends-section">
+          <label>Invite friends</label>
+          <div className="friends-list">
+            <div className="add-friend-button">
+              <button>
+                <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
+              </button>
             </div>
           </div>
-
+        </div>
+        {game && game.activePlayers?.length > 0 && (
+          <div className="active-players-section"></div>)}
             <div className="card-footer">
               {isCreator ? (
                 <>
