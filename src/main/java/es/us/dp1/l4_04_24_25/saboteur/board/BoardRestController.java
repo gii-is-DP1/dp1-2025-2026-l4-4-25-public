@@ -75,6 +75,37 @@ public class BoardRestController {
         return new ResponseEntity<>(this.boardService.updateBoard(board, id), HttpStatus.OK);
     }
 
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    
+    public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+        RestPreconditions.checkNotNull(boardService.findBoard(id), "Board", "ID", id);
+        Board board = boardService.findBoard(id);
+
+        updates.forEach((k, v) -> {
+            Field field = ReflectionUtils.findField(Board.class, k);
+            if (field == null) return;
+            field.setAccessible(true);
+            try {
+        
+                if (field.getType().equals(Integer.class)) {
+                    ReflectionUtils.setField(field, board, (Integer) v);
+                }
+                
+                else if (k.equals("round") && v instanceof Map) {
+                    
+                }
+                else {
+                    ReflectionUtils.setField(field, board, v);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error applying patch to field " + k, e);
+            }
+        });
+
+        boardService.saveBoard(board);
+        return ResponseEntity.ok(board);
+    }
     
     @DeleteMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)

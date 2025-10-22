@@ -3,6 +3,9 @@ package es.us.dp1.l4_04_24_25.saboteur.board;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.square.Square;
+import es.us.dp1.l4_04_24_25.saboteur.square.SquareDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.square.SquareSerializer;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +38,9 @@ public class Board extends BaseEntity{
     @NotNull 
     protected Integer heigth = 9;
 
+    @JsonSerialize(contentUsing = SquareSerializer.class)
+    @JsonDeserialize(contentUsing =  SquareDeserializer.class)
     @OneToMany(mappedBy = "board")
-    @JsonManagedReference 
     private List<Square> busy = new ArrayList<>();
 
     @JsonSerialize(using = RoundSerializer.class)

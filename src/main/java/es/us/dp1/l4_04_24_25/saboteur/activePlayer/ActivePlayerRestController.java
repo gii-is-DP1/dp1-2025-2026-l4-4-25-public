@@ -127,31 +127,29 @@ class ActivePlayerRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ActivePlayer> createPlayer(@RequestBody @Valid Player activePlayer)
     throws DataAccessException, DuplicatedPlayerException, DuplicatedUserException, DuplicatedActivePlayerException {
-       
-    
-        //VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO USERNAME
+        
         if (activePlayerService.existsActivePlayer(activePlayer.getUsername())){
             throw new DuplicatedActivePlayerException("An activePlayer with username '" + activePlayer.getUsername() + "' already exists");
          }
-         // VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO EMAIL
+     
          List<ActivePlayer> existingActivePlayers = activePlayerService.findAll();
          boolean emailExistsActivePlayer = existingActivePlayers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
          if (emailExistsActivePlayer) {
             throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
           }
-        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        
         try {
             playerService.findByUsername(activePlayer.getUsername());
             throw new DuplicatedPlayerException("Username already exists: " + activePlayer.getUsername());
         } catch (ResourceNotFoundException e) {
        
         }
-        //VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO USERNAME
+        
         if (userService.existsUser(activePlayer.getUsername())) {
             throw new DuplicatedUserException("A user with username '" + activePlayer.getUsername() + "' already exists");
          }
-         // VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO EMAIL
+
          List<UserDTO> existingUsers = userService.findAll();
          boolean emailExists = existingUsers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
@@ -159,14 +157,13 @@ class ActivePlayerRestController {
          if (emailExists) {
             throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
           }
-        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        
         try {
             playerService.findByUsername(activePlayer.getUsername());
             throw new DuplicatedPlayerException("Username already exists: " + activePlayer.getUsername());
         } catch (ResourceNotFoundException e) {
-       
         }
-        //VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO EMAIL
+
         List<PlayerDTO> existingPlayers = playerService.findAll();
         boolean emailExistsPlayer = existingPlayers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
