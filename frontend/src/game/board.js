@@ -4,7 +4,6 @@ import '../static/css/home/home.css';
 import { Link } from 'react-router-dom';
 import '../static/css/game/game.css'; 
 import minerRol from '../game/cards-images/roles/minerRol.png';
-import saboteurRol from '../game/cards-images/roles/minerRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
 import avatar from "../static/images/icons/1.jpeg"

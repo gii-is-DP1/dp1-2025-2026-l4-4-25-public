@@ -25,12 +25,10 @@ import lombok.Setter;
 public class Message extends BaseEntity{
 
     @NotEmpty
-    @Column(name = "text", nullable = false)
-    private String text;
+    @Column(name = "content", nullable = false)
+    private String content;
     
     //Relación muchos mensajes 1 participante
-
-   
     @JsonSerialize(using = ActivePlayerSerializer.class)
     @JsonDeserialize(using = ActivePlayerDeserializer.class)
     @ManyToOne(optional = false)

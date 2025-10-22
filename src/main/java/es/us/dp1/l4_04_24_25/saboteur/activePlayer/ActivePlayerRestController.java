@@ -1,6 +1,8 @@
 package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +10,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -127,17 +131,14 @@ class ActivePlayerRestController {
     
         //VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO USERNAME
         if (activePlayerService.existsActivePlayer(activePlayer.getUsername())){
-        throw new DuplicatedActivePlayerException("An activePlayer with username '" + activePlayer.getUsername() + "' already exists");
+            throw new DuplicatedActivePlayerException("An activePlayer with username '" + activePlayer.getUsername() + "' already exists");
          }
-
-
          // VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO EMAIL
          List<ActivePlayer> existingActivePlayers = activePlayerService.findAll();
          boolean emailExistsActivePlayer = existingActivePlayers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
-
          if (emailExistsActivePlayer) {
-          throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
+            throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
           }
         // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
         try {
@@ -146,19 +147,17 @@ class ActivePlayerRestController {
         } catch (ResourceNotFoundException e) {
        
         }
-
         //VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO USERNAME
         if (userService.existsUser(activePlayer.getUsername())) {
-        throw new DuplicatedUserException("A user with username '" + activePlayer.getUsername() + "' already exists");
+            throw new DuplicatedUserException("A user with username '" + activePlayer.getUsername() + "' already exists");
          }
-
          // VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO EMAIL
          List<UserDTO> existingUsers = userService.findAll();
          boolean emailExists = existingUsers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
 
          if (emailExists) {
-          throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
+            throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
           }
         // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
         try {
@@ -167,7 +166,6 @@ class ActivePlayerRestController {
         } catch (ResourceNotFoundException e) {
        
         }
-
         //VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO EMAIL
         List<PlayerDTO> existingPlayers = playerService.findAll();
         boolean emailExistsPlayer = existingPlayers.stream()
@@ -177,23 +175,15 @@ class ActivePlayerRestController {
             throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
         }
 
-    
         ActivePlayer newActivePlayer = new ActivePlayer();
         ActivePlayer savedActivePlayer;
 
-       
         BeanUtils.copyProperties(activePlayer, newActivePlayer, "id");
 
-       
-       
-            
-            newActivePlayer.setPassword(encoder.encode(activePlayer.getPassword()));
-        
-
-       
+        newActivePlayer.setPassword(encoder.encode(activePlayer.getPassword()));
+               
         savedActivePlayer = this.activePlayerService.saveActivePlayer(newActivePlayer);
 
-        
         return new ResponseEntity<>(savedActivePlayer, HttpStatus.CREATED);
 
     }
@@ -204,6 +194,36 @@ class ActivePlayerRestController {
         RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
         return new ResponseEntity<>(activePlayerService.updateActivePlayer(activePlayer, id), HttpStatus.OK);
     }
+
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ActivePlayer> partialUpdate(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates){
+        RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
+        ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
+        updates.forEach((k, v) -> {
+            Field field = ReflectionUtils.findField(ActivePlayer.class, k);
+            if (field == null) return; 
+            ReflectionUtils.makeAccessible(field);
+            ReflectionUtils.setField(field, activePlayer, v);
+        });
+        return new ResponseEntity<>(activePlayerService.updateActivePlayer(activePlayer, id), HttpStatus.OK);
+    }
+    /*
+    @PatchMapping(value = "{username}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ActivePlayer> partialUpdateByUsername(@PathVariable("username") String username, @RequestBody Map<String, Object> updates){
+        RestPreconditions.checkNotNull(activePlayerService.findByUsername(username), "ActivePlayer", "USERNAME", username);
+        ActivePlayer activePlayer = activePlayerService.findByUsername(username);
+        updates.forEach((k, v) -> {
+            Field field = ReflectionUtils.findField(ActivePlayer.class, k);
+            ReflectionUtils.makeAccessible(field);
+            ReflectionUtils.setField(field, activePlayer, v);
+        });
+        ActivePlayer updatedActivePlayer = activePlayerService.updateActivePlayer(activePlayer, activePlayer.getId());
+        return new ResponseEntity<>(updatedActivePlayer, HttpStatus.OK);
+    }
+    */
+    
 
     @DeleteMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)

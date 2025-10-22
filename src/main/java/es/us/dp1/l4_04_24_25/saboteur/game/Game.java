@@ -16,7 +16,6 @@ import es.us.dp1.l4_04_24_25.saboteur.chat.ChatDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.chat.ChatSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
-import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,6 +29,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,15 +47,16 @@ public class Game extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Column(name = "game_status", nullable = false)
-    private gameStatus gameStatus;
+    private gameStatus gameStatus = Enum.valueOf(gameStatus.class, "CREATED");
 
     @Column(unique = true, nullable = false)
     private String link;
 
     @Column(nullable = false)
-    private boolean isPrivate;
+    private boolean isPrivate = true;
 
     @Max(value = 12, message = "El número máximo de jugadores no puede ser mayor de 12")
+    @Min(value = 3, message = "El número mínimo de jugadores no puede ser menor de 3")
     @Column(nullable = false)
 
     private Integer maxPlayers = 3;
@@ -117,24 +118,6 @@ public class Game extends BaseEntity{
     
     public boolean canAddPlayer(){
         return this.activePlayers.size() < this.maxPlayers;
-    }
-
-    public Game() {
-        super();
-    }
-
-    public Game(Duration time, gameStatus gameStatus, String link, boolean isPrivate, Integer maxPlayers, List<Player> watchers, List<ActivePlayer> activePlayers, ActivePlayer winner, ActivePlayer creator, List<Round> rounds, Chat chat) {
-        this.time = time;
-        this.gameStatus = gameStatus;
-        this.link = link;
-        this.isPrivate = isPrivate;
-        this.maxPlayers = maxPlayers;
-        this.watchers = watchers;
-        this.activePlayers = activePlayers;
-        this.winner = winner;
-        this.creator = creator;
-        this.rounds = rounds;
-        this.chat = chat;
     }
 
 }

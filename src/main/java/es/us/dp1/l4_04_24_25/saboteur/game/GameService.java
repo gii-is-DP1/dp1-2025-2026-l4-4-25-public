@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
@@ -74,6 +75,10 @@ public class GameService {
     @Transactional(readOnly = true)
     public Iterable<Game> findAllPrivateGames() {
         return gameRepository.findAllPrivateGames();
+    }
+
+    public boolean existsByLink(String link) {
+        return gameRepository.existsByLink(link);
     }
     
 }

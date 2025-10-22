@@ -76,30 +76,6 @@ public class BoardRestController {
     }
 
     
-
-    @PatchMapping(value = "{id}")
-@ResponseStatus(HttpStatus.OK)
-public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
-    Board board = boardService.findBoard(id);
-
-    updates.forEach((k, v) -> {
-        Field field = ReflectionUtils.findField(Board.class, k);
-        if (field == null) return;
-        field.setAccessible(true);
-
-        try {
-                ReflectionUtils.setField(field, board, v);
-        } catch (Exception e) {
-            throw new RuntimeException("Error applying patch to field " + k, e);
-        }
-    });
-
-    boardService.saveBoard(board);
-    return ResponseEntity.ok(board);
-}
-
-
-
     @DeleteMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("id") int id) {

@@ -49,9 +49,10 @@ export default function Lobby(){
                 "Authorization": `Bearer ${jwt}`
               }
             });
-            console.log(response);
+            console.log("response del player", response);
             if (response.ok) {
               const data = await response.json();
+              console.log("respone 2",data)
               setPlayer(data);
             } else {
               console.error('Respuesta no OK:', response.status);
@@ -62,10 +63,11 @@ export default function Lobby(){
             alert('Error de red. No se pudo conectar con el servidor.');}
         };
         fetchPlayer()
-        console.log("este es  el player", player)
+       
   },[jwt])
 
     async function handleSubmit() {
+         console.log("este es  el player", player)
         const jwt = tokenService.getLocalAccessToken();
         try {
             const chatResponse = await fetch("/api/v1/chats", {
@@ -74,7 +76,7 @@ export default function Lobby(){
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${jwt}` 
                 },
-                body: JSON.stringify({ message: "" }), });
+                body: JSON.stringify({}), });
             if (!chatResponse.ok) { 
                 const errorData = await chatResponse.json();
                 alert(`Error al crear el chat: ${errorData.message}`);
@@ -111,7 +113,7 @@ export default function Lobby(){
             const newGame = await gameResponse.json();
             alert("¡Partida creada con éxito!");
             console.log("Partida creada:", newGame);
-            navigate('/CreateGame', { state: { game: newGame } });
+            navigate('/CreateGame/' + newGame.id , { state: { game: newGame } });
         } else {
             const errorData = await gameResponse.json();
             alert(`Error al crear la partida: ${errorData.message}`);
@@ -137,16 +139,7 @@ export default function Lobby(){
                     <button className="button-login">💻Login</button>
                 </Link>
                 */}
-                {isAdmin && (
-                <Link to="/users">
-                    <button className="button-logOut">📑Users</button>
-                </Link>
-                )}
-                {isAdmin && (
-                <Link to="/EditAchievement">
-                    <button className="button-logOut">🥇Achievement</button>
-                </Link>
-                )}
+                {!isAdmin && (
                 <div className="friends-dropdown-container">
                     <button 
                         className="button-logOut" 
@@ -169,6 +162,7 @@ export default function Lobby(){
                         </div>
                     )}
                 </div>
+                )}
                 <Link to="/profile">
                     <button className="button-logOut"> 👤Profile</button>
                 </Link>
@@ -178,12 +172,28 @@ export default function Lobby(){
                     <button className="button-info"> ℹ️</button>
                 </Link>
             </div>
+            {!isAdmin && (
             <div className="hero-div-lobby">
                     <button className="button-crear" onClick={handleSubmit}>📑CREATE GAME</button>
                  <Link to="/ListGames">
                 <button className="button-unirse">📥JOIN A GAME</button>   
                 </Link>
             </div>
+             )}
+            {isAdmin && (
+                 <div className="hero-div-lobby">
+                <Link to="/users">
+                    <button className="button-users">📑Users</button>
+                </Link>
+                    </div>
+                )}
+             {isAdmin && (
+                 <div className="hero-div-lobby">
+                <Link to="/EditAchievement">
+                    <button className="button-edit">✏️Edit Achievement</button>
+                </Link>
+                    </div>
+                )}
             <div className="bottom-left-button">
                 <Link to="/Ranking">
                 <button className="button-ranking">🏆RANKING</button>

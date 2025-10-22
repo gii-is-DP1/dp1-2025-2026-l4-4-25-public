@@ -6,7 +6,7 @@ import AppNavbar from "./AppNavbar";
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
-import Profile from "./lobbies/profiles/Profile";
+import Profile from "./lobbies/profiles/profile";
 import EditProfile from "./lobbies/profiles/EditProfile"; 
 import Login from "./auth/login";
 import Logout from "./auth/logout";
@@ -18,6 +18,7 @@ import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
 import Board from "./game/board";
 import Info from "./lobbies/info";
+import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -64,6 +65,7 @@ function App() {
           <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
+          <Route path="/GamesPlayed" element={<GamesPlayed />} />
 
         </>)
     }    
@@ -82,7 +84,7 @@ function App() {
         <Route path="/lobby" element={<PrivateRoute><Lobby /></PrivateRoute>} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
+        <Route path="/CreateGame/:id" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
       </>

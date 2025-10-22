@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedLinkException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/v1/games")
@@ -75,20 +76,19 @@ class GameRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Game> create(@RequestBody @Valid Game game) {
-        Game savedGame = gameService.saveGame(new Game(
-            game.getTime(),
-            game.getGameStatus(),
-            game.getLink(),
-            game.isPrivate(),
-            game.getMaxPlayers(),
-            game.getWatchers(),
-            game.getActivePlayers(),
-            game.getWinner(),
-            game.getCreator(),
-            game.getRounds(),
-            game.getChat()
-        ));
+    public ResponseEntity<Game> create(@RequestBody @Valid Game game) throws DuplicatedLinkException, EmptyActivePlayerListException {
+        Game newGame = new Game();
+        BeanUtils.copyProperties(game, newGame, "id", "time", "gameStatus", "chat", "watchers", "rounds" );
+        if (newGame.getActivePlayers() == null || newGame.getActivePlayers().isEmpty()) {
+            throw new IllegalArgumentException("A game must have at least one active player (the creator).");
+        }
+        if (gameService.existsByLink(newGame.getLink())) {
+            throw new EmptyActivePlayerListException("A game with the same link already exists.");
+        }
+        Chat chat = new Chat();
+        chat.setGame(newGame);
+        newGame.setChat(chat);
+        Game savedGame = gameService.saveGame(newGame);
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
     }
 
@@ -102,20 +102,20 @@ class GameRestController {
 
    @PatchMapping(value = "{gameId}")
     public ResponseEntity<Game> patchGame(@PathVariable("gameId") Integer id, @RequestBody Map<String, Object> updates) {
+    RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
     Game game = gameService.findGame(id);
 
     updates.forEach((k, v) -> {
         String fieldName = k.equals("private") ? "isPrivate" : k;
         Field field = ReflectionUtils.findField(Game.class, fieldName);
         if (field == null) {
-            return ;
+            throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
         }
         field.setAccessible(true);
-
-        
         try {
+            /*
             // Handle lists of usernames -> convert to List<ActivePlayer>
-            if ((field.getType().equals(List.class) || List.class.isAssignableFrom(field.getType())) && (fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
+            if ((fieldName.equals("activePlayers") || fieldName.equals("admins") || fieldName.equals("watchers"))) {
                 List<String> names = (List<String>) v;
                 List<ActivePlayer> objectList = new ArrayList<>();
                 for (String name: names){
@@ -123,12 +123,11 @@ class GameRestController {
                     objectList.add(ap);
                 }
                 ReflectionUtils.setField(field, game, objectList);
-            }
+            }*/
             // Caso especial de winner (ActivePlayer) representado por nombre de usuario
-            else if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
+            if (field.getType().isAssignableFrom(ActivePlayer.class) && v instanceof String username) {
                 ActivePlayer ap = activePlayerService.findByUsername(username);
-
-                
+            
             // Si ya hay un ganador, desvincular la partida ganada del jugador anterior
             // y si el nuevo ganador no es null, vincular la partida ganada al nuevo ganador
                 if (game.getWinner() != null) {

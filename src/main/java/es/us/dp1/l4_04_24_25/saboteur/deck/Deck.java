@@ -26,10 +26,6 @@ import lombok.Setter;
 @Table(name = "Deck")
 public class Deck extends BaseEntity{
     
-    public Deck() {
-        super();
-    }
-
     @OneToMany(mappedBy = "deck", cascade = CascadeType.MERGE) 
     @JsonManagedReference 
     private List<Card> cards = new ArrayList<>();
