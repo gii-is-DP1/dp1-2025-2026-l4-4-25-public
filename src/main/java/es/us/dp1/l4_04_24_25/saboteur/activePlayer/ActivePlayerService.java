@@ -67,8 +67,6 @@ public class ActivePlayerService {
         return activePlayerRepository.findByPickaxeState(cartState);
     }
 
-    
-
     /*
     @Transactional(readOnly = true)
     public Iterable<ActivePlayer>  findByGameId(Integer gameId) {
