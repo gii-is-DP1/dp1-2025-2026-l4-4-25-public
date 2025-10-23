@@ -63,7 +63,10 @@ export default function ListGames() {
     setFilters((prev) => ({ ...prev, [name]: value }));};
 
   useEffect(() => {
-    let filtered = gamesList;
+    let filtered = gamesList.filter(
+      (g) =>
+        g.gameStatus === "CREATED" ||
+        g.gameStatus === "ONGOING");
     if (filters.privacy) {
       const isPrivate = filters.privacy === "private";
       filtered = filtered.filter((g) => g.private === isPrivate);}
@@ -80,12 +83,12 @@ export default function ListGames() {
           g.creator?.username?.toLowerCase().includes(term) ||
           g.id?.toString().includes(term));}
     if (onlyFriend && friendLs.length > 0) {
-      const friendUsernames = friendLs.map((f) =>
-        f.username?.toLowerCase());
+      const friendUsernames = friendLs.map((f) => f.username?.toLowerCase());
       filtered = filtered.filter((g) =>
         friendUsernames.includes(g.creator?.username?.toLowerCase()));}
     setFilteredGames(filtered);
-  }, [filters, gamesList, onlyFriend, friendLs]);
+}, [filters, gamesList, onlyFriend, friendLs]);
+
 
   return (
     <div className="home-page-lobby-container">
