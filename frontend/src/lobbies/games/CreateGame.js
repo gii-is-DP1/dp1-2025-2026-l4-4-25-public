@@ -169,6 +169,27 @@ const CreateGame = () => {
         postFirstMessage();
         fetchPlayer();
   },[])
+//para refrescar los activeplayers
+  useEffect(() => {
+    if (!game?.id) return;
+
+    const fetchGame = async () => {
+      try {
+        const res = await fetch(`/api/v1/games/${game.id}`, {
+          headers: { "Authorization": `Bearer ${jwt}` },
+        });
+        if (!res.ok) return;
+        const latestgame = await res.json();
+       setGame({ ...(game || {}), activePlayers: latestgame.activePlayers });
+      } catch (err) {
+        console.error("Error fetching game:", err);
+      }
+    };
+
+    fetchGame();
+    const iv = setInterval(fetchGame, 3000);
+    return () => clearInterval(iv);
+  }, [game?.id, jwt]);
   
   console.log('chat del creategame ', chat)
 
@@ -315,18 +336,15 @@ const handleExpelPlayer = (usernameToExpel) => {
             </select>
           </div>
           )}
-          <div className="active-players-section">
-            <h2>Players : ({game?.activePlayers?.length}/{game?.maxPlayers})</h2>
+           <div className="active-players-section">
+            <h2>Players : ({game?.activePlayers?.length ?? 0}/{game?.maxPlayers ?? 0})</h2>
             <div className="active-players-list">
-              {game?.activePlayers.map((username, index) => (
-                <div key={index} className="player-card">
-                  <div className="player-avatar">
-                    <img
-                      alt={username}
-                    />
+              {(game?.activePlayers ?? []).map((username, index) => (
+                <div key={username ?? index} className="player-card">
+                  <div className="player-avatar" title={username}>
                   </div>
                   <div className="player-name">{username}</div>
-                  {isCreator && username!==game.creator && (
+                  {isCreator && username !== game.creator && (
                     <button
                       className="expel-player-btn"
                       onClick={() => handleExpelPlayer(username)}>
