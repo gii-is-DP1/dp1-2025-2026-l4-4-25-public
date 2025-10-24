@@ -11,25 +11,22 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 @Component
-public class AchievementDeserializer extends JsonDeserializer<Achievement> {
+public class AchievementDeserializer extends JsonDeserializer<Achievement>{
 
     @Autowired
-    private AchievementService achievementService; 
-
+    private AchievementService achievementService;
+    
     @Override
-    public Achievement deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException {
+    public Achievement deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JacksonException{
         Achievement result = null;
 
-        try {
-            
-            Integer achievementId = p.getIntValue();
-            
-            result = achievementService.findAchievement(achievementId);
-
-        } catch (Exception e) {
-            throw new IOException("Achievement not found", e);
+        try{
+            String achievementTittle = p.getText();
+            result = this.achievementService.findByTittle(achievementTittle);
+        } catch (Exception e){
+            throw new IOException ("Achievement not found");
         }
-
         return result;
     }
+    
 }

@@ -5,7 +5,7 @@ INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,auth
 -- Ten player users, named player1 with passwor 0wn3r
 INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
 INSERT INTO appusers(id,username,name,birthDate,joined, password,image,email,authority) VALUES (4,'Carlosbox2k','Carlos Borrego Ortiz','2005-02-04','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/carlos.png', 'carlos@saboteur.es', 2);
-INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2); -- Probar Null en la imagen para probar que funciona el defaultProfile en los usuarios por defecto
 
 INSERT INTO chat (id) VALUES (1);
 
@@ -23,7 +23,7 @@ INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, 
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 2,  0, 5, false, true, null );
 
 
-INSERT INTO message (id, chat_id, text, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
 
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 'link', 0, 4);
 
@@ -51,7 +51,6 @@ VALUES (201, FALSE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle) 
 VALUES (200, 1, 50, 'Gana 10 partidas habiendo construido más de 20 caminos.', 'Constructor Maestro');
-
 --INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
 --VALUES (4, 1, 4, TRUE, 'PATH', 1);
 

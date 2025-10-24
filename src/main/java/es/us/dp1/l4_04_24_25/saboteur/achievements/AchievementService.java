@@ -54,4 +54,10 @@ public class AchievementService {
         Achievement toDelete = findAchievement(id);
         achievementRepository.delete(toDelete);
     }
+
+    @Transactional
+    public Achievement findByTittle (String tittle){
+        return achievementRepository.findByTittle(tittle);
+    }
+
 }

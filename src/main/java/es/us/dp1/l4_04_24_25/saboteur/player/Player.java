@@ -3,7 +3,12 @@ package es.us.dp1.l4_04_24_25.saboteur.player;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.Column;
@@ -15,15 +20,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import com.fasterxml.jackson.annotation.JsonManagedReference; 
-import com.fasterxml.jackson.annotation.JsonIgnore; 
 
 @Getter
 @Setter
 @Entity
 @Table(name = "Player")
 public class Player extends User{
-    
+
     @Column(name = "playedGames", nullable = false)
     private Integer playedGames = 0;
 
@@ -48,8 +51,7 @@ public class Player extends User{
     @Column(name = "isWatcher", nullable = false)
     private boolean isWatcher;
 
-    
-    @JsonIgnore 
+    //Relacion de muchos a muchos con amigos
     @ManyToMany
     @JoinTable(
         name = "friends",
@@ -59,8 +61,10 @@ public class Player extends User{
     private List<Player> friends = new ArrayList<>();
 
 
-    // Lado Manager para Achievement
-    @JsonManagedReference 
+
+    //Relacion de muchos jugadores a muchos logros
+    @JsonSerialize(contentUsing = AchievementSerializer.class)
+    @JsonDeserialize(contentUsing = AchievementDeserializer.class)
     @ManyToMany
     @JoinTable(
         name = "accquiredAchievements",
@@ -69,7 +73,7 @@ public class Player extends User{
     )
     private List<Achievement> accquiredAchievements = new ArrayList<>();
 
-    // Relacion muchos jugadores observan una partida
+    //Relacion muchos jugadores observan una partida
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;

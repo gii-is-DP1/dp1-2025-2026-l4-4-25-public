@@ -2,6 +2,8 @@ package es.us.dp1.l4_04_24_25.saboteur.card;
 
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
@@ -12,7 +14,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import com.fasterxml.jackson.annotation.JsonBackReference; 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize; 
 
 @Getter
 @Setter
@@ -29,7 +32,8 @@ public class Card extends BaseEntity {
     @NotBlank
     protected String image;
 
-    @JsonBackReference 
+    @JsonDeserialize(using = DeckDeserializer.class)
+    @JsonSerialize(using = DeckSerializer.class)
     @ManyToOne
     protected Deck deck;
 }

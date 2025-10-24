@@ -1,6 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +9,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedActivePlayerException;
@@ -46,13 +47,15 @@ class ActivePlayerRestController {
     private final PlayerService playerService;
     private final UserService userService;
     private final PasswordEncoder encoder;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ActivePlayerRestController(ActivePlayerService activePlayerService, PlayerService playerService, UserService userService, PasswordEncoder encoder) {
+    public ActivePlayerRestController(ActivePlayerService activePlayerService, PlayerService playerService, UserService userService, PasswordEncoder encoder, ObjectMapper objectMapper) {
         this.activePlayerService = activePlayerService;
         this.encoder = encoder;
         this.userService = userService;
         this.playerService = playerService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -127,31 +130,29 @@ class ActivePlayerRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ActivePlayer> createPlayer(@RequestBody @Valid Player activePlayer)
     throws DataAccessException, DuplicatedPlayerException, DuplicatedUserException, DuplicatedActivePlayerException {
-       
-    
-        //VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO USERNAME
+        
         if (activePlayerService.existsActivePlayer(activePlayer.getUsername())){
             throw new DuplicatedActivePlayerException("An activePlayer with username '" + activePlayer.getUsername() + "' already exists");
          }
-         // VERIFICAMOS QUE NO EXISTE UN ACTIVEPLAYER CON EL MISMO EMAIL
+     
          List<ActivePlayer> existingActivePlayers = activePlayerService.findAll();
          boolean emailExistsActivePlayer = existingActivePlayers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
          if (emailExistsActivePlayer) {
             throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
           }
-        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        
         try {
             playerService.findByUsername(activePlayer.getUsername());
             throw new DuplicatedPlayerException("Username already exists: " + activePlayer.getUsername());
         } catch (ResourceNotFoundException e) {
        
         }
-        //VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO USERNAME
+        
         if (userService.existsUser(activePlayer.getUsername())) {
             throw new DuplicatedUserException("A user with username '" + activePlayer.getUsername() + "' already exists");
          }
-         // VERIFICAMOS QUE NO EXISTE UN USUARIO CON EL MISMO EMAIL
+
          List<UserDTO> existingUsers = userService.findAll();
          boolean emailExists = existingUsers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
@@ -159,14 +160,13 @@ class ActivePlayerRestController {
          if (emailExists) {
             throw new DuplicatedUserException("A user with email '" + activePlayer.getEmail() + "' already exists");
           }
-        // VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO USERNAME
+        
         try {
             playerService.findByUsername(activePlayer.getUsername());
             throw new DuplicatedPlayerException("Username already exists: " + activePlayer.getUsername());
         } catch (ResourceNotFoundException e) {
-       
         }
-        //VERIFICAMOS QUE NO EXISTE UN PLAYER CON EL MISMO EMAIL
+
         List<PlayerDTO> existingPlayers = playerService.findAll();
         boolean emailExistsPlayer = existingPlayers.stream()
             .anyMatch(u -> u.getEmail().equalsIgnoreCase(activePlayer.getEmail()));
@@ -197,33 +197,12 @@ class ActivePlayerRestController {
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ActivePlayer> partialUpdate(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates){
+    public ResponseEntity<ActivePlayer> partialUpdate(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
         RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
         ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(ActivePlayer.class, k);
-            if (field == null) return; 
-            ReflectionUtils.makeAccessible(field);
-            ReflectionUtils.setField(field, activePlayer, v);
-        });
-        return new ResponseEntity<>(activePlayerService.updateActivePlayer(activePlayer, id), HttpStatus.OK);
+        ActivePlayer achievementPatched = objectMapper.updateValue(activePlayer, updates);
+        return new ResponseEntity<>(activePlayerService.updateActivePlayer(achievementPatched, id), HttpStatus.OK);
     }
-    /*
-    @PatchMapping(value = "{username}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ActivePlayer> partialUpdateByUsername(@PathVariable("username") String username, @RequestBody Map<String, Object> updates){
-        RestPreconditions.checkNotNull(activePlayerService.findByUsername(username), "ActivePlayer", "USERNAME", username);
-        ActivePlayer activePlayer = activePlayerService.findByUsername(username);
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(ActivePlayer.class, k);
-            ReflectionUtils.makeAccessible(field);
-            ReflectionUtils.setField(field, activePlayer, v);
-        });
-        ActivePlayer updatedActivePlayer = activePlayerService.updateActivePlayer(activePlayer, activePlayer.getId());
-        return new ResponseEntity<>(updatedActivePlayer, HttpStatus.OK);
-    }
-    */
-    
 
     @DeleteMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)

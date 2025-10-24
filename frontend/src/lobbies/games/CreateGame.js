@@ -18,20 +18,99 @@ const CreateGame = () => {
   const isCreator = game?.creator === loggedInUser?.username;
 
 
+  
+
+
   useEffect(() => {
+    console.log("Entrando al useEffect. Valor de game:", game);
      if (!game) return;
-    const patchchat = async () => {
+     // Función para unirse a la partida
+     const joinGame = async () => {
+      console.log("Intentando unirse a la partida como invitado...");
+      try {
+        //Obtenemos el username del usuario actual
+        const currentUser = tokenService.getUser();
+        if(!currentUser || !currentUser.username) {
+          alert("No se pudo identificar al usuario para unirse")
+          navigate("/lobby");
+          return;
+        }
+        // Traemos la última versión de la partida
+        const gameResponse = await fetch(`/api/v1/games/${game.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+        });
+        if(!gameResponse.ok){
+          alert("Error al cargar los datos de la partida");
+          navigate("/ListGames");
+          return;
+        }
+
+        const currentGame = await gameResponse.json();
+        // Obtenemos la lista de players de la partida
+        const activePlayerList = currentGame.activePlayers || [];
+        // Evaluamos si el usuario actual está en la partida
+        const amIAlreadyIn = activePlayerList.some(p=> p.username === currentUser.username);
+        
+        if(amIAlreadyIn){
+          console.log("Ya estás en la partida");
+          setGame(currentGame);
+          return;
+        }
+
+        const updatedActivePlayerList = [...activePlayerList, currentUser.username];
+
+        // Hacemos el PATCH al Game con la lista ya actualizada
+        const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwt}`
+          },
+          body: JSON.stringify({activePlayers: updatedActivePlayerList}),
+        });
+
+        if(patchResponse.ok){
+          const updatedGame = await patchResponse.json();
+          setGame(updatedGame); 
+          console.log("Unido a la partida con éxito")
+        }else{
+          alert("Error al intentar unirse a la partida");
+          navigate("/ListGames");
+        }
+      } catch(error){
+        console.error("Error en el proceso de unirse:", error);
+        alert(error.message);
+        navigate("/ListGames");
+      }
+    }; 
+    
+        
+        if(!isCreator){
+          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
+        }
+
+  },[])
+  
+  useEffect(()=>{
+    const postFirstMessage = async () => {
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
         } //corregido con el copy properties
+        const msg = "Bienvenido a Saboteur"
            const request = {
-          game : game.id
+              content: msg,
+              activePlayer: game.creator,
+              chat:game.chat
         }
-            const response = await fetch(`/api/v1/chats/${game.chat}`, {
-        method: "PUT",
+            const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
@@ -45,27 +124,27 @@ const CreateGame = () => {
               setchat(data);
             } else {
               console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener la chat del jugador.');
+              alert('Error al obtener el mensaje del jugador.');
             }
           } catch (error) {
             console.error('Hubo un problema con la petición fetch:', error);
             alert('Error de red. No se pudo conectar con el servidor.');
           }
         };
+
         console.log('game del navigate', game)
         console.log('chat del navigate', game.chat)
-        patchchat()
         
-
         const fetchPlayer = async () => {
-          console.log('chat del creategame ', chat)
           try {
             const loggedInUser = tokenService.getUser();
           if (!loggedInUser || !loggedInUser.id) {
             console.error("No se encontró el ID del usuario.");
             return;
-        } //necesitamos el metodo findbyusername de player bien
+        } 
+        //necesitamos el metodo findbyusername de player bien
         //mientras tanto lo buscamos por el id con el loggedinuser
+        
             const response = await fetch(`/api/v1/players?username=${game.creator}`, {
               method: "GET",
               headers: {
@@ -86,14 +165,12 @@ const CreateGame = () => {
             alert('Error de red. No se pudo conectar con el servidor.');
           }
         };
-        fetchPlayer()
         
-
-        console.log("este es  el player", player)
-        
-        
-
-  },[jwt, game])
+        postFirstMessage();
+        fetchPlayer();
+  },[])
+  
+  console.log('chat del creategame ', chat)
 
   async function handleSubmit() {
     //necesitamos el patch de game
@@ -102,7 +179,7 @@ const CreateGame = () => {
       gameStatus: "CREATED",
       private: isPrivate,
       maxPlayers: parseInt(numPlayers),
-      activePlayers: [player.username]
+      //activePlayers: [player.username]
     };
 
     console.log('Enviando request:', request);
@@ -202,6 +279,14 @@ const CreateGame = () => {
       alert('No se pudo copiar el enlace.');
     }
   }
+const handleExpelPlayer = (usernameToExpel) => {
+  setGame(prevGame => ({
+    ...prevGame,
+    activePlayers: prevGame.activePlayers.filter(
+      username => username !== usernameToExpel
+    ),
+  }));
+};
 
   return (
     <div className="home-page-container">
@@ -229,8 +314,29 @@ const CreateGame = () => {
               <option value="12">12</option>
             </select>
           </div>
-            )}
-          
+          )}
+          <div className="active-players-section">
+            <h2>Players : ({game?.activePlayers?.length}/{game?.maxPlayers})</h2>
+            <div className="active-players-list">
+              {game?.activePlayers.map((username, index) => (
+                <div key={index} className="player-card">
+                  <div className="player-avatar">
+                    <img
+                      alt={username}
+                    />
+                  </div>
+                  <div className="player-name">{username}</div>
+                  {isCreator && username!==game.creator && (
+                    <button
+                      className="expel-player-btn"
+                      onClick={() => handleExpelPlayer(username)}>
+                      ❌ expulsar
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
           {isCreator && (
           <div className="form-group privacy-toggle">
             <label>Privacity</label>
@@ -248,17 +354,18 @@ const CreateGame = () => {
           </div>
             )}
 
-          <div className="form-group add-friends-section">
-            <label>Invite friends</label>
-            <div className="friends-list">
-              <div className="add-friend-button">
-                <button>
-                  <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
-                </button>
-              </div>
+        <div className="form-group add-friends-section">
+          <label>Invite friends</label>
+          <div className="friends-list">
+            <div className="add-friend-button">
+              <button>
+                <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
+              </button>
             </div>
           </div>
-
+        </div>
+        {game && game.activePlayers?.length > 0 && (
+          <div className="active-players-section"></div>)}
             <div className="card-footer">
               {isCreator ? (
                 <>

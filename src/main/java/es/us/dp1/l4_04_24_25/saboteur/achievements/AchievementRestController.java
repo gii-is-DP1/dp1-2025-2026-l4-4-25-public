@@ -17,8 +17,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedAchievementException;
@@ -33,10 +37,12 @@ import jakarta.validation.Valid;
 public class AchievementRestController {
 
     private final AchievementService achievementService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public AchievementRestController(AchievementService achievementService) {
+    public AchievementRestController(AchievementService achievementService, ObjectMapper objectMapper) {
         this.achievementService = achievementService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -118,6 +124,16 @@ public class AchievementRestController {
     }
 
 
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Achievement> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
+        Achievement achievement = achievementService.findAchievement(id);
+        Achievement achievementPatched = objectMapper.updateValue(achievement, updates);
+        achievementService.updateAchievement(achievementPatched, id);
+        return new ResponseEntity<>(achievementPatched, HttpStatus.OK);
+    }
+
     @DeleteMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("id") int id) {
@@ -125,4 +141,9 @@ public class AchievementRestController {
         achievementService.deleteAchievement(id);
         return new ResponseEntity<>(new MessageResponse("Achievement deleted!"), HttpStatus.OK);
     }
-}
+
+    @GetMapping("byTittle")
+        public ResponseEntity<Achievement> findByTittle(@RequestParam String tittle){
+            return new ResponseEntity<>(achievementService.findByTittle(tittle), HttpStatus.OK);
+        }
+    }

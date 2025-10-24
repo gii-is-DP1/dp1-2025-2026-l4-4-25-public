@@ -53,11 +53,16 @@ public class PlayerService {
     }
 
     @Transactional (readOnly = true)
-    public PlayerDTO findByUsername(String username) {
+    public PlayerDTO findByUsernameDTO(String username) {
         Player player = playerRepository.findByUsername(username).orElseThrow(()-> new ResourceNotFoundException("Player","username",username));
          return new PlayerDTO(player.getUsername(), player.getName(), player.getBirthDate(), player.getJoined(), player.getImage(), player.getEmail(), player.getAuthority().getAuthority(),
             player.getPlayedGames(), player.getWonGames(), player.getDestroyedPaths(), player.getBuiltPaths(), 
             player.getAcquiredGoldNuggets(), player.getPeopleDamaged(), player.getPeopleRepaired(), player.isWatcher(), player.getFriends().stream().map(f->f.getUsername()).toList(), player.getAccquiredAchievements(), player.getGame());
+    }
+
+    @Transactional (readOnly = true)
+    public Player findByUsername(String username) {
+        return playerRepository.findByUsername(username).orElseThrow(()-> new ResourceNotFoundException("Player","username",username));
     }
 
     @Transactional (readOnly = true)

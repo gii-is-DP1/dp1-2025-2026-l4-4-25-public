@@ -66,12 +66,13 @@ export default function Lobby(){
         // Solo buscar los datos del jugador si el usuario NO es un admin
         if (!admin) {
             fetchPlayer();
+            console.log("entro")
             console.log("este es  el player", player)
         }
   },[jwt])
 
     async function handleSubmit() {
-         console.log("este es  el player", player)
+         console.log("este es  el player submit", player)
         const jwt = tokenService.getLocalAccessToken();
         try {
         const randomPart = generateRandomLink(16);

@@ -75,6 +75,8 @@ public class BoardRestController {
         return new ResponseEntity<>(this.boardService.updateBoard(board, id), HttpStatus.OK);
     }
 
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
     
     public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
         RestPreconditions.checkNotNull(boardService.findBoard(id), "Board", "ID", id);
@@ -82,7 +84,9 @@ public class BoardRestController {
 
         updates.forEach((k, v) -> {
             Field field = ReflectionUtils.findField(Board.class, k);
-            if (field == null) return;
+            if (field == null) {
+                throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
+            }
             field.setAccessible(true);
             try {
         
@@ -99,13 +103,12 @@ public class BoardRestController {
             } catch (Exception e) {
                 throw new RuntimeException("Error applying patch to field " + k, e);
             }
-            });
+        });
+
+        boardService.saveBoard(board);
+        return ResponseEntity.ok(board);
+    }
     
-            return new ResponseEntity<>(board, HttpStatus.OK);
-        }
-
-
-
     @DeleteMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("id") int id) {
