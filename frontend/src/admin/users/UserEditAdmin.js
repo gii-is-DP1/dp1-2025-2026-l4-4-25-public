@@ -23,7 +23,7 @@ export default function UserEditAdmin() {
     birthDate: "",
     email: "",
     image: "",
-    authority: null,
+    authority: { id: 2}, // Por defecto, todo usuario que se añada será Player, esto antes estaba en null
   };
 
   const id = getIdFromUrl(2);
@@ -56,19 +56,27 @@ export default function UserEditAdmin() {
       const imageUrl = URL.createObjectURL(f);
       setProfileImage(imageUrl);}}
 
-  function handleChange(event) {
+  /*function handleChange(event) {
     const {name,value } = event.target;
     if (name === "authority") {
       const selectedAuth = auths.find((a) => a.id === Number(value)) || null;
       setUser({ ...user, authority: selectedAuth });
     } else {
       setUser({ ...user, [name]: value });}}
+  */
+
+  function handleChange(event) {
+    const {name,value } = event.target;
+    setUser({ ...user, [name]: value });
+  }
+ 
   function handleSubmit(event) {
     event.preventDefault();
     const request = {
       ...user,
       image: profileImage,
     };
+
     if (!user.password || user.password.trim() === "") {
       delete request.password;}
 
@@ -191,7 +199,7 @@ export default function UserEditAdmin() {
             />
           </div>
 
-          <div className="custom-form-input">
+          {/*<div className="custom-form-input">
             <Label className="custom-form-input-label">Authority</Label>
             <Input
               type="select"
@@ -204,6 +212,7 @@ export default function UserEditAdmin() {
               {authOptions}
             </Input>
           </div>
+          */}
 
           <div className="custom-button-row">
             <button type="submit" className="auth-button">
