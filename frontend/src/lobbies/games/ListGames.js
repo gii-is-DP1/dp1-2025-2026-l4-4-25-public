@@ -87,7 +87,12 @@ export default function ListGames() {
       filtered = filtered.filter((g) =>
         friendUsernames.includes(g.creator?.username?.toLowerCase()));}
     setFilteredGames(filtered);
-}, [filters, gamesList, onlyFriend, friendLs]);
+    
+    
+}, [filters, gamesList, onlyFriend, friendLs,filteredGames.activePlayers]);
+
+console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
+
 
 
   return (
@@ -111,6 +116,14 @@ export default function ListGames() {
                   <p>🖥️ ID: {game.id}</p>
                   <p>🔁 Status: {game.gameStatus}</p>
                   <p>👤 Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
+                   <div className="players-list">
+                    <label>Jugadores:</label>
+                      <ul>
+                        {game.activePlayers.map((p, idx) => (
+                          <li>{p.username ?? p}</li>
+                        ))}
+                      </ul>
+                  </div>
                   <p>🌐 Privacy: {game.private ? "Private 🔒" : "Public 🔓"}</p>
                   <div className="game-card-footer">
                     {game.gameStatus === "CREATED" ? (
@@ -118,10 +131,12 @@ export default function ListGames() {
                         <Link to={"/board/" + game.id}>
                           <button className="button-join-game">📩REQUEST JOIN</button>
                         </Link>
-                      ) : (
+                      ) : game.activePlayers?.length < game.maxPlayers ? (
                         <Link to={"/CreateGame/" + game.id} state={{ game }}>
                           <button className="button-join-game">📥JOIN</button>
                         </Link>
+                      ) : (
+                        <button className="button-join-game">GAME IS FULL</button>
                       )
                     ) : (
                       <Link to={"/board/" + game.id}>
