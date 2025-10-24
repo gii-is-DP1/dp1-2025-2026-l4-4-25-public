@@ -24,11 +24,8 @@ const CreateGame = () => {
   useEffect(() => {
     console.log("Entrando al useEffect. Valor de game:", game);
      if (!game || isCreator) return;
-      let joined = false;
      // Función para unirse a la partida
      const joinGame = async () => {
-    if (joined) return;
-    joined = true;
       console.log("Intentando unirse a la partida como invitado...");
       try {
         //Obtenemos el username del usuario actual
@@ -65,7 +62,9 @@ const CreateGame = () => {
           return;
         }
 
-        const updatedActivePlayerList = [...activePlayerList, currentUser.username];
+        const updatedActivePlayerList = Array.from(
+        new Set([...(activePlayerList ?? []), currentUser.username])
+);
 
         // Hacemos el PATCH al Game con la lista ya actualizada
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
@@ -79,7 +78,7 @@ const CreateGame = () => {
 
         if(patchResponse.ok){
           const updatedGame = await patchResponse.json();
-          setGame(updatedGame); 
+          setGame(updatedGame)    
           console.log("Unido a la partida con éxito")
         }else{
           alert("Error al intentar unirse a la partida");
@@ -96,7 +95,7 @@ const CreateGame = () => {
         if(!isCreator){
           joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
         }
-          return () => { joined = true; };
+
 
   },[game?.id])
   
@@ -173,7 +172,7 @@ const CreateGame = () => {
         
         postFirstMessage();
         fetchPlayer();
-  },[])
+  },[[game, isCreator]])
 //para refrescar los activeplayers
   useEffect(() => {
     if (!game?.id) return;
@@ -184,8 +183,17 @@ const CreateGame = () => {
           headers: { "Authorization": `Bearer ${jwt}` },
         });
         if (!res.ok) return;
+        /*
         const latestgame = await res.json();
        setGame({ ...(game || {}), activePlayers: latestgame.activePlayers, maxPlayers:latestgame.maxPlayers });
+       */
+        const latestgame = await res.json();
+  setGame(prev => ({
+    ...prev,
+    ...latestgame,
+    activePlayers: Array.from(new Set(latestgame.activePlayers ?? [])),
+    maxPlayers: latestgame.maxPlayers,
+  }));
       } catch (err) {
         console.error("Error fetching game:", err);
       }
@@ -304,14 +312,60 @@ const CreateGame = () => {
       alert('No se pudo copiar el enlace.');
     }
   }
-const handleExpelPlayer = (usernameToExpel) => {
-  setGame(prevGame => ({
-    ...prevGame,
-    activePlayers: prevGame.activePlayers.filter(
-      username => username !== usernameToExpel
-    ),
-  }));
+async function handleExpelPlayer(usernameToExpel) {
+  const currentActivePlayers = game.activePlayers;
+  const newActivePlayers = currentActivePlayers.filter(p => p !== usernameToExpel);
+
+  try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ activePlayers: newActivePlayers }),
+    });
+
+    if (response.ok) {
+      const updatedGame = await response.json();
+      
+      setGame(updatedGame); 
+    } else {
+      alert("Error al expulsar al jugador");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("No se pudo conectar con el servidor");
+  }
 };
+
+async function handleExitLobby() {
+  const currentPlayer = tokenService.getUser();
+  const currentActivePlayers = game.activePlayers;
+  const newActivePlayers = currentActivePlayers.filter(p => p !== currentPlayer.username);
+
+  try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ activePlayers: newActivePlayers }),
+    });
+
+    if (response.ok) {
+      const updatedGame = await response.json();
+      setGame(updatedGame);
+      navigate("/lobby");
+    } else {
+      alert("Error al salir de la partida");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("No se pudo conectar con el servidor");
+  }
+}
 
   return (
     <div className="home-page-container">
@@ -399,7 +453,7 @@ const handleExpelPlayer = (usernameToExpel) => {
                 </>
               ) : (
                 <Link to="/lobby">
-                  <button className="button-small">🚪 EXIT LOBBY</button>
+                  <button className="button-small" onClick={handleExitLobby}>🚪 EXIT LOBBY</button>
                 </Link>
               )}
                 {!isCreator && (
