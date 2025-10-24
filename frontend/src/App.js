@@ -54,7 +54,7 @@ function App() {
       adminRoutes = (
         <>
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
-          <Route path="/users/:username" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
+          <Route path="/users/:id" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
           <Route path="/profile" element={<Profile />} />
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
