@@ -14,9 +14,10 @@ const jwt = tokenService.getLocalAccessToken();
 export default function Board() {
    const location = useLocation();
  
-  const ndeck=60;
-  const timeturn=60;
+ const timeturn=60;
 
+  const [CardPorPlayer, setCardPorPlayer] = useState(0);
+  const [deckCount, setDeckCount] = useState(60);
   const [profileImage, setProfileImage] = useState(avatar);
   const [game, setGame] = useState(location.state?.game);
   const [message, setMessage] = useState([]); // UseState que almacenan los mensajes (Chat de texto)
@@ -29,6 +30,7 @@ export default function Board() {
   const [playerRol, setPlayerRol] = useState([]); // Para los roles de saboteur y minero
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
+  const [privateLog, setPrivateLog] = useState([]); 
 
 
 useEffect(() => {
@@ -95,7 +97,7 @@ useEffect(() => {
   }
 }, [activePlayers]);
 
-  
+
 
 /*
 useEffect(() => {
@@ -147,6 +149,7 @@ const assignRolesGame = () => {
     username: p.username || p,
     role: i<numSaboteur ? 'SABOTEUR':'MINER',
     roleImg: i<numSaboteur ? saboteurRol:minerRol}));
+
   return roles;};
 
 useEffect(() => {
@@ -162,9 +165,10 @@ const nextTurn = () => {
   const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
   const nextIndex = (currentIndex + 1) % playerOrder.length; 
   setCurrentPlayer(playerOrder[nextIndex].username);
-  setCont(timeturn); 
-  addLog(`Its turn of ${playerOrder[nextIndex].username}`); 
-};
+  setCont(timeturn);
+  const nextName = playerOrder[nextIndex].username;
+  const nextClass = `player${nextIndex + 1}`;
+  addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");};
 
 
 const deck = () => {
@@ -190,9 +194,12 @@ const stateLint = () => {
 const repartoCartas = () => {
     return null; 
 };
+
 const addLog = (msg,type="info") => {
-  setGameLog(prev => [...prev, { msg,type }]);
-}; 
+  setGameLog(prev => [...prev, { msg,type }]);}; 
+
+const addPrivateLog = (msg, type = "info") => {
+  setPrivateLog(prev => [...prev, { msg, type }]);};
 
 const messagesEndRef = useRef(null);
 useEffect(() => {
@@ -215,39 +222,33 @@ useEffect(() => {
     const sec = (s%60).toString().padStart(2, '0');
     return `${min}:${sec}`;
   };
-  //console.log("activeplayers", activePlayers)
 
-  /*
-  useEffect(() => {
-    const fetchedRound = async () => {
-      try {
-        const response = await fetch(`/api/v1/rounds/byGame/${game.id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
-          }
-        });
-        const data = await response.json();
-        if (data && data.roundNumber) {
-          setNumRound(data.roundNumber);}
-      } catch (error) {
-        console.error(error);
-      }};
+useEffect(() => {
+  if (activePlayers.length > 0) {
+    let cardsPerPlayer = 0;
+    if (activePlayers.length <= 5) cardsPerPlayer = 6;
+    else if (activePlayers.length <= 9) cardsPerPlayer = 5;
+    else cardsPerPlayer = 4;
+    const initialDeck = 60 - (activePlayers.length * cardsPerPlayer);
+    setDeckCount(initialDeck); 
+    setCardPorPlayer(cardsPerPlayer);}
+}, [activePlayers]);
 
-    fetchedRound();
-  }, [game.id]);
-  */
- //NO HACE FALTA COGEMOS LAS RONDAS DEL NAVIGATE
+const deckfuction = () => deckCount;
 
-  let numCards = 0; // Iniciamos con 0 cartas, según los jugadores se repartirá x cartas
-  if (nPlayers <= 5) {
-    numCards = 6;
-  } else if (nPlayers > 5 && nPlayers <= 9) {
-    numCards = 5;
+const handleDiscard = () => {
+  const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+  if (loggedInUser.username!==currentPlayer) {
+    addPrivateLog("⚠️ It's not your turn!", "warning");
+    return;}
+  if (deckCount>0) {
+    setDeckCount(p =>p-1);
+    nextTurn();           
+    setCont(timeturn);    
+    addColoredLog(currentIndex, playerOrder[currentIndex].username, `🎴 Discarded a card. ${deckCount - 1} cards left in the deck.`);
   } else {
-    numCards = 4; // Con 3-4-5 jugadores cada jugador tiene 6 cartas, con 6-7-8-9 tiene 5 cartas, con 10-11-12 tiene 4 cartas.
-  }
+    addLog("⛔No more cards left in the deck!", "warning");}};
+
 
   const SendMessage = (e) => {
     e.preventDefault(); // No quitar que sino no se actualiza
@@ -255,7 +256,12 @@ useEffect(() => {
     setNewMessage(''); 
   };
 
-  const cards = [...Array(numCards)].map((_, i) => (
+  const addColoredLog = (playerIndex, playerName, action) => {
+     const coloredName = `<span class="player${playerIndex + 1}">${playerName}</span>`;
+     addLog(`${coloredName} ${action}`, "action");};
+
+
+  const cards = [...Array(CardPorPlayer)].map((_, i) => (
     <button key={i} className="card-slot">Cards {i + 1}</button>));
 
   return (
@@ -287,13 +293,11 @@ useEffect(() => {
       </div>
 
       <div className="n-deck">
-        🎴{ndeck}
+        🎴{deckfuction()}
       </div>
 
-      <button className="n-discard">
-        <Link to={deck}>
-        📥Discard
-        </Link>
+      <button className="n-discard" onClick={handleDiscard}>
+        📥 Discard
       </button>
 
       <div className="time-card">
@@ -327,7 +331,7 @@ useEffect(() => {
             <div className="player-lint"> 🔦 : 🟢 {/*stateLint*/}</div>
             <div className="player-vag">🪨 : 🟢 {/*stateVag*/}</div> 
             <div className="player-pic"> ⛏️ : 🟢 {/*statePic*/} </div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
-            <div className="player-pep"> 🪙 : 0 {/*numPep*/} </div>
+            <div className="player-pep"> 🪙 : 0 {/*numPep*/} 🎴 : {CardPorPlayer} </div>
           </div>
         ))}
       </div>
@@ -335,14 +339,24 @@ useEffect(() => {
       <div className="game-log">
         <div className="game-log-header">💻 GAME LOG 💻</div>
         <div className="game-log-messages">
-          {gameLog.length === 0 ? (
+          {gameLog.length === 0 && privateLog.length === 0 ? (
             <p className="no-log">❕No actions yet...</p>
           ) : (
-            gameLog.map((log, index) => (
-              <p key={index} className={`log-entry ${log.type}`}>
-                {log.msg}
-              </p> )))}
-              <div ref={messagesEndRef} />
+            <>
+              {gameLog.map((log, index) => (
+                <p
+                  key={`global-${index}`}
+                  className={`log-entry ${log.type}`}
+                  dangerouslySetInnerHTML={{ __html: log.msg }}/>))}
+
+              {privateLog.map((log, index) => (
+                <p
+                  key={`private-${index}`}
+                  className={`log-entry ${log.type}`}
+                  dangerouslySetInnerHTML={{ __html: log.msg }}/>))}
+            </>
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 

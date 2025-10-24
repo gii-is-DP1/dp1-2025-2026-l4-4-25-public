@@ -50,8 +50,22 @@ VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
 VALUES (201, FALSE, TRUE, TRUE, FALSE, FALSE);
 
-INSERT INTO achievements (id, creator_id, score, descripcion, tittle) 
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
 VALUES (200, 1, 50, 'Gana 10 partidas habiendo construido más de 20 caminos.', 'Constructor Maestro');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (201, 1, 30, 'TEST2', 'fran?');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (202, 1, 40, 'TEST3', 'javi osuna?');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (203, 1, 60, 'TEST4', 'carlos?');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (204, 1, 20, 'TEST5', 'julio?');
+
 --INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
 --VALUES (4, 1, 4, TRUE, 'PATH', 1);
 
