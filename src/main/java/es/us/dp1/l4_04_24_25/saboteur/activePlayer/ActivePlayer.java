@@ -3,7 +3,12 @@ package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.message.Message;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
@@ -45,6 +50,7 @@ public class ActivePlayer extends Player{
 
     // Relación 1 participante 1 mano
     @OneToOne
+
     @JoinColumn(name = "deck_id")
     private Deck deck;
 

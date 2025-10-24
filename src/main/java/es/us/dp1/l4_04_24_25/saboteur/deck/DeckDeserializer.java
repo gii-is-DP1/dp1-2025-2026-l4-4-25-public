@@ -23,7 +23,7 @@ public class DeckDeserializer extends JsonDeserializer<Deck> {
         try {
 
             Integer deckId = p.getIntValue();
-            result = deckService.findDeck(deckId);
+            result = this.deckService.findDeck(deckId);
 
         } catch (Exception e) {
 

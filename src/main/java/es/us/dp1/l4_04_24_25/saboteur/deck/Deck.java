@@ -3,7 +3,7 @@ package es.us.dp1.l4_04_24_25.saboteur.deck;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize; // Nuevo Import
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize; 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
@@ -29,7 +29,7 @@ public class Deck extends BaseEntity{
     
     @JsonDeserialize(contentUsing = CardDeserializer.class)
     @JsonSerialize(contentUsing = CardSerializer.class)
-    @OneToMany(mappedBy = "deck", cascade = CascadeType.MERGE) 
+    @OneToMany(mappedBy = "deck") 
     private List<Card> cards = new ArrayList<>();
 
     @JsonSerialize(using = ActivePlayerSerializer.class)
