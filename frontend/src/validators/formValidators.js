@@ -32,5 +32,13 @@ export const formValidators = {
             return value.trim().length === 9 && /^\d+$/.test(value);
         },
         message: "The phone number must be 9 digits long and contain only numbers"
+    },
+    emailValidator: {
+        validate: (value) => {
+            // Expresión regular para validar formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(value);
+        },
+        message: "Please enter a valid email address (e.g., user@example.com)"
     }
 }

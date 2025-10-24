@@ -50,11 +50,17 @@ export default function UserEditAdmin() {
     if (user?.password) setUser((prev)=>({...prev,password: "" }));
   }, [user?.id]);
 
-  function handleFileChange(ev) {
-    const f=ev.target.files[0];
-    if (f) {
-      const imageUrl = URL.createObjectURL(f);
-      setProfileImage(imageUrl);}}
+  const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if(file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // reader.result tendrá la imagen como una cadena Base64
+            setProfileImage(reader.result);
+        };
+        reader.readAsDataURL(file);
+        }
+  }
 
   /*function handleChange(event) {
     const {name,value } = event.target;

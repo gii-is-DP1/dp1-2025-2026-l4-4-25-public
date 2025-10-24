@@ -47,10 +47,10 @@ export default function UserListAdmin() {
         <div className="user-table-cell">
           <span
             className={`user-role ${
-              user.authority.authority === "ADMIN" ? "role-admin" : "role-user"
+              user.authority === "ADMIN" ? "role-admin" : "role-user"
             }`}
           >
-            {user.authority.authority}
+            {user.authority || 'Rol desconocido'}
           </span>
         </div>
       </td>
