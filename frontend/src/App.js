@@ -19,6 +19,8 @@ import ListGames from "./lobbies/games/ListGames";
 import Board from "./game/board";
 import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
+import Achievements from "./lobbies/profiles/Achievements";
+import EditAchievements from "./admin/achievements/EditAchievements";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -56,6 +58,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
+          <Route path="/EditAchievement" element={<EditAchievements />} />
         </>)
     }
     if (role === "PLAYER") {
@@ -66,6 +69,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
           <Route path="/GamesPlayed" element={<GamesPlayed />} />
+          <Route path="/Achievement" element={<Achievements />} />
 
         </>)
     }    
