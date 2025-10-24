@@ -23,9 +23,12 @@ const CreateGame = () => {
 
   useEffect(() => {
     console.log("Entrando al useEffect. Valor de game:", game);
-     if (!game) return;
+     if (!game || isCreator) return;
+      let joined = false;
      // Función para unirse a la partida
      const joinGame = async () => {
+    if (joined) return;
+    joined = true;
       console.log("Intentando unirse a la partida como invitado...");
       try {
         //Obtenemos el username del usuario actual
@@ -53,7 +56,8 @@ const CreateGame = () => {
         // Obtenemos la lista de players de la partida
         const activePlayerList = currentGame.activePlayers || [];
         // Evaluamos si el usuario actual está en la partida
-        const amIAlreadyIn = activePlayerList.some(p=> p.username === currentUser.username);
+        const amIAlreadyIn = activePlayerList.includes(currentUser.username);
+
         
         if(amIAlreadyIn){
           console.log("Ya estás en la partida");
@@ -92,8 +96,9 @@ const CreateGame = () => {
         if(!isCreator){
           joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
         }
+          return () => { joined = true; };
 
-  },[])
+  },[game?.id])
   
   useEffect(()=>{
     const postFirstMessage = async () => {
@@ -180,7 +185,7 @@ const CreateGame = () => {
         });
         if (!res.ok) return;
         const latestgame = await res.json();
-       setGame({ ...(game || {}), activePlayers: latestgame.activePlayers });
+       setGame({ ...(game || {}), activePlayers: latestgame.activePlayers, maxPlayers:latestgame.maxPlayers });
       } catch (err) {
         console.error("Error fetching game:", err);
       }
@@ -191,7 +196,6 @@ const CreateGame = () => {
     return () => clearInterval(iv);
   }, [game?.id, jwt]);
   
-  console.log('chat del creategame ', chat)
 
   async function handleSubmit() {
     //necesitamos el patch de game
@@ -340,7 +344,7 @@ const handleExpelPlayer = (usernameToExpel) => {
             <h2>Players : ({game?.activePlayers?.length ?? 0}/{game?.maxPlayers ?? 0})</h2>
             <div className="active-players-list">
               {(game?.activePlayers ?? []).map((username, index) => (
-                <div key={username ?? index} className="player-card">
+                <div key={username ?? index} className="player-card2">
                   <div className="player-avatar" title={username}>
                   </div>
                   <div className="player-name">{username}</div>

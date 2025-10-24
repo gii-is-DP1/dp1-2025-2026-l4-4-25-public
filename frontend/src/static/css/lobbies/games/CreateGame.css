@@ -126,7 +126,7 @@
   position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s;
 }
 input:checked + .slider {
-  background-color: #f1c40f; /* Color amarillo para combinar */
+  background-color: #f1c40f; 
 }
 input:checked + .slider:before {
   transform: translateX(26px);
@@ -158,22 +158,48 @@ input:checked + .slider:before {
   animation: spin 1s linear infinite;
 }
 
-.player-card {
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  color: inherit;
-  padding: 6px 8px;
-  border-radius: 6px; 
+.player-card2 {
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  font-size: 0.8rem;
+  max-width: 150px; 
+  min-width: 0; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
+.player-card2:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+}
 
 .player-avatar {
   background: transparent;
   box-shadow: none;
+  width: 28px;                 
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 28px;
+}
+
+
+.player-name {
+  flex: 1 1 auto; 
+  min-width: 0;   
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 
@@ -182,8 +208,12 @@ input:checked + .slider:before {
   border: none;
   color: #ff6b6b;
   cursor: pointer;
-  padding: 4px;
+  padding: 3px 6px;
+  font-size: 0.75rem;
+  margin-left: 6px;
+  flex: 0 0 auto; 
 }
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
