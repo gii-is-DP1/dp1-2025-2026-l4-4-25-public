@@ -7,12 +7,10 @@ import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.message.Message;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
-import es.us.dp1.l4_04_24_25.saboteur.square.Square;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +18,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "ActivePlayer")
+//@Table(name = "ActivePlayer")
 public class ActivePlayer extends Player{
 
     private boolean rol;
@@ -34,10 +32,9 @@ public class ActivePlayer extends Player{
 
     private boolean cartState;
 
-    //Relación 1 participante gana 1 partida
-    @OneToOne
-    @JoinColumn(name = "wonGame_id")
-    private Game wonGame;
+    //Relación 1 participante gana n partidas
+    @OneToMany (mappedBy = "winner")
+    private List<Game> wonGame;
 
     //Relación 1 participante crea n partidas
     @OneToMany (mappedBy = "creator")
@@ -45,6 +42,7 @@ public class ActivePlayer extends Player{
 
     // Relación 1 participante 1 mano
     @OneToOne
+
     @JoinColumn(name = "deck_id")
     private Deck deck;
 

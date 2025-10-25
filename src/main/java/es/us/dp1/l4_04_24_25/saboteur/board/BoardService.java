@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.board;
 
 import java.util.List;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,8 @@ public class BoardService {
     }
 
     @Transactional
-    public Board saveBoard(@Valid Board board) {
-        
-        if (board.getRound() != null) {
-            board.getRound().setBoard(board);
-        }
-        
-        boardRepository.save(board);
+    public Board saveBoard(Board board) {    
+        boardRepository.saveAndFlush(board);
         return board;
     }
 
@@ -44,9 +40,7 @@ public class BoardService {
     @Transactional
     public Board updateBoard(@Valid Board board, Integer idToUpdate) {
         Board toUpdate = findBoard(idToUpdate);
-        
-        BeanUtils.copyProperties(board, toUpdate, "id", "busy", "round"); 
-        
+        BeanUtils.copyProperties(board, toUpdate, "id"); 
         boardRepository.save(toUpdate);
         return toUpdate;
     }

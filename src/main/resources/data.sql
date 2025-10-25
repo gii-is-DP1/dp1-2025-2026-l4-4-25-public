@@ -18,14 +18,15 @@ INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, ac
 INSERT INTO deck (id) VALUES (1);
 INSERT INTO deck (id) VALUES (2);
 
-
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 1,  0, 4, false, true, null );
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 2,  0, 5, false, true, null );
 
 
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
 
+
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 'link', 0, 4);
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 'link2', 2000, 4);
 
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, null, 2);
@@ -49,8 +50,22 @@ VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
 VALUES (201, FALSE, TRUE, TRUE, FALSE, FALSE);
 
-INSERT INTO achievements (id, creator_id, score, descripcion, tittle) 
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
 VALUES (200, 1, 50, 'Gana 10 partidas habiendo construido más de 20 caminos.', 'Constructor Maestro');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (201, 1, 30, 'TEST2', 'fran?');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (202, 1, 40, 'TEST3', 'javi osuna?');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (203, 1, 60, 'TEST4', 'carlos?');
+
+INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
+VALUES (204, 1, 20, 'TEST5', 'julio?');
+
 --INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
 --VALUES (4, 1, 4, TRUE, 'PATH', 1);
 

@@ -27,8 +27,12 @@ export default function Register() {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if(file) {
-      const imageUrl = URL.createObjectURL(file); 
-      setProfileImage(imageUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // reader.result tendrá la imagen como una cadena Base64
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   }
   function handleSubmit({ values }) {

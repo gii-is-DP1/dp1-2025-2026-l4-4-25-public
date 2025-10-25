@@ -12,6 +12,7 @@ import lombok.Setter;
 @Setter
 public class PlayerDTO{
 
+    private Integer id;
     private String username;
     private String name;
     private String birthDate;
@@ -28,16 +29,17 @@ public class PlayerDTO{
     private Integer peopleRepaired;
     private boolean isWatcher;
     private List<String> friends;
-    private List<Achievement> achievements;
+    private List<Achievement> accquiredAchievements;
     private Game game;
     
 
     public PlayerDTO() {
     }
 
-    public PlayerDTO(String username, String name, String birthDate, LocalDateTime joined, String image, String email, String authority, 
+    public PlayerDTO(Integer id,String username, String name, String birthDate, LocalDateTime joined, String image, String email, String authority, 
             Integer playedGames, Integer wonGames, Integer destroyedPaths, Integer builtPaths, Integer acquiredGoldNuggets, Integer peopleDamaged, 
-            Integer peopleRepaired, boolean isWatcher, List<String> friends, List<Achievement> achievements, Game game) {
+            Integer peopleRepaired, boolean isWatcher, List<String> friends, List<Achievement> accquiredAchievements, Game game) {
+        this.id = id;
         this.username = username;
         this.name = name;
         this.birthDate = birthDate;
@@ -54,7 +56,7 @@ public class PlayerDTO{
         this.peopleRepaired = peopleRepaired;
         this.isWatcher = isWatcher;
         this.friends = friends;
-        this.achievements = achievements;
+        this.accquiredAchievements = accquiredAchievements;
         this.game = game;
     }
 }

@@ -13,10 +13,7 @@ public class CardSerializer extends JsonSerializer<Card> {
 
     @Override
     public void serialize(Card value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        if (value.getId() != null) {
-            gen.writeNumber(value.getId());
-        } else {
-            gen.writeNull();
-        }
+        
+        gen.writeNumber(value.getId());;
     }
 }

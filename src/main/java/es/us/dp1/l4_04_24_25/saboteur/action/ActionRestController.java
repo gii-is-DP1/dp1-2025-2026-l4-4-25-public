@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.action;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
@@ -30,10 +35,12 @@ import jakarta.validation.Valid;
 public class ActionRestController {
 
     private final ActionService actionService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ActionRestController(ActionService actionService) {
+    public ActionRestController(ActionService actionService, ObjectMapper objectMapper) {
         this.actionService = actionService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -84,6 +91,16 @@ public class ActionRestController {
     public ResponseEntity<Action> update(@PathVariable("id") Integer id, @RequestBody @Valid Action action) {
         RestPreconditions.checkNotNull(actionService.findAction(id), "Action", "ID", id);
         return new ResponseEntity<>(actionService.updateAction(action, id), HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Action> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(actionService.findAction(id), "Action", "ID", id);
+        Action action = actionService.findAction(id);
+        Action actionPatched = objectMapper.updateValue(action, updates);
+        actionService.updateAction(actionPatched, id);
+        return new ResponseEntity<>(actionPatched, HttpStatus.OK);
     }
 
     @DeleteMapping(value = "{id}")

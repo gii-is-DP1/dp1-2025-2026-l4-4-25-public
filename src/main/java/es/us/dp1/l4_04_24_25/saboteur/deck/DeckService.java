@@ -1,20 +1,19 @@
 package es.us.dp1.l4_04_24_25.saboteur.deck;
 
-import java.util.List;
+
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
 @Service
 public class DeckService {
 
-    private final DeckRepository deckRepository;
+    private DeckRepository deckRepository;
 
     @Autowired
     public DeckService(DeckRepository deckRepository) {
@@ -22,21 +21,9 @@ public class DeckService {
     }
 
     @Transactional
-    public Deck saveDeck(@Valid Deck deck) {
-        
-        if (deck.getCards() != null) {
-            for (Card card : deck.getCards()) {
-                card.setDeck(deck);
-            }
-        }
-        
-        Deck savedDeck = deckRepository.save(deck);
-        
-        if (savedDeck.getActivePlayer() != null) {
-            savedDeck.getActivePlayer().setDeck(savedDeck);
-        }
-        
-        return savedDeck;
+    public Deck saveDeck(Deck deck){
+        deckRepository.save(deck);
+        return deck;
     }
 
     @Transactional(readOnly = true)
@@ -53,27 +40,9 @@ public class DeckService {
     @Transactional
     public Deck updateDeck(@Valid Deck deck, Integer idToUpdate) {
         Deck toUpdate = findDeck(idToUpdate);
-        
-        if (deck.getCards() != null) {
-
-            toUpdate.getCards().clear(); 
-            for (Card card : deck.getCards()) {
-                card.setDeck(toUpdate);
-                toUpdate.getCards().add(card);
-            }
-        }
-        
-        
-        BeanUtils.copyProperties(deck, toUpdate, "id", "cards", "activePlayer"); 
-    
-        
-        Deck updatedDeck = deckRepository.save(toUpdate);
-
-        if (updatedDeck.getActivePlayer() != null) {
-            updatedDeck.getActivePlayer().setDeck(updatedDeck);
-        }
-        
-        return updatedDeck;
+        BeanUtils.copyProperties(deck, toUpdate, "id");
+        deckRepository.save(toUpdate);
+        return toUpdate;
     }
 
     @Transactional
@@ -89,11 +58,6 @@ public class DeckService {
                 .orElseThrow(() -> new ResourceNotFoundException("Deck", "ActivePlayerId", activePlayerId));
     }
     
-    @Transactional(readOnly = true)
-    public Deck findDeckByCardId(Integer cardId) {
-        return deckRepository.findDeckByCardId(cardId) 
-                .orElseThrow(() -> new ResourceNotFoundException("Deck", "CardId", cardId));
-    }
 
     @Transactional(readOnly = true)
     public Integer countCardsInDeck(Integer deckId) {

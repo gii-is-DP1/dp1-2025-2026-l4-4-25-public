@@ -1,6 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.board;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,11 +21,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
-
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.round.RoundService;
+import es.us.dp1.l4_04_24_25.saboteur.square.Square;
+import es.us.dp1.l4_04_24_25.saboteur.square.SquareService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -37,12 +39,17 @@ import jakarta.validation.Valid;
 public class BoardRestController {
 
     private final BoardService boardService;
+    private final SquareService squareService;
+    private final RoundService roundService;
+    private final ObjectMapper objectMapper;
     
 
     @Autowired
-    public BoardRestController(BoardService boardService, RoundService roundService, ObjectMapper objectMapper) {
+    public BoardRestController(BoardService boardService, RoundService roundService,SquareService squareService, ObjectMapper objectMapper) {
         this.boardService = boardService;
-    
+        this.roundService = roundService;
+        this.squareService = squareService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -60,11 +67,23 @@ public class BoardRestController {
     @ResponseStatus(HttpStatus.CREATED)
     
     public ResponseEntity<Board> create(@Valid @RequestBody Board board) throws DataAccessException{
-        
         Board newBoard = new Board();
-        Board savedBoard;
-        BeanUtils.copyProperties(board, newBoard,"id");
-        savedBoard = this.boardService.saveBoard(newBoard);
+        BeanUtils.copyProperties(board, newBoard, "id","busy","round");
+
+        if (board.getBusy()!=null && !board.getBusy().isEmpty()){
+            for (var square: board.getBusy()){
+                square.setBoard(newBoard);
+                newBoard.getBusy().add(square);
+            }
+        }
+
+        if (board.getRound()!=null){
+            var round = board.getRound();
+            round.setBoard(newBoard);
+            newBoard.setRound(round);
+        }
+
+        Board savedBoard = this.boardService.saveBoard(newBoard);
         return new ResponseEntity<>(savedBoard, HttpStatus.CREATED);
     }
 
@@ -77,36 +96,49 @@ public class BoardRestController {
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    
-    public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
-        RestPreconditions.checkNotNull(boardService.findBoard(id), "Board", "ID", id);
+    public ResponseEntity<Board> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
         Board board = boardService.findBoard(id);
+        RestPreconditions.checkNotNull(board, "Achievement", "ID", id);
+        List<Square> updatedSquares = new ArrayList<>();
+        if (updates.containsKey("busy")){
+            List<Integer> squares = (List<Integer>) updates.get("busy");
 
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(Board.class, k);
-            if (field == null) {
-                throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
+            List<Square> oldSquares = new ArrayList<>(board.getBusy());
+            for (Square oldSquare : oldSquares) {
+                if (!squares.contains(oldSquare.getId())) {
+                    oldSquare.setBoard(null);
+                    squareService.saveSquare(oldSquare);
+                    board.getBusy().remove(oldSquare);
+                }
             }
-            field.setAccessible(true);
-            try {
-        
-                if (field.getType().equals(Integer.class)) {
-                    ReflectionUtils.setField(field, board, (Integer) v);
-                }
-                
-                else if (k.equals("round") && v instanceof Map) {
-                    
-                }
-                else {
-                    ReflectionUtils.setField(field, board, v);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Error applying patch to field " + k, e);
-            }
-        });
 
-        boardService.saveBoard(board);
-        return ResponseEntity.ok(board);
+            for(Integer sq:squares){
+                if (sq!=null){
+                    Square patchedSquare = squareService.patchSquare(sq, Map.of("board", board.getId()));
+                    updatedSquares.add(patchedSquare);
+                }
+            }
+
+            board.setBusy(updatedSquares);
+        }
+
+        if (updates.containsKey("round")){
+            Object roundObject = updates.get("round");
+            if (roundObject != null) {
+                Integer roundId = (Integer) roundObject;
+                // Llamada al PATCH de ActivePlayer para actualizar su deck
+                Round roundUpdated = roundService.patchRoundBoard(roundId, Map.of("board", board.getId()));
+                board.setRound(roundUpdated);
+            } else {
+                // Quitar el ActivePlayer anterior
+                if (board.getRound() != null) {
+                    board.getRound().setBoard(null);
+                }
+                board.setRound(null);
+            }     
+        }
+        Board saved = boardService.saveBoard(board);
+        return new ResponseEntity<>(saved, HttpStatus.OK);
     }
     
     @DeleteMapping(value = "{id}")

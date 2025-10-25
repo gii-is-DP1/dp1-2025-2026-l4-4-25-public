@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.board.Board;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
@@ -15,10 +18,12 @@ import jakarta.validation.Valid;
 public class SquareService {
 
     private final SquareRepository squareRepository;
+    private final BoardService boardService;
 
     @Autowired
-    public SquareService(SquareRepository squareRepository) {
+    public SquareService(SquareRepository squareRepository, BoardService boardService) {
         this.squareRepository = squareRepository;
+        this.boardService = boardService;
     }
 
     @Transactional
@@ -73,8 +78,20 @@ public class SquareService {
         return squareRepository.findByCoordinateXAndCoordinateY(coordinateX, coordinateY);
     }
 
-   public boolean existsByCoordinateXAndCoordinateY (Integer coordinateX, Integer coordinateY){
+    public boolean existsByCoordinateXAndCoordinateY (Integer coordinateX, Integer coordinateY){
         return squareRepository.existsByCoordinateXAndCoordinateY(coordinateX, coordinateY);
     }
+
+    @Transactional(readOnly = true)
+    public Square patchSquare(Integer id, Map<String, Object> updates) {
+        Square sq = findSquare(id);
+        if (updates.containsKey("board")){
+            Integer boardId = (Integer) updates.get("board");
+            Board board = boardService.findBoard(boardId);
+            sq.setBoard(board);
+        }
+        return squareRepository.save(sq);
+    }
+
         
 }

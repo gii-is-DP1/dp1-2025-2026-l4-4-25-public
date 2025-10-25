@@ -124,7 +124,7 @@ public ResponseEntity<User> create(@RequestBody @Valid User user)
 		} else
 			throw new AccessDeniedException("You can't delete yourself!");
 	}
-
+/* 
 	@DeleteMapping(value = "{username}")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<MessageResponse> deleteByUsername(@PathVariable("username") String username) {
@@ -135,5 +135,5 @@ public ResponseEntity<User> create(@RequestBody @Valid User user)
 			return new ResponseEntity<>(new MessageResponse("User deleted!"), HttpStatus.OK);
 		} else
 			throw new AccessDeniedException("You can't delete yourself!");
-	}
+	} */
 }

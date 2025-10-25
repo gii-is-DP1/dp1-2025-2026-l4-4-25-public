@@ -63,7 +63,10 @@ export default function ListGames() {
     setFilters((prev) => ({ ...prev, [name]: value }));};
 
   useEffect(() => {
-    let filtered = gamesList;
+    let filtered = gamesList.filter(
+      (g) =>
+        g.gameStatus === "CREATED" ||
+        g.gameStatus === "ONGOING");
     if (filters.privacy) {
       const isPrivate = filters.privacy === "private";
       filtered = filtered.filter((g) => g.private === isPrivate);}
@@ -80,12 +83,17 @@ export default function ListGames() {
           g.creator?.username?.toLowerCase().includes(term) ||
           g.id?.toString().includes(term));}
     if (onlyFriend && friendLs.length > 0) {
-      const friendUsernames = friendLs.map((f) =>
-        f.username?.toLowerCase());
+      const friendUsernames = friendLs.map((f) => f.username?.toLowerCase());
       filtered = filtered.filter((g) =>
         friendUsernames.includes(g.creator?.username?.toLowerCase()));}
     setFilteredGames(filtered);
-  }, [filters, gamesList, onlyFriend, friendLs]);
+    
+    
+}, [filters, gamesList, onlyFriend, friendLs,filteredGames.activePlayers]);
+
+console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
+
+
 
   return (
     <div className="home-page-lobby-container">
@@ -108,6 +116,14 @@ export default function ListGames() {
                   <p>🖥️ ID: {game.id}</p>
                   <p>🔁 Status: {game.gameStatus}</p>
                   <p>👤 Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
+                   <div className="players-list">
+                    <label>Jugadores:</label>
+                      <ul>
+                        {game.activePlayers.map((p, idx) => (
+                          <li>{p.username ?? p}</li>
+                        ))}
+                      </ul>
+                  </div>
                   <p>🌐 Privacy: {game.private ? "Private 🔒" : "Public 🔓"}</p>
                   <div className="game-card-footer">
                     {game.gameStatus === "CREATED" ? (
@@ -115,10 +131,12 @@ export default function ListGames() {
                         <Link to={"/board/" + game.id}>
                           <button className="button-join-game">📩REQUEST JOIN</button>
                         </Link>
-                      ) : (
+                      ) : game.activePlayers?.length < game.maxPlayers ? (
                         <Link to={"/CreateGame/" + game.id} state={{ game }}>
                           <button className="button-join-game">📥JOIN</button>
                         </Link>
+                      ) : (
+                        <button className="button-join-game">GAME IS FULL</button>
                       )
                     ) : (
                       <Link to={"/board/" + game.id}>

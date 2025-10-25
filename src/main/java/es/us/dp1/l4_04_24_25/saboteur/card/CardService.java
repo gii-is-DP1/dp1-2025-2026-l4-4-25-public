@@ -1,10 +1,14 @@
 package es.us.dp1.l4_04_24_25.saboteur.card;
 
+import java.util.Map;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
@@ -12,10 +16,12 @@ import jakarta.validation.Valid;
 public class CardService {
 
     private final CardRepository cardRepository;
+    private final DeckService deckService;
 
     @Autowired
-    public CardService(CardRepository cardRepository) {
+    public CardService(CardRepository cardRepository, DeckService deckService) {
         this.cardRepository = cardRepository;
+        this.deckService = deckService;
     }
 
     @Transactional
@@ -48,4 +54,15 @@ public class CardService {
         Card toDelete = findCard(id);
         cardRepository.delete(toDelete);
     }
+
+    @Transactional
+    public Card patchCard(Integer id, Map<String, Object> updates) {
+    Card card = findCard(id);
+    if (updates.containsKey("deck")) {
+        Integer deckId = (Integer) updates.get("deck");
+        Deck deck = deckService.findDeck(deckId);
+        card.setDeck(deck); // actualiza FK, lado propietario
+    }
+    return cardRepository.save(card);
+}
 }
