@@ -2,23 +2,29 @@ package es.us.dp1.l4_04_24_25.saboteur.player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 
 
 @Service
 public class PlayerService {
 
     private PlayerRepository playerRepository;
+    private GameService gameService;
 
     @Autowired
-    public PlayerService(PlayerRepository playerRepository) {
+    public PlayerService(PlayerRepository playerRepository, GameService gameService) {
         this.playerRepository = playerRepository;
+        this.gameService = gameService;
     }
 
     @Transactional
@@ -101,7 +107,16 @@ public class PlayerService {
         playerRepository.delete(toDelete);
     }
 
-
+    @Transactional
+    public Player patchPlayer(Integer id, Map<String, Object> updates) {
+    Player player = findPlayer(id);
+    if (updates.containsKey("game")) {
+        Integer gameId = (Integer) updates.get("game");
+        Game game = gameService.findGame(gameId);
+        player.setGame(game); // actualiza FK, lado propietario
+    }
+    return playerRepository.save(player);
+}
 
     
     

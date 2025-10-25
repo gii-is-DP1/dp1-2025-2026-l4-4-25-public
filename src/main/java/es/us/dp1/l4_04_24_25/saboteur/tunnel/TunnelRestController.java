@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.tunnel;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
@@ -29,10 +34,12 @@ import jakarta.validation.Valid;
 public class TunnelRestController {
 
     private final TunnelService tunnelService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public TunnelRestController(TunnelService tunnelService) {
+    public TunnelRestController(TunnelService tunnelService, ObjectMapper objectMapper) {
         this.tunnelService = tunnelService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -61,6 +68,16 @@ public class TunnelRestController {
     public ResponseEntity<Tunnel> update(@PathVariable("id") Integer id, @RequestBody @Valid Tunnel tunnel) {
         RestPreconditions.checkNotNull(tunnelService.findTunnel(id), "Tunnel", "ID", id);
         return new ResponseEntity<>(tunnelService.updateTunnel(tunnel, id), HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Tunnel> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(tunnelService.findTunnel(id), "Tunnel", "ID", id);
+        Tunnel tunnel = tunnelService.findTunnel(id);
+        Tunnel tunnelPatched = objectMapper.updateValue(tunnel, updates);
+        tunnelService.updateTunnel(tunnelPatched, id);
+        return new ResponseEntity<>(tunnelPatched, HttpStatus.OK);
     }
 
     @DeleteMapping(value = "{id}")

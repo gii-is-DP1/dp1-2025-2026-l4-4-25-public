@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,9 +28,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedLinkException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -40,14 +47,16 @@ import jakarta.validation.Valid;
 class GameRestController {
 
     private final GameService gameService;
-    private final ActivePlayerService activePlayerService;
+    private final PlayerService playerService;
     private final ObjectMapper objectMapper;
+    private final RoundService roundService;
 
     @Autowired
-    public GameRestController(GameService gameService, ActivePlayerService activePlayerService, ObjectMapper objectMapper) {
+    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService) {
         this.gameService = gameService;
-        this.activePlayerService = activePlayerService;
+        this.playerService = playerService;
         this.objectMapper = objectMapper;
+        this.roundService = roundService;
     }
 
 
@@ -107,11 +116,72 @@ class GameRestController {
 
    @PatchMapping(value = "{gameId}")
     public ResponseEntity<Game> patchGame(@PathVariable("gameId") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException {
-    RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
-    Game game = gameService.findGame(id);
+        Game game = gameService.findGame(id);
+        RestPreconditions.checkNotNull(game, "Game", "ID", id);
+        
+        if (updates.containsKey("watchers")) {
+        Object playerObj = updates.get("watchers");
+        List<Player> updatedPlayers = new ArrayList<>();
+
+        if (playerObj != null) {
+            List<String> playerUsernames = (List<String>) playerObj;
+
+            // Desvinculamos cartas antiguas que no están en la nueva lista
+            List<Player> oldWatchers = new ArrayList<>(game.getWatchers());
+            for (Player oldWatcher : oldWatchers) {
+                if (!playerUsernames.contains(oldWatcher.getUsername())) {
+                    oldWatcher.setGame(null); // desvincula del Deck
+                    playerService.savePlayer(oldWatcher);
+                    game.getWatchers().remove(oldWatcher);
+                }
+            }
+
+            // Vinculamos las nuevas cartas
+            for (String playerUsername : playerUsernames) {
+                Player p = playerService.findByUsername(playerUsername);
+                Integer pId = p.getId();
+                Player watcher = playerService.patchPlayer(pId, Map.of("game", game.getId()));
+                updatedPlayers.add(watcher);
+            }
+        }
+
+        game.setWatchers(updatedPlayers);
+    }
+
+    // 3️⃣ Actualizar Round si vienen en el JSON
+    if (updates.containsKey("rounds")) {
+        Object roundObj = updates.get("rounds");
+        List<Round> updatedRounds = new ArrayList<>();
+
+        if (roundObj != null) {
+            List<Integer> roundIds = (List<Integer>) roundObj;
+
+            // Desvinculamos cartas antiguas que no están en la nueva lista
+            List<Round> oldRounds = new ArrayList<>(game.getRounds());
+            for (Round oldRound : oldRounds) {
+                if (!roundIds.contains(oldRound.getId())) {
+                    oldRound.setGame(null); // desvincula del Deck
+                    roundService.saveRound(oldRound);
+                    game.getRounds().remove(oldRound);
+                }
+            }
+
+            // Vinculamos las nuevas cartas
+            for (Integer roundId : roundIds) {
+                Round round = roundService.patchRoundGame(roundId, Map.of("game", game.getId()));
+                updatedRounds.add(round);
+            }
+        }
+
+        game.setRounds(updatedRounds);
+    }
+
+    // 4️⃣ Guardamos el Deck para sincronizar las colecciones en memoria
+    //Game updatedGame = gameService.saveGame(game);
     Game gamePatched = objectMapper.updateValue(game, updates);
-    gameService.saveGame(gamePatched);
-    return ResponseEntity.ok(gamePatched);
+    gameService.updateGame(gamePatched, id);
+
+    return new ResponseEntity<>(gamePatched, HttpStatus.OK);
 }
 
     @DeleteMapping(value = "{gameId}")

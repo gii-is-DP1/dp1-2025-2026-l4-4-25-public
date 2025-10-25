@@ -10,6 +10,8 @@ import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,14 +19,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "Player")
+// @Table(name = "Player")
 public class Player extends User{
 
     @Column(name = "playedGames", nullable = false)
@@ -52,6 +53,8 @@ public class Player extends User{
     private boolean isWatcher;
 
     //Relacion de muchos a muchos con amigos
+    @JsonSerialize(contentUsing = PlayerSerializer.class)
+    @JsonDeserialize(contentUsing = PlayerDeserializer.class)
     @ManyToMany
     @JoinTable(
         name = "friends",
@@ -74,7 +77,9 @@ public class Player extends User{
     private List<Achievement> accquiredAchievements = new ArrayList<>();
 
     //Relacion muchos jugadores observan una partida
-    @ManyToOne
+    @JsonSerialize(using = GameSerializer.class)
+    @JsonDeserialize(using = GameDeserializer.class)
+    @ManyToOne 
     @JoinColumn(name = "game_id")
     private Game game;
 }
