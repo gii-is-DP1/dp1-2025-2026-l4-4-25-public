@@ -18,8 +18,8 @@ INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, ac
 INSERT INTO deck (id) VALUES (1);
 INSERT INTO deck (id) VALUES (2);
 
-INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 1,  0, 4, false, true, null );
-INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol, won_game_id) values (false, false, 2,  0, 5, false, true, null );
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 1,  0, 4, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 2,  0, 5, false, true);
 
 
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
