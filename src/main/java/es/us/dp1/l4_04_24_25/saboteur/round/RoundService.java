@@ -1,20 +1,26 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
+import java.util.Map;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.board.Board;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 
 @Service
 public class RoundService {
     
     private RoundRepository roundRepository;
+    private BoardService boardService;
 
     @Autowired
-    public RoundService(RoundRepository roundRepository) {
+    public RoundService(RoundRepository roundRepository, BoardService boardService) {
         this.roundRepository = roundRepository;
+        this.boardService = boardService;
     }
 
     @Transactional
@@ -45,6 +51,17 @@ public class RoundService {
     public void deleteRound(Integer id) {
         Round toDelete = findRound(id);
         roundRepository.delete(toDelete);
+    }
+
+    @Transactional(readOnly = true)
+    public Round patchRound(Integer id, Map<String, Object> updates) {
+        Round round = findRound(id);
+        if (updates.containsKey("board")){
+            Integer boardId = (Integer) updates.get("board");
+            Board board = boardService.findBoard(boardId);
+            round.setBoard(board);
+        }
+        return roundRepository.save(round);
     }
 
 }
