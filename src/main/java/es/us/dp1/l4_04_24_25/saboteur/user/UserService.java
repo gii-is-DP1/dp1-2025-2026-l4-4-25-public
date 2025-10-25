@@ -28,11 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
 import jakarta.validation.Valid;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 
 
 
@@ -173,7 +173,7 @@ public class UserService {
 	@Transactional
 	public User updateUser(@Valid User user, Integer idToUpdate) {
     User toUpdate = findUser(idToUpdate);
-    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password","createdAchievements", "managedAchievements", "managedGames", "users");
+    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password");
     String newPassword = user.getPassword();
 
 	// Solo actualiza si el campo de la contraseña NO es nulo y NO está vacío
