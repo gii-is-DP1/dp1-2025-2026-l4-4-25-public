@@ -6,7 +6,7 @@ import AppNavbar from "./AppNavbar";
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
-import Profile from "./lobbies/profiles/profile";
+import Profile from "./lobbies/profiles/Profile";
 import EditProfile from "./lobbies/profiles/EditProfile"; 
 import Login from "./auth/login";
 import Logout from "./auth/logout";
@@ -19,6 +19,8 @@ import ListGames from "./lobbies/games/ListGames";
 import Board from "./game/board";
 import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
+import Achievements from "./lobbies/profiles/Achievements";
+import EditAchievements from "./admin/achievements/EditAchievements";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -52,20 +54,22 @@ function App() {
       adminRoutes = (
         <>
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
-          <Route path="/users/:username" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
+          <Route path="/users/:id" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
           <Route path="/profile" element={<Profile />} />
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
+          <Route path="/EditAchievement" element={<EditAchievements />} />
         </>)
     }
     if (role === "PLAYER") {
       ownerRoutes = (
         <>
-          <Route path="/register" element={<Register />} />
+          {/*<Route path="/register" element={<Register />} />*/}
           <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
           <Route path="/GamesPlayed" element={<GamesPlayed />} />
+          <Route path="/Achievement" element={<Achievements />} />
 
         </>)
     }    
@@ -85,6 +89,7 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/CreateGame/:id" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
+        <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
       </>

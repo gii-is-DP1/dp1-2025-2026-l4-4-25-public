@@ -1,9 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState,useRef, useEffect} from 'react';
 import '../App.css';
 import '../static/css/home/home.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import '../static/css/game/game.css'; 
 import minerRol from '../game/cards-images/roles/minerRol.png';
+import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
 import avatar from "../static/images/icons/1.jpeg"
@@ -11,48 +12,99 @@ import avatar from "../static/images/icons/1.jpeg"
 const jwt = tokenService.getLocalAccessToken();
 
 export default function Board() {
+   const location = useLocation();
  
-  const ndeck=60;
-  const timeturn=60;
-  const idGame = 0; // Usar el getIdFromUrl
+ const timeturn=60;
 
+  const [CardPorPlayer, setCardPorPlayer] = useState(0);
+  const [deckCount, setDeckCount] = useState(60);
   const [profileImage, setProfileImage] = useState(avatar);
+  const [game, setGame] = useState(location.state?.game);
   const [message, setMessage] = useState([]); // UseState que almacenan los mensajes (Chat de texto)
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState('1'); 
   const [currentPlayer, setCurrentPlayer] = useState(); // Nos ayudará para el NextTurn (saber el usuario que tiene el turno)
   const [cont, setCont] = useState(timeturn); 
   const [gameLog, setGameLog] = useState([]);
-  const [playerOrder, setPlayerOrder] = useState(['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia']); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
-  const [playerRol, setPlayerRol] = useState({}); // Para los roles de saboteur y minero
-  const [activePlayer, setActivePlayer] = useState([]); // Lista de arrays de isactivePlayer
-  const nPlayers=setActivePlayer.length; // Total de jugadores en la partida
+  const [playerOrder, setPlayerOrder] = useState([]); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
+  const [playerRol, setPlayerRol] = useState([]); // Para los roles de saboteur y minero
+  const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
+  const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
+  const [privateLog, setPrivateLog] = useState([]); 
 
-
- useEffect(() => {
-    const fetchPlayers = async () => {
-      try {
-        const response = await fetch(`/api/v1/players/byGameId?gameId=${idGame}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,}});
-        const data = await response.json();
-        if (data && data.length > 0) { // players > 0
-          const res =data.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
-          setPlayerOrder(res);
-          setCurrentPlayer(res[0].username);}
-          
-
-      } catch (error) {
-        console.error(error);}};
-    fetchPlayers();
-  }, [idGame]);
 
 useEffect(() => {
+  // console.log("game", game)
+
+  const fetchPlayerByUsername = async (username) => {
+    try {
+      const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // console.log('players', data)
+        return data;
+      } else {
+        console.error('Respuesta no OK:', response.status);
+        alert('Error al obtener el jugador.');
+      }
+    } catch (error) {
+      console.error('Hubo un problema con la petición fetch:', error);
+      alert('Error de red. No se pudo conectar con el servidor.');
+    }
+  };
+
+  const loadActivePlayers = async () => {
+    const initialPlayers = game?.activePlayers || [];
+    //prueba
+    const usernames = ['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia'];
+    //prueba
+    const mockPlayers = usernames.map((username, index) => ({
+      username,
+      birthDate: new Date(1990 + index, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(), 
+      profileImage: avatar, 
+      wins: Math.floor(Math.random() * 10), 
+    }));
+    const fetchedPlayers = await Promise.all(initialPlayers.map(username => fetchPlayerByUsername(username)));
+    const validPlayers = fetchedPlayers.filter(player => player !== null); 
+    setActivePlayers([...validPlayers, ...mockPlayers]); 
+  };
+
+  loadActivePlayers();
+
+  async function handlerounds() {
+    const irounds = game?.rounds?.length || 0;
+    if (irounds <= 0) {
+      setNumRound(1);
+    }
+  }
+
+  handlerounds();
+
+  
+}, []);
+useEffect(() => {
+  if(activePlayers.length > 1){
+    const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate)); 
+    setPlayerOrder(res);
+    setCurrentPlayer(res[0].username);
+    console.log('ORDEN ACTUALIZADO', res);
+  }
+}, [activePlayers]);
+
+
+
+/*
+useEffect(() => {
+  
   const fetchActivePlayers = async () => {
     try {
-      const response = await fetch(`/api/v1/games/${idGame}/activePlayers`, {
+      const response = await fetch(`/api/v1/games/${game.id}/activePlayers`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -64,29 +116,101 @@ useEffect(() => {
     } catch (error) {
       console.error(error);}};
     fetchActivePlayers();
-  }, [idGame]);
+  }, [game.id]);
+  */
+ //NO HACE FALTA LO COGEMOS DE NAVIGATE 
 
-const assignRolesGame = (activePlayers) => {
-  return null; // AUN POR DEFINIR (Definir numeros de roles de cada tipo según los jugadores de la partida)
-    };
+const loggedInUser = tokenService.getUser();
+
+const assignRolesGame = () => {
+  const n = activePlayers.length;
+  let numSaboteur = 0;
+  let numMiner = 0;
+  if(n===1){numSaboteur = 1; numMiner = 3;}
+  else if(n===4){numSaboteur = 1; numMiner = 3;}
+  else if(n===5){numSaboteur = 2; numMiner = 3;}
+  else if(n===6){numSaboteur = 2; numMiner = 4;}
+  else if(n===7){numSaboteur = 3; numMiner = 4;}
+  else if(n===8){numSaboteur = 3; numMiner = 5;}
+  else if(n===9){numSaboteur = 4; numMiner = 5;}
+  else if(n===10){numSaboteur = 4; numMiner = 6;}
+  else if(n===11){numSaboteur = 5; numMiner = 6;}
+  else if(n===12){numSaboteur = 5; numMiner = 7;}
+
+  const sArray = (array) => {
+  const res = [...array];
+  for (let i = res.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i + 1));
+    [res[i], res[j]] = [res[j], res[i]];}
+  return res;};
+
+  const sPlayers = sArray(activePlayers);
+  const roles = sPlayers.map((p, i) => ({
+    username: p.username || p,
+    role: i<numSaboteur ? 'SABOTEUR':'MINER',
+    roleImg: i<numSaboteur ? saboteurRol:minerRol}));
+
+  return roles;};
+
+useEffect(() => {
+  if(activePlayers.length > 0){
+    console.log(playerRol)
+    const rolesAssigned = assignRolesGame(activePlayers);
+    setPlayerRol(rolesAssigned); }
+}, [activePlayers]);
+
 
 const nextTurn = () => {
-    return null; // AUN POR DEFINIR
-  };
+  if (playerOrder.length === 0) return;
+  const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+  const nextIndex = (currentIndex + 1) % playerOrder.length; 
+  setCurrentPlayer(playerOrder[nextIndex].username);
+  setCont(timeturn);
+  const nextName = playerOrder[nextIndex].username;
+  const nextClass = `player${nextIndex + 1}`;
+  addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");};
+
 
 const deck = () => {
     return null; // AUN POR DEFINIR, ESTA FUNCIÓN TIENE QUE IR RESTANDO CARTAS DEL MAZO SEGÚN SE VAYA ROBANDO/DESCARTANDO ¿CREAR OTRA FUNCIÓN QUE ASIGNE CARTA DE ESE MAZO A UN JUGADOR?
 };
 
+const numPep = () => {
+    return 0; // PEPITAS TOTALES, SIRVE PARA LAS ESTADISTICAS
+};
+
+const statePic = () => {
+    return "🟢"; // ESTADO PICO, SIRVE PARA LAS ESTADISTICAS
+};
+
+const stateVag = () => {
+    return "🟢"; // ESTADO VAGONETA, SIRVE PARA LAS ESTADISTICAS
+};
+
+const stateLint = () => {
+    return "🟢"; // ESTADO LINTERNA, SIRVE PARA LAS ESTADISTICAS
+};
+
+const repartoCartas = () => {
+    return null; 
+};
+
 const addLog = (msg,type="info") => {
-  setGameLog(prev => [...prev, { msg,type }]);
-}; // Tendriamos que llamarlo en nextTurn
+  setGameLog(prev => [...prev, { msg,type }]);}; 
+
+const addPrivateLog = (msg, type = "info") => {
+  setPrivateLog(prev => [...prev, { msg, type }]);};
+
+const messagesEndRef = useRef(null);
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({behavior:'smooth'});
+}, [gameLog]); 
 
  useEffect(() => {
     const time = setInterval(() => {
       setCont(p => {
         if (p <= 1) {
-          nextTurn(); // Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
+          nextTurn(); // YA DEFINIDO. Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
           return timeturn;}
         return p-1;});
     }, 1000);
@@ -99,34 +223,32 @@ const addLog = (msg,type="info") => {
     return `${min}:${sec}`;
   };
 
-  useEffect(() => {
-    const fetchedRound = async () => {
-      try {
-        const response = await fetch(`/api/v1/rounds/byGame/${idGame}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
-          }
-        });
-        const data = await response.json();
-        if (data && data.roundNumber) {
-          setNumRound(data.roundNumber);}
-      } catch (error) {
-        console.error(error);
-      }};
+useEffect(() => {
+  if (activePlayers.length > 0) {
+    let cardsPerPlayer = 0;
+    if (activePlayers.length <= 5) cardsPerPlayer = 6;
+    else if (activePlayers.length <= 9) cardsPerPlayer = 5;
+    else cardsPerPlayer = 4;
+    const initialDeck = 60 - (activePlayers.length * cardsPerPlayer);
+    setDeckCount(initialDeck); 
+    setCardPorPlayer(cardsPerPlayer);}
+}, [activePlayers]);
 
-    fetchedRound();
-  }, [idGame]);
+const deckfuction = () => deckCount;
 
-  let numCards = 0; // Iniciamos con 0 cartas, según los jugadores se repartirá x cartas
-  if (nPlayers <= 5) {
-    numCards = 6;
-  } else if (nPlayers > 5 && nPlayers <= 9) {
-    numCards = 5;
+const handleDiscard = () => {
+  const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+  if (loggedInUser.username!==currentPlayer) {
+    addPrivateLog("⚠️ It's not your turn!", "warning");
+    return;}
+  if (deckCount>0) {
+    setDeckCount(p =>p-1);
+    nextTurn();           
+    setCont(timeturn);    
+    addColoredLog(currentIndex, playerOrder[currentIndex].username, `🎴 Discarded a card. ${deckCount - 1} cards left in the deck.`);
   } else {
-    numCards = 4; // Con 3-4-5 jugadores cada jugador tiene 6 cartas, con 6-7-8-9 tiene 5 cartas, con 10-11-12 tiene 4 cartas.
-  }
+    addLog("⛔No more cards left in the deck!", "warning");}};
+
 
   const SendMessage = (e) => {
     e.preventDefault(); // No quitar que sino no se actualiza
@@ -134,7 +256,12 @@ const addLog = (msg,type="info") => {
     setNewMessage(''); 
   };
 
-  const cards = [...Array(numCards)].map((_, i) => (
+  const addColoredLog = (playerIndex, playerName, action) => {
+     const coloredName = `<span class="player${playerIndex + 1}">${playerName}</span>`;
+     addLog(`${coloredName} ${action}`, "action");};
+
+
+  const cards = [...Array(CardPorPlayer)].map((_, i) => (
     <button key={i} className="card-slot">Cards {i + 1}</button>));
 
   return (
@@ -152,20 +279,25 @@ const addLog = (msg,type="info") => {
       </div>
 
       <div className="my-role">
-        MY ROL :
+        MY ROLE:
         <div className="logo-img">
-         <img src={minerRol} alt="Miner Role" className="logo-img"/> 
+      <img 
+        src={Array.isArray(playerRol) 
+              ? playerRol.find(p => p.username === loggedInUser.username)?.roleImg || minerRol
+              : minerRol
+            } 
+        alt="My Role" 
+        className="logo-img"
+      />
         </div>
       </div>
 
       <div className="n-deck">
-        🎴{ndeck}
+        🎴{deckfuction()}
       </div>
 
-      <button className="n-discard">
-        <Link to={deck}>
-        📥Discard
-        </Link>
+      <button className="n-discard" onClick={handleDiscard}>
+        📥 Discard
       </button>
 
       <div className="time-card">
@@ -184,22 +316,22 @@ const addLog = (msg,type="info") => {
       </div>
 
       <div className="turn-box">
-        🔴 · TURNO DE  {playerOrder[0]} {/* {currentPlayer} */}
+        🔴 · TURNO DE {currentPlayer}
       </div>
 
       <div className="players-var">
-        {playerOrder.map((player, index) => (
+        {activePlayers.map((activePlayers, index) => (
           <div key={index} className={`player-card player${index + 1}`}>
             <div className="player-avatar">
-              <img src={player.profileImage || avatar} alt={player.username || player} />
+              <img src={activePlayers.profileImage || avatar} alt={activePlayers.username || activePlayers} />
             </div>
             <div className={`player-name player${index + 1}`}>
-              {player.username || player}
+              {activePlayers.username || activePlayers}
             </div>
-            <div className="player-lint">{player.wins} 🔦 : 🟢</div>
-            <div className="player-vag">{player.wins} 🪨 : 🟢</div>
-            <div className="player-pic">{player.wins} ⛏️ : 🟢</div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
-            <div className="player-pep">{player.wins} 🪙 : 0</div>
+            <div className="player-lint"> 🔦 : 🟢 {/*stateLint*/}</div>
+            <div className="player-vag">🪨 : 🟢 {/*stateVag*/}</div> 
+            <div className="player-pic"> ⛏️ : 🟢 {/*statePic*/} </div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
+            <div className="player-pep"> 🪙 : 0 {/*numPep*/} 🎴 : {CardPorPlayer} </div>
           </div>
         ))}
       </div>
@@ -207,13 +339,24 @@ const addLog = (msg,type="info") => {
       <div className="game-log">
         <div className="game-log-header">💻 GAME LOG 💻</div>
         <div className="game-log-messages">
-          {gameLog.length === 0 ? (
+          {gameLog.length === 0 && privateLog.length === 0 ? (
             <p className="no-log">❕No actions yet...</p>
           ) : (
-            gameLog.map((log, index) => (
-              <p key={index} className={`log-entry ${log.type}`}>
-                {log.msg}
-              </p> )))}
+            <>
+              {gameLog.map((log, index) => (
+                <p
+                  key={`global-${index}`}
+                  className={`log-entry ${log.type}`}
+                  dangerouslySetInnerHTML={{ __html: log.msg }}/>))}
+
+              {privateLog.map((log, index) => (
+                <p
+                  key={`private-${index}`}
+                  className={`log-entry ${log.type}`}
+                  dangerouslySetInnerHTML={{ __html: log.msg }}/>))}
+            </>
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 

@@ -11,6 +11,7 @@ import useFetchData from "../../util/useFetchData";
 import useFetchState from "../../util/useFetchState";
 import getIconImage from "../../util/getIconImage";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png";
+import { useParams } from "react-router-dom";
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -23,10 +24,13 @@ export default function UserEditAdmin() {
     birthDate: "",
     email: "",
     image: "",
-    authority: null,
+    authority: { id: 2, authority: "PLAYER" }, // Por defecto, todo usuario que se añada será Player, esto antes estaba en null
   };
 
-  const id = getIdFromUrl(2);
+  //const id = getIdFromUrl(2);
+  const { id: useIdFromUrl } = useParams();
+  const id = useIdFromUrl && useIdFromUrl !== "new" ? parseInt(useIdFromUrl, 10) : null; // El 10 es para base 10*/
+  console.log("1. ID obtenido de useParams:", id, "(Tipo:", typeof id, ")"); // LOG 1
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
   const [user, setUser] = useFetchState(
@@ -50,28 +54,52 @@ export default function UserEditAdmin() {
     if (user?.password) setUser((prev)=>({...prev,password: "" }));
   }, [user?.id]);
 
-  function handleFileChange(ev) {
-    const f=ev.target.files[0];
-    if (f) {
-      const imageUrl = URL.createObjectURL(f);
-      setProfileImage(imageUrl);}}
+  const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if(file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // reader.result tendrá la imagen como una cadena Base64
+            setProfileImage(reader.result);
+        };
+        reader.readAsDataURL(file);
+        }
+  }
 
-  function handleChange(event) {
+  /*function handleChange(event) {
     const {name,value } = event.target;
     if (name === "authority") {
       const selectedAuth = auths.find((a) => a.id === Number(value)) || null;
       setUser({ ...user, authority: selectedAuth });
     } else {
       setUser({ ...user, [name]: value });}}
+  */
+
+  function handleChange(event) {
+    const {name,value } = event.target;
+    setUser({ ...user, [name]: value });
+  }
+ 
   function handleSubmit(event) {
     event.preventDefault();
+    console.log("Intentando guardar usuario con ID:", user?.id);
+    if (!user || (user.id !== null && typeof user.id !== 'number')) { // Evaluamos que user.id puede ser null si estamos haciendo un Add User
+        alert("Error: ID de usuario inválido. Recarga la página.");
+        return;
+    }
     const request = {
       ...user,
       image: profileImage,
     };
+
     if (!user.password || user.password.trim() === "") {
       delete request.password;}
-
+    
+    // Eliminamos de la request el campo authority ya que este nunca se va a editar y va a mantener el que tenía de siempre (PLAYER)
+    if (user.id) { // Solo borramos este campo si estamos con un usuario existente, si creamos un usuario de 0 este campo no se borrará y se pondrá por defecto el del emptyItem
+    delete request.authority;
+    }
+    
     fetch("/api/v1/users" + (user.id ? "/" + user.id : ""), {
       method: user.id ? "PUT" : "POST",
       headers: {
@@ -191,7 +219,7 @@ export default function UserEditAdmin() {
             />
           </div>
 
-          <div className="custom-form-input">
+          {/*<div className="custom-form-input">
             <Label className="custom-form-input-label">Authority</Label>
             <Input
               type="select"
@@ -204,6 +232,7 @@ export default function UserEditAdmin() {
               {authOptions}
             </Input>
           </div>
+          */}
 
           <div className="custom-button-row">
             <button type="submit" className="auth-button">
