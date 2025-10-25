@@ -1,14 +1,13 @@
 package es.us.dp1.l4_04_24_25.saboteur.achievements;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -47,6 +46,7 @@ public class AchievementRestController {
 
     @GetMapping
     public ResponseEntity<List<Achievement>> findAll(){
+
         List<Achievement> res;
         res = (List<Achievement>) achievementService.findAll();
         return new ResponseEntity<>(res, HttpStatus.OK);
@@ -62,17 +62,13 @@ public class AchievementRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Achievement> create(@RequestBody @Valid Achievement achievement) throws DataAccessException, DuplicatedAchievementException {
         
+        Achievement newachievement = new Achievement();
+        Achievement savedAchievement;
+        BeanUtils.copyProperties(achievement, newachievement, "id");
         if (achievementService.existsByTittle(achievement.getTittle())){
-            throw new DuplicatedActivePlayerException("An achievement with tittle '" + achievement.getTittle() + "' already exists"); 
+            throw new DuplicatedActivePlayerException("An achievement with tittle '" + achievement.getTittle() + "' already exists");
         }
-
-        Achievement newAchievement = new Achievement();
-        newAchievement.setTittle(achievement.getTittle());
-        newAchievement.setDescription(achievement.getDescription());
-        newAchievement.setScore(achievement.getScore());
-        newAchievement.setCreator(achievement.getCreator());
-
-        Achievement savedAchievement = this.achievementService.saveAchievement(newAchievement);
+        savedAchievement = this.achievementService.saveAchievement(newachievement);
         return new ResponseEntity<>(savedAchievement, HttpStatus.CREATED);
     }
 
@@ -83,46 +79,6 @@ public class AchievementRestController {
         RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
         return new ResponseEntity<>(achievementService.updateAchievement(achievement, id), HttpStatus.OK);
     }
-    
-    @PatchMapping(value = "{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Achievement> patchAchievement(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
-        Achievement achievement = achievementService.findAchievement(id);
-
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(Achievement.class, k);
-            
-            if (field == null) return; 
-            
-            field.setAccessible(true);
-
-            try {
-                
-                if (k.equals("score") && v instanceof Integer) {
-                    ReflectionUtils.setField(field, achievement, (Integer) v);
-                } 
-                
-                else if (k.equals("tittle") || k.equals("description")) {
-                    ReflectionUtils.setField(field, achievement, (String) v);
-                }
-                
-                else if (k.equals("creator") && v instanceof Map) {
-                    // Lógica para buscar el User por ID y asignarlo
-                }
-                else {
-                    ReflectionUtils.setField(field, achievement, v);
-                }
-
-            } catch (Exception e) {
-                
-                throw new RuntimeException("Error applying patch to field " + k, e);
-            }
-        });
-
-        achievementService.saveAchievement(achievement);
-        return ResponseEntity.ok(achievement);
-    }
-
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)

@@ -66,6 +66,8 @@ VALUES (203, 1, 60, 'TEST4', 'carlos?');
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
 VALUES (204, 1, 20, 'TEST5', 'julio?');
 
+
+
 --INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
 --VALUES (4, 1, 4, TRUE, 'PATH', 1);
 

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameSerializer;
@@ -28,6 +30,10 @@ import lombok.Setter;
 @Table(name = "Round")
 public class Round extends BaseEntity{
 
+    // Los constructores han sido eliminados por requisito.
+    
+    // Se asume que el convertidor de Duration existe en el classpath
+    @jakarta.persistence.Convert(converter = es.us.dp1.l4_04_24_25.saboteur.game.DurationSecondsConverter.class)
     private Duration timeSpent = Duration.ZERO;
 
     @Column(name = "left_cards", nullable = false)
@@ -45,7 +51,9 @@ public class Round extends BaseEntity{
     @JoinColumn(name = "game_id")
     private Game game;
 
-    //Relacion 1 ronda tiene 1 tablero
+    // Relacion 1 ronda tiene 1 tablero (Lado Inverso)
+    @JsonSerialize(using = BoardSerializer.class)
+    @JsonDeserialize(using = BoardDeserializer.class)
     @OneToOne
     @JoinColumn(name = "board_id")
     private Board board;
@@ -54,18 +62,4 @@ public class Round extends BaseEntity{
     @Max(3)
     @Column(name = "round_number", nullable = false)
     private Integer roundNumber; // Limitación de rondas a maximo 3
-    
-    public Round() {
-        super();
-    }
-
-    public Round(Duration timeSpent, Integer leftCards, boolean winnerRol, Integer turn, Game game, Board board, Integer roundNumber) {
-        this.timeSpent = timeSpent;
-        this.leftCards = leftCards;
-        this.winnerRol = winnerRol;
-        this.turn = turn;
-        this.game = game;
-        this.board = board;
-        this.roundNumber = roundNumber;
-    }
 }
