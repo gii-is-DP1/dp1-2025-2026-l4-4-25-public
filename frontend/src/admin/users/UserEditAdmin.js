@@ -24,7 +24,7 @@ export default function UserEditAdmin() {
     birthDate: "",
     email: "",
     image: "",
-    authority: { id: 2}, // Por defecto, todo usuario que se añada será Player, esto antes estaba en null
+    authority: { id: 2, authority: "PLAYER" }, // Por defecto, todo usuario que se añada será Player, esto antes estaba en null
   };
 
   //const id = getIdFromUrl(2);
@@ -83,7 +83,7 @@ export default function UserEditAdmin() {
   function handleSubmit(event) {
     event.preventDefault();
     console.log("Intentando guardar usuario con ID:", user?.id);
-    if (!user || typeof user.id !== 'number') {
+    if (!user || (user.id !== null && typeof user.id !== 'number')) { // Evaluamos que user.id puede ser null si estamos haciendo un Add User
         alert("Error: ID de usuario inválido. Recarga la página.");
         return;
     }
@@ -94,7 +94,12 @@ export default function UserEditAdmin() {
 
     if (!user.password || user.password.trim() === "") {
       delete request.password;}
-
+    
+    // Eliminamos de la request el campo authority ya que este nunca se va a editar y va a mantener el que tenía de siempre (PLAYER)
+    if (user.id) { // Solo borramos este campo si estamos con un usuario existente, si creamos un usuario de 0 este campo no se borrará y se pondrá por defecto el del emptyItem
+    delete request.authority;
+    }
+    
     fetch("/api/v1/users" + (user.id ? "/" + user.id : ""), {
       method: user.id ? "PUT" : "POST",
       headers: {

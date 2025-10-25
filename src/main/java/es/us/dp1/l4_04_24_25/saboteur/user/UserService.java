@@ -27,9 +27,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
 import jakarta.validation.Valid;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
+
+
 
 
 
@@ -39,19 +44,56 @@ public class UserService {
 	private UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder; 
 	private final PlayerRepository playerRepository;
+	private final AuthoritiesService authoritiesService;
+	private final ActivePlayerService activePlayerService;
+	private ActivePlayerRepository activePlayerRepository;
+
+
 
 	@Autowired
-	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PlayerRepository playerRepository) {
+	public UserService(UserRepository userRepository, ActivePlayerRepository activePlayerRepository, PasswordEncoder passwordEncoder, PlayerRepository playerRepository, AuthoritiesService authoritiesService, ActivePlayerService activePlayerService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder; 
 		this.playerRepository = playerRepository;
+		this.authoritiesService = authoritiesService; 
+		this.activePlayerService = activePlayerService;
+		this.activePlayerRepository = activePlayerRepository; 
 
 	}
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
-		
-		return userRepository.save(user); 
+		ActivePlayer activePlayer = new ActivePlayer();
+		activePlayer.setUsername(user.getUsername());
+		activePlayer.setPassword(passwordEncoder.encode(user.getPassword()));
+		activePlayer.setName(user.getName());
+		activePlayer.setBirthDate(user.getBirthDate());
+		activePlayer.setImage(user.getImage());
+		activePlayer.setEmail(user.getEmail());
+		String strRoles = user.getAuthority().authority;
+		Authorities role;
+
+		switch (strRoles.toLowerCase()) {
+		case "admin":
+			role = authoritiesService.findByAuthority("ADMIN");
+			activePlayer.setAuthority(role);
+			activePlayerService.saveActivePlayer(activePlayer);
+			break;
+		default:
+			role = authoritiesService.findByAuthority("PLAYER");
+			activePlayer.setAuthority(role);
+			activePlayerService.saveActivePlayer(activePlayer);
+			/*Player player = new Player();
+			player.setFirstName(request.getFirstName());
+			player.setLastName(request.getLastName());
+			player.setAddress(request.getAddress());
+			player.setCity(request.getCity());
+			player.setTelephone(request.getTelephone());
+			player.setUser(user);
+			playerService.savePlayer(player);
+			*/
+		}
+		return activePlayerRepository.save(activePlayer); 
 	}
 
 	@Transactional(readOnly = true)
