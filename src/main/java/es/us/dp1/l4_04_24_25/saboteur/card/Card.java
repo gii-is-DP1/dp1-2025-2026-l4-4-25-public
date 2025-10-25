@@ -26,14 +26,14 @@ public class Card extends BaseEntity {
 
     @Column(name = "status", nullable = false)
     @NotNull
-    protected boolean status;
+    private boolean status;
 
     @Column(name = "image", nullable = false)
     @NotBlank
-    protected String image;
+    private String image;
 
     @JsonDeserialize(using = DeckDeserializer.class)
     @JsonSerialize(using = DeckSerializer.class)
     @ManyToOne
-    protected Deck deck;
+    private Deck deck;
 }

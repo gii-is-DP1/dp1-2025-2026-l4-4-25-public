@@ -25,7 +25,7 @@ public class GameDeserializer extends JsonDeserializer<Game>{
             result = gameService.findGame(gameId);
 
         } catch (Exception e){
-            throw new IOException ("active player not found");
+            throw new IOException ("game not found");
     }
 
     return result;
