@@ -25,7 +25,7 @@ public class ChatDeserializer extends JsonDeserializer<Chat>{
             result = chatService.findChat(chatId);
 
         } catch (Exception e){
-            throw new IOException ("active player not found");
+            throw new IOException ("chat not found");
     }
 
     return result;

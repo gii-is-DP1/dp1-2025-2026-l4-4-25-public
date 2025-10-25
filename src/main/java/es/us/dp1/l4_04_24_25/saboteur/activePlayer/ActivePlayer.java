@@ -39,10 +39,9 @@ public class ActivePlayer extends Player{
 
     private boolean cartState;
 
-    //Relación 1 participante gana 1 partida
-    @OneToOne
-    @JoinColumn(name = "wonGame_id")
-    private Game wonGame;
+    //Relación 1 participante gana n partidas
+    @OneToMany (mappedBy = "winner")
+    private List<Game> wonGame;
 
     //Relación 1 participante crea n partidas
     @OneToMany (mappedBy = "creator")

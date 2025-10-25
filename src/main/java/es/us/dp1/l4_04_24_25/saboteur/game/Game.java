@@ -15,7 +15,11 @@ import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
 import es.us.dp1.l4_04_24_25.saboteur.chat.ChatDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.chat.ChatSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundSerializer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -68,6 +72,8 @@ public class Game extends BaseEntity{
 */
     // Relación 1 partidas son observadas por n jugador
 
+    @JsonSerialize(contentUsing  = PlayerSerializer.class)
+    @JsonDeserialize(contentUsing = PlayerDeserializer.class)
     @OneToMany(mappedBy = "game")
     private List<Player> watchers = new ArrayList<>();
 
@@ -86,7 +92,7 @@ public class Game extends BaseEntity{
     //Relacion 1 partida es ganada por 1 participante
     @JsonSerialize(using = ActivePlayerSerializer.class)
     @JsonDeserialize(using = ActivePlayerDeserializer.class)
-    @OneToOne(mappedBy = "wonGame")
+    @ManyToOne()
     private ActivePlayer winner;
 
     @JsonSerialize(using = ActivePlayerSerializer.class)
@@ -96,7 +102,9 @@ public class Game extends BaseEntity{
     private ActivePlayer creator;
 
     //Relacion 1 partida tiene 3 rondas
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonDeserialize(contentUsing = RoundDeserializer.class)
+    @JsonSerialize(contentUsing = RoundSerializer.class)
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
     private List<Round> rounds = new ArrayList<>();
 
     //Relacion 1 partida 1 chat
