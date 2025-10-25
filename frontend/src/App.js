@@ -64,7 +64,7 @@ function App() {
     if (role === "PLAYER") {
       ownerRoutes = (
         <>
-          <Route path="/register" element={<Register />} />
+          {/*<Route path="/register" element={<Register />} />*/}
           <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />

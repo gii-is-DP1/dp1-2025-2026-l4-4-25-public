@@ -11,6 +11,7 @@ import useFetchData from "../../util/useFetchData";
 import useFetchState from "../../util/useFetchState";
 import getIconImage from "../../util/getIconImage";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png";
+import { useParams } from "react-router-dom";
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -26,7 +27,10 @@ export default function UserEditAdmin() {
     authority: { id: 2}, // Por defecto, todo usuario que se añada será Player, esto antes estaba en null
   };
 
-  const id = getIdFromUrl(2);
+  //const id = getIdFromUrl(2);
+  const { id: useIdFromUrl } = useParams();
+  const id = useIdFromUrl && useIdFromUrl !== "new" ? parseInt(useIdFromUrl, 10) : null; // El 10 es para base 10*/
+  console.log("1. ID obtenido de useParams:", id, "(Tipo:", typeof id, ")"); // LOG 1
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
   const [user, setUser] = useFetchState(
@@ -78,6 +82,11 @@ export default function UserEditAdmin() {
  
   function handleSubmit(event) {
     event.preventDefault();
+    console.log("Intentando guardar usuario con ID:", user?.id);
+    if (!user || typeof user.id !== 'number') {
+        alert("Error: ID de usuario inválido. Recarga la página.");
+        return;
+    }
     const request = {
       ...user,
       image: profileImage,

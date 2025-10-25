@@ -23,7 +23,9 @@ export default function UserListAdmin() {
   );
   const [alerts, setAlerts] = useState([]);
 
-  const userList = users.map((user) => (
+  const userList = users.map((user) => {
+    console.log("Renderizando usuario:", user);
+    return(
     <tr key={user.id} className="user-row">
       <td data-label="Avatar">
         <div className="user-table-cell">
@@ -89,7 +91,7 @@ export default function UserListAdmin() {
         </div>
       </td>
     </tr>
-  ));
+  )});
 
   const modal = getErrorModal(setVisible, visible, message);
 
