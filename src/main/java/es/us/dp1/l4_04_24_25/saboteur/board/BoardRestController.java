@@ -127,7 +127,7 @@ public class BoardRestController {
             if (roundObject != null) {
                 Integer roundId = (Integer) roundObject;
                 // Llamada al PATCH de ActivePlayer para actualizar su deck
-                Round roundUpdated = roundService.patchRound(roundId, Map.of("board", board.getId()));
+                Round roundUpdated = roundService.patchRoundBoard(roundId, Map.of("board", board.getId()));
                 board.setRound(roundUpdated);
             } else {
                 // Quitar el ActivePlayer anterior

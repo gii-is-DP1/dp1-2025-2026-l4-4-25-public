@@ -168,7 +168,7 @@ class GameRestController {
 
             // Vinculamos las nuevas cartas
             for (Integer roundId : roundIds) {
-                Round round = roundService.patchRound(roundId, Map.of("game", game.getId()));
+                Round round = roundService.patchRoundGame(roundId, Map.of("game", game.getId()));
                 updatedRounds.add(round);
             }
         }
