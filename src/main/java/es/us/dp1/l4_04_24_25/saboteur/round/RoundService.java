@@ -9,18 +9,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 
 @Service
 public class RoundService {
     
     private RoundRepository roundRepository;
     private BoardService boardService;
+    private GameService gameService;
+
 
     @Autowired
-    public RoundService(RoundRepository roundRepository, BoardService boardService) {
+    public RoundService(RoundRepository roundRepository, BoardService boardService, GameService gameService) {
         this.roundRepository = roundRepository;
         this.boardService = boardService;
+        this.gameService = gameService;
     }
 
     @Transactional
@@ -54,7 +62,7 @@ public class RoundService {
     }
 
     @Transactional(readOnly = true)
-    public Round patchRound(Integer id, Map<String, Object> updates) {
+    public Round patchRoundBoard(Integer id, Map<String, Object> updates) {
         Round round = findRound(id);
         if (updates.containsKey("board")){
             Integer boardId = (Integer) updates.get("board");
@@ -63,5 +71,15 @@ public class RoundService {
         }
         return roundRepository.save(round);
     }
+    @Transactional
+    public Round patchRound(Integer id, Map<String, Object> updates) {
+    Round round = findRound(id);
+    if (updates.containsKey("game")) {
+        Integer gameId = (Integer) updates.get("game");
+        Game game = gameService.findGame(gameId);
+        round.setGame(game); // actualiza FK, lado propietario
+    }
+    return roundRepository.save(round);
+}
 
 }

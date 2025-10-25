@@ -126,10 +126,18 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
         Object activePlayerObj = updates.get("activePlayer");
 
         if (activePlayerObj != null) {
-            Integer activePlayerId = (Integer) activePlayerObj;
-            // Llamada al PATCH de ActivePlayer para actualizar su deck
-            ActivePlayer ap = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
-            deck.setActivePlayer(ap);
+            if (activePlayerObj instanceof Integer){
+                Integer activePlayerId = (Integer) activePlayerObj;
+                // Llamada al PATCH de ActivePlayer para actualizar su deck
+                ActivePlayer ap = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
+                deck.setActivePlayer(ap);
+            } else {
+                String activePlayerUsername = (String) activePlayerObj;
+                ActivePlayer ap = activePlayerService.findByUsername(activePlayerUsername);
+                Integer activePlayerId = ap.getId();
+                ActivePlayer apPatched = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
+                deck.setActivePlayer(apPatched);
+            }
         } else {
             // Quitar el ActivePlayer anterior
             if (deck.getActivePlayer() != null) {
