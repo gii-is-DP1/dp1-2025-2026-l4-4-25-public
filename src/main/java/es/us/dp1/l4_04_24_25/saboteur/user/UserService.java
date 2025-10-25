@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
 import jakarta.validation.Valid;
 
@@ -59,7 +58,7 @@ public class UserService {
 	public UserDTO findByUsernameDTO(String username) {
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User", "Username", username));
-		return new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+		return new UserDTO(user.getId(),user.getUsername(), user.getName(), user.getBirthDate(),
 				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority());
 	}
 
@@ -77,7 +76,7 @@ public class UserService {
 	@Transactional(readOnly = true)
 	public UserDTO findUserDTO(Integer id) {
 		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-		return new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+		return new UserDTO(user.getId(),user.getUsername(), user.getName(), user.getBirthDate(),
 				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority());
 	}
 	@Transactional(readOnly = true)
@@ -99,7 +98,7 @@ public class UserService {
 		else {
 			User currentUser = userRepository.findByUsername(auth.getName())
 					.orElseThrow(() -> new ResourceNotFoundException("User", "Username", auth.getName()));
-			return new UserDTO(currentUser.getUsername(), currentUser.getName(), currentUser.getBirthDate(),
+			return new UserDTO(currentUser.getId(),currentUser.getUsername(), currentUser.getName(), currentUser.getBirthDate(),
 				currentUser.getJoined(), currentUser.getImage(), currentUser.getEmail(), currentUser.getAuthority().getAuthority());
 		}
 	}
@@ -113,7 +112,7 @@ public class UserService {
 		Iterable<User> users =userRepository.findAll();
 		List<UserDTO> res = new ArrayList<>();
 		for (User user : users) {
-			res.add(new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+			res.add(new UserDTO(user.getId(),user.getUsername(), user.getName(), user.getBirthDate(),
 				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority()));
 		}
 		return res;
@@ -123,7 +122,7 @@ public class UserService {
 		Iterable<User> users = userRepository.findAllByAuthority(auth);
 		List<UserDTO> res = new ArrayList<>();
 		for (User user : users) {
-			res.add(new UserDTO(user.getUsername(), user.getName(), user.getBirthDate(),
+			res.add(new UserDTO(user.getId(),user.getUsername(), user.getName(), user.getBirthDate(),
 				user.getJoined(), user.getImage(), user.getEmail(), user.getAuthority().getAuthority()));
 		}
 		return res;

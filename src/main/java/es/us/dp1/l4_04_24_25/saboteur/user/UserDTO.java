@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 public class UserDTO{
 
+    private Integer id;
     private String username;
     private String name;
     private String birthDate;
@@ -19,7 +20,8 @@ public class UserDTO{
     public UserDTO() {
     }
 
-    public UserDTO(String username, String name, String birthDate, LocalDateTime joined, String image, String email, String authority) {
+    public UserDTO(Integer id, String username, String name, String birthDate, LocalDateTime joined, String image, String email, String authority) {
+        this.id = id;
         this.username = username;
         this.name = name;
         this.birthDate = birthDate;
