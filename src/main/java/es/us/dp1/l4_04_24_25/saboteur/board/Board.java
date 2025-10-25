@@ -1,20 +1,18 @@
 package es.us.dp1.l4_04_24_25.saboteur.board;
 
-import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
-import es.us.dp1.l4_04_24_25.saboteur.round.Round;
-import es.us.dp1.l4_04_24_25.saboteur.square.Square;
-import es.us.dp1.l4_04_24_25.saboteur.square.SquareDeserializer;
-import es.us.dp1.l4_04_24_25.saboteur.square.SquareSerializer;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.annotation.JsonManagedReference; 
 
+import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.round.RoundDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.round.RoundSerializer;
+import es.us.dp1.l4_04_24_25.saboteur.square.Square;
+import es.us.dp1.l4_04_24_25.saboteur.square.SquareDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.square.SquareSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;

@@ -25,7 +25,7 @@ public class CardDeserializer extends JsonDeserializer<Card> {
             
             Integer cardId = p.getIntValue();
             
-            result = cardService.findCard(cardId);
+            result = this.cardService.findCard(cardId);
 
         } catch (Exception e) {
             throw new IOException("Card not found", e);

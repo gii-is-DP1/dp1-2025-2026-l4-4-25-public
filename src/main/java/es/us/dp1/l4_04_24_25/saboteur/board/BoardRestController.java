@@ -1,6 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.board;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,10 +20,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
-
 import es.us.dp1.l4_04_24_25.saboteur.round.RoundService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -37,12 +35,13 @@ import jakarta.validation.Valid;
 public class BoardRestController {
 
     private final BoardService boardService;
+    private final ObjectMapper objectMapper;
     
 
     @Autowired
     public BoardRestController(BoardService boardService, RoundService roundService, ObjectMapper objectMapper) {
         this.boardService = boardService;
-    
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -77,36 +76,12 @@ public class BoardRestController {
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    
-    public ResponseEntity<Board> patchBoard(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
-        RestPreconditions.checkNotNull(boardService.findBoard(id), "Board", "ID", id);
+    public ResponseEntity<Board> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(boardService.findBoard(id), "Achievement", "ID", id);
         Board board = boardService.findBoard(id);
-
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(Board.class, k);
-            if (field == null) {
-                throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
-            }
-            field.setAccessible(true);
-            try {
-        
-                if (field.getType().equals(Integer.class)) {
-                    ReflectionUtils.setField(field, board, (Integer) v);
-                }
-                
-                else if (k.equals("round") && v instanceof Map) {
-                    
-                }
-                else {
-                    ReflectionUtils.setField(field, board, v);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Error applying patch to field " + k, e);
-            }
-        });
-
-        boardService.saveBoard(board);
-        return ResponseEntity.ok(board);
+        objectMapper.updateValue(board, updates);
+        Board saved = boardService.saveBoard(board);
+        return new ResponseEntity<>(saved, HttpStatus.OK);
     }
     
     @DeleteMapping(value = "{id}")

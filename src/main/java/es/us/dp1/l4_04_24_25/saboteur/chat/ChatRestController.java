@@ -19,8 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -31,10 +36,12 @@ import jakarta.validation.Valid;
 public class ChatRestController {
 
     private final ChatService chatService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ChatRestController(ChatService chatService) {
+    public ChatRestController(ChatService chatService, ObjectMapper objectMapper) {
         this.chatService = chatService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -75,26 +82,16 @@ public class ChatRestController {
         return new ResponseEntity<>(this.chatService.updateChat(chat, id), HttpStatus.OK);
     }
 
-    @PatchMapping(value = "{chatId}")
+    @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Chat> patchChat(@PathVariable("chatId") Integer id, @RequestBody Map<String, Object> updates){
-        RestPreconditions.checkNotNull(chatService.findChat(id), "Chat", "ID", id);
+    public ResponseEntity<Chat> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(chatService.findChat(id), "Achievement", "ID", id);
         Chat chat = chatService.findChat(id);
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(Chat.class, k);
-            if (field == null) {
-                throw new IllegalArgumentException("Field '" + k + "' not found on Achievement class");
-            }
-            field.setAccessible(true);
-            try {
-                ReflectionUtils.setField(field, chat, v);
-            } catch (Exception e) {
-                throw new RuntimeException("Error applying patch", e);
-            }
-        });
-        chatService.saveChat(chat);
-        return new ResponseEntity<>(chat, HttpStatus.OK);
+        Chat chatPatched = objectMapper.updateValue(chat, updates);
+        chatService.updateChat(chatPatched, id);
+        return new ResponseEntity<>(chatPatched, HttpStatus.OK);
     }
+    
 
 
     @DeleteMapping(value = "{chatId}")

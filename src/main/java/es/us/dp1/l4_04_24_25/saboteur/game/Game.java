@@ -16,6 +16,8 @@ import es.us.dp1.l4_04_24_25.saboteur.chat.ChatDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.chat.ChatSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.round.RoundSerializer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -96,6 +98,8 @@ public class Game extends BaseEntity{
     private ActivePlayer creator;
 
     //Relacion 1 partida tiene 3 rondas
+    @JsonSerialize(contentUsing = RoundSerializer.class)
+    @JsonDeserialize(contentUsing = RoundDeserializer.class)
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Round> rounds = new ArrayList<>();
 
