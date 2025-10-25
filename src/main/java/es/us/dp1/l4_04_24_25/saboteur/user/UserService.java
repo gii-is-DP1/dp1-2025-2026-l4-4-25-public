@@ -65,7 +65,7 @@ public class UserService {
 	public User saveUser(User user) throws DataAccessException {
 		ActivePlayer activePlayer = new ActivePlayer();
 		activePlayer.setUsername(user.getUsername());
-		activePlayer.setPassword(passwordEncoder.encode(user.getPassword()));
+		activePlayer.setPassword(user.getPassword());
 		activePlayer.setName(user.getName());
 		activePlayer.setBirthDate(user.getBirthDate());
 		activePlayer.setImage(user.getImage());
@@ -77,12 +77,12 @@ public class UserService {
 		case "admin":
 			role = authoritiesService.findByAuthority("ADMIN");
 			activePlayer.setAuthority(role);
-			activePlayerService.saveActivePlayer(activePlayer);
+			//activePlayerService.saveActivePlayer(activePlayer);
 			break;
 		default:
 			role = authoritiesService.findByAuthority("PLAYER");
 			activePlayer.setAuthority(role);
-			activePlayerService.saveActivePlayer(activePlayer);
+			//activePlayerService.saveActivePlayer(activePlayer);
 			/*Player player = new Player();
 			player.setFirstName(request.getFirstName());
 			player.setLastName(request.getLastName());

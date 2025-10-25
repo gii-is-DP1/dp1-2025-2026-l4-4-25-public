@@ -99,7 +99,7 @@ export default function UserEditAdmin() {
     if (user.id) { // Solo borramos este campo si estamos con un usuario existente, si creamos un usuario de 0 este campo no se borrará y se pondrá por defecto el del emptyItem
     delete request.authority;
     }
-    
+
     fetch("/api/v1/users" + (user.id ? "/" + user.id : ""), {
       method: user.id ? "PUT" : "POST",
       headers: {
@@ -178,9 +178,11 @@ export default function UserEditAdmin() {
               value={user.password || ""}
               onChange={handleChange}
               className="custom-input"/>
-            <small style={{ color:"blue"}}>
+            {user.id !== null &&(
+              <small style={{ color:"blue"}}>
               ❕Leave blank to keep current password
-            </small>
+              </small>
+            )}
           </div>
 
           <div className="custom-form-input">
