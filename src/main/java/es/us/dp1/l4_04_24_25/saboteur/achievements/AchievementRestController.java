@@ -112,6 +112,31 @@ public class AchievementRestController {
     public ResponseEntity<Achievement> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
         RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
         Achievement achievement = achievementService.findAchievement(id);
+
+        if(updates.containsKey("players")){
+            Object playerObj = updates.get("players");
+            List<Player> updatedPlayers = new ArrayList<>();
+
+            if(playerObj != null){
+                List<String> playerUsernames = (List<String>) playerObj;
+                List<Player> oldPlayers = new ArrayList<>(achievement.getPlayers());
+                for(Player oldPlayer : oldPlayers){
+                    if(!playerUsernames.contains(oldPlayer.getUsername())){
+                        oldPlayer.getAccquiredAchievements().removeIf(a->a.getId() == achievement.getId());
+                        playerService.savePlayer(oldPlayer);
+                        achievement.getPlayers().remove(oldPlayer);
+                    }
+                }
+                
+                for (String playerUsername : playerUsernames){
+                    Player p = playerService.findByUsername(playerUsername);
+                    Integer pId = p.getId();
+                    Player player = playerService.patchPlayerAchievement(pId, Map.of("accquiredAchievements", achievement.getId()));
+                    updatedPlayers.add(player);
+
+                }
+            }
+        }
         Achievement achievementPatched = objectMapper.updateValue(achievement, updates);
         achievementService.updateAchievement(achievementPatched, id);
         return new ResponseEntity<>(achievementPatched, HttpStatus.OK);

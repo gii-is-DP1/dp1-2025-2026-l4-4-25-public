@@ -93,7 +93,7 @@ public class User extends BaseEntity {
     //RELACION -> ADMIN CREA LGORO
     @JsonSerialize(contentUsing = AchievementSerializer.class)
     @JsonDeserialize(contentUsing = AchievementDeserializer.class)
-    @OneToMany (mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true) //CASCADE ES PARA QUE CUALQIUER ACCIÓN SOBRE EL PADRE (EL ADMIN) SE APLIQUE TAMBIEN SOBRE SU HIJO (LOGRO)
+    @OneToMany (mappedBy = "creator", cascade = CascadeType.ALL) //CASCADE ES PARA QUE CUALQIUER ACCIÓN SOBRE EL PADRE (EL ADMIN) SE APLIQUE TAMBIEN SOBRE SU HIJO (LOGRO)
     private List<Achievement> createdAchievements = new ArrayList<>();
 
     /* 

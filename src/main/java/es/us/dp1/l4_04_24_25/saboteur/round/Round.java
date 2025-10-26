@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameSerializer;
@@ -47,6 +49,8 @@ public class Round extends BaseEntity{
 
     //Relacion 1 ronda tiene 1 tablero
     @OneToOne
+    @JsonSerialize(using=BoardSerializer.class)
+    @JsonDeserialize(using=BoardDeserializer.class)
     @JoinColumn(name = "board_id")
     private Board board;
 

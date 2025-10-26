@@ -126,7 +126,7 @@ class GameRestController {
         if (playerObj != null) {
             List<String> playerUsernames = (List<String>) playerObj;
 
-            // Desvinculamos cartas antiguas que no están en la nueva lista
+          
             List<Player> oldWatchers = new ArrayList<>(game.getWatchers());
             for (Player oldWatcher : oldWatchers) {
                 if (!playerUsernames.contains(oldWatcher.getUsername())) {
@@ -136,7 +136,6 @@ class GameRestController {
                 }
             }
 
-            // Vinculamos las nuevas cartas
             for (String playerUsername : playerUsernames) {
                 Player p = playerService.findByUsername(playerUsername);
                 Integer pId = p.getId();
@@ -148,7 +147,6 @@ class GameRestController {
         game.setWatchers(updatedPlayers);
     }
 
-    // 3️⃣ Actualizar Round si vienen en el JSON
     if (updates.containsKey("rounds")) {
         Object roundObj = updates.get("rounds");
         List<Round> updatedRounds = new ArrayList<>();
@@ -156,17 +154,16 @@ class GameRestController {
         if (roundObj != null) {
             List<Integer> roundIds = (List<Integer>) roundObj;
 
-            // Desvinculamos cartas antiguas que no están en la nueva lista
+         
             List<Round> oldRounds = new ArrayList<>(game.getRounds());
             for (Round oldRound : oldRounds) {
                 if (!roundIds.contains(oldRound.getId())) {
-                    oldRound.setGame(null); // desvincula del Deck
+                    oldRound.setGame(null); 
                     roundService.saveRound(oldRound);
                     game.getRounds().remove(oldRound);
                 }
             }
 
-            // Vinculamos las nuevas cartas
             for (Integer roundId : roundIds) {
                 Round round = roundService.patchRoundGame(roundId, Map.of("game", game.getId()));
                 updatedRounds.add(round);
@@ -176,8 +173,6 @@ class GameRestController {
         game.setRounds(updatedRounds);
     }
 
-    // 4️⃣ Guardamos el Deck para sincronizar las colecciones en memoria
-    //Game updatedGame = gameService.saveGame(game);
     Game gamePatched = objectMapper.updateValue(game, updates);
     gameService.updateGame(gamePatched, id);
 

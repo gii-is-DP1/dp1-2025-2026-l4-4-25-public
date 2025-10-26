@@ -138,8 +138,9 @@ public class BoardRestController {
                 board.setRound(null);
             }     
         }
-        Board saved = boardService.saveBoard(board);
-        return new ResponseEntity<>(saved, HttpStatus.OK);
+        Board boardPatched = objectMapper.updateValue(board, updates);
+        boardService.updateBoard(boardPatched, id);
+        return new ResponseEntity<>(boardPatched, HttpStatus.OK);
     }
     
     @DeleteMapping(value = "{id}")
