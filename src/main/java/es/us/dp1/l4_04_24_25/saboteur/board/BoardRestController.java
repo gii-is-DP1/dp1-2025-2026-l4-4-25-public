@@ -73,6 +73,7 @@ public class BoardRestController {
         if (board.getBusy()!=null && !board.getBusy().isEmpty()){
             for (var square: board.getBusy()){
                 square.setBoard(newBoard);
+                // squareService.saveSquare(square);
                 newBoard.getBusy().add(square);
             }
         }
@@ -80,6 +81,7 @@ public class BoardRestController {
         if (board.getRound()!=null){
             var round = board.getRound();
             round.setBoard(newBoard);
+            // roundService.saveRound(round);
             newBoard.setRound(round);
         }
 
@@ -114,6 +116,7 @@ public class BoardRestController {
 
             for(Integer sq:squares){
                 if (sq!=null){
+                    RestPreconditions.checkNotNull(squareService.findById(sq), "Square", "ID", id);
                     Square patchedSquare = squareService.patchSquare(sq, Map.of("board", board.getId()));
                     updatedSquares.add(patchedSquare);
                 }
@@ -126,11 +129,9 @@ public class BoardRestController {
             Object roundObject = updates.get("round");
             if (roundObject != null) {
                 Integer roundId = (Integer) roundObject;
-                // Llamada al PATCH de ActivePlayer para actualizar su deck
                 Round roundUpdated = roundService.patchRoundBoard(roundId, Map.of("board", board.getId()));
                 board.setRound(roundUpdated);
             } else {
-                // Quitar el ActivePlayer anterior
                 if (board.getRound() != null) {
                     board.getRound().setBoard(null);
                 }

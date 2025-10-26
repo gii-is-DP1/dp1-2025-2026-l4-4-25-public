@@ -167,7 +167,8 @@ public ResponseEntity<User> create(@RequestBody @Valid User user)
 			newUser.setCreatedAchievements(newAchievements);
 		}
 		User userPatched = objectMapper.updateValue(newUser, updates);
-		return new ResponseEntity<>(userPatched, HttpStatus.OK);
+		User userSaved = userService.updateUser(userPatched, id);
+		return new ResponseEntity<>(userSaved, HttpStatus.OK);
 	}
 
 

@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.achievements;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedAchievementException;
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedActivePlayerException;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.user.User;
+import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -36,11 +40,15 @@ import jakarta.validation.Valid;
 public class AchievementRestController {
 
     private final AchievementService achievementService;
+    private final UserService userService;
+    private final PlayerService playerService;
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public AchievementRestController(AchievementService achievementService, ObjectMapper objectMapper) {
+    public AchievementRestController(AchievementService achievementService, UserService userService, PlayerService playerService, ObjectMapper objectMapper) {
         this.achievementService = achievementService;
+        this.userService = userService;
+        this.playerService = playerService;
         this.objectMapper = objectMapper;
     }
 
@@ -62,13 +70,32 @@ public class AchievementRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Achievement> create(@RequestBody @Valid Achievement achievement) throws DataAccessException, DuplicatedAchievementException {
         
-        Achievement newachievement = new Achievement();
+        Achievement newAchievement = new Achievement();
         Achievement savedAchievement;
-        BeanUtils.copyProperties(achievement, newachievement, "id");
+        BeanUtils.copyProperties(achievement, newAchievement, "id", "creator", "players");
+        List<Player> players = new ArrayList<>();
         if (achievementService.existsByTittle(achievement.getTittle())){
-            throw new DuplicatedActivePlayerException("An achievement with tittle '" + achievement.getTittle() + "' already exists");
+            throw new DuplicatedAchievementException("An achievement with tittle '" + achievement.getTittle() + "' already exists");
         }
-        savedAchievement = this.achievementService.saveAchievement(newachievement);
+
+        if(achievement.getPlayers()!=null && !achievement.getPlayers().isEmpty()){
+            for (Player player:achievement.getPlayers()){
+                Player savedPlayer = playerService.findByUsername(player.getUsername());
+                RestPreconditions.checkNotNull(savedPlayer, "Player", "Username",player.getUsername());
+                players.add(player);
+            }
+        }
+        User creator = userService.findByUsername(achievement.getCreator().getUsername());
+        RestPreconditions.checkNotNull(creator, "CREATOR", "Username",achievement.getCreator().getUsername());
+        creator.getCreatedAchievements().add(newAchievement);
+        newAchievement.setCreator(creator);
+        newAchievement.setPlayers(players);
+
+        savedAchievement = this.achievementService.saveAchievement(newAchievement);
+        for (Player player:savedAchievement.getPlayers()){
+                player.getAccquiredAchievements().add(savedAchievement);
+                playerService.savePlayer(player);
+        }
         return new ResponseEntity<>(savedAchievement, HttpStatus.CREATED);
     }
 

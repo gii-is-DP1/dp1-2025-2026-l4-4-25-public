@@ -175,12 +175,16 @@ public class UserService {
     User toUpdate = findUser(idToUpdate);
     BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password");
     String newPassword = user.getPassword();
+	Authorities authority = user.getAuthority();
 
 	// Solo actualiza si el campo de la contraseña NO es nulo y NO está vacío
 	// Si está vacío se queda con el copyProperties del backend para password
 	if (newPassword != null && !newPassword.trim().isEmpty()){
 		//Hashear y establecer nueva contraseña
 		toUpdate.setPassword(passwordEncoder.encode(newPassword));
+	}
+	if (authority != null && authoritiesService.findByAuthority(authority.getAuthority()) != null){
+		toUpdate.setAuthority(authority);
 	}
 	// Si el newPassword está vacío este if se ignora, y se mantiene la contraseña que había en la base de datos
 	userRepository.save(toUpdate);
