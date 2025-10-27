@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementService;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
@@ -20,11 +22,13 @@ public class PlayerService {
 
     private PlayerRepository playerRepository;
     private GameService gameService;
+    private AchievementService achievementService;
 
     @Autowired
-    public PlayerService(PlayerRepository playerRepository, GameService gameService) {
+    public PlayerService(PlayerRepository playerRepository, GameService gameService,AchievementService achievementService) {
         this.playerRepository = playerRepository;
         this.gameService = gameService;
+        this.achievementService= achievementService;
     }
 
     @Transactional
@@ -114,6 +118,17 @@ public class PlayerService {
         Integer gameId = (Integer) updates.get("game");
         Game game = gameService.findGame(gameId);
         player.setGame(game); // actualiza FK, lado propietario
+    }
+    return playerRepository.save(player);
+}
+
+@Transactional
+    public Player patchPlayerAchievement(Integer id, Map<String, Object> updates) {
+    Player player = findPlayer(id);
+    if (updates.containsKey("accquiredAchievements")) {
+        Integer achievementId = (Integer) updates.get("accquiredAchievements");
+        Achievement achievement = achievementService.findAchievement(achievementId);
+        player.getAccquiredAchievements().add(achievement); // actualiza FK, lado propietario
     }
     return playerRepository.save(player);
 }

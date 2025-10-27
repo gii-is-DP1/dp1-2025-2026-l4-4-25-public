@@ -55,6 +55,8 @@ public class Round extends BaseEntity{
     @JsonSerialize(using = BoardSerializer.class)
     @JsonDeserialize(using = BoardDeserializer.class)
     @OneToOne
+    @JsonSerialize(using=BoardSerializer.class)
+    @JsonDeserialize(using=BoardDeserializer.class)
     @JoinColumn(name = "board_id")
     private Board board;
 

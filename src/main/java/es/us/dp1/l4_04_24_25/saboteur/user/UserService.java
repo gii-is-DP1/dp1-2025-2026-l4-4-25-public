@@ -28,11 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
 import jakarta.validation.Valid;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 
 
 
@@ -173,14 +173,18 @@ public class UserService {
 	@Transactional
 	public User updateUser(@Valid User user, Integer idToUpdate) {
     User toUpdate = findUser(idToUpdate);
-    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password","createdAchievements", "managedAchievements", "managedGames", "users");
+    BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password");
     String newPassword = user.getPassword();
+	Authorities authority = user.getAuthority();
 
 	// Solo actualiza si el campo de la contraseña NO es nulo y NO está vacío
 	// Si está vacío se queda con el copyProperties del backend para password
 	if (newPassword != null && !newPassword.trim().isEmpty()){
 		//Hashear y establecer nueva contraseña
 		toUpdate.setPassword(passwordEncoder.encode(newPassword));
+	}
+	if (authority != null && authoritiesService.findByAuthority(authority.getAuthority()) != null){
+		toUpdate.setAuthority(authority);
 	}
 	// Si el newPassword está vacío este if se ignora, y se mantiene la contraseña que había en la base de datos
 	userRepository.save(toUpdate);

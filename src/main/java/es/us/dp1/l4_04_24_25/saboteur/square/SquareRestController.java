@@ -1,16 +1,13 @@
 package es.us.dp1.l4_04_24_25.saboteur.square;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,10 +20,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.board.Board;
+import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
-import es.us.dp1.l4_04_24_25.saboteur.square.type; 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
@@ -36,10 +37,15 @@ import jakarta.validation.Valid;
 public class SquareRestController {
 
     private final SquareService squareService;
+    private final BoardService boardService;
+    private final ObjectMapper objectMapper;
+
 
     @Autowired
-    public SquareRestController(SquareService squareService) {
+    public SquareRestController(SquareService squareService, BoardService boardService, ObjectMapper objectMapper) {
         this.squareService = squareService;
+        this.boardService = boardService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -79,45 +85,30 @@ public class SquareRestController {
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
    
-    public ResponseEntity<Square> patchSquare(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<Square> patchSquare(@PathVariable Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(squareService.findSquare(id), "Square", "ID", id);
         Square square = squareService.findSquare(id);
-
-        updates.forEach((k, v) -> {
-            Field field = ReflectionUtils.findField(Square.class, k);
-            
-            if (field == null) return; 
-            
-            field.setAccessible(true);
-
-            try {
-                
-                if (field.getType().equals(Boolean.class) || field.getType().equals(boolean.class)) {
-                    ReflectionUtils.setField(field, square, (Boolean) v);
-                } else if (field.getType().equals(Integer.class)) {
-                    ReflectionUtils.setField(field, square, (Integer) v);
-                } 
-                
-                else if (field.getType().isEnum() && v instanceof String) {
-                    @SuppressWarnings({"rawtypes", "unchecked"})
-                    Enum enumValue = Enum.valueOf((Class) field.getType(), (String) v);
-                    ReflectionUtils.setField(field, square, enumValue);
+        
+        if(updates.containsKey("coordinateX") && updates.containsKey("coordinateY") ){
+            if(updates.get("coordinateX") != null && updates.get("coordinateY") != null){
+                if(squareService.existsByCoordinateXAndCoordinateY((Integer) updates.get("coordinateX"), (Integer) updates.get("coordinateY"))){
+                    throw new DuplicatedSquareException("A square with coordinateX '" + (Integer) updates.get("coordinateX") + "' and coordinateY '" + (Integer) updates.get("coordinateY") + "' already exists");
                 }
-                
-                else if (k.equals("board") && v instanceof Map) {
-                    
-                }
-                else {
-                    ReflectionUtils.setField(field, square, v);
-                }
-
-            } catch (Exception e) {
-                
-                throw new RuntimeException("Error applying patch to field " + k, e);
             }
-        });
+        }
 
-        squareService.saveSquare(square);
-        return ResponseEntity.ok(square);
+        if(updates.containsKey("board")){
+            if (updates.get("board") != null){
+                Integer boardId = (Integer) updates.get("board");
+                Board board = boardService.findBoard(boardId);
+                board.getBusy().add(square);
+                square.setBoard(board);
+            }
+        }
+        Square squarePatched = objectMapper.updateValue(square, updates);
+
+        squareService.saveSquare(squarePatched);
+        return new ResponseEntity<>(squarePatched,HttpStatus.OK);
     }
 
 
