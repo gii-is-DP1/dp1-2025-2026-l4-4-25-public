@@ -117,7 +117,7 @@ console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
                   <p>🔁 Status: {game.gameStatus}</p>
                   <p>👤 Players: {game.activePlayers?.length || 0}/{game.maxPlayers}</p>
                    <div className="players-list">
-                    <label>Jugadores:</label>
+                    <label>🫂 Jugadores:</label>
                       <ul>
                         {game.activePlayers.map((p, idx) => (
                           <li>{p.username ?? p}</li>
@@ -166,7 +166,6 @@ console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
               <option value="">Alls</option>
               <option value="CREATED">Created</option>
               <option value="IN_PROGRESS">In Progress</option>
-              <option value="FINISHED">Finished</option>
             </select>
           </div>
 
