@@ -52,8 +52,7 @@ public class Round extends BaseEntity{
     private Game game;
 
     // Relacion 1 ronda tiene 1 tablero (Lado Inverso)
-    @JsonSerialize(using = BoardSerializer.class)
-    @JsonDeserialize(using = BoardDeserializer.class)
+ 
     @OneToOne
     @JsonSerialize(using=BoardSerializer.class)
     @JsonDeserialize(using=BoardDeserializer.class)
