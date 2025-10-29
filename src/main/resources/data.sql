@@ -28,11 +28,14 @@ INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Wel
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 'link', 0, 4);
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 'link2', 2000, 4);
 
-INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, null,1);
-INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, null, 2);
 
 INSERT INTO board (id, base, heigth) VALUES (1, 11, 9);
 INSERT INTO board (id, base, heigth) VALUES (2, 11, 9);
+
+INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, 
+null,1);
+INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
+
 
 
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
