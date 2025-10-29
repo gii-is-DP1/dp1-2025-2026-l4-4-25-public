@@ -68,6 +68,21 @@ VALUES (204, 1, 20, 'TEST5', 'julio?');
 
 
 
+
+
+
+INSERT INTO card (id, deck_id, status, image) 
+VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
+INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
+VALUES (200, 'REPAIR', FALSE, 'REPAIR_PICKAXE'); -- ENUMS como STRING, FALSE como booleano.
+
+-- *** INSERCIÓN ID 2 (PARA ELIMINAR) ***
+INSERT INTO card (id, deck_id, status, image) 
+VALUES (2, 1, TRUE, 'action_destroy_cart.png');
+INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
+VALUES (2, 'DESTROY', FALSE, 'DESTROY_CART');
+
+
 --INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
 --VALUES (4, 1, 4, TRUE, 'PATH', 1);
 

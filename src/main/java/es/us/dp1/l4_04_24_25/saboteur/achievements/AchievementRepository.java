@@ -20,7 +20,7 @@ public interface AchievementRepository extends CrudRepository<Achievement, Integ
     @Query("SELECT a FROM Achievement a WHERE a.creator.id = :adminId")
     List<Achievement> findAchievementsByCreatorId(@Param("adminId") Integer adminId);
 
-    Achievement findByTittle(String tittle);
+    Optional<Achievement> findByTittle(String tittle);
     
     
     @Query("SELECT COUNT(a) FROM Achievement a JOIN a.players p WHERE p.id = :playerId")

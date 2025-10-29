@@ -61,9 +61,11 @@ public class AchievementService {
         achievementRepository.delete(toDelete);
     }
 
-    @Transactional
+
+    @Transactional(readOnly = true)
     public Achievement findByTittle (String tittle){
-        return achievementRepository.findByTittle(tittle);
+        return achievementRepository.findByTittle(tittle)
+                .orElseThrow(() -> new ResourceNotFoundException("Achievement", "Tittle", tittle));
     }
 
     @Transactional(readOnly = true)
@@ -71,10 +73,9 @@ public class AchievementService {
         Achievement achievement = findAchievement(id);
         if (updates.containsKey("creator")){
             Integer userId = (Integer) updates.get("creator");
-            User user = userService.findUser(userId);
+            User user = userService.findUser(userId); 
             achievement.setCreator(user);
         }
         return achievementRepository.save(achievement);
     }
-
 }

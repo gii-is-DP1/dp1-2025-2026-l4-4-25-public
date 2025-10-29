@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when; // Necesario si usas Mockito
+import static org.junit.jupiter.api.Assertions.assertFalse; // Añadido para el test de no existencia
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,8 +41,8 @@ class AchievementServiceTests {
     @Autowired
     private UserService userService; 
 
-
-    private static final String TEST_TITTLE_EXISTS = "El Maestro Picador";
+    // CORRECCIÓN CLAVE: El título que existe en la DB (ID 200)
+    private static final String TEST_TITTLE_EXISTS = "Constructor Maestro";
     private static final String TEST_TITTLE_NEW = "Logro De Prueba Nuevo";
     private static final int TEST_ACHIEVEMENT_ID = 200; 
 
@@ -54,6 +54,7 @@ class AchievementServiceTests {
         
         List<Achievement> achievements = (List<Achievement>) this.achievementService.findAll();
         
+        // Hay 5 logros insertados (200, 201, 202, 203, 204)
         assertTrue(achievements.size() >= 5); 
     }
 
@@ -76,7 +77,7 @@ class AchievementServiceTests {
         User creator = userService.findUser(1); 
         
         Achievement newAchievement = new Achievement();
-        newAchievement.setTittle("Logro Test Insert");
+        newAchievement.setTittle(TEST_TITTLE_NEW); // Usamos el título que no existe aún
         newAchievement.setDescription("Descripción de prueba.");
         newAchievement.setScore(10);
         newAchievement.setCreator(creator); 
@@ -84,7 +85,7 @@ class AchievementServiceTests {
         Achievement savedAchievement = this.achievementService.saveAchievement(newAchievement);
         
         assertNotNull(savedAchievement.getId());
-        assertEquals("Logro Test Insert", savedAchievement.getTittle());
+        assertEquals(TEST_TITTLE_NEW, savedAchievement.getTittle());
         
         int finalCount = ((Collection<Achievement>) this.achievementService.findAll()).size();
         assertEquals(initialCount + 1, finalCount);
@@ -118,18 +119,20 @@ class AchievementServiceTests {
     
     @Test
     void shouldExistAchievementByTittle() {
+        // Busca 'Constructor Maestro'
         assertTrue(this.achievementService.existsByTittle(TEST_TITTLE_EXISTS));
     }
     
     @Test
     void shouldNotExisstAchievementByTittle() {
-        assertEquals(false, this.achievementService.existsByTittle(TEST_TITTLE_NEW));
+        // Busca 'Logro De Prueba Nuevo'
+        assertFalse(this.achievementService.existsByTittle(TEST_TITTLE_NEW));
     }
     
     @Test
     @Transactional
     void shouldFindByTittle() {
-        Achievement achievement = this.achievementService.findByTittle("fran?"); // Título de tu data.sql (ID 201)
+        Achievement achievement = this.achievementService.findByTittle("fran?"); 
         assertEquals(201, achievement.getId());
     }
 
