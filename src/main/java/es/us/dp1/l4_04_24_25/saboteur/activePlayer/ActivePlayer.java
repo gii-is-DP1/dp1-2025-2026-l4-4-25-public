@@ -35,11 +35,11 @@ public class ActivePlayer extends Player{
     @Max(50)
     private Integer goldNugget = 0;
 
-    private boolean pickaxeState;
+    private boolean pickaxeState = true;
 
-    private boolean candleState;
+    private boolean candleState = true;
 
-    private boolean cartState;
+    private boolean cartState = true;
 
     //Relación 1 participante gana n partidas
     @JsonSerialize(contentUsing = GameSerializer.class)
