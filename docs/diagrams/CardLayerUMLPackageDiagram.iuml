@@ -32,7 +32,6 @@ class TunnelRepository {
     List<Tunnel> findByArribaAndAbajo(boolean arriba, boolean abajo);
     List<Tunnel> findByAbajoAndDerecha(boolean abajo, boolean derecha);
     List<Tunnel> findByArribaAndAbajoAndDerechaAndIzquierda(boolean arriba, boolean abajo, boolean derecha, boolean izquierda);
-...
 }
 }
 
