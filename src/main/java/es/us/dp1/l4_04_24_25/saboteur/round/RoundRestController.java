@@ -1,12 +1,14 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
@@ -26,10 +31,11 @@ import jakarta.validation.Valid;
 public class RoundRestController {
 
     private final RoundService roundService;
-
+    private final ObjectMapper objectMapper;
     @Autowired
-    public RoundRestController(RoundService roundService) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper) {
         this.roundService = roundService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -66,6 +72,16 @@ public class RoundRestController {
         RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "id", id);
         Round updatedRound = roundService.updateRound(round, id);
         return new ResponseEntity<>(updatedRound, HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Round> patch(@PathVariable("id") Integer id, @RequestBody Map<String,Object> updates) throws JsonMappingException{
+        RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "ID", id);
+        Round round = roundService.findRound(id);
+        Round roundPatched = objectMapper.updateValue(round, updates);
+        roundService.updateRound(roundPatched, id);
+        return new ResponseEntity<>(roundPatched,HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

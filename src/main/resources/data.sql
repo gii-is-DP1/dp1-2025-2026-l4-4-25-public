@@ -8,6 +8,7 @@ INSERT INTO appusers(id,username,name,birthDate,joined, password,image,email,aut
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2); -- Probar Null en la imagen para probar que funciona el defaultProfile en los usuarios por defecto
 
 INSERT INTO chat (id) VALUES (1);
+INSERT INTO chat (id) VALUES (2);
 
 -- Jugadores por defecto
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 0, 0, 0, 0, 0, false, 5, 3);
@@ -23,20 +24,26 @@ INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, 
 
 
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
-
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 2, 2, 'Welcome to the game!', 4);
 
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 'link', 0, 4);
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 'link2', 2000, 4);
 
-INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, null,1);
-INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, null, 2);
 
 INSERT INTO board (id, base, heigth) VALUES (1, 11, 9);
 INSERT INTO board (id, base, heigth) VALUES (2, 11, 9);
 
+INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, 
+null,1);
+INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
+
+
 
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
 VALUES (101, 1, 4, TRUE, 0, 1);
+
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
+VALUES (102, 2, 5, FALSE, 1, 1);
 
 INSERT INTO cards (id, deck_id, status, image) 
 VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
@@ -47,8 +54,14 @@ VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 INSERT INTO cards (id, deck_id, status, image) 
 VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');
 
+INSERT INTO cards (id, deck_id, status, image) 
+VALUES (202, 1, TRUE, 'tunnel_recto_vertical_izquierda.png');
+
 INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
 VALUES (201, FALSE, TRUE, TRUE, FALSE, FALSE);
+
+INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
+VALUES (202, FALSE, TRUE, TRUE, FALSE, TRUE);
 
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
