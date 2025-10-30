@@ -83,11 +83,11 @@ _En este caso hemos vuelto a usar mermaid para crear el diagrama de dominio/dise
 
 ### Diagrama de Capas (incluyendo Controladores, Servicios y Repositorios)
 
-![your-UML-diagram-name](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/FQY7185/docs/diagrams/UserLayerUMLPackageDiagram.iuml)
+![your-UML-diagram-name](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/blob/FQY7185/docs/diagrams/UserLayerUMLPackageDiagram.iuml)
 
-![your-UML-diagram-name](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/FQY7185/docs/diagrams/GameLayerUMLPackageDiagram.iuml)
+![your-UML-diagram-name](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/blob/FQY7185/docs/diagrams/GameLayerUMLPackageDiagram.iuml)
                 
-![your-UML-diagram-name](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/FQY7185/docs/diagrams/CardLayerUMLPackageDiagram.iuml)
+![your-UML-diagram-name](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/blob/FQY7185/docs/diagrams/CardLayerUMLPackageDiagram.iuml)
            
   OJO HAY QUE CAMBIAR LA RUTA SOLO A **/main/** cuando esté en el main sino no funciona, ahora mismo ESTÁ EN LA RAMA DE ALEJANDRO
 
