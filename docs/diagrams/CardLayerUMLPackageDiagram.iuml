@@ -1,0 +1,47 @@
+@startuml
+
+hide circle
+
+title Cards Layer Diagram - Proyecto Saboteur L4
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam shadowing false
+
+
+package "Business Logic Layer" {
+ class ActivePlayerService
+class TunnelService
+class CardService
+class ActionService
+class DeckService
+
+}
+
+package "Resources Layer" {
+class CardRepository  {
+Integer countCardsByDeckId(@Param("deckId") Integer deckId);
+    }
+class ActionRepository {
+}
+class TunnelRepository {
+    List<Tunnel> findByRotacion(boolean rotacion);
+    List<Tunnel> findByArriba(boolean arriba);
+    List<Tunnel> findByAbajo(boolean abajo);
+    List<Tunnel> findByDerecha(boolean derecha);
+    List<Tunnel> findByIzquierda(boolean izquierda);
+    List<Tunnel> findByArribaAndAbajo(boolean arriba, boolean abajo);
+    List<Tunnel> findByAbajoAndDerecha(boolean abajo, boolean derecha);
+    List<Tunnel> findByArribaAndAbajoAndDerechaAndIzquierda(boolean arriba, boolean abajo, boolean derecha, boolean izquierda);
+...
+}
+}
+
+TunnelService ..> ActivePlayerService
+TunnelService ..> DeckService
+CardService ..> DeckService
+TunnelService ..> TunnelRepository
+CardService ..> CardRepository
+ActionService ..> ActionRepository
+ActionService ..> ActivePlayerService
+DeckService ..> ActivePlayerServiceç
+@enduml 
