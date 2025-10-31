@@ -50,9 +50,25 @@ En esta sección se ha proporcionado un diagrama UML de clases que describe el m
 
 ![DomainDiagramUML](../../diagrams/DomainDiagramUML.png)
 
-<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/DomainDiagramUML.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
- ❕ Pulse para ver archivo .iuml
+
+<a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/DomainDiagramUML.iuml" 
+   style="
+     display:inline-block;
+     padding:12px 20px;
+     background:#0052ff;
+     color:#fff;
+     border-radius:6px;
+     text-decoration:none;
+     font-weight:600;
+     box-shadow:0 2px 6px rgba(0,0,0,0.15);
+     transition:background 0.3s ease;
+   "
+   onmouseover="this.style.background='#003dd9'"
+   onmouseout="this.style.background='#0052ff'">
+   ❕ Pulse para ver archivo .iuml
 </a>
+
+
 
 
 ### Diagrama de Capas (incluyendo Controladores, Servicios y Repositorios)
@@ -60,20 +76,61 @@ En esta sección se ha proporcionado un diagrama UML de clases que describe el m
          
 ![](D2_images/user-layer.png)
                 
-<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/UserLayerUMLPackageDiagram.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
- ❕ Pulse para ver archivo .iuml
+
+<a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/UserLayerUMLPackageDiagram.iuml" 
+   style="
+     display:inline-block;
+     padding:12px 20px;
+     background:#0052ff;
+     color:#fff;
+     border-radius:6px;
+     text-decoration:none;
+     font-weight:600;
+     box-shadow:0 2px 6px rgba(0,0,0,0.15);
+     transition:background 0.3s ease;
+   "
+   onmouseover="this.style.background='#003dd9'"
+   onmouseout="this.style.background='#0052ff'">
+   ❕ Pulse para ver archivo .iuml
 </a>
 
 ![](D2_images/game-layer.png)
 
-<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/GameLayerUMLPackageDiagram.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
- ❕ Pulse para ver archivo .iuml
+
+<a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/GameLayerUMLPackageDiagram.iuml" 
+   style="
+     display:inline-block;
+     padding:12px 20px;
+     background:#0052ff;
+     color:#fff;
+     border-radius:6px;
+     text-decoration:none;
+     font-weight:600;
+     box-shadow:0 2px 6px rgba(0,0,0,0.15);
+     transition:background 0.3s ease;
+   "
+   onmouseover="this.style.background='#003dd9'"
+   onmouseout="this.style.background='#0052ff'">
+   ❕ Pulse para ver archivo .iuml
 </a>
 
 ![](D2_images/card-layer.png)
 
-<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/CardLayerUMLPackageDiagram.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
- ❕ Pulse para ver archivo .iuml
+<a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/CardLayerUMLPackageDiagram.iuml" 
+   style="
+     display:inline-block;
+     padding:12px 20px;
+     background:#0052ff;
+     color:#fff;
+     border-radius:6px;
+     text-decoration:none;
+     font-weight:600;
+     box-shadow:0 2px 6px rgba(0,0,0,0.15);
+     transition:background 0.3s ease;
+   "
+   onmouseover="this.style.background='#003dd9'"
+   onmouseout="this.style.background='#0052ff'">
+   ❕ Pulse para ver archivo .iuml
 </a>
 
 
@@ -228,7 +285,7 @@ Cuando se inicia una partida nos navega al **Tablero de Juego** `/board/gameId` 
 
 ---
 
-### $\color{brown}{\textsf{3. Deck & Actions Section}}$
+### $\color{brown}{\textsf{3. Deck and Actions Section}}$
 **· Contenedor:** `<div className="n-deck">` y `<button className="n-discard">`  
 **· Función:**
 - Muestra las cartas restantes en el mazo (`deckCount`).
@@ -388,7 +445,7 @@ Permite agrupar y transferir datos de forma eficiente entre capas, encapsulando 
 
 *Contexto de Aplicación*
 
-El patrón Hooks se utilizó en el frontend, aprovechando la funcionalidad proporcionada por el framework **React.**
+El patrón Hooks se utilizó en los componentes relacionados con el frontend, aprovechando la funcionalidad proporcionada por el framework **React.**
 
 *Clases o paquetes creados*
     
