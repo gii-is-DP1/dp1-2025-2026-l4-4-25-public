@@ -83,14 +83,29 @@ _En este caso hemos vuelto a usar mermaid para crear el diagrama de dominio/dise
 
 ### Diagrama de Capas (incluyendo Controladores, Servicios y Repositorios)
 
-![User UML diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/FQY7185/docs/diagrams/UserLayerUMLPackageDiagram.iuml)
+         
+![](D2_images/user-layer.png)
+                
+<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/UserLayerUMLPackageDiagram.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
+ ❕ Pulse para ver archivo .iuml
+</a>
 
-![Game UML diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/FQY7185/docs/diagrams/GameLayerUMLPackageDiagram.iuml)
+![](D2_images/game-layer.png)
 
-![Card UML diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/gii-is-DP1/dp1-2025-2026-l4-4-25/FQY7185/docs/diagrams/CardLayerUMLPackageDiagram.iuml)
+<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/GameLayerUMLPackageDiagram.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
+ ❕ Pulse para ver archivo .iuml
+</a>
 
-           
-  OJO HAY QUE CAMBIAR LA RUTA SOLO A **/main/** cuando esté en el main sino no funciona, ahora mismo ESTÁ EN LA RAMA DE ALEJANDRO
+![](D2_images/card-layer.png)
+
+<a href="https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/docs/diagrams/CardLayerUMLPackageDiagram.iuml" style="display:inline-block;padding:10px 15px;background:#010aff;color:#fff;border-radius:5px;text-decoration:none;">
+ ❕ Pulse para ver archivo .iuml
+</a>
+
+
+**-Nota:** *Ante los fallos de importación y del propio rendimiento de PlantUML se ha decidido importarlo como PNG y adjuntar la ruta del código que ha generado dichos diagramas.*
+
+---
 
 ## 3️⃣Descomposición del mockups del tablero de juego en componentes
 

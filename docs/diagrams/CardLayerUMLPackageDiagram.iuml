@@ -43,5 +43,5 @@ TunnelService ..> TunnelRepository
 CardService ..> CardRepository
 ActionService ..> ActionRepository
 ActionService ..> ActivePlayerService
-DeckService ..> ActivePlayerServiceç
+DeckService ..> ActivePlayerService
 @enduml 
