@@ -46,7 +46,7 @@ El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 
 ### Diagrama de Dominio/Diseño
 
-_En esta sección se ha proporcionado un diagrama UML de clases que describe el modelo de dominio de nuestra aplicación:
+En esta sección se ha proporcionado un diagrama UML de clases que describe el modelo de dominio de nuestra aplicación:
 
 ![DomainDiagramUML](../../diagrams/DomainDiagramUML.png)
 
@@ -54,8 +54,6 @@ _En esta sección se ha proporcionado un diagrama UML de clases que describe el 
  ❕ Pulse para ver archivo .iuml
 </a>
 
-
-_En este caso hemos vuelto a usar mermaid para crear el diagrama de dominio/diseño, pero recuerda que puedes usar cualquier otra herramienta que consideres oportuno para crear tus diagramas e inclurlos en este document como imagen._
 
 ### Diagrama de Capas (incluyendo Controladores, Servicios y Repositorios)
 
