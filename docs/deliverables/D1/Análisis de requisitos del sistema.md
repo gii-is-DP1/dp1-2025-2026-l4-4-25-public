@@ -1,11 +1,7 @@
 # 📄Documento de análisis de requisitos del sistema📄
 **Asignatura:** Diseño y Pruebas (Grado en Ingeniería del Software, Universidad de Sevilla)  
 **Curso académico:** 2025/2026 
-<<<<<<< HEAD
 **Grupo/Equipo:** L4-4  
-=======
-**Grupo/Equipo:** L4-04  
->>>>>>> c2dcbbdf7d1bbbc28adc6b52a386c5d1945106a6
 **Nombre del proyecto:** Saboteur 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** <!-- Nombre Apellidos (US-Id / correo @us.es) -->
@@ -16,12 +12,8 @@ Lorenzo Valderrama Román (WRG8176 / lorvalrom@alum.us.es)
 
 Diego Rey Carmona (RHQ7780 / diereycar@alum.us.es)
 
-<<<<<<< HEAD
-Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us.es)
-=======
 
 Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us)
->>>>>>> c2dcbbdf7d1bbbc28adc6b52a386c5d1945106a6
 
 Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
 
@@ -30,32 +22,22 @@ Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 _Esta es una plantilla que sirve como guía para realizar este entregable. Por favor, mantén las mismas secciones y los contenidos que se indican para poder hacer su revisión más ágil._ 
 
 
-<<<<<<< HEAD
-=======
 ## 1️⃣ Introducción
 
->>>>>>> c2dcbbdf7d1bbbc28adc6b52a386c5d1945106a6
 El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y **gratuito**.
 Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona.
 Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio.
 Una vez asignados los roles y las cartas de cada uno, los **buscadores de oro** intentarán construir el camino hasta donde creen que están las **pepitas de oro** y los **saboteadores** tendrán que poner trabas para impedir que los buscadores puedan lograr su hazaña.
 
-<<<<<<< HEAD
 Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
 El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 
 
 Enlace al vídeo de explicación de las reglas del juego / partida jugada por el grupo](https://www.youtube.com/watch?v=lwxIUdtN4aE)
-=======
->>>>>>> c2dcbbdf7d1bbbc28adc6b52a386c5d1945106a6
 
 Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
 El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 
-<<<<<<< HEAD
-=======
-=======
->>>>>>> c2dcbbdf7d1bbbc28adc6b52a386c5d1945106a6
 
 #### · VIDEO EXPLICATIVO :
 
