@@ -45,16 +45,16 @@ VALUES (101, 1, 4, TRUE, 0, 1);
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
 VALUES (102, 2, 5, FALSE, 1, 1);
 
-INSERT INTO cards (id, deck_id, status, image) 
+INSERT INTO card (id, deck_id, status, image) 
 VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 
 --INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
 --VALUES (200, 0, FALSE, 0);
 
-INSERT INTO cards (id, deck_id, status, image) 
+INSERT INTO card (id, deck_id, status, image) 
 VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');
 
-INSERT INTO cards (id, deck_id, status, image) 
+INSERT INTO card (id, deck_id, status, image) 
 VALUES (202, 1, TRUE, 'tunnel_recto_vertical_izquierda.png');
 
 INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
