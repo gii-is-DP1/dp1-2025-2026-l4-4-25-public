@@ -23,9 +23,9 @@ const CreateGame = () => {
 
   useEffect(() => {
     console.log("Entrando al useEffect. Valor de game:", game);
-     if (!game || isCreator) return;
-     // Función para unirse a la partida
-     const joinGame = async () => {
+      if (!game || isCreator) return;
+      // Función para unirse a la partida
+      const joinGame = async () => {
       console.log("Intentando unirse a la partida como invitado...");
       try {
         //Obtenemos el username del usuario actual
@@ -91,7 +91,7 @@ const CreateGame = () => {
       }
     }; 
     
-        
+      
         if(!isCreator){
           joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
         }
@@ -101,19 +101,19 @@ const CreateGame = () => {
   
   useEffect(()=>{
     const postFirstMessage = async () => {
-          try {
-            const loggedInUser = tokenService.getUser();
-          if (!loggedInUser || !loggedInUser.id) {
-            console.error("No se encontró el ID del usuario.");
-            return;
-        } //corregido con el copy properties
+        try {
+          const loggedInUser = tokenService.getUser();
+        if (!loggedInUser || !loggedInUser.id) {
+          console.error("No se encontró el ID del usuario.");
+          return;
+        } 
         const msg = "Bienvenido a Saboteur"
-           const request = {
-              content: msg,
-              activePlayer: game.creator,
-              chat:game.chat
+          const request = {
+            content: msg,
+            activePlayer: game.creator,
+            chat:game.chat
         }
-            const response = await fetch(`/api/v1/messages`, {
+          const response = await fetch(`/api/v1/messages`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -121,58 +121,57 @@ const CreateGame = () => {
         },
         body: JSON.stringify(request),
       });
-            console.log(response);
-            if (response.ok) {
-              const data = await response.json();
-              console.log('chat del creategame ', data)
-              setchat(data);
-            } else {
-              console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener el mensaje del jugador.');
-            }
-          } catch (error) {
-            console.error('Hubo un problema con la petición fetch:', error);
-            alert('Error de red. No se pudo conectar con el servidor.');
+          console.log(response);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('chat del creategame ', data)
+            setchat(data);
+          } else {
+            console.error('Respuesta no OK:', response.status);
+            alert('Error al obtener el mensaje del jugador.');
           }
-        };
+        } catch (error) {
+          console.error('Hubo un problema con la petición fetch:', error);
+          alert('Error de red. No se pudo conectar con el servidor.');
+        }
+      };
 
-        console.log('game del navigate', game)
-        console.log('chat del navigate', game.chat)
-        
-        const fetchPlayer = async () => {
-          try {
-            const loggedInUser = tokenService.getUser();
-          if (!loggedInUser || !loggedInUser.id) {
-            console.error("No se encontró el ID del usuario.");
-            return;
+      console.log('game del navigate', game)
+      console.log('chat del navigate', game.chat)
+      
+      const fetchPlayer = async () => {
+        try {
+          const loggedInUser = tokenService.getUser();
+        if (!loggedInUser || !loggedInUser.id) {
+          console.error("No se encontró el ID del usuario.");
+          return;
         } 
-        //necesitamos el metodo findbyusername de player bien
-        //mientras tanto lo buscamos por el id con el loggedinuser
+       
         
-            const response = await fetch(`/api/v1/players?username=${game.creator}`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwt}`
-              }
-            });
-            console.log(response);
-            if (response.ok) {
-              const data = await response.json();
-              setPlayer(data);
-            } else {
-              console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener la información del jugador.');
+          const response = await fetch(`/api/v1/players?username=${game.creator}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${jwt}`
             }
-          } catch (error) {
-            console.error('Hubo un problema con la petición fetch:', error);
-            alert('Error de red. No se pudo conectar con el servidor.');
+          });
+          console.log(response);
+          if (response.ok) {
+            const data = await response.json();
+            setPlayer(data);
+          } else {
+            console.error('Respuesta no OK:', response.status);
+            alert('Error al obtener la información del jugador.');
           }
-        };
-        
-        postFirstMessage();
-        fetchPlayer();
-  },[[game, isCreator]])
+        } catch (error) {
+          console.error('Hubo un problema con la petición fetch:', error);
+          alert('Error de red. No se pudo conectar con el servidor.');
+        }
+      };
+      
+      postFirstMessage();
+      fetchPlayer();
+  },[game?.creator, game?.chat])
 //para refrescar los activeplayers
   useEffect(() => {
     if (!game?.id) return;
@@ -185,8 +184,8 @@ const CreateGame = () => {
         if (!res.ok) return;
         /*
         const latestgame = await res.json();
-       setGame({ ...(game || {}), activePlayers: latestgame.activePlayers, maxPlayers:latestgame.maxPlayers });
-       */
+        setGame({ ...(game || {}), activePlayers: latestgame.activePlayers, maxPlayers:latestgame.maxPlayers });
+        */
         const latestgame = await res.json();
   setGame(prev => ({
     ...prev,
@@ -236,7 +235,7 @@ const CreateGame = () => {
         alert("¡Partida actualizada con éxito!");
         setpatchgame(newGame)
         console.log(newGame)
-         //navigate(`/board/${newGame.id}`); 
+        //navigate(`/board/${newGame.id}`); 
       } else {
         const errorData = await response.json();
         alert(`Error al actualizar la partida: ${errorData.message}`);
@@ -394,7 +393,7 @@ async function handleExitLobby() {
             </select>
           </div>
           )}
-           <div className="active-players-section">
+          <div className="active-players-section">
             <h2>Players : ({game?.activePlayers?.length ?? 0}/{game?.maxPlayers ?? 0})</h2>
             <div className="active-players-list">
               {(game?.activePlayers ?? []).map((username, index) => (
