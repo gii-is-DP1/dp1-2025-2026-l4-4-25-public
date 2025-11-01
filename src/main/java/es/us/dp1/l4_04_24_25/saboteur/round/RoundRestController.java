@@ -2,7 +2,6 @@ package es.us.dp1.l4_04_24_25.saboteur.round;
 
 import java.util.List;
 import java.util.Map;
-import java.time.Duration;
 
 import org.springframework.beans.BeanUtils; 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +33,7 @@ import jakarta.validation.Valid;
 public class RoundRestController {
 
     private final RoundService roundService;
-    private final ObjectMapper objectMapper; 
-
+    private final ObjectMapper objectMapper;
     @Autowired
     public RoundRestController(RoundService roundService, ObjectMapper objectMapper) {
         this.roundService = roundService;
@@ -72,18 +70,17 @@ public class RoundRestController {
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Round> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException {
+    public ResponseEntity<Round> patch(@PathVariable("id") Integer id, @RequestBody Map<String,Object> updates) throws JsonMappingException{
         RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "ID", id);
         Round round = roundService.findRound(id);
         Round roundPatched = objectMapper.updateValue(round, updates);
         roundService.updateRound(roundPatched, id);
-        return new ResponseEntity<>(roundPatched, HttpStatus.OK);
+        return new ResponseEntity<>(roundPatched,HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<MessageResponse> delete(@PathVariable("id") int id) {
-        RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "ID", id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<MessageResponse> deleteRound(@PathVariable Integer id){
+        RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "id", id);
         roundService.deleteRound(id);
         return new ResponseEntity<>(new MessageResponse("Round deleted!"), HttpStatus.OK);
     }

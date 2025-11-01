@@ -135,7 +135,7 @@ public class PlayerRestController {
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Player> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
-        RestPreconditions.checkNotNull(playerService.findPlayer(id), "Achievement", "ID", id);
+        RestPreconditions.checkNotNull(playerService.findPlayer(id), "Player", "ID", id);
         Player player = playerService.findPlayer(id);
         Player playerPatched = objectMapper.updateValue(player, updates);
         playerService.updatePlayer(playerPatched, id);
