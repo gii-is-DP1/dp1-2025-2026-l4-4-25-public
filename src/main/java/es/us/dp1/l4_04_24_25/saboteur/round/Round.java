@@ -30,6 +30,10 @@ import lombok.Setter;
 @Table(name = "Round")
 public class Round extends BaseEntity{
 
+    // Los constructores han sido eliminados por requisito.
+    
+    // Se asume que el convertidor de Duration existe en el classpath
+    @jakarta.persistence.Convert(converter = es.us.dp1.l4_04_24_25.saboteur.game.DurationSecondsConverter.class)
     private Duration timeSpent = Duration.ZERO;
 
     @Column(name = "left_cards", nullable = false)
@@ -47,7 +51,8 @@ public class Round extends BaseEntity{
     @JoinColumn(name = "game_id")
     private Game game;
 
-    //Relacion 1 ronda tiene 1 tablero
+    // Relacion 1 ronda tiene 1 tablero (Lado Inverso)
+ 
     @OneToOne
     @JsonSerialize(using=BoardSerializer.class)
     @JsonDeserialize(using=BoardDeserializer.class)
@@ -58,18 +63,4 @@ public class Round extends BaseEntity{
     @Max(3)
     @Column(name = "round_number", nullable = false)
     private Integer roundNumber; // Limitación de rondas a maximo 3
-    
-    public Round() {
-        super();
-    }
-
-    public Round(Duration timeSpent, Integer leftCards, boolean winnerRol, Integer turn, Game game, Board board, Integer roundNumber) {
-        this.timeSpent = timeSpent;
-        this.leftCards = leftCards;
-        this.winnerRol = winnerRol;
-        this.turn = turn;
-        this.game = game;
-        this.board = board;
-        this.roundNumber = roundNumber;
-    }
 }

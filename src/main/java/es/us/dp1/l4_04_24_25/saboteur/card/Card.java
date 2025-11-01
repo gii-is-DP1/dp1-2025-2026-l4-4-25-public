@@ -1,5 +1,8 @@
 package es.us.dp1.l4_04_24_25.saboteur.card;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.deck.DeckDeserializer;
@@ -13,14 +16,12 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.Setter;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize; 
+import lombok.Setter; 
 
 @Getter
 @Setter
 @Entity
-@Table(name = "Cards")
+@Table(name = "Card")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Card extends BaseEntity {
 

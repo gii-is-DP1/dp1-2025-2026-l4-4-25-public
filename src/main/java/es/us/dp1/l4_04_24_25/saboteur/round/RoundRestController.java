@@ -3,6 +3,7 @@ package es.us.dp1.l4_04_24_25.saboteur.round;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,38 +42,30 @@ public class RoundRestController {
 
     @GetMapping
     public ResponseEntity<List<Round>> findAll(){
-        List<Round> res;
-        res = (List<Round>) roundService.findAll();
+        List<Round> res = (List<Round>) roundService.findAll();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Round> findById(@PathVariable Integer id){
-        Round res;
-        res = roundService.findRound(id);
-        return new ResponseEntity<>(res, HttpStatus.OK);
+    @GetMapping(value = "{id}")
+    public ResponseEntity<Round> findById(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(roundService.findRound(id), HttpStatus.OK);
     }
-
+    
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Round> createRound(@Valid @RequestBody Round round){  
-        Round res = roundService.saveRound(new Round(
-            round.getTimeSpent(),
-            round.getLeftCards(),
-            round.isWinnerRol(),
-            round.getTurn(),
-            round.getGame(),
-            round.getBoard(),
-            round.getRoundNumber()
-        ));
-        return new ResponseEntity<>(res, HttpStatus.CREATED);
+    public ResponseEntity<Round> create(@RequestBody @Valid Round round) {
+        Round newRound = new Round(); 
+        BeanUtils.copyProperties(round, newRound, "id");
+        Round savedRound = this.roundService.saveRound(newRound);
+        return new ResponseEntity<>(savedRound, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Round> updateRound(@Valid @RequestBody Round round, @PathVariable Integer id){
-        RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "id", id);
-        Round updatedRound = roundService.updateRound(round, id);
-        return new ResponseEntity<>(updatedRound, HttpStatus.OK);
+
+    @PutMapping(value = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Round> update(@PathVariable("id") Integer id, @RequestBody @Valid Round round){
+        RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "ID", id);
+        return new ResponseEntity<>(roundService.updateRound(round, id), HttpStatus.OK);
     }
 
     @PatchMapping(value = "{id}")
@@ -88,6 +82,36 @@ public class RoundRestController {
     public ResponseEntity<MessageResponse> deleteRound(@PathVariable Integer id){
         RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "id", id);
         roundService.deleteRound(id);
-        return new ResponseEntity<>(new MessageResponse("Round deleted successfully!"), HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("Round deleted!"), HttpStatus.OK);
+    }
+
+    @GetMapping("byGameId")
+    public ResponseEntity<List<Round>> findByGameId(@RequestParam Integer gameId){
+        List<Round> res = roundService.findByGameId(gameId);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+    
+    @GetMapping("byGameIdAndNumber")
+    public ResponseEntity<Round> findByGameIdAndRoundNumber(@RequestParam Integer gameId, @RequestParam Integer roundNumber){
+        Round res = roundService.findByGameIdAndRoundNumber(gameId, roundNumber);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+    
+    @GetMapping("byWinnerRol")
+    public ResponseEntity<List<Round>> findByWinnerRol(@RequestParam boolean winnerRol){
+        List<Round> res = roundService.findByWinnerRol(winnerRol);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+    
+    @GetMapping("byRoundNumber")
+    public ResponseEntity<List<Round>> findByRoundNumber(@RequestParam Integer roundNumber){
+        List<Round> res = roundService.findByRoundNumber(roundNumber);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+    
+    @GetMapping("byLeftCards")
+    public ResponseEntity<List<Round>> findByLeftCardsLessThanEqual(@RequestParam Integer leftCards){
+        List<Round> res = roundService.findByLeftCardsLessThanEqual(leftCards);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }
