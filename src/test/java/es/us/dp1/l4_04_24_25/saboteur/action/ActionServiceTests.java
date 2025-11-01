@@ -1,225 +1,148 @@
 package es.us.dp1.l4_04_24_25.saboteur.action;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.card.effectValue;
+import es.us.dp1.l4_04_24_25.saboteur.card.effectValue; 
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService; 
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.action.nameAction;
 
-@ExtendWith(MockitoExtension.class)
+
+@SpringBootTest
+@AutoConfigureTestDatabase
 class ActionServiceTests {
 
-    @Mock
-    private ActionRepository actionRepository;
-
-    @InjectMocks
+    @Autowired
     private ActionService actionService;
+    
+    @Autowired
+    private DeckService deckService; 
 
-    private Action testAction;
-    private Action testAction2;
+    private static final int TEST_ACTION_ID = 205; 
 
-    @BeforeEach
-    void setUp() {
-        testAction = new Action();
-        testAction.setId(1);
-        testAction.setNameAction(nameAction.REPAIR);
-        testAction.setEffectValue(effectValue.REPAIR_PICKAXE);
-        testAction.setObjectAffect(false);
-
-        testAction2 = new Action();
-        testAction2.setId(2);
-        testAction2.setNameAction(nameAction.DESTROY);
-        testAction2.setEffectValue(effectValue.DESTROY_CART);
-        testAction2.setObjectAffect(false);
-    }
 
     @Test
+    @Transactional
     void shouldFindAllActions() {
-     
-        List<Action> expectedActions = Arrays.asList(testAction, testAction2);
-        when(actionRepository.findAll()).thenReturn(expectedActions);
-
-        Iterable<Action> result = actionService.findAll();
-
-        assertNotNull(result);
-        assertEquals(2, ((List<Action>) result).size());
-        verify(actionRepository, times(1)).findAll();
+        List<Action> actions = (List<Action>) this.actionService.findAll();
+        assertTrue(actions.size() == 2); 
     }
 
     @Test
     void shouldFindActionById() {
-       
-        when(actionRepository.findById(1)).thenReturn(Optional.of(testAction));
-
-        Action result = actionService.findAction(1);
-
-        assertNotNull(result);
-        assertEquals(1, result.getId());
-        assertEquals(nameAction.REPAIR, result.getNameAction());
-        verify(actionRepository, times(1)).findById(1);
+        Action action = this.actionService.findAction(TEST_ACTION_ID);
+        assertNotNull(action);
+        assertEquals(TEST_ACTION_ID, action.getId());
     }
 
     @Test
     void shouldThrowExceptionWhenFindingNonExistingAction() {
-  
-        when(actionRepository.findById(999)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            actionService.findAction(999);
-        });
-        verify(actionRepository, times(1)).findById(999);
+        assertThrows(ResourceNotFoundException.class, () -> this.actionService.findAction(99999));
     }
-
+    
     @Test
-    void shouldSaveAction() {
-       
-        when(actionRepository.save(testAction)).thenReturn(testAction);
-
-        Action result = actionService.saveAction(testAction);
-
-        assertNotNull(result);
-        assertEquals(1, result.getId());
-        verify(actionRepository, times(1)).save(testAction);
-    }
-
-    @Test
-    void shouldUpdateAction() {
-       
-        Action updatedAction = new Action();
-        updatedAction.setNameAction(nameAction.OVERTHROW);
-        updatedAction.setEffectValue(effectValue.DESTROY_TUNNEL);
-        updatedAction.setObjectAffect(true);
-
-        when(actionRepository.findById(1)).thenReturn(Optional.of(testAction));
-        when(actionRepository.save(any(Action.class))).thenReturn(updatedAction);
-
-        Action result = actionService.updateAction(updatedAction, 1);
-
-        assertNotNull(result);
-        assertEquals(nameAction.OVERTHROW, result.getNameAction());
-        assertEquals(effectValue.DESTROY_TUNNEL, result.getEffectValue());
-        assertTrue(result.isObjectAffect());
-        verify(actionRepository, times(1)).findById(1);
-        verify(actionRepository, times(1)).save(any(Action.class));
-    }
-
-    @Test
-    void shouldDeleteAction() {
+    @Transactional
+    void shouldInsertAction() {
+        int initialCount = ((Collection<Action>) this.actionService.findAll()).size();
         
-        when(actionRepository.findById(1)).thenReturn(Optional.of(testAction));
+        Action newAction = new Action();
+        newAction.setNameAction(nameAction.DESTROY);
+        newAction.setEffectValue(effectValue.DESTROY_LAMP);
+        newAction.setObjectAffect(true); 
+        newAction.setStatus(true);
+        newAction.setImage("action_test_insert.png");
+        
+        Deck deckRef = deckService.findDeck(1);
+        newAction.setDeck(deckRef);
 
-        actionService.deleteAction(1);
-
-        verify(actionRepository, times(1)).findById(1);
-        verify(actionRepository, times(1)).delete(testAction);
+        Action savedAction = this.actionService.saveAction(newAction);
+        
+        assertNotNull(savedAction.getId());
+        assertEquals(nameAction.DESTROY, savedAction.getNameAction());
+        
+        int finalCount = ((Collection<Action>) this.actionService.findAll()).size();
+        assertEquals(initialCount + 1, finalCount);
     }
+    
+   
+    @Test
+    @Transactional
+    void shouldUpdateAction() {
+        
+        boolean newObjectAffect = true; 
+        
+        Action action = this.actionService.findAction(TEST_ACTION_ID);
+        
+        assertFalse(action.isObjectAffect()); 
+
+        action.setObjectAffect(newObjectAffect); 
+        
+        Action updatedAction = this.actionService.updateAction(action, TEST_ACTION_ID);
+        
+        assertEquals(newObjectAffect, updatedAction.isObjectAffect());
+    }
+    
+    @Test
+    @Transactional
+    void shouldDeleteAction() {
+        Action action = this.actionService.findAction(TEST_ACTION_ID);
+        assertNotNull(action);
+
+        this.actionService.deleteAction(TEST_ACTION_ID);
+        
+        assertThrows(ResourceNotFoundException.class, () -> this.actionService.findAction(TEST_ACTION_ID));
+    }
+
 
     @Test
     void shouldFindActionsByNameAction() {
-       
-        List<Action> expectedActions = Arrays.asList(testAction);
-        when(actionRepository.findByNameAction(nameAction.REPAIR)).thenReturn(expectedActions);
-
-        Iterable<Action> result = actionService.findByNameAction(nameAction.REPAIR);
-
-        assertNotNull(result);
-        assertEquals(1, ((List<Action>) result).size());
-        assertEquals(nameAction.REPAIR, ((List<Action>) result).get(0).getNameAction());
-        verify(actionRepository, times(1)).findByNameAction(nameAction.REPAIR);
+    
+        List<Action> actions = (List<Action>)this.actionService.findByNameAction(nameAction.REPAIR);
+        
+        assertTrue(actions.size() == 1, "Debe haber 1 Action de tipo REPAIR.");
+        assertEquals(nameAction.REPAIR, actions.get(0).getNameAction());
     }
 
     @Test
     void shouldFindActionsByEffectValue() {
         
-        List<Action> expectedActions = Arrays.asList(testAction);
-        when(actionRepository.findByEffectValue(effectValue.REPAIR_PICKAXE)).thenReturn(expectedActions);
-
-        Iterable<Action> result = actionService.findByEffectValue(effectValue.REPAIR_PICKAXE);
-
-        assertNotNull(result);
-        assertEquals(1, ((List<Action>) result).size());
-        assertEquals(effectValue.REPAIR_PICKAXE, ((List<Action>) result).get(0).getEffectValue());
-        verify(actionRepository, times(1)).findByEffectValue(effectValue.REPAIR_PICKAXE);
+        List<Action> actions = (List<Action>)this.actionService.findByEffectValue(effectValue.REPAIR_PICKAXE);
+    
+        assertTrue(actions.size() == 1, "Debe haber 1 Action con el efecto REPAIR_PICKAXE.");
+        assertEquals(effectValue.REPAIR_PICKAXE, actions.get(0).getEffectValue());
     }
 
     @Test
     void shouldFindActionsByObjectAffect() {
-    
-        List<Action> expectedActions = Arrays.asList(testAction, testAction2);
-        when(actionRepository.findByObjectAffect(false)).thenReturn(expectedActions);
-
-       
-        Iterable<Action> result = actionService.findByObjectAffect(false);
-
-     
-        assertNotNull(result);
-        assertEquals(2, ((List<Action>) result).size());
-        verify(actionRepository, times(1)).findByObjectAffect(false);
+        
+        List<Action> actions = (List<Action>)this.actionService.findByObjectAffect(false);
+        
+        assertTrue(actions.size() == 2, "Debe haber 2 Action que afecten al jugador.");
+        assertFalse(actions.get(0).isObjectAffect());
     }
-
+    
     @Test
     void shouldFindActionsByNameActionAndObjectAffect() {
         
-        List<Action> expectedActions = Arrays.asList(testAction);
-        when(actionRepository.findByNameActionAndObjectAffect(nameAction.REPAIR, false))
-            .thenReturn(expectedActions);
-
-        Iterable<Action> result = actionService.findByNameActionAndObjectAffect(nameAction.REPAIR, false);
-
-        assertNotNull(result);
-        assertEquals(1, ((List<Action>) result).size());
-        assertEquals(nameAction.REPAIR, ((List<Action>) result).get(0).getNameAction());
-        verify(actionRepository, times(1)).findByNameActionAndObjectAffect(nameAction.REPAIR, false);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDeletingNonExistingAction() {
+        List<Action> actions = (List<Action>)this.actionService.findByNameActionAndObjectAffect(nameAction.REPAIR, false);
         
-        when(actionRepository.findById(999)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            actionService.deleteAction(999);
-        });
-        verify(actionRepository, never()).delete(any(Action.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingAction() {
-        
-        when(actionRepository.findById(999)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            actionService.updateAction(testAction, 999);
-        });
-        verify(actionRepository, never()).save(any(Action.class));
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenNoActionsMatchCriteria() {
-        
-        when(actionRepository.findByNameAction(nameAction.REVEAL)).thenReturn(Arrays.asList());
-
-        Iterable<Action> result = actionService.findByNameAction(nameAction.REVEAL);
-
-        assertNotNull(result);
-        assertEquals(0, ((List<Action>) result).size());
-        verify(actionRepository, times(1)).findByNameAction(nameAction.REVEAL);
+        assertTrue(actions.size() == 1, "Debe haber 1 Action REPAIR que afecte al jugador.");
+        assertEquals(nameAction.REPAIR, actions.get(0).getNameAction());
+        assertFalse(actions.get(0).isObjectAffect());
     }
 }

@@ -18,17 +18,17 @@ import lombok.Setter;
 public class Action extends Card {
 
 	@Enumerated(EnumType.STRING)
-    @Column(name = "nombreAccion")
+    @Column(name = "nameAction")
 	@NotNull
 	protected nameAction nameAction;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "valorEfecto")
+	@Column(name = "effectValue")
 	@NotNull
 	protected effectValue effectValue;
 
     
-	@Column(name = "objetoAfecta", nullable = false)
+	@Column(name = "objectAffect", nullable = false)
 	@NotNull
 	protected boolean objectAffect;  //0 si afecta a un jugador, 1 si afecta al tablero
 
