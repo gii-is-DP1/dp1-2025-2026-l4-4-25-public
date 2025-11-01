@@ -68,16 +68,16 @@ INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
 VALUES (200, 1, 50, 'Gana 10 partidas habiendo construido más de 20 caminos.', 'Constructor Maestro');
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
-VALUES (201, 1, 30, 'TEST2', 'fran?');
+VALUES (201, 1, 30, 'TEST2', 'TEST2?');
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
-VALUES (202, 1, 40, 'TEST3', 'javi osuna?');
+VALUES (202, 1, 40, 'TEST3', 'TEST3?');
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
-VALUES (203, 1, 60, 'TEST4', 'carlos?');
+VALUES (203, 1, 60, 'TEST4', 'TEST4?');
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
-VALUES (204, 1, 20, 'TEST5', 'julio?');
+VALUES (204, 1, 20, 'TEST5', 'TEST5?');
 
 --INSERT INTO squares (id, coordinate_x, coordinate_y, occupation, type, board_id) 
 --VALUES (4, 1, 4, TRUE, 'PATH', 1);

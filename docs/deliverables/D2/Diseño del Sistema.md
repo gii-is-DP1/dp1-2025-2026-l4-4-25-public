@@ -311,7 +311,7 @@ Cuando se inicia una partida nos navega al **Tablero de Juego** `/board/gameId` 
 
 ---
 
-###$\color{red}{\textsf{ 6. Board Grid Section}}$
+### $\color{red}{\textsf{ 6. Board Grid Section}}$
 **· Contenedor:** `<div className="board-grid">`  
 **· Función:**
 - Representa la cuadrícula principal del tablero.
