@@ -166,14 +166,17 @@ input:checked + .slider:before {
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   font-size: 0.8rem;
-  max-width: 150px; 
+  max-width: 280px; 
+  width: fit-content;
   min-width: 0; 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
+  margin: 0;
 }
 
 .player-card2:hover {
@@ -189,6 +192,9 @@ input:checked + .slider:before {
   border-radius: 50%;
   object-fit: cover;
   flex: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
@@ -202,6 +208,13 @@ input:checked + .slider:before {
   font-size: 0.85rem;
 }
 
+.active-players-list {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;    
+  gap: 10px;              
+  margin-top: 10px;       
+}
 
 .expel-player-btn {
   background: transparent;
@@ -210,8 +223,9 @@ input:checked + .slider:before {
   cursor: pointer;
   padding: 3px 6px;
   font-size: 0.75rem;
-  margin-left: 6px;
-  flex: 0 0 auto; 
+  /*margin-left: 6px; */
+  /*flex: 0 0 auto; */
+  flex-shrink: 0;
 }
 
 @keyframes spin {
