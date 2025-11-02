@@ -1,0 +1,171 @@
+@startuml Diagrama de diseño
+
+skinparam classAttributeIconSize 0
+hide emptymethods
+skinparam linetype ortho
+
+class BaseEntity {
+  id: Integer
+}
+
+class NamedEntity extends BaseEntity {
+  name: String {Size(min=3, max=50)}
+}
+
+class User extends BaseEntity {
+  username: String {unique, NotEmpty, NotNull}
+  name: String {NotEmpty, NotNull}
+  birthDate: String {NotEmpty, NotNull}
+  joined: LocalDateTime {NotNull}
+  password: String {WRITE_ONLY, NotNull}
+  image: String {NotNull}
+  email: String {unique, NotEmpty, NotNull}
+}
+
+User "1" -- "1..*" Authorities : "authority"
+User "1" -- "0..*" Achievement : "creator"
+
+class Player extends User {
+  playedGames: Integer {NotNull}
+  wonGames: Integer {NotNull}
+  destroyedPaths: Integer {NotNull}
+  builtPaths: Integer {NotNull}
+  acquiredGoldNuggets: Integer {NotNull}
+  peopleDamaged: Integer {NotNull}
+  peopleRepaired: Integer {NotNull}
+  isWatcher: boolean {NotNull}
+}
+
+Player "0..*" -- "0..*" Player : "friends"
+Player "0..*" -- "0..*" Achievement : "accquiredAchievements"
+Player "0..*" -- "0..1" Game : "game (watcher)"
+
+class ActivePlayer extends Player {
+  rol: boolean
+  goldNugget: Integer {Max(50)}
+  pickaxeState: boolean
+  candleState: boolean
+  cartState: boolean
+}
+
+ActivePlayer "1" -- "1" Deck : "deck"
+ActivePlayer "1" -- "0..*" Message : "activePlayer"
+
+class Authorities extends BaseEntity {
+  authority: String
+}
+
+class Game extends BaseEntity {
+  time: Duration {NotNull}
+  gameStatus: gameStatus {NotNull}
+  link: String {unique, NotNull}
+  isPrivate: boolean {NotNull}
+  maxPlayers: Integer {NotNull, Min(3), Max(12)}
+}
+
+Game "1" *-- "0..3" Round : "rounds"
+Game "1" *-- "1" Chat : "chat"
+Game "0..*" -- "1" ActivePlayer : "winner"
+Game "0..*" -- "1" ActivePlayer : "creator"
+Game "0..*" -- "0..*" ActivePlayer : "activePlayers"
+
+enum gameStatus {
+  CREATED
+  ONGOING
+  FINISHED
+}
+
+class Round extends BaseEntity {
+  timeSpent: Duration {NotNull}
+  leftCards: Integer {NotNull}
+  winnerRol: boolean {NotNull}
+  turn: Integer
+  roundNumber: Integer {NotNull, Min(1), Max(3)}
+}
+
+Round "1" -- "1" Board : "board"
+
+class Board extends BaseEntity {
+  base: Integer {NotNull}
+  heigth: Integer {NotNull}
+}
+
+
+Board "1" *-- "0..*" Square : "busy"
+
+class Square extends BaseEntity {
+  coordinateX: Integer {Min(0), Max(11), NotNull}
+  coordinateY: Integer {Min(0), Max(9), NotNull}
+  occupation: boolean {NotNull}
+  type: type {NotNull}
+}
+
+enum type {
+  PATH
+  GOAL
+  START
+}
+
+class Chat extends BaseEntity {
+}
+
+Chat "1" *-- "0..*" Message : "messages"
+
+class Message extends BaseEntity {
+  content: String {NotEmpty, NotNull}
+}
+
+class Card extends BaseEntity {
+  status: boolean {NotNull}
+  image: String {NotBlank}
+}
+
+class Tunnel extends Card {
+  rotacion: boolean {NotNull}
+  arriba: boolean {NotNull}
+  abajo: boolean {NotNull}
+  derecha: boolean {NotNull}
+  izquierda: boolean {NotNull}
+}
+
+class Action extends Card {
+  nameAction: nameAction {NotNull}
+  effectValue: effectValue {NotNull}
+  objectAffect: boolean {NotNull}
+}
+
+enum nameAction {
+  REPAIR
+  DESTROY
+  OVERTHROW
+  REVEAL
+}
+
+enum effectValue {
+  REPAIR_PICKAXE
+  REPAIR_CART
+  REPAIR_LAMP
+  DESTROY_PICKAXE
+  DESTROY_CART
+  DESTROY_LAMP
+  REPAIR_PICKAXE_CART
+  REPAIR_PICKAXE_LAMP
+  REPAIR_CART_LAMP
+  DESTROY_TUNNEL
+  REVEAL
+}
+
+class Deck extends BaseEntity {
+}
+
+Deck "1" -- "0..*" Card : "cards"
+
+class Achievement extends BaseEntity {
+  tittle: String {unique, NotEmpty, NotNull}
+  description: String {NotEmpty, NotNull}
+  score: Integer
+  image: String {NotEmpty, NotNull}
+}
+
+
+@enduml

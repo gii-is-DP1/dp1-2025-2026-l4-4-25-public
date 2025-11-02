@@ -39,8 +39,12 @@ export const registerFormPlayer= [
     type: "email",
     defaultValue: "",
     isRequired: true,
-    validators: [formValidators.notEmptyValidator],
+    validators: [
+      formValidators.notEmptyValidator,
+      formValidators.emailValidator
+    ],
   },
+  /*
     {
     tag: "Profile image",
     name: "image",
@@ -49,4 +53,5 @@ export const registerFormPlayer= [
     isRequired: false,
     validators: []
   },
+  */
 ];

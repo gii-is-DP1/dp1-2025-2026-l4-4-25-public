@@ -1,6 +1,20 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
@@ -8,6 +22,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -23,7 +38,7 @@ public class User extends BaseEntity {
     @NotEmpty
     private String username;
 
-	@Column(name = "name", nullable = false)
+	@Column( name = "name", nullable = false)
     @NotEmpty
     private String name;
 	
@@ -32,7 +47,12 @@ public class User extends BaseEntity {
     @Column(name = "birthdate", nullable = false)
     private String birthDate;
 
-    @NotEmpty
+
+    @Column(name = "joined", nullable = false, updatable = false)
+    private LocalDateTime joined = LocalDateTime.now(); 
+
+   
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name ="password", nullable = false)
     private String password;
 
@@ -40,7 +60,7 @@ public class User extends BaseEntity {
 	@Column(name = "image", nullable = false)
     private String image;
 
-    @Column(unique=true, nullable = false)
+    @Column(unique = true, nullable = false)
     @NotEmpty
     private String email;
 
@@ -60,5 +80,40 @@ public class User extends BaseEntity {
 		}
 		return cond;
 	}
+/* 
+	//RELACION CON USUARIOS
+    @ManyToMany
+    @JoinTable(
+        name = "admin_user",
+        joinColumns = @JoinColumn(name = "admin_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> users = new ArrayList<>();
+*/
+    //RELACION -> ADMIN CREA LGORO
+    @JsonSerialize(contentUsing = AchievementSerializer.class)
+    @JsonDeserialize(contentUsing = AchievementDeserializer.class)
+    @OneToMany (mappedBy = "creator", cascade = CascadeType.ALL) //CASCADE ES PARA QUE CUALQIUER ACCIÓN SOBRE EL PADRE (EL ADMIN) SE APLIQUE TAMBIEN SOBRE SU HIJO (LOGRO)
+    private List<Achievement> createdAchievements = new ArrayList<>();
 
+    /* 
+    //RELACION -> ADMIN EDITA LOGRO
+    @ManyToMany
+    @JoinTable(
+        name = "adminAchievement",
+        joinColumns = @JoinColumn(name = "admin_id"),
+        inverseJoinColumns = @JoinColumn(name = "achievement_id")
+    )
+    private List<Achievement> managedAchievements = new ArrayList<>();
+
+
+    //RELACION -> ADMIN GESTIONA PARTIDA
+    @ManyToMany
+    @JoinTable(
+        name = "adminGame",
+        joinColumns = @JoinColumn(name = "admin_id"),
+        inverseJoinColumns = @JoinColumn(name = "game_id")
+    )
+    private List<Game> managedGames = new ArrayList<>();
+*/
 }

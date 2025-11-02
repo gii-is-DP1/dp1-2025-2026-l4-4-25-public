@@ -12,7 +12,8 @@ Lorenzo Valderrama Román (WRG8176 / lorvalrom@alum.us.es)
 
 Diego Rey Carmona (RHQ7780 / diereycar@alum.us.es)
 
-Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us.es)
+
+Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us)
 
 Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
 
@@ -20,6 +21,8 @@ Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 
 _Esta es una plantilla que sirve como guía para realizar este entregable. Por favor, mantén las mismas secciones y los contenidos que se indican para poder hacer su revisión más ágil._ 
 
+
+## 1️⃣ Introducción
 
 El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y **gratuito**.
 Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona.

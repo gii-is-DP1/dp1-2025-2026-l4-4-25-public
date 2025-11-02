@@ -1,0 +1,173 @@
+.profile-overlay {
+  position: absolute;
+  top: 15%;
+  left: 5%;
+  width: 90%;
+  height: 60%;
+  background-color: rgba(184, 211, 219, 0.582);
+  border-radius: 20px;
+  padding: 2rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  justify-content: right; 
+  align-items: center;
+  box-shadow: 0 0 30px rgba(122, 110, 63, 0.5);
+  backdrop-filter: blur(40px);
+  text-align: center;
+}
+
+.profile-bottom-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+
+/* Cabecera del perfil: avatar + info */
+.profile-header {
+  color:#e6b800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Imagen de perfil */
+.profile-avatar {
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  border: 3px solid #f1c40f;
+  object-fit: cover;
+}
+
+/* Información del usuario */
+.profile-info h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* Contenedor de botones (fecha + editar) */
+.profile-buttons {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Botón de editar perfil */
+.button-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  justify-content: space-between;
+  border: none;
+  background-color: #f1c40f;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+.button-small:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(240, 199, 38, 0.8);
+}
+
+.edit-profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem; /* separación entre columnas */
+  margin-top: 6rem; /* para dejar espacio al logo */
+}
+
+.edit-profile-left,
+.edit-profile-right {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 2rem;
+  box-sizing: border-box; 
+}
+
+.edit-profile-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+}
+
+.edit-profile-right {
+  width: 50%; /* donde irá el formulario */
+}
+
+.profile-image-preview {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin-top: 1rem;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Contenedor de dropdown y input */
+.profile-image-options {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center; 
+    gap: 1rem; 
+    flex-wrap: wrap; 
+}
+
+.profile-image-options input[type="file"] {
+  width: 80%; /* ajustable, para que no se salga */
+}
+
+/*Para mostrar que eres Admin en el profile*/
+
+/* --- Estilo Premium para la Insignia de Administrador --- */
+.admin-badge {
+    /* Fondo con degradado dorado/amarillo */
+    background: linear-gradient(145deg, #f3e5ab 0%, #f1c40f 45%, #e6b800 100%);
+    
+    /* Fuente y texto */
+    color: #333; /* Color oscuro para contraste */
+    font-size: 1.5rem;
+    font-weight: 900; /* Extra bold */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.5rem 1.5rem; /* Relleno */
+    border-radius: 10px;
+    display: inline-block; /* Para que el padding y el tamaño funcionen bien */
+
+    /* Efectos 3D y Premium */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Borde ligero para el brillo */
+    box-shadow: 
+        0 4px 15px rgba(240, 199, 38, 0.7), /* Sombra exterior dorada/brillante */
+        inset 0 0 10px rgba(255, 255, 255, 0.8), /* Brillo interior */
+        inset 0 -5px 5px rgba(0, 0, 0, 0.2); /* Sombra para efecto de relieve (ligeramente levantado) */
+    
+    /* Efecto de inclinación para hacerlo más dinámico (opcional) */
+    transform: rotate(-3deg);
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Pequeño efecto al pasar el ratón */
+.admin-badge:hover {
+    transform: scale(1.05) rotate(-3deg);
+    cursor: default;
+}
+
+/* El texto del nombre de usuario también se ve premium para el admin */
+.profile-info h2.admin-username {
+    color: #f1c40f; 
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+

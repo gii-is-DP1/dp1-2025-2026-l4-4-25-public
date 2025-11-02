@@ -1,0 +1,70 @@
+@startuml
+
+hide circle
+
+title Cards Layer Diagram - Proyecto Saboteur L4
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam shadowing false
+
+package "Presentation Layer" {
+  class GameRestController
+}
+
+package "Business Logic Layer" {
+ class ActivePlayerService
+class UserService
+class TunnelService
+class CardService
+class DeckService
+class GameService
+class MessageService
+class RoundService
+class SquareService
+class ActionService
+
+}
+
+package "Resources Layer" {
+class GameRepository{
+    Optional<Game> findById(Integer id);
+    Optional<Game> findByLink(String link);
+    Optional<Game> findByCreatorUsername(String creatorUsername);
+    Boolean existsByLink(String link);
+    Iterable<Game> findAllByAdminUsername(String adminUsername);
+    Iterable<Game> findAllPublicGames();
+    Iterable<Game> findAllPrivateGames();
+    }
+class ActivePlayerRepository {
+ Iterable<ActivePlayer> findByPickaxeState(boolean pickaxeState);
+    Iterable<ActivePlayer> findByCandleState(boolean candleState);
+    Iterable<ActivePlayer> findByCartState(boolean cartState);
+ Iterable<ActivePlayer> findByRol(boolean rol);
+ Optional<ActivePlayer> findByUsername(String username);
+  boolean existsByUsername (String username);
+}
+class SquareRepository {
+ Optional<Square> findById (Integer id);
+    List<Square> findByOccupation(boolean occupation);
+    List<Square> findByType(type type);
+    Square findByCoordinateXAndCoordinateY(Integer coordinateX, Integer coordinateY);
+    boolean existsByCoordinateXAndCoordinateY (Integer coordinateX, Integer coordinateY);
+}
+}
+GameRestController..> GameService
+GameRestController..> ActivePlayerService
+GameService ..> UserService
+ActivePlayerService ..> UserService
+GameService ..> TunnelService
+GameService..> ActionService
+GameService ..> CardService
+GameService ..> DeckService
+GameService ..> MessageService
+MessageService ..> ActivePlayerService
+CardService ..> ActivePlayerService
+GameService ..> RoundService
+GameService ..> SquareService
+GameService ..> GameRepository
+ActivePlayerService ..> ActivePlayerRepository
+GameService ..> SquareRepository
+@enduml
