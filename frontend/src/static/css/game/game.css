@@ -1,11 +1,14 @@
 .board-container {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  /*height: 100vh;*/
+  min-height: 100vh;
   background-image:  url('../../images/cave_image.jpeg');
   color: white;
   font-family: Arial, sans-serif;
-  overflow: hidden;}
+  overflow: hidden;
+  overflow-y: auto; /* permite scroll si se sale */
+}
 
 .logo-container {
   position: absolute;

@@ -70,8 +70,24 @@ useEffect(() => {
       profileImage: avatar, 
       wins: Math.floor(Math.random() * 10), 
     }));
-    const fetchedPlayers = await Promise.all(initialPlayers.map(username => fetchPlayerByUsername(username)));
-    const validPlayers = fetchedPlayers.filter(player => player !== null); 
+    /*const fetchedPlayers = await Promise.all(initialPlayers.map(username => fetchPlayerByUsername(username)));
+    const validPlayers = fetchedPlayers.filter(player => player !== null); */
+    const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
+    try{
+      const player = await fetchPlayerByUsername(username);
+      if (!player) return null;
+      return {
+        username: player.username,
+        birthDate: player.birthDate,
+        profileImage: player.image || avatar, // Usa su imagen real o el avatar por defecto
+        wins: player.wins ?? 0,
+      };
+    }catch (err) {
+        console.error(`Error al cargar datos de ${username}:`, err);
+        return null;
+    }
+  }));
+    const validPlayers = fetchedPlayers.filter(p => p !== null);
     setActivePlayers([...validPlayers, ...mockPlayers]); 
   };
 
