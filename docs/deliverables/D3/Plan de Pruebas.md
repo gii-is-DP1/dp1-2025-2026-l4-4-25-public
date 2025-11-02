@@ -5,14 +5,14 @@
 **Grupo/Equipo: L4-4** <!-- p.ej., L4-03 Equipo 33 -->  
 **Nombre del proyecto: Saboteur** <!-- p. ej. Petris -->  
 **Repositorio: https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25** <!-- URL del repo -->  
-**Integrantes (máx. 6): 
-Marcos Ángel Ayala Blanco marayabla@alum.us.es
-Luis Calderón Carmona luicalcar@alum.us.es
-Alejandro Caro Pérez alecarper@alum.us.es
-Lorenzo Valderrama Román lorvalrom@alum.us.es
-Carlos Borrego Ortiz carborort@alum.us.es
+**Integrantes (máx. 6):** 
+Marcos Ángel Ayala Blanco marayabla@alum.us.es,
+Luis Calderón Carmona luicalcar@alum.us.es,
+Alejandro Caro Pérez alecarper@alum.us.es,
+Lorenzo Valderrama Román lorvalrom@alum.us.es,
+Carlos Borrego Ortiz carborort@alum.us.es,
 Diego Rey Carmona diereycar@alum.us.es
-** <!-- Nombre Apellidos (US-Id / correo @us.es) -->
+<!-- Nombre Apellidos (US-Id / correo @us.es) -->
 
 
 ## 1. Introducción
@@ -69,7 +69,7 @@ https://gii-is-dp1.github.io/group-project-seed/deliverables/D3/coverage/).
 |---------------------|--------|-------------|--------|--------|
 | HU-34 CRUD de Logros:  | [AchievementServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/achievement/AchievementServiceTests.java) | Verifica la gestión completa de logros (CRUD), la unicidad por título, y las búsquedas por título y creador.|Implementada| Unitaria en backend a nivel de Servicio, prueba social. |
 | HU-18 Registro de Acciones | [ActionServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/action/ActionServiceTests.java) | Verifica la gestión (CRUD) y la funcionalidad de búsqueda de cartas de Acción según su tipo (nameAction), valor de efecto (effectValue) y el objeto afectado (objectAffect). |Implementada| Unitaria en backend a nivel de Servicio, prueba social.|
-| CRUD de ActivePlayer | [ActivePlayerServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/ActivePlayer/ActivePlayerServiceTests.java) | Verifica el ciclo de vida (CRUD) del participante activo en partida, así como la gestión de sus estados de juego (pickaxeState, candleState, rol) |Implementada| Unitaria en backend a nivel de Servicio, prueba social. | |
+| CRUD de ActivePlayer | [ActivePlayerServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/activePlayer/ActivePlayerServiceTests.java) | Verifica el ciclo de vida (CRUD) del participante activo en partida, así como la gestión de sus estados de juego (pickaxeState, candleState, rol) |Implementada| Unitaria en backend a nivel de Servicio, prueba social. | |
 | HU-24 Registros de Jugador: | [AuthServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/auth/AuthServiceTests.java) |Verifica que un nuevo usuario puede registrarse en el sistema. | Implementada |Unitaria en backend a nivel de Servicio, prueba social. |
 | HU-44 Chat entre los jugadores en la partida | [ChatServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/chat/ChatServiceTests.java)| Verifica la gestión (CRUD) y la jerarquía de la entidad base Card, asegurando que el polimorfismo con Action y Tunnel funcione correctamente. | Implementada |Unitaria en backend a nivel de Servicio, prueba social.|
 | HU-44 Chat entre los jugadores de la partida: | [MessageServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/message/MessageServiceTests.java) | Verifica la gestión (CRUD) de los mensajes, la búsqueda por ID de chat y la vinculación correcta al ActivePlayer emisor.| Implementada |Unitaria en backend a nivel de Servicio, prueba social.|
