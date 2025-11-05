@@ -8,8 +8,8 @@ import getErrorModal from "../../util/getErrorModal";
 import useFetchState from "../../util/useFetchState";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 
-const jwt = tokenService.getLocalAccessToken();
-const loggedInUser = tokenService.getUser();
+const jwt = tokenService.getLocalAccessToken(); 
+const loggedInUser = tokenService.getUser(); 
 
 export default function UserListAdmin() {
   const [message, setMessage] = useState(null);
