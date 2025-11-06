@@ -37,8 +37,6 @@ INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) 
 null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
-
-
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
 VALUES (101, 1, 4, TRUE, 0, 1);
 
@@ -50,19 +48,6 @@ VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 
 --INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
 --VALUES (200, 0, FALSE, 0);
-
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (201, 1, TRUE, 'tunnel_recto_vertical.png');
-
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (202, 1, TRUE, 'tunnel_recto_vertical_izquierda.png');
-
-INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
-VALUES (201, FALSE, TRUE, TRUE, FALSE, FALSE);
-
-INSERT INTO tunnel (id, rotacion, arriba, abajo, derecha, izquierda) 
-VALUES (202, FALSE, TRUE, TRUE, FALSE, TRUE);
-
 
 INSERT INTO achievements (id, creator_id, score, descripcion, tittle)
 VALUES (200, 1, 50, 'Gana 10 partidas habiendo construido más de 20 caminos.', 'Constructor Maestro');
@@ -271,169 +256,230 @@ VALUES (30, 'REVEAL', FALSE, 'REVEAL');
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (31, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (31, FALSE, FALSE, FALSE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (31, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (32, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (32, FALSE, FALSE, FALSE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (32, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (33, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (33, FALSE, FALSE, FALSE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (33, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE);
 
     -- ARRIBA ABAJO IZQUIERDA DERECHA
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (34, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (34, FALSE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (34, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (35, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (35, FALSE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (35, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (36, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (36, FALSE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (36, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (37, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (37, FALSE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (37, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (38, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (38, FALSE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (38, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE);
 
     -- ABAJO IZQUIERDA DERECHA
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (39, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (39, FALSE, FALSE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (39, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (40, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (40, FALSE, FALSE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (40, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (41, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (41, FALSE, FALSE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (41, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (42, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (42, FALSE, FALSE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro)
+VALUES (42, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (43, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (43, FALSE, FALSE, TRUE, TRUE, TRUE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (43, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE);
 
     -- ARRIBA IZQUIERDA
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (44, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (44, FALSE, TRUE, FALSE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (44, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (45, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (45, FALSE, TRUE, FALSE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (45, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (46, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (46, FALSE, TRUE, FALSE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (46, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (47, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (47, FALSE, TRUE, FALSE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (47, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE);
 
     -- ARRIBA ABAJO IZQUIERDA
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (48, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (48, FALSE, TRUE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (48, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (49, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (49, FALSE, TRUE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (49, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (50, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (50, FALSE, TRUE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (50, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (51, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (51, FALSE, TRUE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (51, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (52, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (52, FALSE, TRUE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (52, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE);
 
     -- IZQUIERDA ABAJO
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (53, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (53, FALSE, FALSE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (53, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (54, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (54, FALSE, FALSE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (54, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (55, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (55, FALSE, FALSE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (55, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (56, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (56, FALSE, FALSE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (56, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (57, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (57, FALSE, FALSE, TRUE, TRUE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (57, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
     -- ARRIBA ABAJO
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (58, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (58, FALSE, TRUE, TRUE, FALSE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (58, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (59, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (59, FALSE, TRUE, TRUE, FALSE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (59, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (60, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (60, FALSE, TRUE, TRUE, FALSE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (60, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (61, null, FALSE, 'a');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha) 
-VALUES (61, FALSE, TRUE, TRUE, FALSE, FALSE);
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (61, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE);
 
-    -- SIN SALIDA
+    -- SIN SALIDA IZQUIERDA DERECHA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (62, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (62, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE);
+
+    -- SIN SALIDA ARRIBA ABAJO IZQUIERDA DERECHA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (63, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (63, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE);
+
+    -- SIN SALIDA ABAJO IZQUIERDA DERECHA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (64, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (64, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE);
+
+    -- SIN SALIDA ARRIBA IZQUIERDA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (65, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (65, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE);
+
+    -- SIN SALIDA ARRIBA ABAJO IZQUIERDA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (66, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (66, FALSE, TRUE, TRUE, TRUE, FALSE, TRUE);
+
+    -- SIN SALIDA ABAJO IZQUIERDA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (67, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (67, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
+
+    -- SIN SALIDA IZQUIERDA
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (68, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (68, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE);
+
+    -- SIN SALIDA ARRIBA ABAJO
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (69, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (69, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE);
+
+    -- SIN SALIDA ABAJO
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (70, null, FALSE, 'a');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (70, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE);
