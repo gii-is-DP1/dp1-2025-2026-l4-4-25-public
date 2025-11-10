@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "../../static/css/lobbies/games/ListGames.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import gamesImg from "../../static/images/games.png";
+import { toast } from "react-toastify";
 import tokenService from "../../services/token.service";
 
 export default function ListGames() {
@@ -18,6 +19,7 @@ export default function ListGames() {
   const [onlyFriend, setOnlyFriend] = useState(false);
 
   const jwt = tokenService.getLocalAccessToken();
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -35,15 +37,100 @@ export default function ListGames() {
           setGamesList(data);
           setFilteredGames(data);
         } else {
-          alert("Error al obtener la lista de juegos.");
+          toast.error("Error al obtener la lista de juegos.");
         }
       } catch (error) {
         console.error("Error en fetch:", error);
-        alert("No se pudo conectar con el servidor.");
+        toast.error("No se pudo conectar con el servidor.");
       }
     };
     fetchGames();
   }, [jwt]);
+
+    async function refreshGames() {
+    try {
+      const response = await fetch("/api/v1/games", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGamesList(data);
+        setFilteredGames(data);
+        toast.info('Lista de partidas actualizada');
+      } else {
+        toast.error('Error al actualizar la lista de partidas');
+      }
+    } catch (error) {
+      console.error('Error refreshing games:', error);
+      toast.error('No se pudo conectar con el servidor.');
+    }
+  }
+
+  async function handleRequestJoin(game) {
+    try {
+      const currentUser = tokenService.getUser();
+      if (!currentUser || !currentUser.username) {
+        toast.error("Error to identify user.");
+        return;}
+
+      const request = {
+        content: `REQUEST_JOIN:${currentUser.username}:${game.id}`,
+        activePlayer: currentUser.username,
+        chat: game.chat};
+
+      const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify(request),});
+
+      if (response.ok) {
+        toast.success("Request sent to the game creator.");
+        const currentUser = tokenService.getUser();
+        const headers = { Authorization: `Bearer ${jwt}` };
+        const iv = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/v1/messages/byChatId?chatId=${game.chat}`, {headers});
+            if (!res.ok) return;
+            const msgs = await res.json();
+            for (const m of msgs) {
+              if (!m.content || typeof m.content !== 'string') continue;
+              if (m.content.startsWith('REQUEST_ACCEPTED:')) {
+                const parts = m.content.split(':');
+                const targetUser = parts[1];
+                const targetGameId = parts[2];
+                if (targetUser === currentUser.username && String(targetGameId) === String(game.id)) {
+                  clearInterval(iv);
+                  const gres = await fetch(`/api/v1/games/${game.id}`, { headers });
+                  if (gres.ok) {
+                    const updatedGame = await gres.json();
+                    toast.success('Request accepted. Entering the Lobby...');
+                    navigate(`/CreateGame/${game.id}`, {state:{ game:updatedGame}});
+                    return;}}}
+              if (m.content.startsWith('REQUEST_DENIED:')) {
+                const parts = m.content.split(':');
+                const targetUser = parts[1];
+                const targetGameId = parts[2];
+                if (targetUser === currentUser.username && String(targetGameId) === String(game.id)) {
+                  clearInterval(iv);
+                  toast.warn('Request Denied from the Creator.');
+                  return;}}}
+          } catch (error) { console.error( 'error del poling', error); }
+        }, 2000);
+      } else {
+        toast.error("Error to send the request. Try Again.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error to connect with the server. Try Again.");
+    }
+  }
 
    useEffect(() => {
     const fetchFriends = async () => {
@@ -99,9 +186,11 @@ console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
     <div className="home-page-lobby-container">
       <img src={gamesImg} alt="Encabezado" className="listgames-top-image" />
       <div className="top-right-lobby-buttons">
+        <button className="button-logOut" onClick={refreshGames}>🔁</button>
         <Link to="/lobby">
           <button className="button-logOut">➡️</button>
         </Link>
+  
       </div>
 
       <div className="listgames-content">
@@ -128,15 +217,13 @@ console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
                   <div className="game-card-footer">
                     {game.gameStatus === "CREATED" ? (
                       game.private ? (
-                        <Link to={"/board/" + game.id}>
-                          <button className="button-join-game">📩REQUEST JOIN</button>
-                        </Link>
+                        <button className="button-join-game" onClick={() => handleRequestJoin(game)}>📩REQUEST JOIN</button>
                       ) : game.activePlayers?.length < game.maxPlayers ? (
                         <Link to={"/CreateGame/" + game.id} state={{ game }}>
                           <button className="button-join-game">📥JOIN</button>
                         </Link>
                       ) : (
-                        <button className="button-join-game">GAME IS FULL</button>
+                        <button className="button-join-game">🔴GAME IS FULL</button>
                       )
                     ) : (
                       <Link to={"/board/" + game.id}>
@@ -150,7 +237,8 @@ console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
         </div>
 
         <div className="filters-panel">
-          <h2>Filters</h2>
+          <h2> Filters</h2>
+          
           <div className="filter-group">
             <label>🌐Privacy:</label>
             <select name="privacy" value={filters.privacy} onChange={handleFilter}>

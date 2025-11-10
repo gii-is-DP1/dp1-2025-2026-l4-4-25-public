@@ -1,13 +1,12 @@
 .board-container {
   position: relative;
   width: 100vw;
-  /*height: 100vh;*/
   min-height: 100vh;
   background-image:  url('../../images/cave_image.jpeg');
   color: white;
   font-family: Arial, sans-serif;
   overflow: hidden;
-  overflow-y: auto; /* permite scroll si se sale */
+  overflow-y: auto; /*scroll*/
 }
 
 .logo-container {
@@ -167,7 +166,7 @@
   font-size: 12px;}
 
 .chat-box {
-  top:475px;
+  top:525px;
   position: absolute;
   bottom: 40px;
   right: 10px;
@@ -284,7 +283,7 @@
 .game-log {
   position: absolute;
   right: 30px; 
-  top: 42%;
+  top: 40%;
   transform: translateY(-50%);
   width: 220px;
   height: 280px;

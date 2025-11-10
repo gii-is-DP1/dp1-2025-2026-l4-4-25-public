@@ -1,5 +1,6 @@
 import React, {useState,useRef, useEffect} from 'react';
 import '../App.css';
+import { toast } from 'react-toastify';
 import '../static/css/home/home.css';
 import { Link, useLocation } from 'react-router-dom';
 import '../static/css/game/game.css'; 
@@ -16,6 +17,7 @@ export default function Board() {
  
  const timeturn=60;
 
+  const [isSpectator, setIsSpectator] = useState([]);
   const [CardPorPlayer, setCardPorPlayer] = useState(0);
   const [deckCount, setDeckCount] = useState(60);
   const [profileImage, setProfileImage] = useState(avatar);
@@ -34,8 +36,6 @@ export default function Board() {
 
 
 useEffect(() => {
-  // console.log("game", game)
-
   const fetchPlayerByUsername = async (username) => {
     try {
       const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
@@ -51,11 +51,11 @@ useEffect(() => {
         return data;
       } else {
         console.error('Respuesta no OK:', response.status);
-        alert('Error al obtener el jugador.');
+        toast.error('Error al obtener el jugador.');
       }
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
-      alert('Error de red. No se pudo conectar con el servidor.');
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
   };
 
@@ -226,7 +226,7 @@ useEffect(() => {
     const time = setInterval(() => {
       setCont(p => {
         if (p <= 1) {
-          nextTurn(); // YA DEFINIDO. Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
+          nextTurn(); 
           return timeturn;}
         return p-1;});
     }, 1000);

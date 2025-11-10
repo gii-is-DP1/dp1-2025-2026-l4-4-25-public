@@ -2,6 +2,7 @@ import React, { useState,useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import tokenService from '../../services/token.service';
 import '../../static/css/lobbies/games/CreateGame.css'; 
+import { toast } from 'react-toastify';
 
 
 const CreateGame = () => {
@@ -16,7 +17,7 @@ const CreateGame = () => {
   const jwt = tokenService.getLocalAccessToken();
   const loggedInUser = tokenService.getUser();
   const isCreator = game?.creator === loggedInUser?.username;
-
+  const [joinRequests, setJoinRequests] = useState([]);
 
   
 
@@ -31,7 +32,7 @@ const CreateGame = () => {
         //Obtenemos el username del usuario actual
         const currentUser = tokenService.getUser();
         if(!currentUser || !currentUser.username) {
-          alert("No se pudo identificar al usuario para unirse")
+          toast.error("No se pudo identificar al usuario para unirse")
           navigate("/lobby");
           return;
         }
@@ -44,7 +45,7 @@ const CreateGame = () => {
           },
         });
         if(!gameResponse.ok){
-          alert("Error al cargar los datos de la partida");
+          toast.error("Error al cargar los datos de la partida");
           navigate("/ListGames");
           return;
         }
@@ -81,12 +82,12 @@ const CreateGame = () => {
           setGame(updatedGame)    
           console.log("Unido a la partida con éxito")
         }else{
-          alert("Error al intentar unirse a la partida");
+          toast.error("Error al intentar unirse a la partida");
           navigate("/ListGames");
         }
       } catch(error){
         console.error("Error en el proceso de unirse:", error);
-        alert(error.message);
+        toast.error(error.message);
         navigate("/ListGames");
       }
     }; 
@@ -128,11 +129,11 @@ const CreateGame = () => {
             setchat(data);
           } else {
             console.error('Respuesta no OK:', response.status);
-            alert('Error al obtener el mensaje del jugador.');
+            toast.error('Error al obtener el mensaje del jugador.');
           }
         } catch (error) {
           console.error('Hubo un problema con la petición fetch:', error);
-          alert('Error de red. No se pudo conectar con el servidor.');
+          toast.error('Error de red. No se pudo conectar con el servidor.');
         }
       };
 
@@ -161,17 +162,89 @@ const CreateGame = () => {
             setPlayer(data);
           } else {
             console.error('Respuesta no OK:', response.status);
-            alert('Error al obtener la información del jugador.');
+            toast.error('Error al obtener la información del jugador.');
           }
         } catch (error) {
           console.error('Hubo un problema con la petición fetch:', error);
-          alert('Error de red. No se pudo conectar con el servidor.');
+          toast.error('Error de red. No se pudo conectar con el servidor.');
         }
       };
       
       postFirstMessage();
       fetchPlayer();
   },[game?.creator, game?.chat])
+  
+  
+  useEffect(() => {
+    if (!isCreator || !game?.chat) return;
+    let cancelled = false;
+    const fetchRequests = async () => {
+      try {
+        const res = await fetch(`/api/v1/messages/byChatId?chatId=${game.chat}`, {
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        if (!res.ok) return;
+        const msgs = await res.json();
+        const requests = msgs
+          .filter(m => typeof m.content === 'string' && m.content.startsWith('REQUEST_JOIN:'))
+          .map(m => {
+            const parts = m.content.split(":");
+            return { username: parts[1], messageId: m.id };
+          });
+        if (!cancelled) setJoinRequests(requests);
+      } catch (error) {
+        console.error('Error fetching the requests', error);}};
+    fetchRequests();
+    const iv = setInterval(fetchRequests, 5000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [isCreator, game?.chat, jwt]);
+
+  
+  const handleAcceptRequest = async (username) => {
+    try {
+      const currentActivePlayers = Array.from(new Set(game.activePlayers ?? []));
+      if (currentActivePlayers.includes(username)) {
+        toast.info(`${username} is already in the lobby`);
+        setJoinRequests(prev => prev.filter(p => p.username !== username));
+        return;}
+      const newActive = [...currentActivePlayers, username];
+      const res = await fetch(`/api/v1/games/${game.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({ activePlayers: newActive }),});
+      if (res.ok) {
+        const updated = await res.json();
+        setGame(updated);
+        toast.success(`${username} acceepted to the game`);
+        await fetch(`/api/v1/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` }, body: JSON.stringify({ content: `REQUEST_ACCEPTED:${username}:${game.id}`, activePlayer: game.creator, chat: game.chat }) });
+        const msgsToDelete = joinRequests.filter(j => j.username === username).map(j => j.messageId);
+        for (const mid of msgsToDelete) {
+          try { await fetch(`/api/v1/messages/${mid}`, { method: 'DELETE', headers: { Authorization: `Bearer ${jwt}` } }); } catch (e) { console.warn('Failed deleting message', mid, e); }
+        }
+        setJoinRequests(prev => prev.filter(p => p.username !== username));
+      } else {
+        toast.error('Error to accept the request. Try Again.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error to connect with the server. Try Again.');
+    }
+  };
+
+  const handleDenyRequest = async (username) => {
+    try {
+      await fetch(`/api/v1/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` }, body: JSON.stringify({ content: `REQUEST_DENIED:${username}:${game.id}`, activePlayer: game.creator, chat: game.chat }) });
+      const msgsToDelete = joinRequests.filter(j => j.username === username).map(j => j.messageId);
+      for (const mid of msgsToDelete) {
+        try { await fetch(`/api/v1/messages/${mid}`, { method: 'DELETE', headers: { Authorization: `Bearer ${jwt}` } }); } catch (e) { console.warn('Failed deleting message', mid, e); }
+      }
+      toast.info(`${username} has been denied`);
+      setJoinRequests(prev => prev.filter(p => p.username !== username));
+    } catch (err) {
+      console.error(err);
+      toast.error('Error to connect with the server. Try Again.');
+    }
+  };
 //para refrescar los activeplayers
   useEffect(() => {
     if (!game?.id) return;
@@ -202,6 +275,26 @@ const CreateGame = () => {
     const iv = setInterval(fetchGame, 3000);
     return () => clearInterval(iv);
   }, [game?.id, jwt]);
+
+  const [lobbyIn, SetLobbyIn] = useState(() => {
+    try {
+      return (game?.activePlayers ?? []).includes(loggedInUser?.username);
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    if (!game || !game.id) return;
+    const currentUsername = loggedInUser?.username;
+    if (!currentUsername) return;
+    const currentIn = (game.activePlayers ?? []).includes(currentUsername);
+    if (lobbyIn && !currentIn) {
+      toast.error('Has sido expulsado de la partida'); // tmb toast.success, info y warn
+      navigate('/lobby');
+    }
+    SetLobbyIn(currentIn);
+  }, [game?.activePlayers]);
   
 
   async function handleSubmit() {
@@ -232,17 +325,17 @@ const CreateGame = () => {
 
       if (response.ok) {
         const newGame = await response.json();
-        alert("¡Partida actualizada con éxito!");
+        toast.success("¡Partida actualizada con éxito!");
         setpatchgame(newGame)
         console.log(newGame)
         //navigate(`/board/${newGame.id}`); 
       } else {
         const errorData = await response.json();
-        alert(`Error al actualizar la partida: ${errorData.message}`);
+        toast.warn(`Error al actualizar la partida: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
-      alert('Error de red. No se pudo conectar con el servidor.');
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
   }
 
@@ -264,15 +357,15 @@ const CreateGame = () => {
     if (response.ok) {
       const newGame = await response.json();
       setpatchgame(newGame);
-      alert("¡Partida iniciada con éxito!");
+      toast.success("¡Partida iniciada con éxito!");
       navigate(`/board/${newGame.id}`, { state: { game: newGame } });
     } else {
       const errorData = await response.json();
-      alert(`Error al iniciar la partida: ${errorData.message}`);
+      toast.error(`Error al iniciar la partida: ${errorData.message}`);
     }
   } catch (error) {
     console.error(error);
-    alert('No se pudo conectar con el servidor');
+    toast.error('No se pudo conectar con el servidor');
   }
 }
 
@@ -288,15 +381,15 @@ const CreateGame = () => {
 
     if (response.ok) {
       const newGame = await response.json();
-      alert("Partida eliminada");
+      toast.error("Partida eliminada");
       navigate("/lobby");
     } else {
       const errorData = await response.json();
-      alert(`Error al eliminar la partida: ${errorData.message}`);
+      toast.error(`Error al eliminar la partida: ${errorData.message}`);
     }
   } catch (error) {
     console.error(error);
-    alert('No se pudo conectar con el servidor');
+    toast.error('No se pudo conectar con el servidor');
   }
 
   }
@@ -305,10 +398,10 @@ const CreateGame = () => {
     const linkToCopy = game.link;
     try {
       await navigator.clipboard.writeText(linkToCopy);
-      alert("¡Enlace copiado al portapapeles!");
+      toast.info("¡Enlace copiado al portapapeles!");
     } catch (err) {
       console.error('Error al copiar el enlace: ', err);
-      alert('No se pudo copiar el enlace.');
+      toast.error('No se pudo copiar el enlace.');
     }
   }
 async function handleExpelPlayer(usernameToExpel) {
@@ -330,11 +423,11 @@ async function handleExpelPlayer(usernameToExpel) {
       
       setGame(updatedGame); 
     } else {
-      alert("Error al expulsar al jugador");
+      toast.error("Error al expulsar al jugador");
     }
   } catch (error) {
     console.error("Error:", error);
-    alert("No se pudo conectar con el servidor");
+    toast.error("No se pudo conectar con el servidor");
   }
 };
 
@@ -358,19 +451,33 @@ async function handleExitLobby() {
       setGame(updatedGame);
       navigate("/lobby");
     } else {
-      alert("Error al salir de la partida");
+      toast.error("Error al salir de la partida");
     }
   } catch (error) {
     console.error("Error:", error);
-    alert("No se pudo conectar con el servidor");
+    toast.error("No se pudo conectar con el servidor");
   }
 }
 
   return (
     <div className="home-page-container">
       <div className="hero-div"> 
-        <h1>Create Game</h1>
+        <h1>Create Game - ID: {game.id}</h1>
         <div className="creategame-card">
+          {isCreator && joinRequests && joinRequests.length > 0 && (
+            <div className="join-requests-panel">
+              <h3>📥Request Join📥</h3>
+              {joinRequests.map((rq) => (
+                <div key={rq.messageId ?? rq.username} className="join-request-item">
+                  <span>{rq.username}</span>
+                  <div>
+                    <button onClick={() => handleAcceptRequest(rq.username)}>Accept✅</button>
+                    <button onClick={() => handleDenyRequest(rq.username)}>Deny❌</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {isCreator && (
           <div className="form-group">
             <label>Number of players</label>
@@ -405,7 +512,7 @@ async function handleExitLobby() {
                     <button
                       className="expel-player-btn"
                       onClick={() => handleExpelPlayer(username)}>
-                      ❌ expulsar
+                      ❌ EJECT
                     </button>
                   )}
                 </div>
