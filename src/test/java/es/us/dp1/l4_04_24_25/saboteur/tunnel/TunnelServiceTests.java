@@ -26,7 +26,7 @@ class TunnelServiceTests {
 
     @Test
 	void shouldFindSingleTunnelById() {
-        Integer id = 201;
+        Integer id = 31;
 		Tunnel tunnel = this.tunnelService.findTunnel(id);
 		assertEquals(id, tunnel.getId());
 	}
@@ -45,15 +45,15 @@ class TunnelServiceTests {
 
     @Test
     void shouldUpdateTunnel(){
-        Tunnel originalTunnel = this.tunnelService.findTunnel(201);
+        Tunnel originalTunnel = this.tunnelService.findTunnel(31);
         originalTunnel.setDerecha(true);
-        Tunnel tunnel = this.tunnelService.updateTunnel(originalTunnel, 201);
+        Tunnel tunnel = this.tunnelService.updateTunnel(originalTunnel, 31);
         assertTrue(tunnel.derecha);
     }
 
     @Test
     void shouldDeleteTunnel() {
-        Integer id = 202;
+        Integer id = 31;
         Tunnel tunnelToDelete = this.tunnelService.findTunnel(id);
         assertEquals(id, tunnelToDelete.getId());
         this.tunnelService.deleteTunnel(id);
