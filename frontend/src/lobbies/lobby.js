@@ -4,6 +4,7 @@ import '../static/css/home/home.css';
 import { Link, useNavigate} from 'react-router-dom';
 import tokenService from "../services/token.service";
 import generateRandomLink from '../util/generateRandomLink';
+import { toast } from 'react-toastify';
 
 export default function Lobby(){
     const [isAdmin, setisAdmin] = useState(false);
@@ -15,14 +16,13 @@ export default function Lobby(){
     const jwt = tokenService.getLocalAccessToken();
     const navigate = useNavigate();
 
-
     // SIMULAMOS LOS AMIGOS HASTA QUE ESTÉ HECHO EN EL BACKEND
     const [friends, setFriends] = useState([
         {username: "Alexby205", status: "A", color: "green" },
         {username: "LuisCV1", status: "B", color: "orange" },
         {username: "Julio", status: "C", color: "red" },
     ]);
-
+    
     useEffect(() => {
     const fetchPlayer = async () => {
           try {
@@ -45,11 +45,11 @@ export default function Lobby(){
               setPlayer(data);
             } else {
               console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener la información del jugador.');
+              toast.error('Error al obtener la información del jugador.');
             }
           } catch (error) {
             console.error('Hubo un problema con la petición fetch:', error);
-            alert('Error de red. No se pudo conectar con el servidor.');
+            toast.error('Error de red. No se pudo conectar con el servidor.');
             }
         };
 
@@ -101,17 +101,17 @@ export default function Lobby(){
 
         if (gameResponse.ok) {
             const newGame = await gameResponse.json();
-            alert("¡Partida creada con éxito!");
+            toast.success("¡Partida creada con éxito!");
             console.log("Partida creada:", newGame);
             navigate('/CreateGame/' + newGame.id , { state: { game: newGame } });
         } else {
             const errorData = await gameResponse.json();
-            alert(`Error al crear la partida: ${errorData.message}`);
+            toast.warn(`Error al crear la partida: ${errorData.message}`);
         }
 
     } catch (error) {
         console.error('Hubo un problema con la petición fetch:', error);
-        alert('Error de red. No se pudo conectar con el servidor.');
+        toast.error('Error de red. No se pudo conectar con el servidor.');
     }
 }
 

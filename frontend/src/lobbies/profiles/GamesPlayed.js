@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "../../static/css/lobbies/GamesHistory.css";
+import { toast } from 'react-toastify';
 import { Link } from "react-router-dom";
 import tokenService from "../../services/token.service";
 
@@ -43,7 +44,7 @@ export default function GamesHistory() {
           setFilteredGames(finishedGames);
           console.log(data)
         } else {
-          alert("Error al obtener el historial");
+          toast.error("Error al obtener el historial");
         }
       } catch (error) {
         console.error("Error en fetch:", error);}};

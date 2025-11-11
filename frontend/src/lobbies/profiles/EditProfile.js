@@ -8,6 +8,7 @@ import { editProfileFormPlayer } from "./form/editProfileFormPlayer";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import getIconImage from "../../util/getIconImage"; 
+import { toast } from 'react-toastify';
 // import { IoMdArrowDropdown} from "react-icons/io";
 import { useNavigate } from 'react-router-dom';
 
@@ -110,14 +111,14 @@ export default function EditProfile() {
 
             if (response.ok){
                 tokenService.setUser(data);
-                alert("Profile updated successfully!");
+                toast.success("Profile updated successfully!");
                 navigate('/profile');
             } else {
-                alert(data.message || "Could not update profile");
+                toast.warn(data.message || "Could not update profile");
             }
         }catch(error){
             console.error(error);
-            alert("An error occurred while updating profile");
+            toast.error("An error occurred while updating profile");
         }
   }  
 

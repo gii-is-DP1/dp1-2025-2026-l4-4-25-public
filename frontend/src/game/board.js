@@ -1,5 +1,6 @@
 import React, {useState,useRef, useEffect} from 'react';
 import '../App.css';
+import { toast } from 'react-toastify';
 import '../static/css/home/home.css';
 import { Link, useLocation } from 'react-router-dom';
 import '../static/css/game/game.css'; 
@@ -16,6 +17,7 @@ export default function Board() {
  
  const timeturn=60;
 
+  const [isSpectator, setIsSpectator] = useState([]);
   const [CardPorPlayer, setCardPorPlayer] = useState(0);
   const [deckCount, setDeckCount] = useState(60);
   const [profileImage, setProfileImage] = useState(avatar);
@@ -31,11 +33,35 @@ export default function Board() {
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
   const [privateLog, setPrivateLog] = useState([]); 
+  
+  const BOARD_COLS=11; // 11 columnas
+  const BOARD_ROWS=9; // 9 filas
+  const BOARD_CELLS=BOARD_COLS*BOARD_ROWS; // 99 celdas en total
+  const [boardCells, setBoardCells] = useState(() =>
+    Array.from({ length: BOARD_ROWS }, () => Array.from({ length: BOARD_COLS }, () => null))
+  );
 
+  const boardGridRef = useRef(null);
+
+  const handleCellClick = (row, col) => {
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      if (!next[row][col]) {
+        next[row][col] = { type: 'path', owner: loggedInUser?.username || 'unknown', placedAt: Date.now() };
+      }
+      return next;
+    });
+  };
+
+  const handleCellRightClick = (row, col) => {
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      next[row][col] = null;
+      return next;
+    });
+  };
 
 useEffect(() => {
-  // console.log("game", game)
-
   const fetchPlayerByUsername = async (username) => {
     try {
       const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
@@ -51,11 +77,11 @@ useEffect(() => {
         return data;
       } else {
         console.error('Respuesta no OK:', response.status);
-        alert('Error al obtener el jugador.');
+        toast.error('Error al obtener el jugador.');
       }
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
-      alert('Error de red. No se pudo conectar con el servidor.');
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
   };
 
@@ -113,7 +139,15 @@ useEffect(() => {
   }
 }, [activePlayers]);
 
-
+useEffect(() => {
+  if (boardGridRef.current) {
+    // CENTRAR SCROLL TABLERO
+    const scrollHeight = boardGridRef.current.scrollHeight;
+    const clientHeight = boardGridRef.current.clientHeight;
+    const centerScroll = (scrollHeight - clientHeight) / 2;
+    boardGridRef.current.scrollTop = centerScroll;
+  }
+}, [boardCells]); 
 
 /*
 useEffect(() => {
@@ -226,7 +260,7 @@ useEffect(() => {
     const time = setInterval(() => {
       setCont(p => {
         if (p <= 1) {
-          nextTurn(); // YA DEFINIDO. Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
+          nextTurn(); 
           return timeturn;}
         return p-1;});
     }, 1000);
@@ -324,9 +358,27 @@ const handleDiscard = () => {
         🕓·ROUND {numRound}/3 
       </div>
 
-      <div className="board-grid">
-        {[...Array(35)].map((_, i) => (
-          <div key={i} className="board-cell">
+      <div ref={boardGridRef} className="board-grid saboteur-grid">
+        {boardCells.map((row, r) => (
+          <div key={`row-${r}`} className="board-row">
+            {row.map((cell, c) => (
+              <div
+                key={`cell-${r}-${c}`}
+                className={`board-cell ${cell ? 'has-card' : ''}`}
+                onClick={() => handleCellClick(r, c)}
+                onContextMenu={(e) => { e.preventDefault(); handleCellRightClick(r, c); }}
+                title={cell ? `Card: ${cell.type} (by ${cell.owner})` : `Empty ${r},${c}`}
+              >
+                {cell ? (
+                  <div className="card-preview">
+                    <div className="card-type">{cell.type}</div>
+                    <div className="card-owner">{cell.owner}</div>
+                  </div>
+                ) : (
+                  <div className="cell-coords">{r},{c}</div>
+                )}
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -384,7 +436,7 @@ const handleDiscard = () => {
           {message.length===0 ? ( <p className="no-messages">Not messages yet...</p>
           ):(
             message.map((msg, index) => (
-              <p key={index}><strong>{playerOrder.username}:</strong> {msg.text}</p>
+              <p key={index}><strong>{msg.author}:</strong> {msg.text}</p>
             ))
           )}
         </div>
