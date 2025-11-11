@@ -65,7 +65,7 @@ public class AchievementService {
     @Transactional(readOnly = true)
     public Achievement findByTittle (String tittle){
         return achievementRepository.findByTittle(tittle)
-                .orElseThrow(() -> new ResourceNotFoundException("Achievement", "Tittle", tittle));
+                .orElseThrow(() -> new ResourceNotFoundException("Achievement", "tittle", tittle));
     }
 
     @Transactional(readOnly = true)

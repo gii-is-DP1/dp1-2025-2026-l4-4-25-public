@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementService;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Metric;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService; 
@@ -79,7 +80,9 @@ class AchievementServiceTests {
         Achievement newAchievement = new Achievement();
         newAchievement.setTittle(TEST_TITTLE_NEW); // Usamos el título que no existe aún
         newAchievement.setDescription("Descripción de prueba.");
-        newAchievement.setScore(10);
+        newAchievement.setBadgeImage("prueba");
+        newAchievement.setThreshold(10.);
+        newAchievement.setMetric(Metric.GAMES_PLAYED);
         newAchievement.setCreator(creator); 
 
         Achievement savedAchievement = this.achievementService.saveAchievement(newAchievement);
@@ -132,8 +135,8 @@ class AchievementServiceTests {
     @Test
     @Transactional
     void shouldFindByTittle() {
-        Achievement achievement = this.achievementService.findByTittle("fran?"); 
-        assertEquals(201, achievement.getId());
+        Achievement achievement = this.achievementService.findByTittle("TEST3?"); 
+        assertEquals(202, achievement.getId());
     }
 
     @Test
