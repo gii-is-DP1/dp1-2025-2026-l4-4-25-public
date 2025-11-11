@@ -9,6 +9,7 @@ import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
 import avatar from "../static/images/icons/1.jpeg"
+import startCardImage from '../static/images/card-images/tunnel-cards/start.png';
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -37,9 +38,15 @@ export default function Board() {
   const BOARD_COLS=11; // 11 columnas
   const BOARD_ROWS=9; // 9 filas
   const BOARD_CELLS=BOARD_COLS*BOARD_ROWS; // 99 celdas en total
-  const [boardCells, setBoardCells] = useState(() =>
+  /* const [boardCells, setBoardCells] = useState(() =>
     Array.from({ length: BOARD_ROWS }, () => Array.from({ length: BOARD_COLS }, () => null))
-  );
+  );*/
+  const [boardCells, setBoardCells] = useState(() => {
+    const initialBoard = Array.from({ length: BOARD_ROWS }, () => Array.from({ length: BOARD_COLS }, () => null));
+    initialBoard[4][1] = { type: 'start', owner: 'system', placedAt: Date.now() };
+
+    return initialBoard;
+  });
 
   const boardGridRef = useRef(null);
 
@@ -374,6 +381,18 @@ const handleDiscard = () => {
                     <div className="card-type">{cell.type}</div>
                     <div className="card-owner">{cell.owner}</div>
                   </div>
+                ) : (
+                  <div className="cell-coords">{r},{c}</div>
+                )}
+                {cell ? (
+                  cell.type === 'start' ? (
+                    <img src={startCardImage} alt="Start Card" className="static-card-image" />
+                  ) : (
+                    <div className="card-preview">
+                      <div className="card-type">{cell.type}</div>
+                      <div className="card-owner">{cell.owner}</div>
+                    </div>
+                  )
                 ) : (
                   <div className="cell-coords">{r},{c}</div>
                 )}
