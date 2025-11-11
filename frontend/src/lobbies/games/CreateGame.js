@@ -290,7 +290,7 @@ const CreateGame = () => {
     if (!currentUsername) return;
     const currentIn = (game.activePlayers ?? []).includes(currentUsername);
     if (lobbyIn && !currentIn) {
-      toast.error('Has sido expulsado de la partida'); // tmb toast.success, info y warn
+      toast.error('You have been expelled from the game'); // tmb toast.success, info y warn
       navigate('/lobby');
     }
     SetLobbyIn(currentIn);
@@ -325,17 +325,17 @@ const CreateGame = () => {
 
       if (response.ok) {
         const newGame = await response.json();
-        toast.success("¡Partida actualizada con éxito!");
+        toast.success("¡Game updated successfully!");
         setpatchgame(newGame)
         console.log(newGame)
         //navigate(`/board/${newGame.id}`); 
       } else {
         const errorData = await response.json();
-        toast.warn(`Error al actualizar la partida: ${errorData.message}`);
+        toast.warn(`Error to update the game: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
-      toast.error('Error de red. No se pudo conectar con el servidor.');
+      toast.error('Error of network. Try Again.');
     }
   }
 
@@ -357,15 +357,15 @@ const CreateGame = () => {
     if (response.ok) {
       const newGame = await response.json();
       setpatchgame(newGame);
-      toast.success("¡Partida iniciada con éxito!");
+      toast.success("¡Game started successfully!");
       navigate(`/board/${newGame.id}`, { state: { game: newGame } });
     } else {
       const errorData = await response.json();
-      toast.error(`Error al iniciar la partida: ${errorData.message}`);
+      toast.error(`Error to start the game: ${errorData.message}`);
     }
   } catch (error) {
     console.error(error);
-    toast.error('No se pudo conectar con el servidor');
+    toast.error('Dont connect with the server.');
   }
 }
 
@@ -393,7 +393,7 @@ const CreateGame = () => {
   }
 
   }
-  async function handleCopyLink() {
+ /* async function handleCopyLink() {
     console.log("Link", game.link)
     const linkToCopy = game.link;
     try {
@@ -403,7 +403,7 @@ const CreateGame = () => {
       console.error('Error al copiar el enlace: ', err);
       toast.error('No se pudo copiar el enlace.');
     }
-  }
+  }*/
 async function handleExpelPlayer(usernameToExpel) {
   const currentActivePlayers = game.activePlayers;
   const newActivePlayers = currentActivePlayers.filter(p => p !== usernameToExpel);
@@ -450,19 +450,20 @@ async function handleExitLobby() {
       const updatedGame = await response.json();
       setGame(updatedGame);
       navigate("/lobby");
+      toast.success("Just left the game");
     } else {
-      toast.error("Error al salir de la partida");
+      toast.error("Error to leave the game");
     }
   } catch (error) {
     console.error("Error:", error);
-    toast.error("No se pudo conectar con el servidor");
+    toast.error("Dont connect with the server");
   }
 }
 
   return (
     <div className="home-page-container">
       <div className="hero-div"> 
-        <h1>Create Game - ID: {game.id}</h1>
+        <h1>Create Game </h1>
         <div className="creategame-card">
           {isCreator && joinRequests && joinRequests.length > 0 && (
             <div className="join-requests-panel">
@@ -471,8 +472,8 @@ async function handleExitLobby() {
                 <div key={rq.messageId ?? rq.username} className="join-request-item">
                   <span>{rq.username}</span>
                   <div>
-                    <button onClick={() => handleAcceptRequest(rq.username)}>Accept✅</button>
-                    <button onClick={() => handleDenyRequest(rq.username)}>Deny❌</button>
+                    <button onClick={() => handleAcceptRequest(rq.username)}>ACCEPT✅</button>
+                    <button onClick={() => handleDenyRequest(rq.username)}>DENY❌</button>
                   </div>
                 </div>
               ))}
@@ -512,7 +513,7 @@ async function handleExitLobby() {
                     <button
                       className="expel-player-btn"
                       onClick={() => handleExpelPlayer(username)}>
-                      ❌ EJECT
+                      ❌ EXPEL
                     </button>
                   )}
                 </div>
@@ -553,7 +554,7 @@ async function handleExitLobby() {
                 <>
                   <button onClick={handleSubmit}>📑 SAVE CHANGES</button>
                   <button onClick={handleStart}>▶️ START</button>
-                  <button onClickCapture={handleCopyLink}>🔗 LINK</button>
+                  <button className="button-small">🔗 ID : {game.id}</button>
                     <button onClick={handleCancel}>❌ CANCEL</button>
                   
                 </>
