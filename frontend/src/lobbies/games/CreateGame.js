@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import tokenService from '../../services/token.service';
 import '../../static/css/lobbies/games/CreateGame.css'; 
 import { toast } from 'react-toastify';
-
+import useWebSocket from '../../hooks/useWebSocket';
 
 const CreateGame = () => {
   const location = useLocation();
@@ -20,7 +20,23 @@ const CreateGame = () => {
   const [joinRequests, setJoinRequests] = useState([]);
 
   
+const gameUpdate = useWebSocket(
+    `/app/games/start/${game?.id}`, // endpoint para enviar mensajes (opcional si solo escuchas)
+    `/topic/game/${game?.id}`,      // topic al que te suscribes
+    {}                              // payload si quieres enviar algo al conectar
+)
 
+  useEffect(() => {
+    if(!gameUpdate) return;
+    console.log("WebSocket update received:", gameUpdate);
+    setGame(prev => ({...prev, ...gameUpdate}));
+  },[gameUpdate])
+
+  useEffect(() => {
+    if(game?.gameStatus === "ONGOING"){
+      navigate(`/board/${game.id}`, { state: { game } });
+    }
+  },[game]);
 
   useEffect(() => {
     console.log("Entrando al useEffect. Valor de game:", game);
