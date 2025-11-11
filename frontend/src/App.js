@@ -3,6 +3,8 @@ import { Route, Routes } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { ErrorBoundary } from "react-error-boundary";
 import AppNavbar from "./AppNavbar";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
@@ -100,6 +102,7 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
         <AppNavbar />
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Routes>
           <Route path="/" exact={true} element={<Home />} />
           {publicRoutes}
