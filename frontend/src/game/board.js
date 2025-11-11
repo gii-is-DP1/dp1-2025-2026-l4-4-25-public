@@ -1,4 +1,4 @@
-import React, {useState,useRef, useEffect} from 'react';
+import React, {useState,useRef, useEffect, act} from 'react';
 import '../App.css';
 import { toast } from 'react-toastify';
 import '../static/css/home/home.css';
@@ -35,7 +35,8 @@ export default function Board() {
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
   const [privateLog, setPrivateLog] = useState([]); 
-  
+  const [loggedActivePlayer, setLoggedActivePlayer] = useState(null);
+  const [chat, setChat] = useState([]);
   const BOARD_COLS=11; // 11 columnas
   const BOARD_ROWS=9; // 9 filas
   const BOARD_CELLS=BOARD_COLS*BOARD_ROWS; // 99 celdas en total
@@ -55,7 +56,7 @@ export default function Board() {
   });
 
   const boardGridRef = useRef(null);
-
+  
   const handleCellClick = (row, col) => {
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
@@ -74,8 +75,7 @@ export default function Board() {
     });
   };
 
-useEffect(() => {
-  const fetchPlayerByUsername = async (username) => {
+    const fetchPlayerByUsername = async (username) => {
     try {
       const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
         method: "GET",
@@ -130,19 +130,44 @@ useEffect(() => {
     setActivePlayers([...validPlayers, ...mockPlayers]); 
   };
 
-  loadActivePlayers();
+  const getChat = async () => {
+  try {
+    const response = await fetch(`/api/v1/chats/${game.chat}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+    if (response.ok) {
+      const chatData = await response.json();
+      setChat(chatData);
+    } else {
+      console.error('Error al obtener el chat:', response.status);
+    }
+  } catch (error) {
+    console.error('Error de red al obtener el chat:', error);
+  }
+};
 
+async function fetchAndSetLoggedActivePlayer() {
+    const player = await fetchPlayerByUsername(loggedInUser.username);
+    setLoggedActivePlayer(player);
+  }
+
+useEffect(() => {
+  loadActivePlayers();
+  getChat();
   async function handlerounds() {
     const irounds = game?.rounds?.length || 0;
     if (irounds <= 0) {
       setNumRound(1);
     }
   }
-
+  fetchAndSetLoggedActivePlayer();
   handlerounds();
-
-  
 }, []);
+
 useEffect(() => {
   if(activePlayers.length > 1){
     const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate)); 
@@ -161,6 +186,33 @@ useEffect(() => {
     boardGridRef.current.scrollTop = centerScroll;
   }
 }, [boardCells]); 
+
+// Cargar el game completo con sus relaciones si no está completo
+useEffect(() => {
+  const fetchCompleteGame = async () => {
+    if (!game?.id) return;
+    
+    try {
+      const response = await fetch(`/api/v1/games/${game.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        }
+      });
+      
+      if (response.ok) {
+        const completeGame = await response.json();
+        setGame(completeGame);
+        console.log('Game completo cargado:', completeGame);
+      }
+    } catch (error) {
+      console.error('Error al cargar el game completo:', error);
+    }
+  };
+  
+  fetchCompleteGame();
+}, []);
 
 /*
 useEffect(() => {
@@ -233,6 +285,34 @@ const nextTurn = () => {
   const nextClass = `player${nextIndex + 1}`;
   addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");};
 
+const postMessage = async (content, activePlayerUsername, chatId) => {
+  try {
+    console.log('Enviando mensaje:', { activePlayerUsername, content, chatId });
+    const response = await fetch(`/api/v1/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        content: content,
+        activePlayer: activePlayerUsername,
+        chat: chatId,
+      }),
+    });
+
+    if (response.ok) {
+      console.log('Mensaje enviado correctamente');
+    } else {
+      const errorText = await response.text();
+      console.error('Error al enviar mensaje:', errorText);
+      toast.error('Error al enviar el mensaje');
+    }
+  } catch (error) {
+    console.error('Error de red al enviar mensaje:', error);
+    toast.error('Error de red. No se pudo enviar el mensaje.');
+  }
+};
 
 const deck = () => {
     return null; // AUN POR DEFINIR, ESTA FUNCIÓN TIENE QUE IR RESTANDO CARTAS DEL MAZO SEGÚN SE VAYA ROBANDO/DESCARTANDO ¿CREAR OTRA FUNCIÓN QUE ASIGNE CARTA DE ESE MAZO A UN JUGADOR?
@@ -313,10 +393,41 @@ const handleDiscard = () => {
     addLog("⛔No more cards left in the deck!", "warning");}};
 
 
-  const SendMessage = (e) => {
+  const SendMessage = async (e) => {
     e.preventDefault(); // No quitar que sino no se actualiza
-    setMessage([...message,{ author:'Player1', text:newMessage}]); // Indicar el player con la llamda del backend
-    setNewMessage(''); 
+
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage) {
+      return;
+    }
+
+    if (!loggedActivePlayer) {
+      toast.error('No se pudo identificar tu jugador activo');
+      console.error('ActivePlayer no disponible para el usuario:', loggedInUser.username);
+      return;
+    }
+
+    const activePlayerUsername = loggedActivePlayer.username
+      ?? loggedActivePlayer.player?.user?.username
+      ?? loggedActivePlayer.player?.username;
+
+    if (!activePlayerUsername) {
+      toast.error('No se pudo identificar tu username en la partida');
+      console.error('Username no encontrado en activePlayer:', loggedActivePlayer);
+      return;
+    }
+
+    const chatId = chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
+
+    if (!chatId) {
+      toast.error('No se pudo identificar el chat de la partida');
+      console.error('Chat ID no encontrado. chat state:', chat, 'game:', game);
+      return;
+    }
+
+    setMessage(prev => [...prev, { author: loggedInUser.username, text: trimmedMessage }]);
+    await postMessage(trimmedMessage, activePlayerUsername, chatId);
+    setNewMessage('');
   };
 
   const addColoredLog = (playerIndex, playerName, action) => {
