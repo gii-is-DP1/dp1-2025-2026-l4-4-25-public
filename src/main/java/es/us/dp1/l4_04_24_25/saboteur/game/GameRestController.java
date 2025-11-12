@@ -9,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,13 +51,16 @@ class GameRestController {
     private final PlayerService playerService;
     private final ObjectMapper objectMapper;
     private final RoundService roundService;
+    private final SimpMessagingTemplate messagingTemplate;
+
 
     @Autowired
-    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService) {
+    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService,SimpMessagingTemplate messagingTemplate) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.objectMapper = objectMapper;
         this.roundService = roundService;
+        this.messagingTemplate = messagingTemplate;
     }
 
 
@@ -175,6 +179,10 @@ class GameRestController {
 
     Game gamePatched = objectMapper.updateValue(game, updates);
     gameService.updateGame(gamePatched, id);
+
+    if (updates.containsKey("gameStatus") && updates.get("gameStatus").equals("ONGOING")) {
+        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gamePatched);
+    }
 
     return new ResponseEntity<>(gamePatched, HttpStatus.OK);
 }

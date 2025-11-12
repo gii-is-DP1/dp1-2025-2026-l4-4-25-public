@@ -36,6 +36,11 @@ public class GameService {
         return gameRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Iterable<Game> findAllByActivePlayerId(Integer activePlayerId) {
+        return gameRepository.findAllByActivePlayerId(activePlayerId);
+    }
+
     @Transactional
     public Game updateGame(@Valid Game game, Integer idToUpdate){
         Game toUpdate = findGame(idToUpdate);
@@ -80,5 +85,7 @@ public class GameService {
     public boolean existsByLink(String link) {
         return gameRepository.existsByLink(link);
     }
+
+    
     
 }

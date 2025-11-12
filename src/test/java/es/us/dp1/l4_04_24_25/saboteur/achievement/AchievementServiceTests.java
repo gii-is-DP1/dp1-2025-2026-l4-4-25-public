@@ -81,7 +81,7 @@ class AchievementServiceTests {
         newAchievement.setTittle(TEST_TITTLE_NEW); // Usamos el título que no existe aún
         newAchievement.setDescription("Descripción de prueba.");
         newAchievement.setBadgeImage("prueba");
-        newAchievement.setThreshold(10.);
+        newAchievement.setThreshold(10);
         newAchievement.setMetric(Metric.GAMES_PLAYED);
         newAchievement.setCreator(creator); 
 

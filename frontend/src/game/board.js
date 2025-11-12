@@ -9,17 +9,20 @@ import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
 import avatar from "../static/images/icons/1.jpeg"
-import startCardImage from '../static/images/card-images/tunnel-cards/start.png';
-import objetivecardreverse from '../static/images/card-images/reverses/objetive_card_reverse.png';
+import startCardImage from '../static/images/start.png';
+import objetivecardreverse from '../static/images/objetive_card_reverse.png';
 
 const jwt = tokenService.getLocalAccessToken();
 
+
 export default function Board() {
+
+  
    const location = useLocation();
  
  const timeturn=60;
 
-  const [isSpectator, setIsSpectator] = useState([]);
+  const [isSpectator, setIsSpectator] = useState(location.state?.isSpectator||false);
   const [CardPorPlayer, setCardPorPlayer] = useState(0);
   const [deckCount, setDeckCount] = useState(60);
   const [profileImage, setProfileImage] = useState(avatar);
@@ -37,6 +40,7 @@ export default function Board() {
   const [privateLog, setPrivateLog] = useState([]); 
   const [loggedActivePlayer, setLoggedActivePlayer] = useState(null);
   const [chat, setChat] = useState([]);
+  const [ListCards, setListCards] = useState([]); // Lista de cartas del jugador
   const BOARD_COLS=11; // 11 columnas
   const BOARD_ROWS=9; // 9 filas
   const BOARD_CELLS=BOARD_COLS*BOARD_ROWS; // 99 celdas en total
@@ -45,19 +49,24 @@ export default function Board() {
   );*/
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () => Array.from({ length: BOARD_COLS }, () => null));
+
     initialBoard[4][1] = { type: 'start', owner: 'system', placedAt: Date.now() };
     initialBoard[4][9] = { type: 'objective', owner: 'system', placedAt: Date.now() };
     initialBoard[2][9] = { type: 'objective', placedAt: Date.now() };
     initialBoard[6][9] = { type: 'objective', placedAt: Date.now() };
+    initialBoard[4][2] = { type: 'tunnel', placedAt: Date.now() };
+
+
     
-
-
     return initialBoard;
   });
 
   const boardGridRef = useRef(null);
   
   const handleCellClick = (row, col) => {
+    if (isSpectator) { // Si es espectador el log nos informa
+      addPrivateLog("ℹ️ Spectators cannot place cards", "warning");
+      return;}
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
       if (!next[row][col]) {
@@ -68,6 +77,9 @@ export default function Board() {
   };
 
   const handleCellRightClick = (row, col) => {
+    if (isSpectator) { // Si es espectador el log nos informa
+      addPrivateLog("ℹ️ Spectators cannot remove cards", "warning");
+      return;}
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
       next[row][col] = null;
@@ -166,6 +178,10 @@ useEffect(() => {
   }
   fetchAndSetLoggedActivePlayer();
   handlerounds();
+  if (isSpectator) { // Si es espectador el log nos informa y mensaje con toast
+    addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
+    toast.info('Spectator mode activated✅');
+  }
 }, []);
 
 useEffect(() => {
@@ -214,12 +230,12 @@ useEffect(() => {
   fetchCompleteGame();
 }, []);
 
-/*
+
 useEffect(() => {
-  
-  const fetchActivePlayers = async () => {
+
+  const fetchCards = async () => {
     try {
-      const response = await fetch(`/api/v1/games/${game.id}/activePlayers`, {
+      const response = await fetch(`/api/v1/cards`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -227,13 +243,15 @@ useEffect(() => {
         }
       });
       const data = await response.json();
-      setActivePlayer(data);
+      setListCards(data);
     } catch (error) {
-      console.error(error);}};
-    fetchActivePlayers();
-  }, [game.id]);
-  */
- //NO HACE FALTA LO COGEMOS DE NAVIGATE 
+      console.error(error);
+    }
+  };
+  fetchCards();
+  console.log('Cartas del jugador:', ListCards);
+}, [ListCards.length]);
+
 
 const loggedInUser = tokenService.getUser();
 
@@ -283,7 +301,9 @@ const nextTurn = () => {
   setCont(timeturn);
   const nextName = playerOrder[nextIndex].username;
   const nextClass = `player${nextIndex + 1}`;
-  addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");};
+  addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
+};
+
 
 const postMessage = async (content, activePlayerUsername, chatId) => {
   try {
@@ -305,12 +325,12 @@ const postMessage = async (content, activePlayerUsername, chatId) => {
       console.log('Mensaje enviado correctamente');
     } else {
       const errorText = await response.text();
-      console.error('Error al enviar mensaje:', errorText);
-      toast.error('Error al enviar el mensaje');
+      console.error('Error to send a message:', errorText);
+      toast.error('Error to send a message');
     }
   } catch (error) {
-    console.error('Error de red al enviar mensaje:', error);
-    toast.error('Error de red. No se pudo enviar el mensaje.');
+    console.error('Network error while sending message:', error);
+    toast.error('Network error. Could not send the message.');
   }
 };
 
@@ -380,6 +400,11 @@ useEffect(() => {
 const deckfuction = () => deckCount;
 
 const handleDiscard = () => {
+  if (isSpectator) {
+    addPrivateLog("ℹ️ Spectators cannot discard cards", "warning");
+    return;
+  }
+  
   const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
   if (loggedInUser.username!==currentPlayer) {
     addPrivateLog("⚠️ It's not your turn!", "warning");
@@ -401,32 +426,37 @@ const handleDiscard = () => {
       return;
     }
 
-    if (!loggedActivePlayer) {
-      toast.error('No se pudo identificar tu jugador activo');
+    const messagePrefix = isSpectator ? '[]':'';
+    const finalMessage = messagePrefix + trimmedMessage;
+
+    if (!isSpectator && !loggedActivePlayer) {
+      toast.error('Cannot identify your active player');
       console.error('ActivePlayer no disponible para el usuario:', loggedInUser.username);
       return;
     }
 
-    const activePlayerUsername = loggedActivePlayer.username
-      ?? loggedActivePlayer.player?.user?.username
-      ?? loggedActivePlayer.player?.username;
+    const activePlayerUsername = isSpectator 
+      ? loggedInUser.username 
+      : (loggedActivePlayer?.username
+          ?? loggedActivePlayer?.player?.user?.username
+          ?? loggedActivePlayer?.player?.username);
 
     if (!activePlayerUsername) {
-      toast.error('No se pudo identificar tu username en la partida');
-      console.error('Username no encontrado en activePlayer:', loggedActivePlayer);
+      toast.error('Cannot identify your username');
+      console.error('Username no encontrado. isSpectator:', isSpectator, 'loggedActivePlayer:', loggedActivePlayer);
       return;
     }
 
     const chatId = chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
 
     if (!chatId) {
-      toast.error('No se pudo identificar el chat de la partida');
+      toast.error('Cannot identify the game chat');
       console.error('Chat ID no encontrado. chat state:', chat, 'game:', game);
       return;
     }
 
-    setMessage(prev => [...prev, { author: loggedInUser.username, text: trimmedMessage }]);
-    await postMessage(trimmedMessage, activePlayerUsername, chatId);
+    setMessage(prev => [...prev, { author: loggedInUser.username, text: finalMessage }]);
+    await postMessage(finalMessage, activePlayerUsername, chatId);
     setNewMessage('');
   };
 
@@ -438,9 +468,28 @@ const handleDiscard = () => {
   const cards = [...Array(CardPorPlayer)].map((_, i) => (
     <button key={i} className="card-slot">Cards {i + 1}</button>));
 
+
+//Funcion para resolver la URL de la imagen de la carta(de momento no se usa)
+
+    /*
+function resolveCardUrl(img, base = '/images/card-images/tunnel-cards') {
+if (!img) return startCardImage;
+if (img.startsWith('http') || img.startsWith('/')) return img;
+return `${base}/${img}`;
+}
+*/
   
 // nueva función para renderizar el contenido de la celda (usa if/else)
 const renderCellContent = (row, col, cell) => {
+
+  /*
+  for(const card of ListCards){
+    return <img src={card.image} alt={`Card ${card.id}`} className="static-card-image" />;
+  }
+    */
+   const card = ListCards.find(c => c.id === 34);
+   
+
   if (!cell) {
     return <div className="cell-coords">{row},{col}</div>;
   }
@@ -451,14 +500,19 @@ const renderCellContent = (row, col, cell) => {
 
   if (cell.type === 'objective') {
     return (
-      <div className="card-preview objective">
         <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />
         
-      </div>
+      
     );
   }
 
-  // default rendering for path or other card types
+   if (cell.type === 'tunnel') {
+    return (
+     <img src={card?.image} alt="Tunnel Card" className="static-card-image" />
+    );
+  }
+
+
   return (
     <div className="card-preview path">
       <div className="card-type">{cell.type}</div>
@@ -475,15 +529,20 @@ return (
       <img src="/logo1-recortado.png" alt="logo" className="logo-img1"/>
     </div>
 
-    <div className="player-cards">
-      <div className="cards-label">MY CARDS</div>
-      <div className="cards-list">
-          {cards}
+    {!isSpectator && (
+      <div className="player-cards">
+        <div className="cards-label">MY CARDS</div>
+        <div className="cards-list">
+            {cards}
+        </div>
       </div>
-    </div>
+    )}
 
-    <div className="my-role">
-      MY ROLE:
+
+    {isSpectator && ( <div className="spectator-indicator"> 👁️ SPECTATOR MODE </div>)}
+
+ {!isSpectator && (
+    <div className="my-role">MY ROLE:
       <div className="logo-img">
     <img 
       src={Array.isArray(playerRol) 
@@ -495,22 +554,16 @@ return (
     />
       </div>
     </div>
-
-    <div className="n-deck">
-      🎴{deckfuction()}
-    </div>
-
-    <button className="n-discard" onClick={handleDiscard}>
+ )}
+    <div className="n-deck">🎴{deckfuction()}</div>
+    
+    <button className="n-discard" onClick={handleDiscard} disabled={isSpectator}
+      style={isSpectator ? { opacity: 0.5,cursor:'not-allowed'} : {}}>
       📥 Discard
     </button>
-
-    <div className="time-card">
-     ⏰ {formatTime(cont)}
-    </div>
-
-    <div className="round-box">
-      🕓·ROUND {numRound}/3 
-    </div>
+    
+    <div className="time-card">⏰ {formatTime(cont)} </div>
+    <div className="round-box">🕓·ROUND {numRound}/3 </div>
 
      <div ref={boardGridRef} className="board-grid saboteur-grid">
       {boardCells.map((row, r) => (
@@ -530,9 +583,7 @@ return (
       ))}
     </div>
 
-    <div className="turn-box">
-      🔴 · TURNO DE {currentPlayer}
-    </div>
+    <div className="turn-box">🔴 · TURNO DE {currentPlayer}</div>
 
     <div className="players-var">
       {activePlayers.map((activePlayers, index) => (
@@ -589,9 +640,11 @@ return (
           ))
         )}
       </div>
+
       <form className="chat-input" onSubmit={SendMessage}>
         <input
           type="text"
+          disabled={isSpectator}
           placeholder="Write a message📥"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
