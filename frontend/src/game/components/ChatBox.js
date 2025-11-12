@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useRef, useEffect} from 'react';
 
 export default function ChatBox({ 
   message, 
@@ -7,6 +7,11 @@ export default function ChatBox({
   SendMessage, 
   isSpectator 
 }) {
+    const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [message]);
   return (
     <div className="chat-box">
       <div className="chat-header">TEXT CHAT</div>
@@ -21,6 +26,7 @@ export default function ChatBox({
             </p>
           ))
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       <form className="chat-input" onSubmit={SendMessage}>

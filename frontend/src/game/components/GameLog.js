@@ -5,7 +5,7 @@ export default function GameLog({ gameLog, privateLog }) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [gameLog]);
+  }, [gameLog, privateLog]);
 
   return (
     <div className="game-log">
