@@ -50,19 +50,19 @@ VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 --VALUES (200, 0, FALSE, 0);
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (200, 1, 10., 'PRUEBA', 'GAMES_PLAYED', 'Gana 10 partidas.', 'Constructor Maestro');
+VALUES (200, 1, 10, 'PRUEBA', 'GAMES_PLAYED', 'Gana 10 partidas.', 'Constructor Maestro');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (201, 1, 30., 'TEST2', 'GAMES_PLAYED', 'TEST2?', 'TEST2?');
+VALUES (201, 1, 30, 'TEST2', 'GAMES_PLAYED', 'TEST2?', 'TEST2?');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (202, 1, 40., 'TEST3', 'GAMES_PLAYED', 'TEST3?', 'TEST3?');
+VALUES (202, 1, 40, 'TEST3', 'GAMES_PLAYED', 'TEST3?', 'TEST3?');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (203, 1, 60., 'TEST4', 'GAMES_PLAYED', 'TEST4?', 'TEST4?');
+VALUES (203, 1, 60, 'TEST4', 'GAMES_PLAYED', 'TEST4?', 'TEST4?');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (204, 1, 20.,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
+VALUES (204, 1, 20,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
 
 
 
