@@ -425,10 +425,10 @@ Los clientes se suscriben a un canal (topic) y el servidor publica mensajes, exa
 
 Respecto a la parte de _Backend_ se han creado distintas clases para implementar este patrón, entre ellas: 
 - [WebSocketConfig.java](../../../src/main/java/es/us/dp1/l4_04_24_25/saboteur/configuration/WebSocketConfig.java)
-- [WebSocketGameController.java](src/main/java/es/us/dp1/l4_04_24_25/saboteur/game/WebSocketGameController.java)
-- [PATCH del GameRestController.java](src/main/java/es/us/dp1/l4_04_24_25/saboteur/game/GameRestController.java#L183-L185)
+- [WebSocketGameController.java](../../../src/main/java/es/us/dp1/l4_04_24_25/saboteur/game/WebSocketGameController.java)
+- [PATCH del GameRestController.java](../../../src/main/java/es/us/dp1/l4_04_24_25/saboteur/game/GameRestController.java#L183-L185)
 
-Respecto a _Frontend_ la única clase implementada ha sido una modularización de un hook que consigue gestionar la lógica de los _Web Sockets_, este hook ([useWebSocket.js](frontend/src/hooks/useWebSocket.js)) ha sido importado en la clase [CreateGame.js](frontend/src/lobbies/games/CreateGame.js#L23-L39) y en ella se ha implementado la lógica de qué hacer en caso de recibir o enviar mensajes a través del canal.
+Respecto a _Frontend_ la única clase implementada ha sido una modularización de un hook que consigue gestionar la lógica de los _Web Sockets_, este hook ([useWebSocket.js](../../../frontend/src/hooks/useWebSocket.js)) ha sido importado en la clase [CreateGame.js](../../../frontend/src/lobbies/games/CreateGame.js#L23-L39) y en ella se ha implementado la lógica de qué hacer en caso de recibir o enviar mensajes a través del canal.
 
 *Ventajas alcanzadas al aplicar el patrón*
 
