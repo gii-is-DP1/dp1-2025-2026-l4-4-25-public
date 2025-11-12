@@ -16,7 +16,6 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameFinishedEvent;
-import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import jakarta.validation.Valid;
@@ -123,7 +122,7 @@ public class AchievementService {
         activePlayerRepository.save(activePlayer);
     }
 
-    public boolean isAchievementUnlocked(Achievement achievement, Player player) {
+    public boolean isAchievementUnlocked(Achievement achievement, ActivePlayer player) {
         Metric metric = achievement.getMetric();
         Integer threshold = achievement.getThreshold();
 
