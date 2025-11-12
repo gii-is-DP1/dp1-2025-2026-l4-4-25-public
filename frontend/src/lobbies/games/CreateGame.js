@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import tokenService from '../../services/token.service';
 import '../../static/css/lobbies/games/CreateGame.css'; 
 import { toast } from 'react-toastify';
-
+import useWebSocket from '../../hooks/useWebSocket';
 
 const CreateGame = () => {
   const location = useLocation();
@@ -20,7 +20,31 @@ const CreateGame = () => {
   const [joinRequests, setJoinRequests] = useState([]);
 
   
+const gameUpdate = useWebSocket(
+    `/app/games/start/${game?.id}`, // endpoint para enviar mensajes (opcional si solo escuchas)
+    `/topic/game/${game?.id}`,      // topic al que te suscribes
+    {}                              // payload si quieres enviar algo al conectar
+)
 
+  useEffect(() => {
+    if(!gameUpdate) return;
+    console.log("WebSocket update received:", gameUpdate);
+    setGame(prev => ({
+        ...prev,
+        ...gameUpdate,
+        activePlayers: Array.from(
+            new Map(
+                (gameUpdate.activePlayers ?? []).map(p => [typeof p === 'string' ? p : p.username, p])
+            ).values()
+        ),
+    }));
+  },[gameUpdate])
+
+  useEffect(() => {
+    if(game?.gameStatus === "ONGOING"){
+      navigate(`/board/${game.id}`, { state: { game } });
+    }
+  },[game]);
 
   useEffect(() => {
     console.log("Entrando al useEffect. Valor de game:", game);
@@ -553,7 +577,9 @@ async function handleExitLobby() {
               {isCreator ? (
                 <>
                   <button onClick={handleSubmit}>📑 SAVE CHANGES</button>
+                  {game.activePlayers.length >= 1 && ( <>
                   <button onClick={handleStart}>▶️ START</button>
+                  </>)}
                   <button className="button-small">🔗 ID : {game.id}</button>
                     <button onClick={handleCancel}>❌ CANCEL</button>
                   

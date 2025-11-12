@@ -70,6 +70,17 @@ export default function ListGames() {
     }
   }
 
+  async function handleSpectator(game) {
+    try {
+      navigate(`/board/${game.id}`,{state:{game,isSpectator:true}});
+      toast.info('Entering as spectator...');
+    } catch (error) {
+      console.error('Error entering as spectator :', error);
+      toast.error('Could not connect as spectator.');
+    }
+  }
+
+
   async function handleRequestJoin(game) {
     try {
       const currentUser = tokenService.getUser();
@@ -217,18 +228,22 @@ console.log('game.activePlayers', filteredGames.id, filteredGames.activePlayers)
                   <div className="game-card-footer">
                     {game.gameStatus === "CREATED" ? (
                       game.private ? (
-                        <button className="button-join-game" onClick={() => handleRequestJoin(game)}>📩REQUEST JOIN</button>
-                      ) : game.activePlayers?.length < game.maxPlayers ? (
-                        <Link to={"/CreateGame/" + game.id} state={{ game }}>
-                          <button className="button-join-game">📥JOIN</button>
-                        </Link>
+                        game.activePlayers.length < game.maxPlayers ? (
+                          <button className="button-join-game" onClick={() => handleRequestJoin(game)}>📩REQUEST JOIN</button>
+                        ) : (
+                          <button className="button-join-game">🔴GAME IS FULL</button>
+                        )
                       ) : (
-                        <button className="button-join-game">🔴GAME IS FULL</button>
+                        game.activePlayers.length < game.maxPlayers ? (
+                          <Link to={"/CreateGame/" + game.id} state={{ game }}>
+                            <button className="button-join-game">📥JOIN</button>
+                          </Link>
+                        ) : (
+                          <button className="button-join-game">🔴GAME IS FULL</button>
+                        )
                       )
                     ) : (
-                      <Link to={"/board/" + game.id}>
-                        <button className="button-join-game">👁️‍🗨️SPECTATE</button> {/* Hay que poner que de el rol espectador para que tenga limitado el acceso en muchos aspectos en la partida */}
-                      </Link>
+                       <button className="button-join-game" onClick={() => handleSpectator(game)}>👁️‍🗨️SPECTATE</button>
                     )}
                   </div>
                 </div>
