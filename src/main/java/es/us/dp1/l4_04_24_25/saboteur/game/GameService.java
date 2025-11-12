@@ -2,14 +2,11 @@ package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import jakarta.validation.Valid;
 
 @Service
@@ -37,6 +34,11 @@ public class GameService {
     @Transactional(readOnly = true)
     public Iterable<Game> findAll(){
         return gameRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Iterable<Game> findAllByActivePlayerId(Integer activePlayerId) {
+        return gameRepository.findAllByActivePlayerId(activePlayerId);
     }
 
     @Transactional
