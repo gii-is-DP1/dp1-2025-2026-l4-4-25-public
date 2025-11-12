@@ -32,7 +32,17 @@
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  animation: pulse-button 2s infinite;
   width: auto;}
+
+    @keyframes pulse-button {
+  0%, 100% {
+    box-shadow: 0 6px 6px rgba(255, 217, 0, 19);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(255, 217, 0, 0.582);
+  }
+}
 
 .hero-div-lobby button:active {
   transform: scale(0.95);}
