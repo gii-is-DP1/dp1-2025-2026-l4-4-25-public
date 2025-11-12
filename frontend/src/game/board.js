@@ -35,6 +35,7 @@ export default function Board() {
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
   const [privateLog, setPrivateLog] = useState([]); 
+  const [ListCards,setListCards]=useState([]); // Estado para las cartas del jugador
   
   const BOARD_COLS=11; // 11 columnas
   const BOARD_ROWS=9; // 9 filas
@@ -48,7 +49,7 @@ export default function Board() {
     initialBoard[4][9] = { type: 'objective', owner: 'system', placedAt: Date.now() };
     initialBoard[2][9] = { type: 'objective', placedAt: Date.now() };
     initialBoard[6][9] = { type: 'objective', placedAt: Date.now() };
-    
+    initialBoard[4][2] = { type: 'tunnel', placedAt: Date.now() };
 
 
     return initialBoard;
@@ -162,26 +163,28 @@ useEffect(() => {
   }
 }, [boardCells]); 
 
-/*
-useEffect(() => {
-  
-  const fetchActivePlayers = async () => {
-    try {
-      const response = await fetch(`/api/v1/games/${game.id}/activePlayers`, {
-        method: "GET",
-        headers: {
+
+
+  useEffect(() => {
+    const fetchActivePlayers = async () => {
+      try {
+        const response = await fetch(`/api/v1/cards`, {
+          method: "GET",
+          headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${jwt}`,
         }
       });
       const data = await response.json();
-      setActivePlayer(data);
+      setListCards(data);
     } catch (error) {
-      console.error(error);}};
-    fetchActivePlayers();
-  }, [game.id]);
-  */
- //NO HACE FALTA LO COGEMOS DE NAVIGATE 
+      console.error(error);
+    }
+  };
+  fetchActivePlayers();
+  console.log('Cartas del jugador:', ListCards);
+}, [ListCards.length]);
+
 
 const loggedInUser = tokenService.getUser();
 
@@ -330,6 +333,15 @@ const handleDiscard = () => {
   
 // nueva función para renderizar el contenido de la celda (usa if/else)
 const renderCellContent = (row, col, cell) => {
+
+  /*
+  for(const card of ListCards){
+    return <img src={card.image} alt={`Card ${card.id}`} className="static-card-image" />;
+  }
+    */
+   const card = ListCards.find(c => c.id === 34 ) || startCardImage;
+   const image = card.image || startCardImage;
+
   if (!cell) {
     return <div className="cell-coords">{row},{col}</div>;
   }
@@ -343,6 +355,17 @@ const renderCellContent = (row, col, cell) => {
       <div className="card-preview objective">
         <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />
         
+      </div>
+    );
+  }
+
+  if (cell.type === 'tunnel') {
+    return (
+      <div className="card-preview tunnel">
+        {console.log('Card for tunnel:', card.image)}
+        {console.log('Card for tunnel:', startCardImage)}
+        <img src={card.image} alt="Tunnel Card" className="static-card-image" />
+
       </div>
     );
   }
