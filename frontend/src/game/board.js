@@ -9,12 +9,15 @@ import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 // import getIdFromUrl from "../../util/getIdFromUrl";
 import tokenService from '../services/token.service.js';
 import avatar from "../static/images/icons/1.jpeg"
-import startCardImage from '../static/images/card-images/tunnel-cards/start.png';
-import objetivecardreverse from '../static/images/card-images/reverses/objetive_card_reverse.png';
+import startCardImage from '../static/images/start.png';
+import objetivecardreverse from '../static/images/objetive_card_reverse.png';
 
 const jwt = tokenService.getLocalAccessToken();
 
+
 export default function Board() {
+
+  
    const location = useLocation();
  
  const timeturn=60;
@@ -35,10 +38,9 @@ export default function Board() {
   const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
   const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
   const [privateLog, setPrivateLog] = useState([]); 
-  const [ListCards,setListCards]=useState([]); // Estado para las cartas del jugador
-  
   const [loggedActivePlayer, setLoggedActivePlayer] = useState(null);
   const [chat, setChat] = useState([]);
+  const [ListCards, setListCards] = useState([]); // Lista de cartas del jugador
   const BOARD_COLS=11; // 11 columnas
   const BOARD_ROWS=9; // 9 filas
   const BOARD_CELLS=BOARD_COLS*BOARD_ROWS; // 99 celdas en total
@@ -47,6 +49,7 @@ export default function Board() {
   );*/
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () => Array.from({ length: BOARD_COLS }, () => null));
+
     initialBoard[4][1] = { type: 'start', owner: 'system', placedAt: Date.now() };
     initialBoard[4][9] = { type: 'objective', owner: 'system', placedAt: Date.now() };
     initialBoard[2][9] = { type: 'objective', placedAt: Date.now() };
@@ -442,6 +445,16 @@ const handleDiscard = () => {
   const cards = [...Array(CardPorPlayer)].map((_, i) => (
     <button key={i} className="card-slot">Cards {i + 1}</button>));
 
+
+//Funcion para resolver la URL de la imagen de la carta(de momento no se usa)
+
+    /*
+function resolveCardUrl(img, base = '/images/card-images/tunnel-cards') {
+if (!img) return startCardImage;
+if (img.startsWith('http') || img.startsWith('/')) return img;
+return `${base}/${img}`;
+}
+*/
   
 // nueva función para renderizar el contenido de la celda (usa if/else)
 const renderCellContent = (row, col, cell) => {
@@ -451,8 +464,8 @@ const renderCellContent = (row, col, cell) => {
     return <img src={card.image} alt={`Card ${card.id}`} className="static-card-image" />;
   }
     */
-   const card = ListCards.find(c => c.id === 34 ) || startCardImage;
-   const image = card.image || startCardImage;
+   const card = ListCards.find(c => c.id === 34);
+   
 
   if (!cell) {
     return <div className="cell-coords">{row},{col}</div>;
@@ -464,21 +477,15 @@ const renderCellContent = (row, col, cell) => {
 
   if (cell.type === 'objective') {
     return (
-      <div className="card-preview objective">
         <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />
         
-      </div>
+      
     );
   }
 
-  if (cell.type === 'tunnel') {
+   if (cell.type === 'tunnel') {
     return (
-      <div className="card-preview tunnel">
-        {console.log('Card for tunnel:', card.image)}
-        {console.log('Card for tunnel:', startCardImage)}
-        <img src={card.image} alt="Tunnel Card" className="static-card-image" />
-
-      </div>
+     <img src={card?.image} alt="Tunnel Card" className="static-card-image" />
     );
   }
 

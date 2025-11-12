@@ -569,7 +569,9 @@ async function handleExitLobby() {
               {isCreator ? (
                 <>
                   <button onClick={handleSubmit}>📑 SAVE CHANGES</button>
+                  {game.activePlayers.length >= 1 && ( <>
                   <button onClick={handleStart}>▶️ START</button>
+                  </>)}
                   <button className="button-small">🔗 ID : {game.id}</button>
                     <button onClick={handleCancel}>❌ CANCEL</button>
                   

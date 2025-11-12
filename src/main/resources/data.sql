@@ -272,7 +272,7 @@ VALUES (33, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE);
     -- ARRIBA ABAJO IZQUIERDA DERECHA
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (34, null, FALSE, 'arriba_abajo_izquierda_derecha.png');
+VALUES (34, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_izquierda_derecha.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (34, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE);
 
