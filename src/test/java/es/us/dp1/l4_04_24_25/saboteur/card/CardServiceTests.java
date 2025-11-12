@@ -35,14 +35,14 @@ class CardServiceTests {
 
     
     private static final int TEST_DECK_ID = 1;
-    private static final int TEST_ACTION_CARD_ID = 30; 
-    private static final int TEST_TUNNEL_CARD_ID_TO_DELETE = 70;
+    private static final int TEST_ACTION_CARD_ID = 205; 
+    private static final int TEST_TUNNEL_CARD_ID_TO_DELETE = 301;
 
    @Test
     @Transactional
     void shouldFindAllCards() {
         List<Card> cards = (List<Card>) this.cardService.findAll();
-        assertTrue(cards.size() == 73); 
+        assertTrue(cards.size() == 74); 
     }
    
     @Test

@@ -79,6 +79,13 @@ VALUES (300, 1, TRUE, 'action_destroy_cart.png');
 INSERT INTO action (id, name_action, object_affect, effect_value)  
 VALUES (300, 'DESTROY', FALSE, 'DESTROY_CART');
 
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (301, null, FALSE, '/images/card-images/tunnel-cards/izquierda_derecha.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (301, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE);
+
+
 -- * ACTION CARDS *
     -- DESTROY_PICKAXE
 INSERT INTO card (id, deck_id, status, image) 

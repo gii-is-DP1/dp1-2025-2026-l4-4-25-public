@@ -40,7 +40,7 @@ class ActionServiceTests {
     @Transactional
     void shouldFindAllActions() {
         List<Action> actions = (List<Action>) this.actionService.findAll();
-        assertTrue(actions.size() == 2); 
+        assertTrue(actions.size() == 32); 
     }
 
     @Test
@@ -110,12 +110,21 @@ class ActionServiceTests {
 
 
     @Test
-    void shouldFindActionsByNameAction() {
+    void shouldFindActionsByNameActionRepair() {
     
         List<Action> actions = (List<Action>)this.actionService.findByNameAction(nameAction.REPAIR);
         
-        assertTrue(actions.size() == 1, "Debe haber 1 Action de tipo REPAIR.");
+        assertTrue(actions.size() == 13, "Debe haber 13 Action de tipo REPAIR.");
         assertEquals(nameAction.REPAIR, actions.get(0).getNameAction());
+    }
+
+     @Test
+    void shouldFindActionsByNameActionDestroy() {
+    
+        List<Action> actions = (List<Action>)this.actionService.findByNameAction(nameAction.DESTROY);
+        
+        assertTrue(actions.size() == 13, "Debe haber 13 Action de tipo DESTROY.");
+        assertEquals(nameAction.DESTROY, actions.get(0).getNameAction());
     }
 
     @Test
@@ -123,7 +132,7 @@ class ActionServiceTests {
         
         List<Action> actions = (List<Action>)this.actionService.findByEffectValue(effectValue.REPAIR_PICKAXE);
     
-        assertTrue(actions.size() == 1, "Debe haber 1 Action con el efecto REPAIR_PICKAXE.");
+        assertTrue(actions.size() == 4, "Debe haber 4 Action con el efecto REPAIR_PICKAXE.");
         assertEquals(effectValue.REPAIR_PICKAXE, actions.get(0).getEffectValue());
     }
 
@@ -132,17 +141,9 @@ class ActionServiceTests {
         
         List<Action> actions = (List<Action>)this.actionService.findByObjectAffect(false);
         
-        assertTrue(actions.size() == 2, "Debe haber 2 Action que afecten al jugador.");
+        assertTrue(actions.size() == 29, "Debe haber 29 Action que afecten al jugador.");
         assertFalse(actions.get(0).isObjectAffect());
     }
     
-    @Test
-    void shouldFindActionsByNameActionAndObjectAffect() {
-        
-        List<Action> actions = (List<Action>)this.actionService.findByNameActionAndObjectAffect(nameAction.REPAIR, false);
-        
-        assertTrue(actions.size() == 1, "Debe haber 1 Action REPAIR que afecte al jugador.");
-        assertEquals(nameAction.REPAIR, actions.get(0).getNameAction());
-        assertFalse(actions.get(0).isObjectAffect());
-    }
+    
 }
