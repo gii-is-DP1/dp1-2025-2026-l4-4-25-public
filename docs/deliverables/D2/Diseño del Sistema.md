@@ -410,7 +410,72 @@ Las clases y paquetes creados son los que se encuentran dentro del directorio `/
 *Ventajas alcanzadas al aplicar el patrón*
 
 El patrón MVC nos permite separar de manera eficiente y fácil la funcionalidad implementada dentro de la lógica de negocio, las vistas (que sería la presentación de nuestro juego) y el manejo de los eventos a traves del Controlador.
-    
+
+### · Patrón: Publish/Subscribe (Pub/Sub)
+*Tipo*: Arquitectónico
+
+*Contexto de Aplicación*
+
+El patrón Publish/Subscribe se ha aplicado tanto en el Frontend como en el Backend de nuestro proyecto. Su funcionalidad reside en el uso de _Web Sockets_ para conseguir que los jugadores del juego estén constantemente en contacto con el servidor en tiempo real. Esto es útil, por ejemplo, cuando el creador de una partida pulsa el botón "Start" y consigue que automáticamente todos los jugadores que estaban esperando el comienzo naveguen a la pantalla de jugabilidad de la partida.
+
+Los clientes se suscriben a un canal (topic) y el servidor publica mensajes, exactamente como se hace en el ejemplo anterior con SimpMessagingTemplate.convertAndSend("/topic/game/{id}").
+
+
+*Clases o paquetes creados*
+
+Respecto a la parte de _Backend_ se han creado distintas clases para implementar este patrón, entre ellas: 
+- [WebSocketConfig.java](src/main/java/es/us/dp1/l4_04_24_25/saboteur/configuration/WebSocketConfig.java)
+- [WebSocketGameController.java](src/main/java/es/us/dp1/l4_04_24_25/saboteur/game/WebSocketGameController.java)
+- [PATCH del GameRestController.java](src/main/java/es/us/dp1/l4_04_24_25/saboteur/game/GameRestController.java#L183-L185)
+
+Respecto a _Frontend_ la única clase implementada ha sido una modularización de un hook que consigue gestionar la lógica de los _Web Sockets_, este hook ([useWebSocket.js](frontend/src/hooks/useWebSocket.js)) ha sido importado en la clase (CreateGame.js)[frontend/src/lobbies/games/CreateGame.js#L23-L39] y en ella se ha implementado la lógica de qué hacer en caso de recibir o enviar mensajes a través del canal.
+
+*Ventajas alcanzadas al aplicar el patrón*
+
+El patrón Pub/Sub permite el contacto en tiempo real con el servidor en todos los navegadores que estén abiertos y en uso por los jugadores. Las pricipales ventajas encontradas son las siguientes:
+
+### 1. 🔌 **Desacoplamiento total**
+- El **creador de la partida** no necesita saber quiénes están conectados ni cuántos son.  
+- Solo **publica un evento** (por ejemplo, `GameStarted`).  
+- Los **jugadores suscritos** al canal reciben el mensaje automáticamente.  
+Esto simplifica enormemente la lógica del servidor.
+
+---
+
+### 2. 📈 **Escalabilidad**
+- Permite distribuir los eventos en **múltiples servidores WebSocket** (por ejemplo, usando Redis Pub/Sub).  
+- Todos los jugadores reciben el evento al mismo tiempo, **aunque estén conectados a distintos nodos**.  
+
+---
+
+### 3. 🧠 **Código más limpio y mantenible**
+- No necesitas recorrer manualmente la lista de jugadores para enviar mensajes.  
+- Cada evento se trata como una **notificación semántica** (`"start"`, `"playerJoined"`, `"playerLeft"`, etc.).  
+Facilita añadir nuevos tipos de eventos en el futuro sin romper lo existente.
+
+---
+
+### 4. 🕒 **Sincronización en tiempo real garantizada**
+- Los mensajes se distribuyen casi instantáneamente a todos los suscriptores.  
+- No tienes que preocuparte por retransmitir o gestionar los reenvíos.  
+Mejora la experiencia de juego al garantizar respuestas en tiempo real.
+
+---
+
+### 5. ⚙️ **Compatibilidad con microservicios o arquitecturas distribuidas**
+- Si el backend se divide en varios servicios (por ejemplo, `games-service` y `users-service`), todos pueden **publicar o suscribirse** a los mismos canales.  
+- Un **broker central** (como Redis, Kafka o RabbitMQ) coordina los mensajes.  
+Aísla responsabilidades y mejora la modularidad del sistema.
+
+---
+
+### 6. 🔁 **Manejo flexible de reconexiones y estado**
+- Los jugadores pueden reconectarse y volver a suscribirse fácilmente.  
+- Puedes combinar Pub/Sub con persistencia de estado para reenviar eventos clave a jugadores que se reincorporan.  
+Evita inconsistencias si alguien se desconecta brevemente.
+
+---
+
 ### · Patrón: Repository
 *Tipo*: Diseño
 
