@@ -27,10 +27,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.message.Message;
+import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
 import jakarta.validation.Valid;
 
@@ -47,18 +55,26 @@ public class UserService {
 	private final AuthoritiesService authoritiesService;
 	private final ActivePlayerService activePlayerService;
 	private ActivePlayerRepository activePlayerRepository;
+	private final DeckService deckService;
+	private final GameService gameService;
+	private final MessageService messageService;
 
 
 
 	@Autowired
-	public UserService(UserRepository userRepository, ActivePlayerRepository activePlayerRepository, PasswordEncoder passwordEncoder, PlayerRepository playerRepository, AuthoritiesService authoritiesService, ActivePlayerService activePlayerService) {
+	public UserService(UserRepository userRepository, ActivePlayerRepository activePlayerRepository, 
+	                   PasswordEncoder passwordEncoder, PlayerRepository playerRepository, 
+	                   AuthoritiesService authoritiesService, ActivePlayerService activePlayerService,
+	                   DeckService deckService, GameService gameService, MessageService messageService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder; 
 		this.playerRepository = playerRepository;
 		this.authoritiesService = authoritiesService; 
 		this.activePlayerService = activePlayerService;
-		this.activePlayerRepository = activePlayerRepository; 
-
+		this.activePlayerRepository = activePlayerRepository;
+		this.deckService = deckService;
+		this.gameService = gameService;
+		this.messageService = messageService;
 	}
 
 	@Transactional
@@ -193,6 +209,96 @@ public class UserService {
 	@Transactional
 	public void deleteUser(Integer id) {
 		User toDelete = findUser(id);
+		
+		// Determinar si es Player o ActivePlayer
+		boolean isPlayer = toDelete instanceof Player;
+		boolean isActivePlayer = toDelete instanceof ActivePlayer;
+		
+		// 1. Si es Player, desvincular relaciones de Player
+		if (isPlayer) {
+			Player player = (Player) toDelete;
+			detachPlayerRelationships(player);
+		}
+		
+		// 2. Si es ActivePlayer, desvincular relaciones específicas de ActivePlayer
+		if (isActivePlayer) {
+			ActivePlayer activePlayer = (ActivePlayer) toDelete;
+			detachActivePlayerRelationships(activePlayer);
+		}
+		
+		// 3. Desvincular relaciones del User (achievements creados)
+		detachUserRelationships(toDelete);
+		
+		// 4. Eliminar el User (por herencia JOINED, eliminará también Player y ActivePlayer)
 		this.userRepository.delete(toDelete);
+	}
+	
+	private void detachUserRelationships(User user) {
+		// Desvincular achievements creados por este usuario
+		for (Achievement achievement : new ArrayList<>(user.getCreatedAchievements())) {
+			achievement.setCreator(null);
+			// No necesitamos guardar, el achievement queda huérfano pero válido
+		}
+		user.getCreatedAchievements().clear();
+	}
+	
+	private void detachPlayerRelationships(Player player) {
+		// Desvincular amigos (relación many-to-many bidireccional)
+		for (Player friend : new ArrayList<>(player.getFriends())) {
+			friend.getFriends().remove(player);
+		}
+		player.getFriends().clear();
+		
+		// Desvincular achievements adquiridos
+		for (Achievement achievement : new ArrayList<>(player.getAccquiredAchievements())) {
+			achievement.getPlayers().remove(player);
+		}
+		player.getAccquiredAchievements().clear();
+		
+		// Desvincular de la partida como observador
+		Game game = player.getGame();
+		if (game != null) {
+			game.getWatchers().remove(player);
+			player.setGame(null);
+		}
+	}
+	
+	private void detachActivePlayerRelationships(ActivePlayer activePlayer) {
+		// Desvincular deck
+		Deck deck = activePlayer.getDeck();
+		if (deck != null) {
+			deck.setActivePlayer(null);
+			activePlayer.setDeck(null);
+			deckService.saveDeck(deck);
+		}
+		
+		// Desvincular partidas creadas
+		for (Game created : new ArrayList<>(activePlayer.getCreatedGames())) {
+			created.setCreator(null);
+			gameService.saveGame(created);
+		}
+		activePlayer.getCreatedGames().clear();
+		
+		// Desvincular partidas ganadas
+		for (Game won : new ArrayList<>(activePlayer.getWonGame())) {
+			won.setWinner(null);
+			gameService.saveGame(won);
+		}
+		activePlayer.getWonGame().clear();
+		
+		// Desvincular de la tabla many-to-many game_activePlayers
+		Iterable<Game> gamesWithActivePlayer = gameService.findAllByActivePlayerId(activePlayer.getId());
+		for (Game game : gamesWithActivePlayer) {
+			if (game.getActivePlayers().remove(activePlayer)) {
+				gameService.saveGame(game);
+			}
+		}
+		
+		// Desvincular mensajes
+		for (Message message : new ArrayList<>(activePlayer.getMessages())) {
+			message.setActivePlayer(null);
+			messageService.saveMessage(message);
+		}
+		activePlayer.getMessages().clear();
 	}
 }
