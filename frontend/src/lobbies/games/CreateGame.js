@@ -29,7 +29,15 @@ const gameUpdate = useWebSocket(
   useEffect(() => {
     if(!gameUpdate) return;
     console.log("WebSocket update received:", gameUpdate);
-    setGame(prev => ({...prev, ...gameUpdate}));
+    setGame(prev => ({
+        ...prev,
+        ...gameUpdate,
+        activePlayers: Array.from(
+            new Map(
+                (gameUpdate.activePlayers ?? []).map(p => [typeof p === 'string' ? p : p.username, p])
+            ).values()
+        ),
+    }));
   },[gameUpdate])
 
   useEffect(() => {
