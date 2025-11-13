@@ -11,7 +11,7 @@ INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
 
 -- Jugadores por defecto
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 0, 0, 0, 0, 0, false, 5, 3);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 100, 10, 0, 0, 0, false, 5, 3);
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (5, 0, 0, 0, 0, 0, false, 5, 3);
 
 
@@ -50,7 +50,7 @@ VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 --VALUES (200, 0, FALSE, 0);
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (200, 1, 10, 'PRUEBA', 'GAMES_PLAYED', 'Gana 10 partidas.', 'Constructor Maestro');
+VALUES (200, 1, 10, 'PRUEBA', 'VICTORIES', 'Gana 10 partidas.', 'Constructor Maestro');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
 VALUES (201, 1, 30, 'TEST2', 'GAMES_PLAYED', 'TEST2?', 'TEST2?');
@@ -65,11 +65,13 @@ INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, descri
 VALUES (204, 1, 20,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
 
 
+-- Logros para jugador
+INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 4);
 
 
 
 INSERT INTO card (id, deck_id, status, image) 
-VALUES (205, 1, TRUE, 'action_repair_pickaxe.png');
+VALUES (205, 1, TRUE, '/images/card-images/action-cards/pickaxe.png');
 INSERT INTO action (id, name_action, object_affect, effect_value) 
 VALUES (205, 'REPAIR', FALSE, 'REPAIR_PICKAXE'); -- ENUMS como STRING, FALSE como booleano.
 

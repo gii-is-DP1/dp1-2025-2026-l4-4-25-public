@@ -193,16 +193,15 @@ public class UserService {
     String newPassword = user.getPassword();
 	Authorities authority = user.getAuthority();
 
-	// Solo actualiza si el campo de la contraseña NO es nulo y NO está vacío
-	// Si está vacío se queda con el copyProperties del backend para password
+	
 	if (newPassword != null && !newPassword.trim().isEmpty()){
-		//Hashear y establecer nueva contraseña
+		
 		toUpdate.setPassword(passwordEncoder.encode(newPassword));
 	}
 	if (authority != null && authoritiesService.findByAuthority(authority.getAuthority()) != null){
 		toUpdate.setAuthority(authority);
 	}
-	// Si el newPassword está vacío este if se ignora, y se mantiene la contraseña que había en la base de datos
+
 	userRepository.save(toUpdate);
     return toUpdate;
 }
@@ -210,52 +209,46 @@ public class UserService {
 	public void deleteUser(Integer id) {
 		User toDelete = findUser(id);
 		
-		// Determinar si es Player o ActivePlayer
 		boolean isPlayer = toDelete instanceof Player;
 		boolean isActivePlayer = toDelete instanceof ActivePlayer;
-		
-		// 1. Si es Player, desvincular relaciones de Player
+
 		if (isPlayer) {
 			Player player = (Player) toDelete;
 			detachPlayerRelationships(player);
 		}
 		
-		// 2. Si es ActivePlayer, desvincular relaciones específicas de ActivePlayer
 		if (isActivePlayer) {
 			ActivePlayer activePlayer = (ActivePlayer) toDelete;
 			detachActivePlayerRelationships(activePlayer);
 		}
-		
-		// 3. Desvincular relaciones del User (achievements creados)
+	
 		detachUserRelationships(toDelete);
 		
-		// 4. Eliminar el User (por herencia JOINED, eliminará también Player y ActivePlayer)
 		this.userRepository.delete(toDelete);
 	}
 	
 	private void detachUserRelationships(User user) {
-		// Desvincular achievements creados por este usuario
+	
 		for (Achievement achievement : new ArrayList<>(user.getCreatedAchievements())) {
 			achievement.setCreator(null);
-			// No necesitamos guardar, el achievement queda huérfano pero válido
+			
 		}
 		user.getCreatedAchievements().clear();
 	}
 	
 	private void detachPlayerRelationships(Player player) {
-		// Desvincular amigos (relación many-to-many bidireccional)
+		
 		for (Player friend : new ArrayList<>(player.getFriends())) {
 			friend.getFriends().remove(player);
 		}
 		player.getFriends().clear();
 		
-		// Desvincular achievements adquiridos
 		for (Achievement achievement : new ArrayList<>(player.getAccquiredAchievements())) {
 			achievement.getPlayers().remove(player);
 		}
 		player.getAccquiredAchievements().clear();
 		
-		// Desvincular de la partida como observador
+		
 		Game game = player.getGame();
 		if (game != null) {
 			game.getWatchers().remove(player);
@@ -264,7 +257,7 @@ public class UserService {
 	}
 	
 	private void detachActivePlayerRelationships(ActivePlayer activePlayer) {
-		// Desvincular deck
+		
 		Deck deck = activePlayer.getDeck();
 		if (deck != null) {
 			deck.setActivePlayer(null);
@@ -272,21 +265,20 @@ public class UserService {
 			deckService.saveDeck(deck);
 		}
 		
-		// Desvincular partidas creadas
+	
 		for (Game created : new ArrayList<>(activePlayer.getCreatedGames())) {
 			created.setCreator(null);
 			gameService.saveGame(created);
 		}
 		activePlayer.getCreatedGames().clear();
-		
-		// Desvincular partidas ganadas
+	
 		for (Game won : new ArrayList<>(activePlayer.getWonGame())) {
 			won.setWinner(null);
 			gameService.saveGame(won);
 		}
 		activePlayer.getWonGame().clear();
 		
-		// Desvincular de la tabla many-to-many game_activePlayers
+		
 		Iterable<Game> gamesWithActivePlayer = gameService.findAllByActivePlayerId(activePlayer.getId());
 		for (Game game : gamesWithActivePlayer) {
 			if (game.getActivePlayers().remove(activePlayer)) {
@@ -294,7 +286,7 @@ public class UserService {
 			}
 		}
 		
-		// Desvincular mensajes
+
 		for (Message message : new ArrayList<>(activePlayer.getMessages())) {
 			message.setActivePlayer(null);
 			messageService.saveMessage(message);
