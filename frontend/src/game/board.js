@@ -86,6 +86,7 @@ export default function Board() {
     activePlayers,
     postDeck,
     getDeck,
+    patchDeck,
     findActivePlayerUsername,
     loadActivePlayers,
     loggedActivePlayer,
@@ -478,6 +479,7 @@ export default function Board() {
         activePlayers={activePlayers} 
         postDeck={postDeck} 
         getDeck={getDeck}
+        patchDeck={patchDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
         CardPorPlayer={CardPorPlayer} 
         isSpectator={isSpectator}

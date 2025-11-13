@@ -8,6 +8,7 @@ export default function PlayerCards({
   activePlayers,
   postDeck,
   getDeck,
+  patchDeck,
   findActivePlayerUsername,
   onTunnelCardDrop,
   onActionCardUse,
@@ -24,7 +25,20 @@ export default function PlayerCards({
   const [availableCards, setAvailableCards] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
   const [hasServerDeck, setHasServerDeck] = useState(false);
+  const [deckChecked, setDeckChecked] = useState(false);
   const [cardRotations, setCardRotations] = useState({}); 
+
+
+
+  // Se encarga de realizar el patch del deck en el servidor con la nueva mano
+  const syncServerDeck = async (nextHand) => {
+    try {
+      const ids = nextHand.map(card => card.id);
+      await patchDeck(currentUsername, ids);
+    } catch (e) {
+      console.error('Error sincronizando deck en servidor:', e);
+    }
+  };
 
   const pickRandomNonRotated = (cards, count = 5) => {
     const pool = getNonRotatedCards(cards).slice();
@@ -32,10 +46,10 @@ export default function PlayerCards({
     return pool.slice(0, Math.min(count, pool.length));
   };
 
-  // Intenta cargar el mazo del servidor lo antes posible (sin depender de ListCards)
+
+  // Comprobar si el jugador tiene un mazo en el servidor si lo tiene hace un getDeck para cargarlo
   useEffect(() => {
     if (isSpectator) return;
-
     const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
     if (!username) return;
 
@@ -49,15 +63,18 @@ export default function PlayerCards({
         } else {
           setHasServerDeck(false);
         }
+        setDeckChecked(true);
       } catch (e) {
         console.error('Error al obtener mazo existente:', e);
+        setDeckChecked(true);
       }
     })();
 
     return () => { cancelled = true; };
   }, [currentUsername, activePlayers, isSpectator]);
 
-  // Cuando deck esté disponible y tengamos ListCards, mapear IDs a objetos
+  
+  // Del deck seteado anteriormente se mapean las cartas para obtener la mano del jugador y se actualizan las availableCards
   useEffect(() => {
     if (!deck || !Array.isArray(deck.cards)) return;
     if (!Array.isArray(ListCards) || ListCards.length === 0) return;
@@ -71,10 +88,12 @@ export default function PlayerCards({
     }
   }, [deck, ListCards]);
 
+
+  //Cuando se entra por primera vez en la partida y no tiene mazo en el servidor se le genera uno nuevo
   useEffect(() => {
     console.log('ListCards:', ListCards);
     
-    if (Array.isArray(ListCards) && ListCards.length > 0 && !hasServerDeck) {
+    if (deckChecked && Array.isArray(ListCards) && ListCards.length > 0 && !hasServerDeck) {
       const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
       console.log('Active Player Username:', username);
       if (!username) return;
@@ -90,7 +109,7 @@ export default function PlayerCards({
       setHand(newHand);
       setAvailableCards(ListCards);
     }
-  }, [ListCards, activePlayers, hasServerDeck]);
+  }, [ListCards, activePlayers, hasServerDeck, deckChecked, currentUsername]);
 
   // Función para coger una carta del mazo
   const drawCard = () => {
@@ -117,12 +136,14 @@ export default function PlayerCards({
     setHand(prevHand => {
       const newHand = [...prevHand];
       newHand.splice(cardIndex, 1);
-      
       const drawnCard = drawCard();
       if (drawnCard) {
-        newHand.push(drawnCard);}
-      
-      return newHand;});
+        newHand.push(drawnCard);
+      }
+      // Sincroniza servidor con la nueva mano
+      syncServerDeck(newHand);
+      return newHand;
+    });
     
 
     setCardRotations(prev => {
@@ -148,12 +169,12 @@ export default function PlayerCards({
     setHand(prevHand => {
       const newHand = [...prevHand];
       newHand.splice(selectedCardIndex, 1);
-      
       const drawnCard = drawCard();
       if (drawnCard) {
         newHand.push(drawnCard);
       }
-      
+      // Sincroniza servidor con la nueva mano
+      syncServerDeck(newHand);
       return newHand;
     });
     
