@@ -15,6 +15,7 @@ import ChatBox from './components/ChatBox';
 
 // Utilidades
 import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
+import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
@@ -116,54 +117,26 @@ export default function Board() {
     toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : '🔴No more cards in deck.'}`);
     nextTurn();};
 
-
   const handleActionCard = (card, targetPlayer, cardIndex) => {
-    if (isSpectator) {
-      addPrivateLog("ℹ️ Spectators cannot use action cards", "warning");
-      return;}
-
-    if (loggedInUser.username !== currentPlayer) {
-      toast.warning("It's not your turn!");
-      return;}
-
-  
-    const cardImage = card.image.toLowerCase();
-    const targetUsername = targetPlayer.username;
-    // LAS CARTAS QUE REPARAN 2 COSAS NO ESTAN IMPLEMENTADAS ¡OJO! 
-    if (cardImage.includes('broken_pickaxe')) {
-      setPlayerTools(prev => ({
-        ...prev,
-        [targetUsername]: { ...prev[targetUsername],pickaxe:false}}));
-      addLog(`⛏️ ${targetUsername}'s pickaxe has been broken!`);
-    } else if (cardImage.includes('broken_candle')) {
-      setPlayerTools(prev => ({
-        ...prev,
-        [targetUsername]: { ...prev[targetUsername],candle:false}}));
-      addLog(`🔦 ${targetUsername}'s candle has been broken!`);
-    } else if (cardImage.includes('broken_wagon')) {
-      setPlayerTools(prev => ({
-        ...prev,
-        [targetUsername]: { ...prev[targetUsername],wagon:false}}));
-     addLog(`🪨 ${targetUsername}'s wagon has been broken!`);
-    } else if (cardImage.includes('repair')) {
-      setPlayerTools(prev => ({ // Mirarlo bien xq repara todo a la vez
-        ...prev,
-        [targetUsername]: {candle:true,wagon:true,pickaxe:true}}));
-      addLog(`⚒️ ${targetUsername}'s tools have been repaired!`);}
-
-    if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(cardIndex);}
-
-    setDeckCount(prev => Math.max(0, prev - 1));
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    const targetIndex = playerOrder.findIndex(p => p.username === targetPlayer.username);
-    nextTurn();};
+    handleActionCardUtil(card, targetPlayer, cardIndex, {
+      isSpectator,
+      loggedInUser,
+      currentPlayer,
+      playerTools,
+      setPlayerTools,
+      addLog,
+      addPrivateLog,
+      nextTurn,
+      setDeckCount
+    });
+  };
 
   const activateCollapseMode = (card, cardIndex) => {
     setCollapseMode({ active: true, card, cardIndex });
     toast.info('💣Click on a tunnel card to destroy it');
     addPrivateLog('💣Click on a tunnel card in the board to destroy it', 'info');
   };
+
   const handleCellClick = (row, col) => {
     const cell = boardCells[row][col];
     console.log('Contenido:', cell);
