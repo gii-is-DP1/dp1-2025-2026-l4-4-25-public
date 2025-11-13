@@ -1,8 +1,12 @@
 .board-container {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
-  min-height: 100vh;
-  background-image:  url('../../images/cave_image.jpeg');
+  height: 100vh;
+  background-image: url('../../images/cave_image.jpeg');
+  background-size: cover;
+  background-position: center;
   color: white;
   font-family: Arial, sans-serif;
   overflow: hidden;
@@ -113,20 +117,20 @@
 .n-discard {
   position: absolute;
   top: 285px;
-  left: 50px;
+  left: 45px;
   background: #dabb40;
   border: 2px solid #c0af11;
   border-radius: 8px;
   padding: 6px 10px;
   font-family: Arial; 
-  font-size: 14px;       
+  font-size: 15px;       
   color: #000;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;    
+  gap: 10px;    
   animation: pulse-discard 2s infinite;         
   font-weight: bold;}
 
@@ -216,7 +220,7 @@
 
 .turn-box {
   position: absolute;
-  bottom: 140px;
+  bottom: 10px;
   left: 10px;
   color: black;
   background: #fdc200;
@@ -224,7 +228,7 @@
   padding: 6px 12px;
   font-weight: bold;
   animation: pulse-turn 2s infinite;
-  font-size: 12px;}
+  font-size: 15px;}
 
   @keyframes pulse-turn {
   0%, 100% {
@@ -281,9 +285,9 @@
 .player5 { color: #ff44e6;}
 .player6 { color: #9500da;}
 .player7 { color: #f8b600;}
-.player8 { color: #0011ff;}
+.player8 { color: #6c75e9;}
 .player9 { color: #00a03d;}
-.player10 { color: #380d0d;}
+.player10 { color: #a53030a4;}
 .player11 { color: #929b1e;}
 .player12 { color: #4c96db; }
 
@@ -331,9 +335,9 @@
   object-fit: cover;}
 
 .player-name {
-  margin-top: 4px;
+  margin-top: 1px;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 11px;
   word-wrap: break-word;
   text-align: center;
   max-width: 100%;}
@@ -342,12 +346,13 @@
 .player-vag,
 .player-pic,
 .player-pep {
-  margin-top: 2px;
+  margin-top: 1px;
   line-height: 1.2;
   width: 100%;}
 
 .player-wins,
 .player-pep {
+  margin-top: 1px;
   color: rgb(255, 230, 0);
   font-weight: bold;}
 
@@ -510,3 +515,260 @@
   object-fit: cover;
   border-radius: 6px;  /* Para que coincida con el borde de la celda */
 }
+
+/* ========== DRAGGABLE CARDS ========== */
+.draggable-card-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.draggable-card {
+  width: 70px;
+  height: 100px;
+  border: 2px solid #666;
+  border-radius: 8px;
+  cursor: default;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  overflow: hidden;
+  background: #2e2e2e;
+}
+
+.draggable-card.draggable {
+  cursor: grab;
+  border-color: #88cc88;
+}
+
+.draggable-card.draggable:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(136, 204, 136, 0.4);
+  border-color: #aaffaa;
+}
+
+.draggable-card.draggable:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.draggable-card.clickable {
+  cursor: pointer;
+  border-color: #cc8888;
+}
+
+.draggable-card.clickable:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(204, 136, 136, 0.4);
+  border-color: #ffaaaa;
+}
+
+.draggable-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.draggable-card .card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.player-menu {
+  position: fixed;
+  top: 125px;
+  left: 10px;
+  background: #1a1a1a;
+  border: 2px solid #666;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 1000;
+  min-width: 200px;
+  max-width: 250px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.player-menu-header {
+  top: 10px;
+  padding: 10px 12px;
+  background: #a16b6b;
+  border-bottom: 1px solid #444;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ccc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;}
+
+.close-menu {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;}
+
+.close-menu:hover {
+  color: #fff;}
+
+.player-menu-list {
+  max-height: 300px;
+  overflow-y: auto;}
+
+.player-menu-item {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;}
+
+.player-menu-item:hover {
+  background: #333;}
+
+.player-menu-item:last-child {
+  border-bottom: none;}
+
+.player-avatar {
+  font-size: 16px;}
+
+.player-name {
+  font-size: 14px;
+  font-weight: 500;}
+
+.board-cell.drag-over {
+  background-color: rgba(136, 204, 136, 0.3);
+  border-color: #88cc88;
+  box-shadow: 0 0 10px rgba(136, 204, 136, 0.6);
+  transform: scale(1.05);}
+
+.board-cell.destroyable {
+  background-color: rgba(255, 102, 0, 0.2);
+  border-color: #ff6600;
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+  animation: pulse-destroy 1.5s infinite;}
+
+.board-cell.cannot-destroy {
+  opacity: 0.5;
+  filter: grayscale(50%);}
+
+@keyframes pulse-destroy {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 102, 0, 0.8);
+  }
+}
+
+.board-cell.empty .cell-placeholder {
+  opacity: 0.3;
+  font-size: 20px;
+  color: #666;}
+
+.board-cell.empty:hover .cell-placeholder {
+  opacity: 0.6;
+  color: #888;}
+
+.cell-coords {
+  font-size: 10px;
+  color: #666;}
+
+/* ========== INTERACTIVE CARDS ========== */
+.interactive-card-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.interactive-card {
+  width: 70px;
+  height: 100px;
+  border: 2px solid #666;
+  border-radius: 8px;
+  cursor: default;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  overflow: hidden;
+  background: #2e2e2e;}
+
+.interactive-card.draggable-tunnel {
+  border-color: #88cc88;
+  cursor: grab;}
+
+.interactive-card.draggable-tunnel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(136, 204, 136, 0.4);
+  border-color: #aaffaa;}
+
+.interactive-card.draggable-tunnel:active {
+  cursor: grabbing;
+  transform: scale(0.95);}
+
+.interactive-card.clickable-action {
+  border-color: #cc8888;
+  cursor: pointer;}
+
+.interactive-card.clickable-action:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(204, 136, 136, 0.4);
+  border-color: #ffaaaa;}
+
+.interactive-card.clickable-collapse {
+  border-color: #ff6600;
+  cursor: pointer;}
+
+.interactive-card.clickable-collapse:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(255, 102, 0, 0.6);
+  border-color: #ff8833;}
+
+.interactive-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;}
+
+.interactive-card.selected-for-discard {
+  border-color: #ffaa00;
+  border-width: 3px;
+  box-shadow: 0 0 15px rgba(255, 170, 0, 0.8);
+  transform: translateY(-8px);}
+
+.interactive-card .card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;}
+
+.player-card.is-me {
+  opacity: 0.9;}
+
+.draggable-card.draggable-tunnel {
+  border-color: #88cc88;}
+
+.draggable-card.draggable-tunnel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(136, 204, 136, 0.4);
+  border-color: #aaffaa;}
+
+.draggable-card.draggable-action {
+  border-color: #cc8888;}
+
+.draggable-card.draggable-action:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(204, 136, 136, 0.4);
+  border-color: #ffaaaa;}

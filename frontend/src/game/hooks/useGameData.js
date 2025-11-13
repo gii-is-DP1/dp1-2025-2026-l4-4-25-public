@@ -40,16 +40,6 @@ export const useGameData = (game) => {
     if (initialPlayers.length === 0) {
       return;
     }
-    
-    const usernames = ['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia'];
-    
-    const mockPlayers = usernames.map((username, index) => ({
-      id: 1000 + index,
-      username,
-      birthDate: new Date(1990 + index, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(),
-      profileImage: avatar,
-      wins: Math.floor(Math.random() * 10),
-    }));
 
     const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
       try {
@@ -69,7 +59,7 @@ export const useGameData = (game) => {
     }));
 
     const validPlayers = fetchedPlayers.filter(p => p !== null);
-    setActivePlayers([...validPlayers, ...mockPlayers]);
+    setActivePlayers(validPlayers);
   };
 
   const getChat = async () => {

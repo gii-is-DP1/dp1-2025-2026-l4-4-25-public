@@ -25,7 +25,7 @@ import '../static/css/home/home.css';
 import '../static/css/game/game.css';
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 60;
+const timeturn = 10;
 
 export default function Board() {
   const location = useLocation();
@@ -45,12 +45,14 @@ export default function Board() {
   const [playerOrder, setPlayerOrder] = useState([]);
   const [playerRol, setPlayerRol] = useState([]);
   const [privateLog, setPrivateLog] = useState([]);
+    //  ESTADOS DE LAS HERRAMIENTAS, DICCIONARIO {username:{candle:true,wagon:true,pickaxe:true}}
+  const [playerTools, setPlayerTools] = useState({});
   
-  
-
   // Estados del tablero
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
+  const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
+
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
       Array.from({ length: BOARD_COLS }, () => null)
@@ -59,7 +61,6 @@ export default function Board() {
     initialBoard[4][9] = { type: 'objective', owner: 'system', placedAt: Date.now() };
     initialBoard[2][9] = { type: 'objective', placedAt: Date.now() };
     initialBoard[6][9] = { type: 'objective', placedAt: Date.now() };
-    initialBoard[4][2] = { type: 'tunnel', placedAt: Date.now() };
     return initialBoard;
   });
 
@@ -79,28 +80,127 @@ export default function Board() {
     fetchAndSetLoggedActivePlayer
   } = useGameData(game);
 
-  // Particionar cartas en rotadas y no rotadas
+  // Cartas Rotadas y No Rotadas
   const rotatedOnly = getRotatedCards(ListCards);
   const nonRotatedOnly = getNonRotatedCards(ListCards);
 
-  // Funciones de manejo del tablero
-  const handleCellClick = (row, col) => {
+  const handleCardDrop = (row, col, card, cardIndex) => {
     if (isSpectator) {
       addPrivateLog("ℹ️ Spectators cannot place cards", "warning");
-      return;
-    }
+      return;}
+
+    if (loggedInUser.username !== currentPlayer) {
+      toast.warning("It's not your turn!");
+      return;}
+
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
-      if (!next[row][col]) {
-        next[row][col] = {
-          type: 'path',
-          owner: loggedInUser?.username || 'unknown',
-          placedAt: Date.now()
-        };
-      }
+      next[row][col] = {
+        ...card,
+        type: 'tunnel',
+        owner: loggedInUser?.username || 'unknown',
+        placedAt: Date.now()
+      };
       return next;
     });
+
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(cardIndex);}
+    setDeckCount(prev => Math.max(0, prev - 1));
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    addColoredLog(
+      currentIndex,
+      currentPlayer,
+      `🃏 placed a tunnel card in (${row}, ${col})`);
+
+    toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : '🔴No more cards in deck.'}`);
+    nextTurn();};
+
+
+  const handleActionCard = (card, targetPlayer, cardIndex) => {
+    if (isSpectator) {
+      addPrivateLog("ℹ️ Spectators cannot use action cards", "warning");
+      return;}
+
+    if (loggedInUser.username !== currentPlayer) {
+      toast.warning("It's not your turn!");
+      return;}
+
+  
+    const cardImage = card.image.toLowerCase();
+    const targetUsername = targetPlayer.username;
+    // LAS CARTAS QUE REPARAN 2 COSAS NO ESTAN IMPLEMENTADAS ¡OJO! 
+    if (cardImage.includes('broken_pickaxe')) {
+      setPlayerTools(prev => ({
+        ...prev,
+        [targetUsername]: { ...prev[targetUsername],pickaxe:false}}));
+      addLog(`⛏️ ${targetUsername}'s pickaxe has been broken!`);
+    } else if (cardImage.includes('broken_candle')) {
+      setPlayerTools(prev => ({
+        ...prev,
+        [targetUsername]: { ...prev[targetUsername],candle:false}}));
+      addLog(`🔦 ${targetUsername}'s candle has been broken!`);
+    } else if (cardImage.includes('broken_wagon')) {
+      setPlayerTools(prev => ({
+        ...prev,
+        [targetUsername]: { ...prev[targetUsername],wagon:false}}));
+     addLog(`🪨 ${targetUsername}'s wagon has been broken!`);
+    } else if (cardImage.includes('repair')) {
+      setPlayerTools(prev => ({ // Mirarlo bien xq repara todo a la vez
+        ...prev,
+        [targetUsername]: {candle:true,wagon:true,pickaxe:true}}));
+      addLog(`⚒️ ${targetUsername}'s tools have been repaired!`);}
+
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(cardIndex);}
+
+    setDeckCount(prev => Math.max(0, prev - 1));
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    const targetIndex = playerOrder.findIndex(p => p.username === targetPlayer.username);
+    nextTurn();};
+
+  const activateCollapseMode = (card, cardIndex) => {
+    setCollapseMode({ active: true, card, cardIndex });
+    toast.info('💣Click on a tunnel card to destroy it');
+    addPrivateLog('💣Click on a tunnel card in the board to destroy it', 'info');
   };
+  const handleCellClick = (row, col) => {
+    const cell = boardCells[row][col];
+    console.log('Contenido:', cell);
+    
+    if (!cell || cell.type === 'start' || cell.type === 'objective') { // No permitir destruir cartas iniciales u objetivos
+      return;}
+    
+    if (cell.type !== 'tunnel') {
+      toast.warning('🔴You can only destroy tunnel cards');
+      return;}
+    
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      next[row][col] = null;
+      return next;});
+    
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(collapseMode.cardIndex);}
+    setDeckCount(prev => Math.max(0, prev - 1));
+    
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    addColoredLog(
+      currentIndex,
+      playerOrder[currentIndex].username,
+      `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`
+    );
+    toast.success('Tunnel card destroyed!');
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+    nextTurn();
+  };
+
+  useEffect(() => {
+    window.activateCollapseMode = activateCollapseMode;
+    return () => {
+      delete window.activateCollapseMode;
+    };
+  }, []);
 
   // Funciones de logs
   const addLog = (msg, type = "info") => {
@@ -137,21 +237,20 @@ export default function Board() {
 
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
     if (loggedInUser.username !== currentPlayer) {
-      addPrivateLog("⚠️ It's not your turn!", "warning");
+      toast.warning("It's not your turn!");
       return;
     }
-    if (deckCount > 0) {
-      setDeckCount(p => p - 1);
+    if (window.discardSelectedCard && window.discardSelectedCard()) {
+      setDeckCount(p => Math.max(0, p - 1));
       nextTurn();
       setCont(timeturn);
       addColoredLog(
         currentIndex,
         playerOrder[currentIndex].username,
-        `🎴 Discarded a card. ${deckCount - 1} cards left in the deck.`
-      );
+        `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
+      toast.success('Card discarded successfully!');
     } else {
-      addLog("⛔No more cards left in the deck!", "warning");
-    }
+      toast.warning("Please select a card to discard (right-click in the card)");}
   };
 
   // Función para enviar mensajes
@@ -245,7 +344,6 @@ export default function Board() {
       addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
       toast.info('Spectator mode activated✅');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -290,13 +388,21 @@ export default function Board() {
     };
 
     fetchCompleteGame();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (activePlayers.length > 0) {
       const rolesAssigned = assignRolesGame(activePlayers);
       setPlayerRol(rolesAssigned);
+      const initialTools = {};
+      activePlayers.forEach(player => {
+        initialTools[player.username] = {
+          candle: true,
+          wagon: true,
+          pickaxe: true
+        };});
+      setPlayerTools(initialTools);
+      console.log('Herramientas inicializadas (siempre tienen que estar a True):', initialTools);
     }
   }, [activePlayers]);
 
@@ -311,7 +417,6 @@ export default function Board() {
       });
     }, 1000);
     return () => clearInterval(time);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPlayer, playerOrder]);
 
   useEffect(() => {
@@ -323,16 +428,8 @@ export default function Board() {
     }
   }, [activePlayers]);
 
-  
-  //Console log rotated and non-rotated cards
-  useEffect(() => {
-    
-    console.log('Rotated Cards:', rotatedOnly);
-    console.log('Non-Rotated Cards:', nonRotatedOnly);
 
-  }, [ListCards]);
-
-  // Render
+  // Render 
   return (
     <div className="board-container">
       <div className="logo-container">
@@ -346,7 +443,13 @@ export default function Board() {
         postDeck={postDeck} 
         findActivePlayerUsername={findActivePlayerUsername} 
         CardPorPlayer={CardPorPlayer} 
-        isSpectator={isSpectator} 
+        isSpectator={isSpectator}
+        onTunnelCardDrop={handleCardDrop}
+        onActionCardUse={handleActionCard}
+        playerOrder={playerOrder}
+        currentUsername={loggedInUser?.username}
+        currentPlayer={currentPlayer}
+        deckCount={deckCount}
       />
       
       <SpectatorIndicator isSpectator={isSpectator} />
@@ -369,15 +472,23 @@ export default function Board() {
       <GameBoard
         boardCells={boardCells}
         boardGridRef={boardGridRef}
+        handleCardDrop={handleCardDrop}
         handleCellClick={handleCellClick}
         ListCards={ListCards}
+        currentPlayer={currentPlayer}
+        currentUsername={loggedInUser?.username}
+        collapseModeActive={collapseMode.active}
       />
 
-      <div className="turn-box">🔴 · TURNO DE {currentPlayer}</div>
+      <div className="turn-box">🔴 · TURN OF {currentPlayer}</div>
 
       <PlayersList 
-        activePlayers={activePlayers} 
-        CardPorPlayer={CardPorPlayer} 
+        activePlayers={playerOrder} 
+        CardPorPlayer={CardPorPlayer}
+        onActionCardDrop={handleActionCard}
+        isMyTurn={loggedInUser?.username === currentPlayer}
+        currentUsername={loggedInUser?.username}
+        playerTools={playerTools}
       />
 
       <GameLog gameLog={gameLog} privateLog={privateLog} />

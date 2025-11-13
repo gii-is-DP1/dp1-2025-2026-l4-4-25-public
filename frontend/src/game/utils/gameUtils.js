@@ -44,7 +44,7 @@ export const formatTime = (seconds) => {
 
 export const calculateCardsPerPlayer = (numPlayers) => {
   if (numPlayers <= 5) return 6;
-  else if (numPlayers <= 9) return 5;
+  else if (numPlayers <= 9 && numPlayers > 6) return 5;
   else return 4;
 };
 
