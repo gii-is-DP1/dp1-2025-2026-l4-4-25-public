@@ -8,15 +8,22 @@ export default function ChatBox({
   isSpectator 
 }) {
     const messagesEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
 
     useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      if (chatContainerRef.current && messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'nearest'
+        });
+      }
     }, [message]);
   return (
     <div className="chat-box">
       <div className="chat-header">TEXT CHAT</div>
 
-      <div className="chat-messages">
+      <div className="chat-messages" ref={chatContainerRef}>
         {message.length === 0 ? (
           <p className="no-messages">Not messages yet...</p>
         ) : (

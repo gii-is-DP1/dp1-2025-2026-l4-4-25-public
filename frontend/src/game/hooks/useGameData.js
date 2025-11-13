@@ -10,6 +10,7 @@ export const useGameData = (game) => {
   const [chat, setChat] = useState([]);
   const [loggedActivePlayer, setLoggedActivePlayer] = useState(null);
   const [ListCards, setListCards] = useState([]);
+  const [deck, setDeck] = useState();
 
   const fetchPlayerByUsername = async (username) => {
     try {
@@ -35,20 +36,17 @@ export const useGameData = (game) => {
 
   const loadActivePlayers = async () => {
     const initialPlayers = game?.activePlayers || [];
-    const usernames = ['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia'];
     
-    const mockPlayers = usernames.map((username, index) => ({
-      username,
-      birthDate: new Date(1990 + index, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(),
-      profileImage: avatar,
-      wins: Math.floor(Math.random() * 10),
-    }));
+    if (initialPlayers.length === 0) {
+      return;
+    }
 
     const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
       try {
         const player = await fetchPlayerByUsername(username);
         if (!player) return null;
         return {
+          id: player.id,
           username: player.username,
           birthDate: player.birthDate,
           profileImage: player.image || avatar,
@@ -61,7 +59,7 @@ export const useGameData = (game) => {
     }));
 
     const validPlayers = fetchedPlayers.filter(p => p !== null);
-    setActivePlayers([...validPlayers, ...mockPlayers]);
+    setActivePlayers(validPlayers);
   };
 
   const getChat = async () => {
@@ -106,14 +104,66 @@ export const useGameData = (game) => {
     setLoggedActivePlayer(player);
   };
 
+  const postDeck = async (activePlayer, ListCards) => {
+    const body = {
+      activePlayer: activePlayer,
+      cards: ListCards
+    };
+
+    try {
+      const response = await fetch(`/api/v1/decks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await response.json();
+      setDeck(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getDeck = async (activePlayer) => {
+    try {
+      const response = await fetch(`/api/v1/deck/byActivePlayer?activePlayer=${activePlayer}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDeck(data);
+      } else {
+        console.error('Error al obtener el mazo:', response.status);
+      }
+    } catch (error) {
+      console.error('Error de red al obtener el mazo:', error);
+    }
+  };
+
+  const findActivePlayerId = (activePlayers) => {
+    const loggedInUser = tokenService.getUser();
+    const activePlayer = activePlayers.find(p => p.username === loggedInUser.username);
+    return activePlayer ? activePlayer.id : null;
+  };
+
   return {
     activePlayers,
     chat,
+    deck,
     loggedActivePlayer,
     ListCards,
     loadActivePlayers,
     getChat,
     fetchCards,
-    fetchAndSetLoggedActivePlayer
+    fetchAndSetLoggedActivePlayer,
+    postDeck,
+    getDeck,
+    findActivePlayerId,
   };
 };

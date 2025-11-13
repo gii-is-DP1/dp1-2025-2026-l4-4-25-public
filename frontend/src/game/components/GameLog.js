@@ -2,15 +2,22 @@ import React, { useRef, useEffect } from 'react';
 
 export default function GameLog({ gameLog, privateLog }) {
   const messagesEndRef = useRef(null);
+  const logContainerRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (logContainerRef.current && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    }
   }, [gameLog, privateLog]);
 
   return (
     <div className="game-log">
       <div className="game-log-header">💻 GAME LOG 💻</div>
-      <div className="game-log-messages">
+      <div className="game-log-messages" ref={logContainerRef}>
         {gameLog.length === 0 && privateLog.length === 0 ? (
           <p className="no-log">❕No actions yet...</p>
         ) : (
