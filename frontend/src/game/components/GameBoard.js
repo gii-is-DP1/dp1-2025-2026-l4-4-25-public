@@ -5,8 +5,7 @@ import objetivecardreverse from '../../static/images/objetive_card_reverse.png';
 export default function GameBoard({ 
   boardCells, 
   boardGridRef, 
-  handleCellClick, 
-  handleCellRightClick,
+  handleCellClick,
   ListCards 
 }) {
   
@@ -46,7 +45,6 @@ export default function GameBoard({
               key={`cell-${r}-${c}`}
               className={`board-cell ${cell ? 'has-card' : ''}`}
               onClick={() => handleCellClick(r, c)}
-              onContextMenu={(e) => { e.preventDefault(); handleCellRightClick(r, c); }}
               title={cell ? `Card: ${cell.type} (by ${cell.owner})` : `Empty ${r},${c}`}
             >
               {renderCellContent(r, c, cell)}

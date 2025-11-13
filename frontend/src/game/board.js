@@ -1,4 +1,3 @@
-// board.js - VERSIÓN REFACTORIZADA
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useLocation } from 'react-router-dom';
@@ -99,18 +98,6 @@ export default function Board() {
           placedAt: Date.now()
         };
       }
-      return next;
-    });
-  };
-
-  const handleCellRightClick = (row, col) => {
-    if (isSpectator) {
-      addPrivateLog("ℹ️ Spectators cannot remove cards", "warning");
-      return;
-    }
-    setBoardCells(prev => {
-      const next = prev.map(r => r.slice());
-      next[row][col] = null;
       return next;
     });
   };
@@ -383,7 +370,6 @@ export default function Board() {
         boardCells={boardCells}
         boardGridRef={boardGridRef}
         handleCellClick={handleCellClick}
-        handleCellRightClick={handleCellRightClick}
         ListCards={ListCards}
       />
 
