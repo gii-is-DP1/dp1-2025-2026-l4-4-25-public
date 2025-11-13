@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getNonRotatedCards, shuffleInPlace } from '../utils/gameUtils';
 
-export default function PlayerCards({ game, ListCards, activePlayers, postDeck, findActivePlayerId }) {
+export default function PlayerCards({ game, ListCards, activePlayers, postDeck, findActivePlayerUsername }) {
   const [hand, setHand] = useState([]);
 
   const pickRandomNonRotated = (cards, count = 5) => {
@@ -17,14 +17,17 @@ export default function PlayerCards({ game, ListCards, activePlayers, postDeck, 
     console.log('activePlayers:', activePlayers);
     
     if (Array.isArray(ListCards) && ListCards.length > 0 && Array.isArray(activePlayers) && activePlayers.length > 0) {
-      const id = findActivePlayerId(activePlayers);
-      console.log('Active Player ID:', id);
-      if (!id) return;
+      const username = findActivePlayerUsername(activePlayers);
+      console.log('Active Player Username:', username);
+      if (!username) return;
 
       const newHand = pickRandomNonRotated(ListCards, 5);
       console.log('Generando mano:', newHand);
-      setHand(newHand);
-      postDeck(id, newHand);
+
+      const idcartas = newHand.map(card => card.id);
+
+      setHand(newHand); 
+      postDeck(username, idcartas);
     }
   }, [ListCards, activePlayers]);
 

@@ -70,7 +70,7 @@ export default function Board() {
     ListCards,
     activePlayers,
     postDeck,
-    findActivePlayerId,
+    findActivePlayerUsername,
     loadActivePlayers,
     loggedActivePlayer,
     chat,
@@ -344,7 +344,7 @@ export default function Board() {
         ListCards={ListCards} 
         activePlayers={activePlayers} 
         postDeck={postDeck} 
-        findActivePlayerId={findActivePlayerId} 
+        findActivePlayerUsername={findActivePlayerUsername} 
         CardPorPlayer={CardPorPlayer} 
         isSpectator={isSpectator} 
       />

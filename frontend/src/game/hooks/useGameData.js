@@ -156,10 +156,10 @@ export const useGameData = (game) => {
     }
   };
 
-  const findActivePlayerId = (activePlayers) => {
+  const findActivePlayerUsername = (activePlayers) => {
     const loggedInUser = tokenService.getUser();
     const activePlayer = activePlayers.find(p => p.username === loggedInUser.username);
-    return activePlayer ? activePlayer.id : null;
+    return activePlayer ? activePlayer.username : null;
   };
 
   return {
@@ -174,6 +174,6 @@ export const useGameData = (game) => {
     fetchAndSetLoggedActivePlayer,
     postDeck,
     getDeck,
-    findActivePlayerId,
+    findActivePlayerUsername,
   };
 };
