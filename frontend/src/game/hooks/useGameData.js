@@ -126,23 +126,39 @@ export const useGameData = (game) => {
     }
   };
 
-  const getDeck = async (activePlayer) => {
+  // Obtiene el deck por username (resuelve a activePlayerId y luego llama al endpoint correcto)
+  const getDeck = async (username) => {
     try {
-      const response = await fetch(`/api/v1/deck/byActivePlayer?activePlayer=${activePlayer}`, {
+      const activePlayer = await fetchActivePlayerByUsername(username);
+      if (!activePlayer?.id) {
+        console.warn('ActivePlayer no encontrado para username:', username);
+        setDeck(null);
+        return null;
+      }
+
+      const response = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayer.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${jwt}`,
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         setDeck(data);
+        return data;
+      } else if (response.status === 404) {
+        // No existe mazo todavía
+        setDeck(null);
+        return null;
       } else {
         console.error('Error al obtener el mazo:', response.status);
+        return null;
       }
     } catch (error) {
       console.error('Error de red al obtener el mazo:', error);
+      return null;
     }
   };
 
@@ -151,6 +167,28 @@ export const useGameData = (game) => {
     const activePlayer = activePlayers.find(p => p.username === loggedInUser.username);
     return activePlayer ? activePlayer.username : null;
   };
+
+  const fetchActivePlayerByUsername = async (username) => {
+    try {
+      const response = await fetch(`/api/v1/activePlayers/byUsername?username=${username}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        return await response.json();
+      } else {
+        console.error('Respuesta no OK al buscar ActivePlayer:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al buscar ActivePlayer por username:', error);
+      return null;
+    }
+  };
+
 
   return {
     activePlayers,
@@ -165,5 +203,7 @@ export const useGameData = (game) => {
     postDeck,
     getDeck,
     findActivePlayerUsername,
+    fetchActivePlayerByUsername,
   };
 };
+  

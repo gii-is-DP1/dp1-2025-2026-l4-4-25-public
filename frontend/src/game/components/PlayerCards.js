@@ -2,22 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
-export default function PlayerCards({ game, ListCards, activePlayers, postDeck, findActivePlayerUsername }) {
-
-  game, 
-  ListCards, 
-  activePlayers, 
-  postDeck,  
+export default function PlayerCards({
+  game,
+  ListCards,
+  activePlayers,
+  postDeck,
+  getDeck,
+  findActivePlayerUsername,
   onTunnelCardDrop,
   onActionCardUse,
   playerOrder,
   currentUsername,
   currentPlayer,
-  deckCount
- {
+  deckCount,
+  CardPorPlayer,
+  isSpectator,
+  deck,
+}) {
   const [hand, setHand] = useState([]);
   const [availableCards, setAvailableCards] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
+  const [hasServerDeck, setHasServerDeck] = useState(false);
 
   const pickRandomNonRotated = (cards, count = 5) => {
     const pool = getNonRotatedCards(cards).slice();
@@ -25,11 +30,50 @@ export default function PlayerCards({ game, ListCards, activePlayers, postDeck, 
     return pool.slice(0, Math.min(count, pool.length));
   };
 
+  // Intenta cargar el mazo del servidor lo antes posible (sin depender de ListCards)
+  useEffect(() => {
+    if (isSpectator) return;
+
+    const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
+    if (!username) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const existing = await getDeck(username);
+        if (cancelled) return;
+        if (existing && Array.isArray(existing.cards) && existing.cards.length > 0) {
+          setHasServerDeck(true);
+        } else {
+          setHasServerDeck(false);
+        }
+      } catch (e) {
+        console.error('Error al obtener mazo existente:', e);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [currentUsername, activePlayers, isSpectator]);
+
+  // Cuando deck esté disponible y tengamos ListCards, mapear IDs a objetos
+  useEffect(() => {
+    if (!deck || !Array.isArray(deck.cards)) return;
+    if (!Array.isArray(ListCards) || ListCards.length === 0) return;
+
+    const mappedHand = deck.cards
+      .map((id) => ListCards.find((c) => c.id === id))
+      .filter(Boolean);
+    if (mappedHand.length > 0) {
+      setHand(mappedHand);
+      setAvailableCards(ListCards);
+    }
+  }, [deck, ListCards]);
+
   useEffect(() => {
     console.log('ListCards:', ListCards);
     
-    if (Array.isArray(ListCards) && ListCards.length > 0 && Array.isArray(activePlayers) && activePlayers.length > 0) {
-      const username = findActivePlayerUsername(activePlayers);
+    if (Array.isArray(ListCards) && ListCards.length > 0 && !hasServerDeck) {
+      const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
       console.log('Active Player Username:', username);
       if (!username) return;
 
@@ -43,9 +87,8 @@ export default function PlayerCards({ game, ListCards, activePlayers, postDeck, 
       postDeck(username, idcartas);
       setHand(newHand);
       setAvailableCards(ListCards);
-      postDeck(username, idcartas);
     }
-  }, [ListCards, activePlayers]);
+  }, [ListCards, activePlayers, hasServerDeck]);
 
   // Función para robar una carta del mazo
   const drawCard = () => {
@@ -140,4 +183,4 @@ export default function PlayerCards({ game, ListCards, activePlayers, postDeck, 
       </div>
     </div>
   );
-}}
+}
