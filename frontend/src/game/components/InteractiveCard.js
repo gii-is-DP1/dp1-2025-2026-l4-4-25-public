@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
-import { isTunnelCard, isActionCard, isCollapseCard } from '../cards';
+import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../cards';
 
 export default function InteractiveCard({ 
   card, 
   index,
   onTunnelCardDrop,
   onActionCardUse,
+  onMapCardUse,
   playerOrder,
   currentUsername,
   isMyTurn,
   deckCount,
   isSelected,
-  onToggleSelect
+  onToggleSelect,
+  rotation = 0,
+  onToggleRotation
 }) {
   const [showPlayerMenu, setShowPlayerMenu] = useState(false);
+  const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
 
   // LAS CARTAS DE TUNELES SON LAS UNICAS Q SE ARRATRAN
   const handleDragStart = (e) => {
     if (isTunnelCard(card) && isMyTurn) {
-      console.log('Dragging tunnel card:', card);
+      console.log('Dragging tunnel card:', card, 'with rotation:', rotation);
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('application/json', JSON.stringify(card));
+      const cardWithRotation = { ...card, rotation };
+      e.dataTransfer.setData('application/json', JSON.stringify(cardWithRotation));
       e.dataTransfer.setData('cardIndex', index.toString());
+      e.dataTransfer.setData('rotation', rotation.toString());
       e.dataTransfer.setData('text/plain', card.id);
     } else {
       e.preventDefault();
@@ -39,6 +45,11 @@ export default function InteractiveCard({
       return;
     }
     
+    if (isMapCard(card)) {
+      setShowObjectiveMenu(!showObjectiveMenu);
+      return;
+    }
+    
     if (isActionCard(card)) {
       setShowPlayerMenu(!showPlayerMenu);
     }
@@ -48,6 +59,11 @@ export default function InteractiveCard({
     if (onActionCardUse) {
       onActionCardUse(card, player, index);}
     setShowPlayerMenu(false);};
+
+  const handleSelectObjective = (position) => {
+    if (onMapCardUse) {
+      onMapCardUse(card, position, index);}
+    setShowObjectiveMenu(false);};
 
   const handleContextMenu = (e) => { // Para descartar las cartas (menu)
     e.preventDefault();
@@ -59,9 +75,20 @@ export default function InteractiveCard({
       e.preventDefault();
       onToggleSelect(index);}};
 
+  // LA ROTACION LO HACEMOS CON DOBLE CLIC (180º)
+  const handleDoubleClick = (e) => {
+    if (isTunnelCard(card) && isMyTurn && onToggleRotation) {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleRotation(index);
+      console.log(`🔄 Rotating tunnel card ${index} to ${rotation === 180 ? 0 : 180}°`);
+    }
+  };
+
   const isDraggableTunnel = isTunnelCard(card);
   const isClickableAction = isActionCard(card);
   const isClickableCollapse = isCollapseCard(card);
+  const isClickableMap = isMapCard(card);
   const canDrag = isDraggableTunnel && isMyTurn;
 
   let cardClass = 'interactive-card';
@@ -70,13 +97,16 @@ export default function InteractiveCard({
   if (isMyTurn) {
     if (isDraggableTunnel) {
       cardClass += ' draggable-tunnel';
-      cardTitle = 'Drag to board | Right-click to select for discard';
+      cardTitle = 'Drag to board | 🔁Double-click to rotate 180° | Right-click to discard';
     } else if (isClickableCollapse) {
       cardClass += ' clickable-collapse';
       cardTitle = 'Click to destroy a tunnel card on the board';
+    } else if (isClickableMap) {
+      cardClass += ' clickable-map';
+      cardTitle = 'Click to reveal an objective card or Right-click to select for discard';
     } else if (isClickableAction) {
       cardClass += ' clickable-action';
-      cardTitle = 'Click to use on player | Right-click to select for discard';}
+      cardTitle = 'Click to use on player or Right-click to select for discard';}
   } else {
     cardClass += ' disabled';}
   
@@ -90,11 +120,19 @@ export default function InteractiveCard({
         draggable={canDrag}
         onDragStart={handleDragStart}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
         onAuxClick={handleAuxClick}
-        title={cardTitle}
-      >
-        <img src={card.image} alt={card.name || 'Card'} className="card-image" />
+        title={cardTitle}>
+        <img 
+          src={card.image} 
+          alt={card.name || 'Card'} 
+          className="card-image"
+          style={{ 
+            transform: `rotate(${rotation}deg)`,
+            transition: 'transform 0.3s ease'
+          }}
+        />
       </div>
 
       {showPlayerMenu && isClickableAction && (
@@ -128,6 +166,51 @@ export default function InteractiveCard({
                   </button>
                 );
               })}
+          </div>
+        </div>
+      )}
+
+      {showObjectiveMenu && isClickableMap && (
+        <div className="player-menu">
+          <div className="player-menu-header">
+            Select objective to reveal
+            <button 
+              className="close-menu" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowObjectiveMenu(false);
+              }}>
+              ❌
+            </button>
+          </div>
+          <div className="player-menu-list">
+            <button
+              className="player-menu-item objective-top"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectObjective('[2][9]');
+              }}>
+              <span className="player-avatar">🎯</span>
+              <span className="player-name">UP Objective</span>
+            </button>
+            <button
+              className="player-menu-item objective-middle"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectObjective('[4][9]');
+              }}>
+              <span className="player-avatar">🎯</span>
+              <span className="player-name">MIDDLE Objective</span>
+            </button>
+            <button
+              className="player-menu-item objective-bottom"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectObjective('[6][9]');
+              }}>
+              <span className="player-avatar">🎯</span>
+              <span className="player-name">LOW Objective</span>
+            </button>
           </div>
         </div>
       )}

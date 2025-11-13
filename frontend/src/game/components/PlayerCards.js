@@ -11,6 +11,7 @@ export default function PlayerCards({
   findActivePlayerUsername,
   onTunnelCardDrop,
   onActionCardUse,
+  onMapCardUse,
   playerOrder,
   currentUsername,
   currentPlayer,
@@ -23,6 +24,7 @@ export default function PlayerCards({
   const [availableCards, setAvailableCards] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
   const [hasServerDeck, setHasServerDeck] = useState(false);
+  const [cardRotations, setCardRotations] = useState({}); 
 
   const pickRandomNonRotated = (cards, count = 5) => {
     const pool = getNonRotatedCards(cards).slice();
@@ -90,7 +92,7 @@ export default function PlayerCards({
     }
   }, [ListCards, activePlayers, hasServerDeck]);
 
-  // Función para robar una carta del mazo
+  // Función para coger una carta del mazo
   const drawCard = () => {
     if (deckCount <= 0) {
       console.log('No hay más cartas en el mazo');
@@ -120,9 +122,23 @@ export default function PlayerCards({
       if (drawnCard) {
         newHand.push(drawnCard);}
       
-      return newHand;});};
+      return newHand;});
+    
 
-  // Función para descartar una carta seleccionada
+    setCardRotations(prev => {
+      const newRotations = {};
+      Object.keys(prev).forEach(key => {
+        const idx = parseInt(key);
+        if (idx < cardIndex) {
+          newRotations[idx] = prev[idx];
+        } else if (idx > cardIndex) {
+          newRotations[idx - 1] = prev[idx];
+        }
+      });
+      return newRotations;
+    });
+  };
+
   const discardCard = () => {
     if (selectedCardIndex === null) {
       console.log('No card selected to discard');
@@ -145,9 +161,16 @@ export default function PlayerCards({
     return true;
   };
 
-  // Función para seleccionar/deseleccionar carta
   const toggleSelectCard = (index) => {
     setSelectedCardIndex(prev => prev === index ? null : index);
+  };
+
+  const toggleCardRotation = (index) => {
+    setCardRotations(prev => ({
+      ...prev,
+      [index]: prev[index] === 180 ? 0 : 180
+    }));
+    console.log(`🔄 Card ${index} rotated to ${cardRotations[index] === 180 ? 0 : 180}°`);
   };
 
   useEffect(() => {
@@ -172,12 +195,15 @@ export default function PlayerCards({
             index={i}
             onTunnelCardDrop={onTunnelCardDrop}
             onActionCardUse={onActionCardUse}
+            onMapCardUse={onMapCardUse}
             playerOrder={playerOrder || []}
             currentUsername={currentUsername}
             isMyTurn={isMyTurn}
             deckCount={deckCount}
             isSelected={selectedCardIndex === i}
             onToggleSelect={toggleSelectCard}
+            rotation={cardRotations[i] || 0}
+            onToggleRotation={toggleCardRotation}
           />
         ))}
       </div>

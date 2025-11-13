@@ -61,6 +61,7 @@ function App() {
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
           <Route path="/EditAchievement" element={<EditAchievements />} />
+          <Route path="/achievements/admin" element={<PrivateRoute><EditAchievements /></PrivateRoute>} />
         </>)
     }
     if (role === "PLAYER") {

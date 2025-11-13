@@ -12,28 +12,47 @@ export default function GameBoard({
   ListCards,
   currentPlayer,
   currentUsername,
-  collapseModeActive
+  collapseModeActive,
+  revealedObjective,
+  objectiveCards,
+  destroyingCell
 }) {
   
+  const getObjectiveCardImage = (cardType) => {
+    switch(cardType) {
+      case 'gold': return '/images/card-images/finals/gold.png';
+      case 'carbon_1': return '/images/card-images/finals/carbon_1.png';
+      case 'carbon_2': return '/images/card-images/finals/carbon_2.png';
+      default: return objetivecardreverse;
+    }};
+
   const renderCellContent = (row, col, cell) => {
     const card = ListCards.find(c => c.id === 34);
 
     if (!cell) {
-      return <div className="cell-coords">{row},{col}</div>;
-    }
+      return <div className="cell-coords">{row},{col}</div>;}
 
     if (cell.type === 'start') {
-      return <img src={startCardImage} alt="Start Card" className="static-card-image" />;
-    }
+      return <img src={startCardImage} alt="Start Card" className="static-card-image" />;}
 
     if (cell.type === 'objective') {
+      const positionKey = `[${row}][${col}]`;
+      if (revealedObjective && revealedObjective.position === positionKey) {
+        const cardImage = getObjectiveCardImage(revealedObjective.cardType);
+        return (
+          <img 
+            src={cardImage} 
+            alt={`Objective: ${revealedObjective.cardType}`} 
+            className="static-card-image revealed-objective" 
+            style={{border:'3px solid gold',boxShadow:'0 0 20px gold'}}
+          />
+        );}
       return <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />;
     }
 
     if (cell.type === 'tunnel' || cell.image) {
       const imgSrc = cell.image || card?.image;
-      return <img src={imgSrc} alt="Tunnel Card" className="static-card-image" />;
-    }
+      return <img src={imgSrc} alt="Tunnel Card" className="static-card-image" />;}
 
     return (
       <div className="card-preview path">
@@ -76,6 +95,7 @@ export default function GameBoard({
                 onRightClick={handleCellRightClick}
                 isMyTurn={isMyTurn}
                 collapseModeActive={collapseModeActive}
+                isDestroying={destroyingCell && destroyingCell.row === r && destroyingCell.col === c}
               />
             );
           })}
