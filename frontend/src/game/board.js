@@ -15,7 +15,7 @@ import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
 
 // Utilidades
-import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck } from './utils/gameUtils';
+import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
@@ -46,6 +46,8 @@ export default function Board() {
   const [playerOrder, setPlayerOrder] = useState([]);
   const [playerRol, setPlayerRol] = useState([]);
   const [privateLog, setPrivateLog] = useState([]);
+  
+  
 
   // Estados del tablero
   const BOARD_COLS = 11;
@@ -66,15 +68,21 @@ export default function Board() {
 
   // Hook personalizado para cargar datos del juego
   const {
-    activePlayers,
-    chat,
-    loggedActivePlayer,
     ListCards,
+    activePlayers,
+    postDeck,
+    findActivePlayerId,
     loadActivePlayers,
+    loggedActivePlayer,
+    chat,
     getChat,
     fetchCards,
     fetchAndSetLoggedActivePlayer
   } = useGameData(game);
+
+  // Particionar cartas en rotadas y no rotadas
+  const rotatedOnly = getRotatedCards(ListCards);
+  const nonRotatedOnly = getNonRotatedCards(ListCards);
 
   // Funciones de manejo del tablero
   const handleCellClick = (row, col) => {
@@ -233,9 +241,9 @@ export default function Board() {
 
   // Efectos
   useEffect(() => {
+    fetchCards();
     loadActivePlayers();
     getChat();
-    fetchCards();
     fetchAndSetLoggedActivePlayer();
 
     async function handlerounds() {
@@ -328,6 +336,15 @@ export default function Board() {
     }
   }, [activePlayers]);
 
+  
+  //Console log rotated and non-rotated cards
+  useEffect(() => {
+    
+    console.log('Rotated Cards:', rotatedOnly);
+    console.log('Non-Rotated Cards:', nonRotatedOnly);
+
+  }, [ListCards]);
+
   // Render
   return (
     <div className="board-container">
@@ -335,7 +352,15 @@ export default function Board() {
         <img src="/logo1-recortado.png" alt="logo" className="logo-img1" />
       </div>
 
-      <PlayerCards CardPorPlayer={CardPorPlayer} isSpectator={isSpectator} />
+      <PlayerCards 
+        game={game} 
+        ListCards={ListCards} 
+        activePlayers={activePlayers} 
+        postDeck={postDeck} 
+        findActivePlayerId={findActivePlayerId} 
+        CardPorPlayer={CardPorPlayer} 
+        isSpectator={isSpectator} 
+      />
       
       <SpectatorIndicator isSpectator={isSpectator} />
 
