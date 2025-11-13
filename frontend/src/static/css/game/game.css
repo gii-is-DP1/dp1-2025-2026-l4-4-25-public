@@ -46,10 +46,10 @@
   display: flex;
   gap: 8px;}
 .card-slot {
-  width: 70px;
-  height: 100px;
-  background: #0198fd; /* Aqui iria cada carta....*/
-  border: 2px solid #00ee3b;
+  width: 60px;
+  height: auto;
+  background: #57575700; /* Aqui iria cada carta....*/
+  border: 2px solid #00ee3b50;
   border-radius: 5px;
   display: flex;
   align-items: center;
