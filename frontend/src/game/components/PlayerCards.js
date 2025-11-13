@@ -19,6 +19,7 @@ export default function PlayerCards({
   const [hand, setHand] = useState([]);
   const [availableCards, setAvailableCards] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
+  const [cardRotations, setCardRotations] = useState({}); 
 
   const pickRandomNonRotated = (cards, count = 5) => {
     const pool = getNonRotatedCards(cards).slice();
@@ -75,7 +76,22 @@ export default function PlayerCards({
       if (drawnCard) {
         newHand.push(drawnCard);}
       
-      return newHand;});};
+      return newHand;});
+    
+
+    setCardRotations(prev => {
+      const newRotations = {};
+      Object.keys(prev).forEach(key => {
+        const idx = parseInt(key);
+        if (idx < cardIndex) {
+          newRotations[idx] = prev[idx];
+        } else if (idx > cardIndex) {
+          newRotations[idx - 1] = prev[idx];
+        }
+      });
+      return newRotations;
+    });
+  };
 
   const discardCard = () => {
     if (selectedCardIndex === null) {
@@ -101,6 +117,14 @@ export default function PlayerCards({
 
   const toggleSelectCard = (index) => {
     setSelectedCardIndex(prev => prev === index ? null : index);
+  };
+
+  const toggleCardRotation = (index) => {
+    setCardRotations(prev => ({
+      ...prev,
+      [index]: prev[index] === 180 ? 0 : 180
+    }));
+    console.log(`🔄 Card ${index} rotated to ${cardRotations[index] === 180 ? 0 : 180}°`);
   };
 
   useEffect(() => {
@@ -132,6 +156,8 @@ export default function PlayerCards({
             deckCount={deckCount}
             isSelected={selectedCardIndex === i}
             onToggleSelect={toggleSelectCard}
+            rotation={cardRotations[i] || 0}
+            onToggleRotation={toggleCardRotation}
           />
         ))}
       </div>

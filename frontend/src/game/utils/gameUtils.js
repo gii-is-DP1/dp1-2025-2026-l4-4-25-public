@@ -4,18 +4,13 @@ import minerRol from '../cards-images/roles/minerRol.png';
 export const assignRolesGame = (activePlayers) => {
   const n = activePlayers.length;
   let numSaboteur = 0;
-  let numMiner = 0;
 
-  if (n === 1) { numSaboteur = 1; numMiner = 3; }
-  else if (n === 4) { numSaboteur = 1; numMiner = 3; }
-  else if (n === 5) { numSaboteur = 2; numMiner = 3; }
-  else if (n === 6) { numSaboteur = 2; numMiner = 4; }
-  else if (n === 7) { numSaboteur = 3; numMiner = 4; }
-  else if (n === 8) { numSaboteur = 3; numMiner = 5; }
-  else if (n === 9) { numSaboteur = 4; numMiner = 5; }
-  else if (n === 10) { numSaboteur = 4; numMiner = 6; }
-  else if (n === 11) { numSaboteur = 5; numMiner = 6; }
-  else if (n === 12) { numSaboteur = 5; numMiner = 7; }
+  if (n === 3 || n === 4) { numSaboteur = 1; }
+  else if (n === 5 || n === 6) { numSaboteur = 2; }
+  else if (n === 7 || n === 8) { numSaboteur = 3; }
+  else if (n === 9 || n === 10) { numSaboteur = 4; }
+  else if (n === 11 || n === 12) { numSaboteur = 5; }
+  else { numSaboteur = 1; } 
 
   const shuffleArray = (array) => {
     const res = [...array];
@@ -30,8 +25,12 @@ export const assignRolesGame = (activePlayers) => {
   const roles = shuffledPlayers.map((p, i) => ({
     username: p.username || p,
     role: i < numSaboteur ? 'SABOTEUR' : 'MINER',
-    roleImg: i < numSaboteur ? saboteurRol : minerRol
+    roleImg: i < numSaboteur ? saboteurRol : minerRol,
+    roleName: i < numSaboteur ? 'SABOTEUR' : 'MINER'
   }));
+
+  console.log(`🎭 Roles assigned for ${n} players: ${numSaboteur} Saboteurs, ${n - numSaboteur} Miners`);
+  console.log('Roles:', roles);
 
   return roles;
 };

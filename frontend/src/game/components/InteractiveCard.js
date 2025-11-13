@@ -12,7 +12,9 @@ export default function InteractiveCard({
   isMyTurn,
   deckCount,
   isSelected,
-  onToggleSelect
+  onToggleSelect,
+  rotation = 0,
+  onToggleRotation
 }) {
   const [showPlayerMenu, setShowPlayerMenu] = useState(false);
   const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
@@ -20,10 +22,12 @@ export default function InteractiveCard({
   // LAS CARTAS DE TUNELES SON LAS UNICAS Q SE ARRATRAN
   const handleDragStart = (e) => {
     if (isTunnelCard(card) && isMyTurn) {
-      console.log('Dragging tunnel card:', card);
+      console.log('Dragging tunnel card:', card, 'with rotation:', rotation);
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('application/json', JSON.stringify(card));
+      const cardWithRotation = { ...card, rotation };
+      e.dataTransfer.setData('application/json', JSON.stringify(cardWithRotation));
       e.dataTransfer.setData('cardIndex', index.toString());
+      e.dataTransfer.setData('rotation', rotation.toString());
       e.dataTransfer.setData('text/plain', card.id);
     } else {
       e.preventDefault();
@@ -71,6 +75,16 @@ export default function InteractiveCard({
       e.preventDefault();
       onToggleSelect(index);}};
 
+  // LA ROTACION LO HACEMOS CON DOBLE CLIC (180º)
+  const handleDoubleClick = (e) => {
+    if (isTunnelCard(card) && isMyTurn && onToggleRotation) {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleRotation(index);
+      console.log(`🔄 Rotating tunnel card ${index} to ${rotation === 180 ? 0 : 180}°`);
+    }
+  };
+
   const isDraggableTunnel = isTunnelCard(card);
   const isClickableAction = isActionCard(card);
   const isClickableCollapse = isCollapseCard(card);
@@ -83,7 +97,7 @@ export default function InteractiveCard({
   if (isMyTurn) {
     if (isDraggableTunnel) {
       cardClass += ' draggable-tunnel';
-      cardTitle = 'Drag tunnel to board or Right-click to select for discard';
+      cardTitle = 'Drag to board | 🔁Double-click to rotate 180° | Right-click to discard';
     } else if (isClickableCollapse) {
       cardClass += ' clickable-collapse';
       cardTitle = 'Click to destroy a tunnel card on the board';
@@ -106,11 +120,19 @@ export default function InteractiveCard({
         draggable={canDrag}
         onDragStart={handleDragStart}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
         onAuxClick={handleAuxClick}
-        title={cardTitle}
-      >
-        <img src={card.image} alt={card.name || 'Card'} className="card-image" />
+        title={cardTitle}>
+        <img 
+          src={card.image} 
+          alt={card.name || 'Card'} 
+          className="card-image"
+          style={{ 
+            transform: `rotate(${rotation}deg)`,
+            transition: 'transform 0.3s ease'
+          }}
+        />
       </div>
 
       {showPlayerMenu && isClickableAction && (
