@@ -7,13 +7,16 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
-import getIconImage from "../../util/getIconImage"; 
+import getIconImage from "../../util/getIconImage";
+import WelcomeScreen from "../../components/WelcomeScreen";
 // import { IoMdArrowDropdown} from "react-icons/io"; // Para hacer más vistosa la flecha del dropdown
 
 export default function Register() {
   let [authority, setAuthority] = useState(null);
   const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
-  const [dropdownOpen, setDropdownOpen] = useState(false); 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [username, setUsername] = useState("");
   const toggleDropdown = () => setDropdownOpen(prev => !prev)
   const registerFormRef = useRef();
  /*
@@ -79,7 +82,8 @@ export default function Register() {
               else {
                 tokenService.setUser(data);
                 tokenService.updateLocalAccessToken(data.token);
-                window.location.href = "/lobby";
+                setUsername(data.username);
+                setShowWelcome(true);
               }
             })
             .catch((message) => {
@@ -91,7 +95,16 @@ export default function Register() {
         alert(message);
       });
 
-  }  
+  }
+
+  const handleWelcomeComplete = () => {
+    window.location.href = "/lobby";
+  };
+
+  if (showWelcome) {
+    return <WelcomeScreen username={username} onComplete={handleWelcomeComplete} />;
+  }
+  
     return (
       <div className="auth-page-container">
         <Link to="/login">
