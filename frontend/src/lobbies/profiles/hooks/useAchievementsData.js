@@ -32,7 +32,7 @@ const useAchievementsData = () => {
         if (!response.ok) throw new Error("Could not fetch profile");
 
         const data = await response.json();
-        console.log("Player profile data:", data);
+      //  console.log("Player profile data:", data);
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -76,14 +76,14 @@ const useAchievementsData = () => {
         const playerAchievements = profile.accquiredAchievements || [];
         const playerAchievementIds = playerAchievements.map(ach => ach.id);
         
-        console.log("Todos los logros:", allAchievements);
-        console.log("Logros del jugador:", playerAchievements);
-        console.log("IDs de logros del jugador:", playerAchievementIds);
+       // console.log("Todos los logros:", allAchievements);
+       // console.log("Logros del jugador:", playerAchievements);
+       // console.log("IDs de logros del jugador:", playerAchievementIds);
         
         // Función para obtener el valor actual según la métrica
         const getCurrentValue = (metric) => {
-          console.log("Evaluating metric:", metric);
-          console.log("Profile data:", profile);
+        //  console.log("Evaluating metric:", metric);
+         // console.log("Profile data:", profile);
           
           let value;
           switch (metric) {
@@ -112,7 +112,7 @@ const useAchievementsData = () => {
               value = 0;
           }
           
-          console.log(`Metric ${metric} has value:`, value);
+        //  console.log(`Metric ${metric} has value:`, value);
           return value;
         };
 
@@ -120,7 +120,7 @@ const useAchievementsData = () => {
         const achievementsWithStatus = allAchievements.map(ach => {
           const currentValue = getCurrentValue(ach.metric);
           const progress = `${currentValue}/${ach.threshold || 0}`;
-          console.log(`Achievement ${ach.tittle}: ${progress}`);
+        //  console.log(`Achievement ${ach.tittle}: ${progress}`);
           
           return {
             ...ach,
@@ -137,7 +137,7 @@ const useAchievementsData = () => {
           return 0;
         });
         
-        console.log("Logros con estado: ", achievementsWithStatus);
+        //console.log("Logros con estado: ", achievementsWithStatus);
         setAchievements(achievementsWithStatus);
         setError(null);
       } catch (error) {
