@@ -19,6 +19,8 @@ import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.message.Message;
 import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class PlayerService {
@@ -28,6 +30,9 @@ public class PlayerService {
     private final AchievementService achievementService;
     private final DeckService deckService;
     private final MessageService messageService;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     public PlayerService(PlayerRepository playerRepository,
@@ -120,14 +125,26 @@ public class PlayerService {
     @Transactional
     public void deletePlayer(Integer id) {
         Player toDelete = findPlayer(id);
+        Integer userId = toDelete.getId();
+        boolean isActivePlayer = toDelete instanceof ActivePlayer;
 
         detachCommonRelationships(toDelete);
 
-        if (toDelete instanceof ActivePlayer activePlayer) {
-            detachActivePlayerRelationships(activePlayer);
+        if (isActivePlayer) {
+            detachActivePlayerRelationships((ActivePlayer) toDelete);
         }
-
-        playerRepository.delete(toDelete);
+        entityManager.flush();
+        entityManager.clear();
+        
+        if (isActivePlayer) {
+            entityManager.createNativeQuery("DELETE FROM active_player WHERE id = :id")
+                .setParameter("id", userId)
+                .executeUpdate();
+        }
+        
+        entityManager.createNativeQuery("DELETE FROM player WHERE id = :id")
+            .setParameter("id", userId)
+            .executeUpdate();
     }
 
     @Transactional
@@ -151,6 +168,9 @@ public class PlayerService {
         }
         return playerRepository.save(player);
     }
+
+
+
 
     private void detachCommonRelationships(Player player) {
         for (Player friend : new ArrayList<>(player.getFriends())) {
