@@ -16,6 +16,7 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameFinishedEvent;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 import jakarta.validation.Valid;
@@ -70,6 +71,13 @@ public class AchievementService {
     @Transactional
     public void deleteAchievement(Integer id) {
         Achievement toDelete = findAchievement(id);
+        
+        // Eliminar las relaciones con los jugadores que tienen este logro
+        for (Player player : toDelete.getPlayers()) {
+            player.getAccquiredAchievements().remove(toDelete);
+        }
+        toDelete.getPlayers().clear();
+        
         achievementRepository.delete(toDelete);
     }
 
