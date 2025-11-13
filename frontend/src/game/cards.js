@@ -9,15 +9,22 @@ export function isTunnelCard(c) {
 
 // Ruta d las cartas de accion /images/card-images/action-cards/
 export function isActionCard(c) {
-  const res2 = c && c.image && c.image.includes('/action-cards/') && !isCollapseCard(c);
+  const res2 = c && c.image && c.image.includes('/action-cards/') && !isCollapseCard(c) && !isMapCard(c);
   console.log('Funcion isActionCard:', c?.id, c?.image, res2);
   return res2;}
 
-// Carta para destruir caminos (tuneles)
+// Destruir caminos (tuneles)
 export function isCollapseCard(c) {
   const res3 = c && c.image && c.image.includes('/collapse_card.png');
   console.log('Funcion isCollapseCard:', c?.id, c?.image, res3);
   return res3;
+}
+
+// Revelar cartas PEPITAS O CARBON
+export function isMapCard(c) {
+  const res4 = c && c.image && c.image.toLowerCase().includes('/map');
+  console.log('Funcion isMapCard:', c?.id, c?.image, res4);
+  return res4;
 }
 
 // VALIDACIONES DE LAS CARTAS EN EL TABLERO, ¡OJO! HAY QUE PONER TODAS Y LAS RESTRICCIONES SI ES TRUE-FALSE Y TAL

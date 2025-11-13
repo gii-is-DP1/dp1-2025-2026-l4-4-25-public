@@ -52,6 +52,19 @@ export default function Board() {
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
   const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
+  
+  const [objectiveCards, setObjectiveCards] = useState(() => {
+    const cards = ['gold', 'carbon_1', 'carbon_2'];
+    const shuffled = cards.sort(() => Math.random() - 0.5);
+    return {
+      '[2][9]': shuffled[0],  
+      '[4][9]': shuffled[1],  
+      '[6][9]': shuffled[2]};});
+  
+  const [revealedObjective, setRevealedObjective] = useState(null);
+  const [showRoleNotification, setShowRoleNotification] = useState(false);
+  const [myRole, setMyRole] = useState(null);
+  const [destroyingCell, setDestroyingCell] = useState(null); 
 
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
@@ -159,6 +172,30 @@ export default function Board() {
     const targetIndex = playerOrder.findIndex(p => p.username === targetPlayer.username);
     nextTurn();};
 
+  const handleMapCard = (card, objectivePosition, cardIndex) => {
+    if (isSpectator) {
+      addPrivateLog("ℹ️ Spectators cannot use this", "warning");
+      return;}
+
+    const objectiveCardType = objectiveCards[objectivePosition];
+    console.log(`🔍 Revealing objective at ${objectivePosition}: ${objectiveCardType}`);
+    setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); // Solo para el jugador que usa la carta
+    toast.info(`🔍 Revealing objective... Look at the board!`);
+    setTimeout(() => {
+      setRevealedObjective(null);
+      addPrivateLog('🔍 Objective card hidden again', 'info');
+    }, 5000);
+
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(cardIndex);}
+
+    setDeckCount(prev => Math.max(0, prev - 1));
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    addColoredLog(currentIndex,currentPlayer,`🗺️ Used a map card to reveal an objective`);
+    
+    nextTurn();
+  };
+
   const activateCollapseMode = (card, cardIndex) => {
     setCollapseMode({ active: true, card, cardIndex });
     toast.info('💣Click on a tunnel card to destroy it');
@@ -174,26 +211,26 @@ export default function Board() {
     if (cell.type !== 'tunnel') {
       toast.warning('🔴You can only destroy tunnel cards');
       return;}
-    
-    setBoardCells(prev => {
-      const next = prev.map(r => r.slice());
-      next[row][col] = null;
-      return next;});
-    
-    if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(collapseMode.cardIndex);}
-    setDeckCount(prev => Math.max(0, prev - 1));
-    
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    addColoredLog(
-      currentIndex,
-      playerOrder[currentIndex].username,
-      `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`
-    );
-    toast.success('Tunnel card destroyed!');
-    setCollapseMode({ active: false, card: null, cardIndex: null });
-    nextTurn();
-  };
+    setDestroyingCell({ row, col });
+    setTimeout(() => {
+      setBoardCells(prev => {
+        const next = prev.map(r => r.slice());
+        next[row][col] = null;
+        return next;
+      });
+      
+      if (window.removeCardAndDraw) {
+        window.removeCardAndDraw(collapseMode.cardIndex);
+      }
+      setDeckCount(prev => Math.max(0, prev - 1));
+      
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      addColoredLog(currentIndex, playerOrder[currentIndex].username, `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
+      toast.success('Tunnel card destroyed!');
+      setCollapseMode({ active: false, card: null, cardIndex: null });
+      setDestroyingCell(null);
+      nextTurn();
+    }, 800);};
 
   useEffect(() => {
     window.activateCollapseMode = activateCollapseMode;
@@ -394,6 +431,17 @@ export default function Board() {
     if (activePlayers.length > 0) {
       const rolesAssigned = assignRolesGame(activePlayers);
       setPlayerRol(rolesAssigned);
+      if (!isSpectator) {
+        const currentPlayerRole = rolesAssigned.find(p => p.username === loggedInUser.username);
+        if (currentPlayerRole) {
+          setMyRole(currentPlayerRole);
+          setShowRoleNotification(true);
+          setTimeout(() => {
+            setShowRoleNotification(false);
+          }, 5000);
+        }
+      }
+      
       const initialTools = {};
       activePlayers.forEach(player => {
         initialTools[player.username] = {
@@ -432,6 +480,19 @@ export default function Board() {
   // Render 
   return (
     <div className="board-container">
+      {showRoleNotification && myRole && (
+        <div className="role-notification-overlay">
+          <div className="role-notification-card">
+            <h2 className="role-notification-title">YOUR ROLE:</h2>
+            <img 
+              src={myRole.roleImg} 
+              alt={myRole.roleName} 
+              className="role-notification-image"
+            />
+            <p className="role-notification-name">{myRole.roleName}</p>
+          </div>
+        </div>)}
+
       <div className="logo-container">
         <img src="/logo1-recortado.png" alt="logo" className="logo-img1" />
       </div>
@@ -446,6 +507,7 @@ export default function Board() {
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}
+        onMapCardUse={handleMapCard}
         playerOrder={playerOrder}
         currentUsername={loggedInUser?.username}
         currentPlayer={currentPlayer}
@@ -478,6 +540,9 @@ export default function Board() {
         currentPlayer={currentPlayer}
         currentUsername={loggedInUser?.username}
         collapseModeActive={collapseMode.active}
+        revealedObjective={revealedObjective}
+        objectiveCards={objectiveCards}
+        destroyingCell={destroyingCell}
       />
 
       <div className="turn-box">🔴 · TURN OF {currentPlayer}</div>

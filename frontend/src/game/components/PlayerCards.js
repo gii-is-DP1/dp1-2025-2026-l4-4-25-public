@@ -10,6 +10,7 @@ export default function PlayerCards({
   findActivePlayerId,
   onTunnelCardDrop,
   onActionCardUse,
+  onMapCardUse,
   playerOrder,
   currentUsername,
   currentPlayer,
@@ -44,7 +45,7 @@ export default function PlayerCards({
     }
   }, [ListCards, activePlayers]);
 
-  // Función para robar una carta del mazo
+  // Función para coger una carta del mazo
   const drawCard = () => {
     if (deckCount <= 0) {
       console.log('No hay más cartas en el mazo');
@@ -76,7 +77,6 @@ export default function PlayerCards({
       
       return newHand;});};
 
-  // Función para descartar una carta seleccionada
   const discardCard = () => {
     if (selectedCardIndex === null) {
       console.log('No card selected to discard');
@@ -99,7 +99,6 @@ export default function PlayerCards({
     return true;
   };
 
-  // Función para seleccionar/deseleccionar carta
   const toggleSelectCard = (index) => {
     setSelectedCardIndex(prev => prev === index ? null : index);
   };
@@ -126,6 +125,7 @@ export default function PlayerCards({
             index={i}
             onTunnelCardDrop={onTunnelCardDrop}
             onActionCardUse={onActionCardUse}
+            onMapCardUse={onMapCardUse}
             playerOrder={playerOrder || []}
             currentUsername={currentUsername}
             isMyTurn={isMyTurn}

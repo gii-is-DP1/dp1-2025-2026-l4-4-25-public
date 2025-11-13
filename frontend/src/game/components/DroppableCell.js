@@ -10,7 +10,8 @@ export default function DroppableCell({
   onClick, 
   onRightClick,
   isMyTurn,
-  collapseModeActive
+  collapseModeActive,
+  isDestroying
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -86,7 +87,7 @@ export default function DroppableCell({
 
   return (
     <div
-      className={`board-cell ${cell ? 'occupied' : 'empty'} ${isDragOver ? 'drag-over' : ''} ${isDestroyable ? 'destroyable' : ''} ${cannotDestroy ? 'cannot-destroy' : ''}`}
+      className={`board-cell ${cell ? 'occupied' : 'empty'} ${isDragOver ? 'drag-over' : ''} ${isDestroyable ? 'destroyable' : ''} ${cannotDestroy ? 'cannot-destroy' : ''} ${isDestroying ? 'cell-destroying' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

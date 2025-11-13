@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { isTunnelCard, isActionCard, isCollapseCard } from '../cards';
+import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../cards';
 
 export default function InteractiveCard({ 
   card, 
   index,
   onTunnelCardDrop,
   onActionCardUse,
+  onMapCardUse,
   playerOrder,
   currentUsername,
   isMyTurn,
@@ -14,6 +15,7 @@ export default function InteractiveCard({
   onToggleSelect
 }) {
   const [showPlayerMenu, setShowPlayerMenu] = useState(false);
+  const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
 
   // LAS CARTAS DE TUNELES SON LAS UNICAS Q SE ARRATRAN
   const handleDragStart = (e) => {
@@ -39,6 +41,11 @@ export default function InteractiveCard({
       return;
     }
     
+    if (isMapCard(card)) {
+      setShowObjectiveMenu(!showObjectiveMenu);
+      return;
+    }
+    
     if (isActionCard(card)) {
       setShowPlayerMenu(!showPlayerMenu);
     }
@@ -48,6 +55,11 @@ export default function InteractiveCard({
     if (onActionCardUse) {
       onActionCardUse(card, player, index);}
     setShowPlayerMenu(false);};
+
+  const handleSelectObjective = (position) => {
+    if (onMapCardUse) {
+      onMapCardUse(card, position, index);}
+    setShowObjectiveMenu(false);};
 
   const handleContextMenu = (e) => { // Para descartar las cartas (menu)
     e.preventDefault();
@@ -62,6 +74,7 @@ export default function InteractiveCard({
   const isDraggableTunnel = isTunnelCard(card);
   const isClickableAction = isActionCard(card);
   const isClickableCollapse = isCollapseCard(card);
+  const isClickableMap = isMapCard(card);
   const canDrag = isDraggableTunnel && isMyTurn;
 
   let cardClass = 'interactive-card';
@@ -70,13 +83,16 @@ export default function InteractiveCard({
   if (isMyTurn) {
     if (isDraggableTunnel) {
       cardClass += ' draggable-tunnel';
-      cardTitle = 'Drag to board | Right-click to select for discard';
+      cardTitle = 'Drag tunnel to board or Right-click to select for discard';
     } else if (isClickableCollapse) {
       cardClass += ' clickable-collapse';
       cardTitle = 'Click to destroy a tunnel card on the board';
+    } else if (isClickableMap) {
+      cardClass += ' clickable-map';
+      cardTitle = 'Click to reveal an objective card or Right-click to select for discard';
     } else if (isClickableAction) {
       cardClass += ' clickable-action';
-      cardTitle = 'Click to use on player | Right-click to select for discard';}
+      cardTitle = 'Click to use on player or Right-click to select for discard';}
   } else {
     cardClass += ' disabled';}
   
@@ -128,6 +144,51 @@ export default function InteractiveCard({
                   </button>
                 );
               })}
+          </div>
+        </div>
+      )}
+
+      {showObjectiveMenu && isClickableMap && (
+        <div className="player-menu">
+          <div className="player-menu-header">
+            Select objective to reveal
+            <button 
+              className="close-menu" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowObjectiveMenu(false);
+              }}>
+              ❌
+            </button>
+          </div>
+          <div className="player-menu-list">
+            <button
+              className="player-menu-item objective-top"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectObjective('[2][9]');
+              }}>
+              <span className="player-avatar">🎯</span>
+              <span className="player-name">UP Objective</span>
+            </button>
+            <button
+              className="player-menu-item objective-middle"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectObjective('[4][9]');
+              }}>
+              <span className="player-avatar">🎯</span>
+              <span className="player-name">MIDDLE Objective</span>
+            </button>
+            <button
+              className="player-menu-item objective-bottom"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectObjective('[6][9]');
+              }}>
+              <span className="player-avatar">🎯</span>
+              <span className="player-name">LOW Objective</span>
+            </button>
           </div>
         </div>
       )}
