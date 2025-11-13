@@ -1,8 +1,12 @@
 .board-container {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
-  min-height: 100vh;
-  background-image:  url('../../images/cave_image.jpeg');
+  height: 100vh;
+  background-image: url('../../images/cave_image.jpeg');
+  background-size: cover;
+  background-position: center;
   color: white;
   font-family: Arial, sans-serif;
   overflow: hidden;
@@ -113,20 +117,20 @@
 .n-discard {
   position: absolute;
   top: 285px;
-  left: 50px;
+  left: 45px;
   background: #dabb40;
   border: 2px solid #c0af11;
   border-radius: 8px;
   padding: 6px 10px;
   font-family: Arial; 
-  font-size: 14px;       
+  font-size: 15px;       
   color: #000;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;    
+  gap: 10px;    
   animation: pulse-discard 2s infinite;         
   font-weight: bold;}
 
@@ -216,7 +220,7 @@
 
 .turn-box {
   position: absolute;
-  bottom: 140px;
+  bottom: 10px;
   left: 10px;
   color: black;
   background: #fdc200;
@@ -224,7 +228,7 @@
   padding: 6px 12px;
   font-weight: bold;
   animation: pulse-turn 2s infinite;
-  font-size: 12px;}
+  font-size: 15px;}
 
   @keyframes pulse-turn {
   0%, 100% {
@@ -281,9 +285,9 @@
 .player5 { color: #ff44e6;}
 .player6 { color: #9500da;}
 .player7 { color: #f8b600;}
-.player8 { color: #0011ff;}
+.player8 { color: #6c75e9;}
 .player9 { color: #00a03d;}
-.player10 { color: #380d0d;}
+.player10 { color: #a53030a4;}
 .player11 { color: #929b1e;}
 .player12 { color: #4c96db; }
 

@@ -129,7 +129,7 @@ export default function Board() {
 
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
     if (loggedInUser.username !== currentPlayer) {
-      addPrivateLog("⚠️ It's not your turn!", "warning");
+      toast.warning("It's not your turn!");
       return;
     }
     if (deckCount > 0) {
@@ -142,6 +142,7 @@ export default function Board() {
         `🎴 Discarded a card. ${deckCount - 1} cards left in the deck.`
       );
     } else {
+      toast.warning("No more cards left in the deck!");
       addLog("⛔No more cards left in the deck!", "warning");
     }
   };
@@ -351,7 +352,7 @@ export default function Board() {
       <div className="turn-box">🔴 · TURNO DE {currentPlayer}</div>
 
       <PlayersList 
-        activePlayers={activePlayers} 
+        activePlayers={playerOrder} 
         CardPorPlayer={CardPorPlayer} 
       />
 
