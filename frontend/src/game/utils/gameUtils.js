@@ -44,10 +44,36 @@ export const formatTime = (seconds) => {
 
 export const calculateCardsPerPlayer = (numPlayers) => {
   if (numPlayers <= 5) return 6;
-  else if (numPlayers <= 9) return 5;
+  else if (numPlayers <= 9 && numPlayers > 6) return 5;
   else return 4;
 };
 
 export const calculateInitialDeck = (numPlayers, cardsPerPlayer) => {
   return 60 - (numPlayers * cardsPerPlayer);
 };
+
+const cleanImageName = (s) => String(s ?? '').trim().replace(/\r?\n/g, '');
+
+const ROTATED_RE = /_rotated\.png$/i;
+
+export const isRotatedImage = (image) => ROTATED_RE.test(cleanImageName(image));
+
+// Cartas cuya imagen termina en "_rotated.png"
+export const getRotatedCards = (cards) =>
+  (cards ?? []).filter((c) => isRotatedImage(c.image));
+
+// Cartas cuya imagen NO termina en "_rotated.png"
+export const getNonRotatedCards = (cards) =>
+  (cards ?? []).filter((c) => !isRotatedImage(c.image));
+
+//Elegir cartas al azar
+export const shuffleInPlace = (arr) => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+
+
