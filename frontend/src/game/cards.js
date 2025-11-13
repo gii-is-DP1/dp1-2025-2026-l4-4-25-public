@@ -1,67 +1,200 @@
 ﻿// PARA SABER QUE TIPO DE CARTA ES Y SI PODEMOS COLOCARLA EN EL TABLERO (HAY QUE COMPLETYARLO BASTANTE)
 
-
-// Ruta de las catras tuneles /images/card-images/tunnel-cards/
 export function isTunnelCard(c) {
   const res1 = c && c.image && c.image.includes('/tunnel-cards/');
-  console.log('Funcion isTunnelCard:', c?.id, c?.image, res1);
   return res1;}
 
-// Ruta d las cartas de accion /images/card-images/action-cards/
 export function isActionCard(c) {
   const res2 = c && c.image && c.image.includes('/action-cards/') && !isCollapseCard(c) && !isMapCard(c);
-  console.log('Funcion isActionCard:', c?.id, c?.image, res2);
   return res2;}
 
-// Destruir caminos (tuneles)
 export function isCollapseCard(c) {
   const res3 = c && c.image && c.image.includes('/collapse_card.png');
-  console.log('Funcion isCollapseCard:', c?.id, c?.image, res3);
   return res3;
 }
 
-// Revelar cartas PEPITAS O CARBON
 export function isMapCard(c) {
   const res4 = c && c.image && c.image.toLowerCase().includes('/map');
-  console.log('Funcion isMapCard:', c?.id, c?.image, res4);
   return res4;
 }
 
-// VALIDACIONES DE LAS CARTAS EN EL TABLERO, ¡OJO! HAY QUE PONER TODAS Y LAS RESTRICCIONES SI ES TRUE-FALSE Y TAL
+function getCardConnections(card) {
+  if (!card) return { arriba: false, abajo: false, izquierda: false, derecha: false };
+  
+  // Si la carta es start u objective, tienen conexión en todas las direcciones
+  if (card.type === 'start' || card.type === 'objective') {
+    return { arriba: true, abajo: true, izquierda: true, derecha: true };
+  }
+  
+  const rotation = card.rotation || 0;
+  let connections = {
+    arriba: card.arriba || false,
+    abajo: card.abajo || false,
+    izquierda: card.izquierda || false,
+    derecha: card.derecha || false
+  };
+  
+  // Aplicar rotación de 180 grados si existe
+  if (rotation === 180) {
+    connections = {
+      arriba: card.abajo || false,
+      abajo: card.arriba || false,
+      izquierda: card.derecha || false,
+      derecha: card.izquierda || false
+    };
+  }
+  
+  return connections;
+}
+
+function checkPathContinuity(card1Connections, card2Connections, direction) {
+  const oppositeDirection = {
+    'arriba': 'abajo',
+    'abajo': 'arriba',
+    'izquierda': 'derecha',
+    'derecha': 'izquierda'
+  };
+  
+  // La carta que se quiere colocar debe tener camino en la dirección hacia la carta adyacente
+  const hasPathToNeighbor = card1Connections[direction]; //
+  // La carta adyacente debe tener camino en la dirección opuesta hacia la carta que se coloca
+  const neighborHasPathBack = card2Connections[oppositeDirection[direction]];
+  
+  return hasPathToNeighbor && neighborHasPathBack;
+}
+
+/**
+ * Verifica si hay un camino válido desde la carta de inicio hasta la posición objetivo
+ * usando BFS (Breadth-First Search)
+ */
+function hasPathFromStart(board, targetRow, targetCol, cardToPlace) {
+  const start = { row: 4, col: 1 };
+  if (!start) return false;
+  
+  // Crear un tablero temporal con la carta a colocar
+  const tempBoard = board.map(row => row.slice());
+  tempBoard[targetRow][targetCol] = cardToPlace;
+  
+  // BFS
+  const queue = [{ row: start.row, col: start.col }];
+  const visited = new Set();
+  visited.add(`${start.row},${start.col}`);
+  
+  const directions = {
+    'arriba': [-1, 0],
+    'abajo': [1, 0],
+    'izquierda': [0, -1],
+    'derecha': [0, 1]
+  };
+  
+  while (queue.length > 0) {
+    const current = queue.shift();
+    
+    // Si llegamos a la posición objetivo, hay camino
+    if (current.row === targetRow && current.col === targetCol) {
+      return true;
+    }
+    
+    const currentCard = tempBoard[current.row][current.col];
+    if (!currentCard) continue;
+    
+    const currentConnections = getCardConnections(currentCard);
+    
+    // Explorar vecinos
+    for (const [dirName, [dr, dc]] of Object.entries(directions)) {
+      // Verificar si la carta actual tiene camino en esta dirección
+      if (!currentConnections[dirName]) continue;
+      
+      const newRow = current.row + dr;
+      const newCol = current.col + dc;
+      const key = `${newRow},${newCol}`;
+      
+      // Verificar límites y si ya fue visitado
+      if (newRow < 0 || newRow >= tempBoard.length || 
+          newCol < 0 || newCol >= tempBoard[0].length ||
+          visited.has(key)) {
+        continue;
+      }
+      
+      const neighborCard = tempBoard[newRow][newCol];
+      
+      // Solo continuar si hay una carta y hay continuidad de camino
+      if (neighborCard) {
+        const neighborConnections = getCardConnections(neighborCard);
+        
+        if (checkPathContinuity(currentConnections, neighborConnections, dirName)) {
+          visited.add(key);
+          queue.push({ row: newRow, col: newCol });
+        }
+      }
+    }
+  }
+  
+  return false;
+}
+
+// VALIDACIONES DE LAS CARTAS EN EL TABLERO
 export function canPlaceCard(board, row, col, c) {
-  console.log('Funcion canPlaceCard:', { row, col, c, isTunnel: isTunnelCard(c) });
   if (!c) {
-    console.log('No hay carta');
-    return false;}
+    return false;
+  }
   
   if (!isTunnelCard(c)) {
-    console.log('No es una carta de tunel');
-    return false;}
+    return false;
+  }
   
   const cellOccupied = board[row] && board[row][col] !== null;
   if (cellOccupied) {
-    console.log('Celda Ocupada');
-    return false;}
+    return false;
+  }
   
-  const hasAdjacentCard = checkAdjacentCards(board, row, col);
-  console.log('Hay carta conectada:', hasAdjacentCard); // Esto hay que mejorarlo porque solo comprueba los 4 lados, hay que ver la compatsabilidad según el camino
-  return hasAdjacentCard;
+  // Verificar que haya al menos una carta adyacente Y que tenga continuidad de camino
+  const hasValidConnection = checkAdjacentCardsWithContinuity(board, row, col, c);
+  if (!hasValidConnection) {
+    return false;
+  }
+  
+  // NUEVA VALIDACIÓN: Verificar que exista un camino desde la carta de inicio
+  const hasPathToStart = hasPathFromStart(board, row, col, c);
+  if (!hasPathToStart) {
+    return false;
+  }
+  
+  return true;
 }
 
-// Cartas contiguas unidas a los cuatros lados de la misma que se quiere colocar
-export function checkAdjacentCards(board, row, col) {
-  const directions = [[-1, 0],[1, 0],[0, -1],[0, 1]];
-
-  for (const [dr, dc] of directions) {
-    const newR = row + dr;
-    const newC = col + dc;
-    const inBounds = newR >= 0 && newR < board.length && newC >= 0 && newC < board[0].length;
+function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
+  const directions = [
+    { name: 'arriba', dr: -1, dc: 0 },
+    { name: 'abajo', dr: 1, dc: 0 },
+    { name: 'izquierda', dr: 0, dc: -1 },
+    { name: 'derecha', dr: 0, dc: 1 }
+  ];
+  
+  let hasAtLeastOneAdjacent = false;
+  const cardConnections = getCardConnections(cardToPlace);
+  
+  for (const dir of directions) {
+    const newRow = row + dir.dr;
+    const newCol = col + dir.dc;
     
-    if (inBounds) {
-      const hasC = board[newR][newC]!== null; // Diff de null porque no peude estar la celda vacia
-      console.log(`DIRECCIÓN CARTA [${dr},${dc}]---->[${newR},${newC}]:`, hasC);
+    // Verificar límites del tablero
+    if (newRow < 0 || newRow >= board.length || newCol < 0 || newCol >= board[0].length) {
+      continue;
+    }
+    
+    const adjacentCard = board[newRow][newCol];
+    
+    if (adjacentCard) {
+      hasAtLeastOneAdjacent = true;
+      const adjacentConnections = getCardConnections(adjacentCard);
       
-      if (hasC) {
-        return true;}}}
-  return false;
+      // Si hay una carta adyacente, DEBE haber continuidad de camino
+      if (!checkPathContinuity(cardConnections, adjacentConnections, dir.name)) {
+        return false; // No hay continuidad, la colocación es inválida
+      }
+    }
+  }
+  
+  return hasAtLeastOneAdjacent;
 }
