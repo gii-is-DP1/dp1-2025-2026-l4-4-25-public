@@ -85,13 +85,16 @@ export default function Board() {
     ListCards,
     activePlayers,
     postDeck,
-    findActivePlayerId,
+    getDeck,
+    patchDeck,
+    findActivePlayerUsername,
     loadActivePlayers,
     loggedActivePlayer,
     chat,
     getChat,
     fetchCards,
-    fetchAndSetLoggedActivePlayer
+    fetchAndSetLoggedActivePlayer,
+    deck
   } = useGameData(game);
 
   // Cartas Rotadas y No Rotadas
@@ -475,7 +478,9 @@ export default function Board() {
         ListCards={ListCards} 
         activePlayers={activePlayers} 
         postDeck={postDeck} 
-        findActivePlayerId={findActivePlayerId} 
+        getDeck={getDeck}
+        patchDeck={patchDeck}
+        findActivePlayerUsername={findActivePlayerUsername} 
         CardPorPlayer={CardPorPlayer} 
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
@@ -485,6 +490,7 @@ export default function Board() {
         currentUsername={loggedInUser?.username}
         currentPlayer={currentPlayer}
         deckCount={deckCount}
+        deck={deck}
       />
       
       <SpectatorIndicator isSpectator={isSpectator} />
