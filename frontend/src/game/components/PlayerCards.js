@@ -2,22 +2,43 @@ import React, { useEffect, useState } from 'react';
 import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
-export default function PlayerCards({ 
-  game, 
-  ListCards, 
-  activePlayers, 
-  postDeck, 
-  findActivePlayerId,
+export default function PlayerCards({
+  game,
+  ListCards,
+  activePlayers,
+  postDeck,
+  getDeck,
+  patchDeck,
+  findActivePlayerUsername,
   onTunnelCardDrop,
   onActionCardUse,
+  onMapCardUse,
   playerOrder,
   currentUsername,
   currentPlayer,
-  deckCount
+  deckCount,
+  CardPorPlayer,
+  isSpectator,
+  deck,
 }) {
   const [hand, setHand] = useState([]);
   const [availableCards, setAvailableCards] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
+  const [hasServerDeck, setHasServerDeck] = useState(false);
+  const [deckChecked, setDeckChecked] = useState(false);
+  const [cardRotations, setCardRotations] = useState({}); 
+
+
+
+  // Se encarga de realizar el patch del deck en el servidor con la nueva mano
+  const syncServerDeck = async (nextHand) => {
+    try {
+      const ids = nextHand.map(card => card.id);
+      await patchDeck(currentUsername, ids);
+    } catch (e) {
+      console.error('Error sincronizando deck en servidor:', e);
+    }
+  };
 
   const pickRandomNonRotated = (cards, count = 5) => {
     const pool = getNonRotatedCards(cards).slice();
@@ -25,26 +46,72 @@ export default function PlayerCards({
     return pool.slice(0, Math.min(count, pool.length));
   };
 
+
+  // Comprobar si el jugador tiene un mazo en el servidor si lo tiene hace un getDeck para cargarlo
+  useEffect(() => {
+    if (isSpectator) return;
+    const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
+    if (!username) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const existing = await getDeck(username);
+        if (cancelled) return;
+        if (existing && Array.isArray(existing.cards) && existing.cards.length > 0) {
+          setHasServerDeck(true);
+        } else {
+          setHasServerDeck(false);
+        }
+        setDeckChecked(true);
+      } catch (e) {
+        console.error('Error al obtener mazo existente:', e);
+        setDeckChecked(true);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [currentUsername, activePlayers, isSpectator]);
+
+  
+  // Del deck seteado anteriormente se mapean las cartas para obtener la mano del jugador y se actualizan las availableCards
+  useEffect(() => {
+    if (!deck || !Array.isArray(deck.cards)) return;
+    if (!Array.isArray(ListCards) || ListCards.length === 0) return;
+
+    const mappedHand = deck.cards
+      .map((id) => ListCards.find((c) => c.id === id))
+      .filter(Boolean);
+    if (mappedHand.length > 0) {
+      setHand(mappedHand);
+      setAvailableCards(ListCards);
+    }
+  }, [deck, ListCards]);
+
+
+  //Cuando se entra por primera vez en la partida y no tiene mazo en el servidor se le genera uno nuevo
   useEffect(() => {
     console.log('ListCards:', ListCards);
     
-    if (Array.isArray(ListCards) && ListCards.length > 0 && Array.isArray(activePlayers) && activePlayers.length > 0) {
-      const id = findActivePlayerId(activePlayers);
-      console.log('Active Player ID:', id);
-      if (!id) return;
+    if (deckChecked && Array.isArray(ListCards) && ListCards.length > 0 && !hasServerDeck) {
+      const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
+      console.log('Active Player Username:', username);
+      if (!username) return;
 
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       console.log('Número de jugadores:', activePlayers.length, 'Cartas por jugador:', cardsPerPlayer);
       
       const newHand = pickRandomNonRotated(ListCards, cardsPerPlayer);
       console.log('Generando mano:', newHand);
+
+      const idcartas = newHand.map(card => card.id);
+      postDeck(username, idcartas);
       setHand(newHand);
       setAvailableCards(ListCards);
-      postDeck(id, newHand);
     }
-  }, [ListCards, activePlayers]);
+  }, [ListCards, activePlayers, hasServerDeck, deckChecked, currentUsername]);
 
-  // Función para robar una carta del mazo
+  // Función para coger una carta del mazo
   const drawCard = () => {
     if (deckCount <= 0) {
       console.log('No hay más cartas en el mazo');
@@ -69,14 +136,30 @@ export default function PlayerCards({
     setHand(prevHand => {
       const newHand = [...prevHand];
       newHand.splice(cardIndex, 1);
-      
       const drawnCard = drawCard();
       if (drawnCard) {
-        newHand.push(drawnCard);}
-      
-      return newHand;});};
+        newHand.push(drawnCard);
+      }
+      // Sincroniza servidor con la nueva mano
+      syncServerDeck(newHand);
+      return newHand;
+    });
+    
 
-  // Función para descartar una carta seleccionada
+    setCardRotations(prev => {
+      const newRotations = {};
+      Object.keys(prev).forEach(key => {
+        const idx = parseInt(key);
+        if (idx < cardIndex) {
+          newRotations[idx] = prev[idx];
+        } else if (idx > cardIndex) {
+          newRotations[idx - 1] = prev[idx];
+        }
+      });
+      return newRotations;
+    });
+  };
+
   const discardCard = () => {
     if (selectedCardIndex === null) {
       console.log('No card selected to discard');
@@ -86,12 +169,12 @@ export default function PlayerCards({
     setHand(prevHand => {
       const newHand = [...prevHand];
       newHand.splice(selectedCardIndex, 1);
-      
       const drawnCard = drawCard();
       if (drawnCard) {
         newHand.push(drawnCard);
       }
-      
+      // Sincroniza servidor con la nueva mano
+      syncServerDeck(newHand);
       return newHand;
     });
     
@@ -99,9 +182,16 @@ export default function PlayerCards({
     return true;
   };
 
-  // Función para seleccionar/deseleccionar carta
   const toggleSelectCard = (index) => {
     setSelectedCardIndex(prev => prev === index ? null : index);
+  };
+
+  const toggleCardRotation = (index) => {
+    setCardRotations(prev => ({
+      ...prev,
+      [index]: prev[index] === 180 ? 0 : 180
+    }));
+    console.log(`🔄 Card ${index} rotated to ${cardRotations[index] === 180 ? 0 : 180}°`);
   };
 
   useEffect(() => {
@@ -126,12 +216,15 @@ export default function PlayerCards({
             index={i}
             onTunnelCardDrop={onTunnelCardDrop}
             onActionCardUse={onActionCardUse}
+            onMapCardUse={onMapCardUse}
             playerOrder={playerOrder || []}
             currentUsername={currentUsername}
             isMyTurn={isMyTurn}
             deckCount={deckCount}
             isSelected={selectedCardIndex === i}
             onToggleSelect={toggleSelectCard}
+            rotation={cardRotations[i] || 0}
+            onToggleRotation={toggleCardRotation}
           />
         ))}
       </div>

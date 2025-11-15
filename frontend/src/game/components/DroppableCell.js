@@ -10,7 +10,8 @@ export default function DroppableCell({
   onClick, 
   onRightClick,
   isMyTurn,
-  collapseModeActive
+  collapseModeActive,
+  isDestroying
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -75,7 +76,17 @@ export default function DroppableCell({
     }
     
     if (cell.image) {
-      return <img src={cell.image} alt="Card" className="static-card-image" />;
+      return (
+        <img 
+          src={cell.image} 
+          alt="Card" 
+          className="static-card-image"
+          style={{ 
+            transform: cell.rotation ? `rotate(${cell.rotation}deg)` : 'none',
+            transition: 'transform 0.3s ease'
+          }}
+        />
+      );
     }
     
     return <span className="cell-coords">{row},{col}</span>;
@@ -86,14 +97,13 @@ export default function DroppableCell({
 
   return (
     <div
-      className={`board-cell ${cell ? 'occupied' : 'empty'} ${isDragOver ? 'drag-over' : ''} ${isDestroyable ? 'destroyable' : ''} ${cannotDestroy ? 'cannot-destroy' : ''}`}
+      className={`board-cell ${cell ? 'occupied' : 'empty'} ${isDragOver ? 'drag-over' : ''} ${isDestroyable ? 'destroyable' : ''} ${cannotDestroy ? 'cannot-destroy' : ''} ${isDestroying ? 'cell-destroying' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={handleClick}
       onContextMenu={handleRightClick}
-      style={{ cursor: collapseModeActive ? (isDestroyable ? 'crosshair' : 'not-allowed') : 'default' }}
-    >
+      style={{ cursor: collapseModeActive ? (isDestroyable ? 'crosshair' : 'not-allowed') : 'default' }}>
       {renderCellContent()}
     </div>
   );
