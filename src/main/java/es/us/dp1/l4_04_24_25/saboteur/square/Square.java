@@ -6,7 +6,9 @@ import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -48,6 +50,7 @@ public class Square extends BaseEntity{
     @ManyToOne
     protected Board board;
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "card_id")
     private Card card;
 }
