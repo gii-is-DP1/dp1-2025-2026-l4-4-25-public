@@ -126,9 +126,106 @@ export const useGameData = (game) => {
     }
   };
 
-  const getDeck = async (activePlayer) => {
+  // Obtiene el deck por username (resuelve a activePlayerId y luego llama al endpoint correcto)
+  const getDeck = async (username) => {
     try {
-      const response = await fetch(`/api/v1/deck/byActivePlayer?activePlayer=${activePlayer}`, {
+      const activePlayer = await fetchActivePlayerByUsername(username);
+      if (!activePlayer?.id) {
+        console.warn('ActivePlayer no encontrado para username:', username);
+        setDeck(null);
+        return null;
+      }
+
+      const response = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayer.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDeck(data);
+        return data;
+      } else if (response.status === 404) {
+        // No existe mazo todavía
+        setDeck(null);
+        return null;
+      } else {
+        console.error('Error al obtener el mazo:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener el mazo:', error);
+      return null;
+    }
+  };
+
+  // Actualiza (PATCH) el deck de un ActivePlayer por username con la lista de IDs de cartas
+  const patchDeck = async (username, cardIds) => {
+    try {
+      const activePlayer = await fetchActivePlayerByUsername(username);
+      if (!activePlayer?.id) {
+        console.warn('ActivePlayer no encontrado para username:', username);
+        return null;
+      }
+
+      // Buscar el deck por activePlayerId para obtener su ID
+      const deckRes = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayer.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      if (!deckRes.ok) {
+        console.error('No se pudo obtener el deck para hacer PATCH. Status:', deckRes.status);
+        return null;
+      }
+
+      const deckData = await deckRes.json();
+      const deckId = deckData?.id;
+      if (!deckId) {
+        console.error('Deck sin ID válido para hacer PATCH');
+        return null;
+      }
+
+      // Hacemos PATCH con la lista de cartas
+      const patchRes = await fetch(`/api/v1/decks/${deckId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ cards: cardIds }),
+      });
+
+      if (!patchRes.ok) {
+        const msg = await patchRes.text();
+        console.error('Error al hacer PATCH del deck:', patchRes.status, msg);
+        return null;
+      }
+
+      const updated = await patchRes.json();
+      setDeck(updated);
+      return updated;
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del deck:', error);
+      return null;
+    }
+  };
+
+  const findActivePlayerUsername = (activePlayers) => {
+    const loggedInUser = tokenService.getUser();
+    const activePlayer = activePlayers.find(p => p.username === loggedInUser.username);
+    return activePlayer ? activePlayer.username : null;
+  };
+
+  const fetchActivePlayerByUsername = async (username) => {
+    try {
+      const response = await fetch(`/api/v1/activePlayers/byUsername?username=${username}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -136,21 +233,17 @@ export const useGameData = (game) => {
         },
       });
       if (response.ok) {
-        const data = await response.json();
-        setDeck(data);
+        return await response.json();
       } else {
-        console.error('Error al obtener el mazo:', response.status);
+        console.error('Respuesta no OK al buscar ActivePlayer:', response.status);
+        return null;
       }
     } catch (error) {
-      console.error('Error de red al obtener el mazo:', error);
+      console.error('Error de red al buscar ActivePlayer por username:', error);
+      return null;
     }
   };
 
-  const findActivePlayerId = (activePlayers) => {
-    const loggedInUser = tokenService.getUser();
-    const activePlayer = activePlayers.find(p => p.username === loggedInUser.username);
-    return activePlayer ? activePlayer.id : null;
-  };
 
   return {
     activePlayers,
@@ -164,6 +257,9 @@ export const useGameData = (game) => {
     fetchAndSetLoggedActivePlayer,
     postDeck,
     getDeck,
-    findActivePlayerId,
+    patchDeck,
+    findActivePlayerUsername,
+    fetchActivePlayerByUsername,
   };
 };
+  

@@ -37,11 +37,11 @@ INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) 
 null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
-VALUES (101, 1, 4, TRUE, 0, 1);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (101, 1, 4, TRUE, 0, 1, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
-VALUES (102, 2, 5, FALSE, 1, 1);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (102, 2, 5, FALSE, 1, 1, NULL);
 
 INSERT INTO card (id, deck_id, status, image) 
 VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
