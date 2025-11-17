@@ -5,6 +5,9 @@ import java.time.Duration;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
@@ -58,6 +61,12 @@ public class Round extends BaseEntity{
     @JsonDeserialize(using=BoardDeserializer.class)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    @OneToOne
+    @JsonDeserialize(using = ActivePlayerDeserializer.class)
+    @JsonSerialize(using = ActivePlayerSerializer.class)
+    @JoinColumn(name = "active_player_id")
+    private ActivePlayer playerTurn;
 
     @Min(1)
     @Max(3)

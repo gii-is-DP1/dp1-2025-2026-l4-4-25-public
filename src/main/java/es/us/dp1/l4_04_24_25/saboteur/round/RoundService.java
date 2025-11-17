@@ -114,6 +114,7 @@ public class RoundService {
         round.setLeftCards(60);
         round.setRoundNumber(roundNumber);
         round.setTimeSpent(Duration.ZERO);
+        round.setPlayerTurn(null);
 
 
 
