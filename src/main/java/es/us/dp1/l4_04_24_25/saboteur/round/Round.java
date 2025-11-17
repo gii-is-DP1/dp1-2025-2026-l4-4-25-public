@@ -39,8 +39,8 @@ public class Round extends BaseEntity{
     @Column(name = "left_cards", nullable = false)
     private Integer leftCards;
 
-    @Column(name = "winner_rol", nullable = false)
-    private boolean winnerRol;
+    @Column(name = "winner_rol")
+    private Boolean winnerRol = null;
 
     private Integer turn = 1;
 

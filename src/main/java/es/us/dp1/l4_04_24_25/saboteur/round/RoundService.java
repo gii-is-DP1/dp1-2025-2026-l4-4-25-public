@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map; // Necesario para el PATCH/Map
@@ -107,7 +108,15 @@ public class RoundService {
     }
 
     @Transactional
-    public Board initializeBoardWithSquares(){
+    public Round initializeRound(Game game, Integer roundNumber){
+        Round round = new Round();
+        round.setGame(game);
+        round.setLeftCards(60);
+        round.setRoundNumber(roundNumber);
+        round.setTimeSpent(Duration.ZERO);
+
+
+
         Board board = new Board();
         board.setBase(11);
         board.setHeight(9);
@@ -133,11 +142,15 @@ public class RoundService {
                 square.setBoard(board);
 
                 squares.add(square); 
+                squareRepository.save(square);
             }
         }
 
         board.setBusy(squares);
-        return board; 
+        boardRepository.save(board);
+        round.setBoard(board);
+        this.saveRound(round);
+        return round; 
 
     }
 }
