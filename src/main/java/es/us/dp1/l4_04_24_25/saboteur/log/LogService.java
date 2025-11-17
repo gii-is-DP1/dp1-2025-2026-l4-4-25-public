@@ -10,7 +10,7 @@ import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
 @Service
-class LogService {
+public class LogService {
     
     private LogRepository logRepository;
 

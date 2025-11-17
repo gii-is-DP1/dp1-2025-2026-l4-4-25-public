@@ -1,5 +1,8 @@
 package es.us.dp1.l4_04_24_25.saboteur.log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -23,12 +26,12 @@ import lombok.Setter;
 public class Log extends BaseEntity {
 
     @OneToOne
-    @JoinColumn(name = "round_id", nullable = false)
+    @JoinColumn(name = "round_id")
     @JsonSerialize(using=RoundSerializer.class)
     @JsonDeserialize(using=RoundDeserializer.class)
-    private Round round;
+    private Round round = null;
 
     @Column(name = "message", nullable = false)
-    private String message;
+    private List<String> messages = new ArrayList<>();
 }
     
