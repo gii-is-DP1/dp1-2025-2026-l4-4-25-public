@@ -12,6 +12,9 @@ import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameSerializer;
+import es.us.dp1.l4_04_24_25.saboteur.log.Log;
+import es.us.dp1.l4_04_24_25.saboteur.log.LogDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.log.LogSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -63,4 +66,10 @@ public class Round extends BaseEntity{
     @Max(3)
     @Column(name = "round_number", nullable = false)
     private Integer roundNumber; // Limitación de rondas a maximo 3
+
+    @OneToOne
+    @JoinColumn(name = "log_id")
+    @JsonSerialize(using=LogSerializer.class)
+    @JsonDeserialize(using=LogDeserializer.class)
+    private Log log;
 }
