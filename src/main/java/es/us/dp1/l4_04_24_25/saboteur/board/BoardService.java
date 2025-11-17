@@ -58,12 +58,12 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public List<Board> findByHeigth(Integer heigth) {
-        return boardRepository.findByHeigth(heigth);
+    public List<Board> findByHeigth(Integer height) {
+        return boardRepository.findByHeight(height);
     }
 
     @Transactional(readOnly = true)
-    public List<Board> findByBaseAndHeigth(Integer base, Integer heigth) {
-        return boardRepository.findByBaseAndHeigth(base, heigth);
+    public List<Board> findByBaseAndHeigth(Integer base, Integer height) {
+        return boardRepository.findByBaseAndHeight(base, height);
     }
 }

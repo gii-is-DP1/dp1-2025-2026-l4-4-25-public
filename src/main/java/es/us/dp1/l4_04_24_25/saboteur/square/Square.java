@@ -6,7 +6,9 @@ import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -17,6 +19,8 @@ import lombok.Setter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
+import es.us.dp1.l4_04_24_25.saboteur.card.CardDeserializer;
+import es.us.dp1.l4_04_24_25.saboteur.card.CardSerializer;
 
 @Table(name="Squares")
 @Entity
@@ -48,6 +52,9 @@ public class Square extends BaseEntity{
     @ManyToOne
     protected Board board;
 
-    @OneToOne
+    @ManyToOne
+    @JsonDeserialize(using = CardDeserializer.class)
+    @JsonSerialize(using = CardSerializer.class)
+    @JoinColumn(name = "card_id")
     private Card card;
 }
