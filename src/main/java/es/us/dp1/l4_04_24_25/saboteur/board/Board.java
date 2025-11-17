@@ -32,9 +32,9 @@ public class Board extends BaseEntity{
     @NotNull 
     protected Integer base = 11;
 
-    @Column(name = "heigth")
+    @Column(name = "height")
     @NotNull 
-    protected Integer heigth = 9;
+    protected Integer height = 9;
 
     @JsonSerialize(contentUsing = SquareSerializer.class)
     @JsonDeserialize(contentUsing =  SquareDeserializer.class)

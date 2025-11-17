@@ -46,7 +46,7 @@ export default function EditAchievements() {
 
   const fetchAchievements = async () => {
     try {
-      console.log("Fetching achievements...");
+      //console.log("Fetching achievements...");
       const res = await fetch('/api/v1/achievements', { 
         headers: { Authorization: `Bearer ${jwt}` } 
       });
@@ -58,7 +58,7 @@ export default function EditAchievements() {
       }
       
       const data = await res.json();
-      console.log("Achievements loaded:", data);
+     // console.log("Achievements loaded:", data);
       setAchievements(data);
     } catch (err) {
       console.error("Error in fetchAchievements:", err);
@@ -78,7 +78,7 @@ export default function EditAchievements() {
 
   const handleUpdate = async (ach) => {
     try {
-      console.log("Updating achievement:", ach);
+     // console.log("Updating achievement:", ach);
       const res = await fetch(`/api/v1/achievements/${ach.id}`, {
         method: 'PUT',
         headers: { 
@@ -107,7 +107,7 @@ export default function EditAchievements() {
     if (!window.confirm('Are you sure you want to delete this achievement?')) return;
     
     try {
-      console.log("Deleting achievement:", id);
+    //  console.log("Deleting achievement:", id);
       const res = await fetch(`/api/v1/achievements/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${jwt}` }
@@ -146,7 +146,7 @@ export default function EditAchievements() {
         creator: user.username  // Solo el string del username
       };
       
-      console.log("Creating achievement with data:", JSON.stringify(achievementData, null, 2));
+     // console.log("Creating achievement with data:", JSON.stringify(achievementData, null, 2));
       
       const res = await fetch('/api/v1/achievements', {
         method: 'POST',
@@ -164,7 +164,7 @@ export default function EditAchievements() {
       }
       
       const result = await res.json();
-      console.log("Achievement created successfully:", result);
+     // console.log("Achievement created successfully:", result);
       
       setMessage({ type: 'success', text: 'Achievement created successfully!' });
       setShowCreateForm(false);

@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -34,10 +36,13 @@ public class RoundRestController {
 
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
+    private final GameService gameService;
+    
     @Autowired
-    public RoundRestController(RoundService roundService, ObjectMapper objectMapper) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService) {
         this.roundService = roundService;
         this.objectMapper = objectMapper;
+        this.gameService = gameService;
     }
 
     @GetMapping
@@ -51,13 +56,14 @@ public class RoundRestController {
         return new ResponseEntity<>(roundService.findRound(id), HttpStatus.OK);
     }
     
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Round> create(@RequestBody @Valid Round round) {
-        Round newRound = new Round(); 
-        BeanUtils.copyProperties(round, newRound, "id");
-        Round savedRound = this.roundService.saveRound(newRound);
-        return new ResponseEntity<>(savedRound, HttpStatus.CREATED);
+    public ResponseEntity<Round> create(@RequestParam @Valid Integer gameId, @RequestParam @Valid Integer roundNumber) {
+
+        Game game = gameService.findGame(gameId);
+        Round newRound = roundService.initializeRound(game, roundNumber); 
+        return new ResponseEntity<>(newRound, HttpStatus.CREATED);
     }
 
 

@@ -30,18 +30,18 @@ INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_s
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 'link2', 2000, 4);
 
 
-INSERT INTO board (id, base, heigth) VALUES (1, 11, 9);
-INSERT INTO board (id, base, heigth) VALUES (2, 11, 9);
+INSERT INTO board (id, base, height) VALUES (1, 11, 9);
+INSERT INTO board (id, base, height) VALUES (2, 11, 9);
 
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, 
 null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
-VALUES (101, 1, 4, TRUE, 0, 1);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (101, 1, 4, TRUE, 0, 1, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
-VALUES (102, 2, 5, FALSE, 1, 1);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (102, 2, 5, FALSE, 1, 1, NULL);
 
 
 
