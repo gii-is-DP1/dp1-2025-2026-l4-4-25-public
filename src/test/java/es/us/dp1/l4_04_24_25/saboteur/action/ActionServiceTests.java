@@ -33,14 +33,14 @@ class ActionServiceTests {
     @Autowired
     private DeckService deckService; 
 
-    private static final int TEST_ACTION_ID = 205; 
+    private static final int TEST_ACTION_ID = 25; 
 
 
     @Test
     @Transactional
     void shouldFindAllActions() {
         List<Action> actions = (List<Action>) this.actionService.findAll();
-        assertTrue(actions.size() == 32); 
+        assertTrue(actions.size() == 30); 
     }
 
     @Test
@@ -114,7 +114,7 @@ class ActionServiceTests {
     
         List<Action> actions = (List<Action>)this.actionService.findByNameAction(nameAction.REPAIR);
         
-        assertTrue(actions.size() == 13, "Debe haber 13 Action de tipo REPAIR.");
+        assertTrue(actions.size() == 12, "Debe haber 12 Action de tipo REPAIR.");
         assertEquals(nameAction.REPAIR, actions.get(0).getNameAction());
     }
 
@@ -123,7 +123,7 @@ class ActionServiceTests {
     
         List<Action> actions = (List<Action>)this.actionService.findByNameAction(nameAction.DESTROY);
         
-        assertTrue(actions.size() == 13, "Debe haber 13 Action de tipo DESTROY.");
+        assertTrue(actions.size() == 12, "Debe haber 12 Action de tipo DESTROY.");
         assertEquals(nameAction.DESTROY, actions.get(0).getNameAction());
     }
 
@@ -132,7 +132,7 @@ class ActionServiceTests {
         
         List<Action> actions = (List<Action>)this.actionService.findByEffectValue(effectValue.REPAIR_PICKAXE);
     
-        assertTrue(actions.size() == 4, "Debe haber 4 Action con el efecto REPAIR_PICKAXE.");
+        assertTrue(actions.size() == 3, "Debe haber 3 Action con el efecto REPAIR_PICKAXE.");
         assertEquals(effectValue.REPAIR_PICKAXE, actions.get(0).getEffectValue());
     }
 
@@ -141,7 +141,7 @@ class ActionServiceTests {
         
         List<Action> actions = (List<Action>)this.actionService.findByObjectAffect(false);
         
-        assertTrue(actions.size() == 29, "Debe haber 29 Action que afecten al jugador.");
+        assertTrue(actions.size() == 27, "Debe haber 27 Action que afecten al jugador.");
         assertFalse(actions.get(0).isObjectAffect());
     }
     

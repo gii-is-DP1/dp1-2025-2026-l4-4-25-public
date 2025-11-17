@@ -43,11 +43,7 @@ VALUES (101, 1, 4, TRUE, 0, 1);
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id) 
 VALUES (102, 2, 5, FALSE, 1, 1);
 
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 
---INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
---VALUES (200, 0, FALSE, 0);
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
 VALUES (200, 1, 10, 'PRUEBA', 'VICTORIES', 'Gana 10 partidas.', 'Constructor Maestro');
@@ -67,26 +63,6 @@ VALUES (204, 1, 20,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
 
 -- Logros para jugador
 INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 4);
-
-
-
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (205, 1, TRUE, '/images/card-images/action-cards/pickaxe.png');
-INSERT INTO action (id, name_action, object_affect, effect_value) 
-VALUES (205, 'REPAIR', FALSE, 'REPAIR_PICKAXE'); -- ENUMS como STRING, FALSE como booleano.
-
--- * INSERCIÓN ID 2 (PARA ELIMINAR) *
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (300, 1, TRUE, 'action_destroy_cart.png');
-INSERT INTO action (id, name_action, object_affect, effect_value)  
-VALUES (300, 'DESTROY', FALSE, 'DESTROY_CART');
-
-
-INSERT INTO card (id, deck_id, status, image)
-VALUES (301, null, FALSE, '/images/card-images/tunnel-cards/izquierda_derecha.png');
-INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (301, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE);
-
 
 -- * ACTION CARDS *
     -- DESTROY_PICKAXE
