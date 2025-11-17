@@ -4,5 +4,4 @@ public enum type {
     PATH,
     GOAL,
     START
-    
 }

@@ -85,13 +85,16 @@ export default function Board() {
     ListCards,
     activePlayers,
     postDeck,
-    findActivePlayerId,
+    getDeck,
+    patchDeck,
+    findActivePlayerUsername,
     loadActivePlayers,
     loggedActivePlayer,
     chat,
     getChat,
     fetchCards,
-    fetchAndSetLoggedActivePlayer
+    fetchAndSetLoggedActivePlayer,
+    deck
   } = useGameData(game);
 
   // Cartas Rotadas y No Rotadas
@@ -449,7 +452,32 @@ export default function Board() {
     }
   }, [activePlayers]);
 
+  // useEffect utilizado para depurar y ver que los Squares se están cargando bien
+  // /api/v1/squares
+  useEffect(() => {
+  const fetchSquares = async () => {
+    try {
+      const squaresResponse = await fetch(`/api/v1/squares`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}`
+        }
+      });
 
+      if (squaresResponse.ok) {
+        const response = await squaresResponse.json();
+        console.log("Squares:", response);
+      } else {
+        toast.error("Error al intentar obtener los Squares");
+      }
+    } catch (error) {
+      console.error( error);
+      toast.error(error.message);
+    }}
+    fetchSquares(); 
+
+  }, []);
   // Render 
   return (
     <div className="board-container">
@@ -475,7 +503,9 @@ export default function Board() {
         ListCards={ListCards} 
         activePlayers={activePlayers} 
         postDeck={postDeck} 
-        findActivePlayerId={findActivePlayerId} 
+        getDeck={getDeck}
+        patchDeck={patchDeck}
+        findActivePlayerUsername={findActivePlayerUsername} 
         CardPorPlayer={CardPorPlayer} 
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
@@ -485,6 +515,7 @@ export default function Board() {
         currentUsername={loggedInUser?.username}
         currentPlayer={currentPlayer}
         deckCount={deckCount}
+        deck={deck}
       />
       
       <SpectatorIndicator isSpectator={isSpectator} />

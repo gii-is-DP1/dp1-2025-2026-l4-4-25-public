@@ -200,6 +200,7 @@ input:checked + .slider:before {
 
 .player-card2:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(0,0,0,0.55); }
 
+/*
 .player-avatar {
   background: transparent;
   box-shadow: none;
@@ -215,8 +216,17 @@ input:checked + .slider:before {
   color: #222;
   font-weight: 800;
 }
-
-
+*/
+/* Estilo para los nuevos avatares en la lista de jugadores */
+.player-avatar-img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #ccc; 
+  flex: 0 0 45px;      
+  margin-right: 12px;  
+}
 .player-name {
   flex: 1 1 auto;
   min-width: 0;
