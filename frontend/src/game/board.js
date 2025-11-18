@@ -178,6 +178,11 @@ export default function Board() {
   };
 
   const handleCellClick = (row, col) => {
+    // Solo permitir clicks si el modo colapso está activo
+    if (!collapseMode.active) {
+      return;
+    }
+    
     const cell = boardCells[row][col];
     console.log('Contenido:', cell);
     

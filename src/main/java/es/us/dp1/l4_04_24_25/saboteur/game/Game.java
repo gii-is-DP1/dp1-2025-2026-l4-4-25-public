@@ -41,7 +41,6 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-//@EqualsAndHashCode(of = "id")
 @Table(name = "Game")
 public class Game extends BaseEntity{
 
