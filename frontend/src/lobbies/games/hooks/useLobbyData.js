@@ -9,6 +9,7 @@ import { extractJoinRequests, getUniqueActivePlayers } from '../utils/lobbyUtils
 const useLobbyData = (gameId, jwt, isCreator) => {
   const [joinRequests, setJoinRequests] = useState([]);
   const [game, setGame] = useState(null);
+  const [round, setRound] = useState(null);
 
   // Fetch inicial del juego
   useEffect(() => {
@@ -192,6 +193,27 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     }
   };
 
+  const postround = async (gameid, roundnumber) => {
+    try {
+      const response = await fetch(`/api/v1/rounds?gameId=${gameid}&roundNumber=${roundnumber}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRound(data);
+        return data;   
+      } else {
+        console.error('Error al crear la ronda:', response.status);
+      } 
+    } catch (error) {
+      console.error('Error de red al crear la ronda:', error);
+    }
+  };
+
   return {
     game,
     setGame,
@@ -201,7 +223,9 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     updateGame,
     deleteGame,
     sendMessage,
-    deleteMessages
+    deleteMessages,
+    postround,
+    round
   };
 };
 

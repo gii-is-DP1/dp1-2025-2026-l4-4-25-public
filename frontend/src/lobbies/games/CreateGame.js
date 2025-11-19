@@ -48,7 +48,9 @@ const CreateGame = () => {
     updateGame,
     deleteGame,
     sendMessage,
-    deleteMessages
+    deleteMessages,
+    postround,
+    round
   } = useLobbyData(game?.id, jwt, isCreator);
 
   // Sincronizar el estado del juego con el hook
@@ -67,10 +69,11 @@ const CreateGame = () => {
 
   // Navegación automática cuando el juego comienza
   useEffect(() => {
-    if (game?.gameStatus === "ONGOING") {
-      navigate(`/board/${game.id}`, { state: { game } });
-    }
-  }, [game?.gameStatus, game?.id, navigate, game]);
+  if (game?.gameStatus === "ONGOING" && round?.board?.id) {
+    navigate(`/board/${round.board.id}`, { state: { game } });
+  }
+}, [game?.gameStatus, round?.board?.id, navigate, game]);
+
 
   // Lógica para unirse al juego (solo no-creadores)
   useEffect(() => {
@@ -252,8 +255,9 @@ const CreateGame = () => {
     try {
       const newGame = await updateGame(request);
       setpatchgame(newGame);
+      const newRound = await postround(newGame.id, 1);  
       toast.success("¡Game started successfully!");
-      navigate(`/board/${newGame.id}`, { state: { game: newGame } });
+      navigate(`/board/${newRound.board}`, { state: { game: newGame } });
     } catch (error) {
       console.error(error);
       toast.error('Dont connect with the server.');
