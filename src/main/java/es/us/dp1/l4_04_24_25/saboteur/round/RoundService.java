@@ -3,7 +3,7 @@ package es.us.dp1.l4_04_24_25.saboteur.round;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map; // Necesario para el PATCH/Map
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardRepository;
-import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardRepository;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.log.Log;
+import es.us.dp1.l4_04_24_25.saboteur.log.LogService;
 import es.us.dp1.l4_04_24_25.saboteur.square.Square;
 import es.us.dp1.l4_04_24_25.saboteur.square.SquareRepository;
 import es.us.dp1.l4_04_24_25.saboteur.square.type;
 import jakarta.validation.Valid;
+
 
 @Service
 public class RoundService {
@@ -29,15 +31,18 @@ public class RoundService {
     private final BoardRepository boardRepository;
     private final SquareRepository squareRepository;
     private final CardRepository cardRepository; 
+    private final LogService logService;
 
     @Autowired
     public RoundService(RoundRepository roundRepository, BoardRepository boardRepository,
                         SquareRepository squareRepository,
-                        CardRepository cardRepository) {
+                        CardRepository cardRepository,
+                        LogService logService) {
         this.roundRepository = roundRepository;
         this.boardRepository = boardRepository;
         this.squareRepository = squareRepository;
         this.cardRepository = cardRepository;
+        this.logService = logService;
     }
 
     @Transactional
@@ -110,15 +115,15 @@ public class RoundService {
     @Transactional
     public Round initializeRound(Game game, Integer roundNumber){
         Round round = new Round();
+        Log newLog = new Log();
+        Board board = new Board();
         round.setGame(game);
         round.setLeftCards(60);
         round.setRoundNumber(roundNumber);
         round.setTimeSpent(Duration.ZERO);
         round.setPlayerTurn(null);
-
-
-
-        Board board = new Board();
+        logService.saveLog(newLog);
+        round.setLog(newLog);
         board.setBase(11);
         board.setHeight(9);
 
@@ -149,6 +154,7 @@ public class RoundService {
 
         board.setBusy(squares);
         boardRepository.save(board);
+        logService.saveLog(newLog);
         round.setBoard(board);
         this.saveRound(round);
         return round; 

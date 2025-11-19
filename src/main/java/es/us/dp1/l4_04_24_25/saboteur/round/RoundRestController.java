@@ -3,7 +3,6 @@ package es.us.dp1.l4_04_24_25.saboteur.round;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.BeanUtils; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,9 +59,8 @@ public class RoundRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Round> create(@RequestParam @Valid Integer gameId, @RequestParam @Valid Integer roundNumber) {
-
         Game game = gameService.findGame(gameId);
-        Round newRound = roundService.initializeRound(game, roundNumber); 
+        Round newRound = roundService.initializeRound(game, roundNumber);         
         return new ResponseEntity<>(newRound, HttpStatus.CREATED);
     }
 
