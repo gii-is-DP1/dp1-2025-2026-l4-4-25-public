@@ -11,6 +11,7 @@ export const useGameData = (game) => {
   const [loggedActivePlayer, setLoggedActivePlayer] = useState(null);
   const [ListCards, setListCards] = useState([]);
   const [deck, setDeck] = useState();
+  const [round, setRound] = useState();
 
   const fetchPlayerByUsername = async (username) => {
     try {
@@ -243,6 +244,10 @@ export const useGameData = (game) => {
       return null;
     }
   };
+
+  
+
+
 
 
   return {
