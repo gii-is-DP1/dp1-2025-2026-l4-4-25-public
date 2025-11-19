@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { canPlaceCard } from '../cards';
+import { canPlaceCard, validateCardPlacement } from '../cards';
+import { toast } from 'react-toastify';
 
 export default function DroppableCell({ 
   cell, 
@@ -43,21 +44,25 @@ export default function DroppableCell({
       if (cardData) {
         const card = JSON.parse(cardData);
         console.log('Parsed card:', card);
-        console.log('Can place card?', canPlaceCard(board, row, col, card));
         
-        if (canPlaceCard(board, row, col, card)) { // verificamos si se puede colocar en dicha posición
+        const validation = validateCardPlacement(board, row, col, card);
+        console.log('Validation result:', validation);
+        
+        if (validation.valid) {
           console.log('Calling onDrop');
           if (onDrop) {
             onDrop(row, col, card, parseInt(cardIndex));
           }
         } else {
-          console.log('Cannot place card at this position');
+          console.log('Cannot place card:', validation.message);
+          toast.warning(validation.message);
         }
       } else {
         console.log('No card data found');
       }
     } catch (error) {
-      console.error('Error dropping card:', error);
+      console.error('Error placing the selected card:', error);
+      toast.error('❌ Error placing the selected card');
     }
   };
 
