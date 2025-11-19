@@ -154,7 +154,6 @@ public class RoundService {
 
         board.setBusy(squares);
         boardRepository.save(board);
-        logService.saveLog(newLog);
         round.setBoard(board);
         this.saveRound(round);
         return round; 
