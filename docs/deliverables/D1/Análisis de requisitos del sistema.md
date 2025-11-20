@@ -3,6 +3,7 @@
 **Curso académico:** 2025/2026 
 **Grupo/Equipo:** L4-4  
 **Nombre del proyecto:** Saboteur 
+**Versión documento:** v3.1 *(18-11-2025)* 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** <!-- Nombre Apellidos (US-Id / correo @us.es) -->
 
@@ -19,7 +20,7 @@ Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
 
 Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 
-_Esta es una plantilla que sirve como guía para realizar este entregable. Por favor, mantén las mismas secciones y los contenidos que se indican para poder hacer su revisión más ágil._ 
+
 
 
 ## 1️⃣ Introducción
@@ -33,7 +34,6 @@ Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que 
 El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 
 
-Enlace al vídeo de explicación de las reglas del juego / partida jugada por el grupo](https://www.youtube.com/watch?v=lwxIUdtN4aE)
 
 Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
 El vencedor será el jugador que **más** pepitas de oro haya conseguido.
@@ -72,7 +72,7 @@ El vencedor será el jugador que **más** pepitas de oro haya conseguido.
 |-----|
 |![Acceda al MockUp HD-1](D1_images/HU-1.png)|
 | El mockup representa la pantalla principal o lobby del juego. Está diseñado con un fondo oscuro que simula la textura de una mina o túnel (coherente con la temática del juego). El título "SABOTEUR" aparece en el centro, en letras grandes, doradas y con un efecto brillante, funcionando como elemento central. La interfaz está organizada en módulos flotantes rectangulares con esquinas redondeadas y tonos claros (beige/amarillo), distribuidos alrededor del título central. Cada módulo muestra una funcionalidad clave: gestión de amigos, partidas, estadísticas, perfil, ranking, etc. A continuación se describirán los elementos por sección:
-   El lobby se organiza en varias secciones. En la zona superior izquierda se encuentra el panel "AMIGOS EN PARTIDA", que muestra las partidas activas creadas por amigos. Cada partida se presenta en una tarjeta con el nombre del creador (ej. "Partida de Alejandro"), el número de jugadores, el estado ("Creada" o "En curso"), y botones de acción: "SOLICITAR UNIRSE" para partidas creadas y "ESPECTAR PARTIDA" para las que están en curso. Iconos de color (verde/naranja) indican la disponibilidad.
+   **- Nota:** El lobby se organiza en varias secciones. La sección "Amigos en partida" se ha optado por suprimirse.
 En la zona superior central se ubica la "SECCIÓN AMIGOS", que lista a los amigos con su estado actual (ej. Alejandro – Activo, Luis – Ausente, Marcos – Inactivo, con puntos de color verde, naranja y rojo, respectivamente). Esta sección incluye opciones para Solicitudes de amistad (desplegable) y Buscar jugador (barra de búsqueda), además de mostrar notificaciones (ej. "Carlos quiere ser tu amigo") tienes entonces la opcion de aceptar o denegar la solicitud de amistad. La zona superior derecha contiene el botón "MI PERFIL" y una notificación de invitación (rosa) de Alejandro para unirse a la partida #1022, con el botón de acción "UNIRSE A LA PARTIDA".
 Las acciones principales del lobby se encuentran en la zona inferior central, destacadas con dos grandes botones amarillos: "CREAR PARTIDA" y "UNIRSE A UNA PARTIDA". En la zona inferior izquierda presenta un único botón con icono de trofeo para acceder al "RANKING" general de jugadores.En la zona inferior derecha se encuentra el panel "ESTADÍSTICAS GLOBALES", que muestra estadísticas de todas las partidas, como el promedio, máximo y mínimo de partidas jugadas por cada jugador (ej. 58 promedio) y la duración de las mismas (ej. 00:39:09 promedio). Cada estadistica apararece en fila, con fondo amarillo claro y texto en negro.
 
@@ -356,19 +356,11 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 | La interfaz de usuario muestra dentro de la sección “Amigos en partida” las partidas que están jugando cada uno de nuestros amigos conectados. Nos permitirá saber si las partidas ya están empezadas (“En curso”) o si aún podemos solicitar la unión (“Solicitar unirse”). Este último caso es el que nos interesa para esta historia de usuario, pues observamos que existe un botón (“SOLICITAR UNIRSE”) que, al ser pulsado, se enviará una solicitud al jugador correspondiente.|
 
 
-
-### HU-42 (ISSUE#88): 👀SOLICITUD DE ESPECTADOR DE PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/88))
-| "Como jugador, quiero que el sistema tenga un chat entre los jugadores de la partida durante la misma para poder comentar en él con los demás jugadores suposiciones sobre quién puede/n ser el/los saboteador/es, jugadas colaborativas, etc."
-|----| 
-|![Acceda al MockUp HD-42](D1_images/HU-42.png)|
-| De nuevo, la interfaz de usuario mediante la sección “Amigos en Partida” nos permite ser espectadores de la partida al pulsar sobre el botón “SER ESPECTADOR PARTIDA”. |
-
-
-### HU-43 (ISSUE#89): 👁MODO ESPECTADOR PARA AMIGOS: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/89))
-| "Como jugador, quiero que el sistema tenga un modo espectador para ver las partidas de otros jugadores sin jugar, siempre y cuando sea amigo de todos los jugadores de la partida. "
+### HU-43 (ISSUE#89): 👁MODO ESPECTADOR GENERAL: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/89))
+| "Como jugador, quiero que el sistema tenga un modo espectador para ver las partidas de otros jugadores sin jugar, siempre y cuando la partida ya haya comenzado. "
 |----| 
 |![Acceda al MockUp HD-43](D1_images/HU-43.png)|
-|En este caso, la interfaz de usuario permitirá al espectador observar la partida, pero con diferencias notables respecto a los jugadores que participan en ella: La interfaz no hará visible para el espectador los mazos del resto de jugadores, hará que pueda observar el chat pero no escribir en él y, obviamente, no le permitirá interactuar de ninguna forma en la partida (solo visionarla).|
+|En este caso, la interfaz de usuario permitirá al espectador observar la partida, pero con diferencias notables respecto a los jugadores que participan en ella: La interfaz no hará visible para el espectador los mazos del resto de jugadores, hará que pueda observar el chat pero no escribir en él y, obviamente, no le permitirá interactuar de ninguna forma en la partida (solo visionarla). Esto ocurrirá cuando la partida esté empezada *(ONGOING)*|
 
 
 ### HU-44 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90))
@@ -407,14 +399,15 @@ El sistema debe asignar automáticamente cuántos saboteadores y cuántos buscad
 
 Distribución oficial de roles:
 
-* 3–5 jugadores → 1 saboteador
-* 6–7 jugadores → 2 saboteadores
-* 8–9 jugadores → 3 saboteadores
-* 10-12 jugadores → 4 saboteadores
+* 3–4 jugadores → 1 saboteador
+* 5–6 jugadores → 2 saboteador
+* 7–8 jugadores → 3 saboteadores
+* 9–10 jugadores → 4 saboteadores
+* 11-12 jugadores → 5 saboteadores
 
 El resto de jugadores siempre serán buscadores de oro.
 
-Por ejemplo: si hay 5 jugadores en la partida, el sistema asignará 1 saboteador y 4 buscadores. Si hay 8 jugadores, el sistema asignará 3 saboteadores y 5 buscadores.
+Por ejemplo: si hay 5 jugadores en la partida, el sistema asignará 2 saboteadores y 3 buscadores. Si hay 8 jugadores, el sistema asignará 3 saboteadores y 5 buscadores.
 
 ### R4 – Asignación inicial de roles de manera oculta
 La aplicación asigna ocultamente el rol (buscador de oro o saboteador) a cada jugador al inicio de la ronda.
@@ -424,7 +417,7 @@ Por ejemplo: si hay 8 jugadores, se asignarán 3 saboteadores y 5 buscadores sin
 ### R5 – Reparto inicial de cartas
 Cada jugador debe recibir un número de cartas (túnel y acción) según el recuento de jugadores, y el resto formará la pila de robo.
 
-Por ejemplo: con 8 jugadores, cada uno recibe 4 cartas al inicio de la ronda, y las cartas restantes forman la pila de robo.
+Por ejemplo: con 8 jugadores, cada uno recibe 4 cartas al inicio de la ronda, y las cartas restantes forman la pila de robo (el mazo).
 
 ### B2: Turnos y Acciones de Juego
 
@@ -578,27 +571,22 @@ Un usuario solo podrá ser espectador de una partida si dicha partida está sien
 
 Por ejemplo: Si Luis desea observar la partida de Carlos, dicha partida tiene que indicar “En Curso”, no podrá visualizar una partida de Carlos si está "Creada" o si ya está "Terminada"
 
-### R34 - Jugadores de la partida amigos de espectador
-Un jugador que desea ser espectador de una partida solo puede ser espectador de dicha partida si todos los jugadores que participan en ella son amigos del usuario que quiere ser espectador.
+### R34 - Administrador en partida
+Un administrador **NO** puede ser un participante en una partida ni realizar ninguna actividad entorno a ella.
 
-Por ejemplo: Si Marcos quiere ser espectador de la partida de Luis, donde están participando 3 personas más (Diego, Lorenzo y Carlos), Marcos debe ser amigo no solo de Luis, sino que también deberá ser amigo de Diego, Lorenzo y Carlos. Si Marcos no es amigo de ninguno de estos jugadores, no podrá ser espectador de la partida.
+Por ejemplo: Si Diego es administrador, no puede participar en una partida ni acceder a ella.
 
-### R35 - Administrador en partida
-Un administrador **NO** puede ser un participante en una partida, solo puede observarla y tomar registro de los jugadores.
-
-Por ejemplo: Si Diego es administrador, no puede participar en una partida, pero si podrá acceder a los datos de esta.
-
-### R36 - Amistades de administrador
+### R35 - Amistades de administrador
 Un administrador **NO** puede ser amigo de otro usuario.
 
 Por ejemplo: Si Marcos es administrador, no puede ser amigo de Lorenzo, siendo Lorenzo un jugador.
 
-### R37 - Cambios en los formularios de edición
+### R36 - Cambios en los formularios de edición
 Los formularios de edición de cualquier funcionalidad de la aplicación (inicio de sesión, registro, edición de pefil, etc) solo van a poder guardar, confirmar y actualizar los cambios en la base de datos si al menos uno de los campos editables del formulario ha sido modificado. Es decir, si no se modifica nada en ningún campo, la opción de "Guardar cambios" no estará disponible y no se ejecutará nada en el backend. 
 
 Por ejemplo: Si Lorenzo es un jugador que decide editar su perfil, en la pantalla de "Edición de perfil" es obligatorio que cambie la información que anteriormente existía y que mostraban los campos del formulario. Si al final no decide editar nada, la opción "Guardar cambios" no estará disponible. Solo si edita un solo campo, como la fecha de nacimiento, el sistema detectará una modificación respecto al dato anterior que había en ese campo y permitirá enviar la nueva información al backend.
 
-### R38 - Eliminar usuarios durante la partida 
+### R37 - Eliminar usuarios durante la partida 
 Bajo ninguna circunstancia ningún usuario, administrador o jugador, podrá eliminar a otro jugador de una partida en juego. 
 
-Por ejemplo: Si Marcos es un administrador, únicamente poseerá los privilegios de gestionar partidas de forma externa y estadística, no podrá sacar a ningún otro jugador de la partida. Si Lorenzo es un jugador, tampoco podrá expulsar a ningún otro jugador que se encuentre con él en la partida. 
+Por ejemplo: Si Marcos es un administrador, no tendrá ningún poder sobre las partidas. Si Lorenzo es un jugador, tampoco podrá expulsar a ningún otro jugador que se encuentre con él en la partida. 
