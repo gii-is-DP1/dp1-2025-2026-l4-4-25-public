@@ -245,6 +245,28 @@ export const useGameData = (game) => {
     }
   };
 
+  const squaresById = async (id) => {
+    try {
+      const response = await fetch(`/api/v1/squares/${id}`, { 
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error('Respuesta no OK al obtener square:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener square:', error);
+      return null;
+    }
+  };
+
   
 
 
@@ -265,6 +287,7 @@ export const useGameData = (game) => {
     patchDeck,
     findActivePlayerUsername,
     fetchActivePlayerByUsername,
+    squaresById,
   };
 };
   

@@ -48,6 +48,8 @@ export default function Board() {
   const [privateLog, setPrivateLog] = useState([]);
     //  ESTADOS DE LAS HERRAMIENTAS, DICCIONARIO {username:{candle:true,wagon:true,pickaxe:true}}
   const [playerTools, setPlayerTools] = useState({});
+  //round del navigate
+  const [round, setRound] = useState(location.state?.round || null);
   
   // Estados del tablero
   const BOARD_COLS = 11;
@@ -78,6 +80,9 @@ export default function Board() {
     return initialBoard;
   });
 
+    
+
+
   const boardGridRef = useRef(null);
 
   // Hook personalizado para cargar datos del juego
@@ -94,7 +99,8 @@ export default function Board() {
     getChat,
     fetchCards,
     fetchAndSetLoggedActivePlayer,
-    deck
+    deck,
+    squaresById,
   } = useGameData(game);
 
   // Cartas Rotadas y No Rotadas
@@ -483,6 +489,39 @@ export default function Board() {
     fetchSquares(); 
 
   }, []);
+
+  
+  //asociar el board con los squares
+  useEffect(() => {
+  if (!round || !round.board || !squaresById) return;
+
+  const busyIds = round.board.busy || [];
+
+  const newBoard = Array.from({ length: BOARD_ROWS }, () =>
+    Array.from({ length: BOARD_COLS }, () => null)
+  );
+
+  busyIds.forEach((squareId) => {
+    const sq = squaresById(squareId);
+    if (!sq) return;
+
+    const row = sq.coordinateY;
+    const col = sq.coordinateX;
+    if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+      newBoard[row][col] = {
+        squareId: sq.id,
+        backendType: sq.type,
+        occupied: sq.occupation,
+        card: sq.card,
+      };
+    }
+  });
+  console.log("New Board with Squares:", newBoard);
+  setBoardCells(newBoard);
+}, [round]);
+
+
+
   // Render 
   return (
     <div className="board-container">
