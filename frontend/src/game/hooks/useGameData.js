@@ -267,10 +267,51 @@ export const useGameData = (game) => {
     }
   };
 
-  
+  const patchSquare = async (squareId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/squares/${squareId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      }); 
+      if (response.ok) {
+        const updatedSquare = await response.json();
+        return updatedSquare;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del square:', error);
+      return null;
+    }
+  };
 
-
-
+  const pactchBoard = async (boardId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      }); 
+      if (response.ok) {
+        const updatedBoard = await response.json();
+        return updatedBoard;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del board:', error);
+      return null;
+    }
+  };
 
   return {
     activePlayers,
@@ -288,6 +329,8 @@ export const useGameData = (game) => {
     findActivePlayerUsername,
     fetchActivePlayerByUsername,
     squaresById,
+    patchSquare,
+    pactchBoard,
   };
 };
   

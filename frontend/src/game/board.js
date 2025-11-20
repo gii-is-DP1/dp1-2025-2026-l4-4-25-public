@@ -101,13 +101,15 @@ export default function Board() {
     fetchAndSetLoggedActivePlayer,
     deck,
     squaresById,
+    patchSquare,
+    pactchBoard,
   } = useGameData(game);
 
-  // Cartas Rotadas y No Rotadas
+  
   const rotatedOnly = getRotatedCards(ListCards);
   const nonRotatedOnly = getNonRotatedCards(ListCards);
 
-  const handleCardDrop = (row, col, card, cardIndex) => {
+  const handleCardDrop = (row, col, card, cardIndex, squareId) => {
     if (isSpectator) {
       addPrivateLog("ℹ️ Spectators cannot place cards", "warning");
       return;}
@@ -116,16 +118,24 @@ export default function Board() {
       toast.warning("It's not your turn!");
       return;}
 
-    setBoardCells(prev => {
-      const next = prev.map(r => r.slice());
-      next[row][col] = {
-        ...card,
-        type: 'tunnel',
-        owner: loggedInUser?.username || 'unknown',
-        placedAt: Date.now()
-      };
-      return next;
-    });
+    patchSquare(squareId, {
+    occupation: true,
+    card: card,
+    board: round.board
+  });
+
+  setBoardCells(prev => {
+    const next = prev.map(r => r.slice());
+    next[row][col] = {
+      ...prev[row][col],   
+      ...card,
+      type: 'tunnel',
+      owner: loggedInUser?.username || 'unknown',
+      placedAt: Date.now(),
+      occupied: true,
+    };
+    return next;
+  });
 
     if (window.removeCardAndDraw) {
       window.removeCardAndDraw(cardIndex);}
@@ -497,9 +507,13 @@ export default function Board() {
 
   const busyIds = round.board.busy || [];
 
-  const newBoard = Array.from({ length: BOARD_ROWS }, () =>
+  const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
     Array.from({ length: BOARD_COLS }, () => null)
   );
+  baseBoard[4][1] = { type: 'start', owner: 'system', fixed: true };
+  baseBoard[4][9] = { type: 'objective', owner: 'system', fixed: true };
+  baseBoard[2][9] = { type: 'objective', owner: 'system', fixed: true };
+  baseBoard[6][9] = { type: 'objective', owner: 'system', fixed: true };
 
   busyIds.forEach((squareId) => {
     const sq = squaresById(squareId);
@@ -508,7 +522,7 @@ export default function Board() {
     const row = sq.coordinateY;
     const col = sq.coordinateX;
     if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
-      newBoard[row][col] = {
+      baseBoard[row][col] = {
         squareId: sq.id,
         backendType: sq.type,
         occupied: sq.occupation,
@@ -516,8 +530,10 @@ export default function Board() {
       };
     }
   });
-  console.log("New Board with Squares:", newBoard);
-  setBoardCells(newBoard);
+  setBoardCells(baseBoard);
+  pactchBoard(round.board, {
+    busy: busyIds,
+  });
 }, [round]);
 
 
