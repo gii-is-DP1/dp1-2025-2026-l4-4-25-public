@@ -80,8 +80,7 @@ export default function Board() {
     return initialBoard;
   });
 
-    
-
+  const hasPatchedBoardBusy = useRef(false);
 
   const boardGridRef = useRef(null);
 
@@ -103,6 +102,7 @@ export default function Board() {
     squaresById,
     patchSquare,
     pactchBoard,
+    getBoard,
   } = useGameData(game);
 
   
@@ -501,40 +501,74 @@ export default function Board() {
   }, []);
 
   
-  //asociar el board con los squares
+  //asociar el board con los squares usando getBoard para asegurar busy
   useEffect(() => {
-  if (!round || !round.board || !squaresById) return;
+    if (!round || !round.board || !squaresById) return;
 
-  const busyIds = round.board.busy || [];
+    const loadBoard = async () => {
+      const boardId = typeof round.board === 'number' ? round.board : round.board.id;
+      if (!boardId) return;
 
-  const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
-    Array.from({ length: BOARD_COLS }, () => null)
-  );
-  baseBoard[4][1] = { type: 'start', owner: 'system', fixed: true };
-  baseBoard[4][9] = { type: 'objective', owner: 'system', fixed: true };
-  baseBoard[2][9] = { type: 'objective', owner: 'system', fixed: true };
-  baseBoard[6][9] = { type: 'objective', owner: 'system', fixed: true };
+      let busyIds = [];
+      if (Array.isArray(round.board.busy) && round.board.busy.length > 0) {
+        busyIds = round.board.busy;
+      } else {
+        const boardData = await getBoard(boardId);
+        busyIds = (boardData?.busy || []).map(sq => sq.id ?? sq);
+      }
 
-  busyIds.forEach((squareId) => {
-    const sq = squaresById(squareId);
-    if (!sq) return;
+      const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
+        Array.from({ length: BOARD_COLS }, () => null)
+      );
+      baseBoard[4][1] = { type: 'start', owner: 'system', fixed: true };
+      baseBoard[4][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[2][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[6][9] = { type: 'objective', owner: 'system', fixed: true };
 
-    const row = sq.coordinateY;
-    const col = sq.coordinateX;
-    if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
-      baseBoard[row][col] = {
-        squareId: sq.id,
-        backendType: sq.type,
-        occupied: sq.occupation,
-        card: sq.card,
-      };
+      await Promise.all(
+        busyIds.map(async (squareId) => {
+          const sq = await squaresById(squareId);
+          if (!sq) return;
+
+          const row = sq.coordinateY;
+          const col = sq.coordinateX;
+          if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+            baseBoard[row][col] = {
+              squareId: sq.id,
+              backendType: sq.type,
+              occupied: sq.occupation,
+              card: sq.card,
+            };
+          }
+        })
+      );
+
+      setBoardCells(baseBoard);
+      if (busyIds.length > 0) {
+        pactchBoard(boardId, { busy: busyIds });
+      }
+    };
+
+    loadBoard();
+  }, [round]);
+
+   //Hace un pacth cada vez que se cambia que hay un cambio en una square
+  useEffect(() => {
+    if (!round?.board) return;
+
+    const busySquareIds = boardCells
+      .flat()
+      .filter(cell => cell && cell.squareId && cell.type !== 'start' && cell.type !== 'objective') //que no sean ni final ni objetivo
+      .map(cell => cell.squareId);
+
+    if (!hasPatchedBoardBusy.current && busySquareIds.length === 0) {
+      return;
     }
-  });
-  setBoardCells(baseBoard);
-  pactchBoard(round.board, {
-    busy: busyIds,
-  });
-}, [round]);
+
+    hasPatchedBoardBusy.current = true;
+    pactchBoard(round.board, { busy: busySquareIds });
+    console.log("he hecho este patch")
+  }, [boardCells, round]);
 
 
 

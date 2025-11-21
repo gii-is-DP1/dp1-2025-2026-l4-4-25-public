@@ -313,6 +313,28 @@ export const useGameData = (game) => {
     }
   };
 
+  const getBoard = async (boardId) => { 
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+      }); 
+      if (response.ok) {
+        const boardData = await response.json();
+        return boardData;
+      } else {
+        console.error('Respuesta no OK al obtener board:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener board:', error);
+      return null;
+    }
+  }
+
   return {
     activePlayers,
     chat,
@@ -331,6 +353,7 @@ export const useGameData = (game) => {
     squaresById,
     patchSquare,
     pactchBoard,
+    getBoard,
   };
 };
   
