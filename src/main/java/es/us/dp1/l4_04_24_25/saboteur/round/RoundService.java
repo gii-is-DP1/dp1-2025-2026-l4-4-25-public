@@ -1,7 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,16 +10,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardRepository;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardRepository;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
-import es.us.dp1.l4_04_24_25.saboteur.log.Log;
 import es.us.dp1.l4_04_24_25.saboteur.log.LogService;
-import es.us.dp1.l4_04_24_25.saboteur.square.Square;
+import es.us.dp1.l4_04_24_25.saboteur.round.builder.StandardRoundBuilder;
 import es.us.dp1.l4_04_24_25.saboteur.square.SquareRepository;
-import es.us.dp1.l4_04_24_25.saboteur.square.type;
 import jakarta.validation.Valid;
 
 
@@ -28,21 +24,16 @@ import jakarta.validation.Valid;
 public class RoundService {
 
     private final RoundRepository roundRepository;
-    private final BoardRepository boardRepository;
-    private final SquareRepository squareRepository;
-    private final CardRepository cardRepository; 
-    private final LogService logService;
+    private final StandardRoundBuilder standardRoundBuilder;
 
     @Autowired
     public RoundService(RoundRepository roundRepository, BoardRepository boardRepository,
                         SquareRepository squareRepository,
                         CardRepository cardRepository,
-                        LogService logService) {
+                        LogService logService,
+                        StandardRoundBuilder standardRoundBuilder) {
         this.roundRepository = roundRepository;
-        this.boardRepository = boardRepository;
-        this.squareRepository = squareRepository;
-        this.cardRepository = cardRepository;
-        this.logService = logService;
+        this.standardRoundBuilder = standardRoundBuilder;
     }
 
     @Transactional
@@ -113,50 +104,16 @@ public class RoundService {
     }
 
     @Transactional
-    public Round initializeRound(Game game, Integer roundNumber){
-        Round round = new Round();
-        Log newLog = new Log();
-        Board board = new Board();
-        round.setGame(game);
-        round.setLeftCards(60);
-        round.setRoundNumber(roundNumber);
-        round.setTimeSpent(Duration.ZERO);
-        round.setPlayerTurn(null);
-        logService.saveLog(newLog);
-        round.setLog(newLog);
-        board.setBase(11);
-        board.setHeight(9);
-
-        List<Square> squares = new ArrayList<>();
+    public Round initializeRound(Game game, Integer roundNumber) {
+        Round round = standardRoundBuilder
+                .withGame(game)
+                .withRoundNumber(roundNumber)
+                .withLeftCards(60)
+                .withTimeSpent(Duration.ZERO)
+                .withWinnerRol(false)
+                .build();
         
-        for (int y = 0; y < board.getHeight(); y++){
-            for (int x = 0; x < board.getBase(); x++){
-                Square square = new Square();
-                square.setCoordinateX(x);
-                square.setCoordinateY(y);
-                square.setOccupation(false);
-                
-                if(y == 4 && x == 1){
-                    square.setType(type.START);
-                } else if( (y == 4 && x == 9) || (y == 6 && x == 9) || ( y == 2 && x == 9) ){
-                    square.setType(type.GOAL);
-                } else {
-                    square.setType(type.PATH);
-                }
-
-                square.setCard(null);
-                square.setBoard(board);
-
-                squares.add(square); 
-                squareRepository.save(square);
-            }
-        }
-
-        board.setBusy(squares);
-        boardRepository.save(board);
-        round.setBoard(board);
         this.saveRound(round);
-        return round; 
-
+        return round;
     }
 }
