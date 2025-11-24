@@ -68,12 +68,14 @@ const CreateGame = () => {
   );
 
   // Efecto para procesar el mensaje que viene del socket
-  useEffect(() => {
+  /*useEffect(() => {
+    console.log("Este es el mensaje del socket", socketMessage);
     if (socketMessage) {
       // Si el mensaje es sobre este juego, actualizamos el estado
       if (socketMessage.id === game?.id) {
         setGame(socketMessage);
-        
+        console.log("Status:", socketMessage.gameStatus);
+        console.log("Rounds:", socketMessage.rounds);
         // Si el juego pasa a ONGOING y tiene rondas, actualizamos la ronda localmente
         // Esto es CRUCIAL para los jugadores que NO son el creador
         if (socketMessage.gameStatus === "ONGOING" && socketMessage.rounds && socketMessage.rounds.length > 0) {
@@ -82,20 +84,53 @@ const CreateGame = () => {
             // Necesitamos forzar la navegación. 
             // Como 'round' viene del hook useLobbyData, podemos navegar directamente aquí o 
             // usar un estado local temporal si round es null.
-            navigate(`/board/${currentRound.board.id}`, { state: { game: socketMessage } });
+            console.log("Juego iniciado. Navegando al tablero:", currentRound.board.id);
+            navigate(`/board/${currentRound.board.id}`, { state: { game: socketMessage, round: currentRound} });
         }
       }
     }
   },[socketMessage, game?.id, navigate]);
+*/
+  useEffect(() => {
+  console.log("Mensaje recibido del socket:", socketMessage);
+
+  if (!socketMessage) return;
+
+  let payload = socketMessage;
+
+  // Si viene como string → parsear
+  if (typeof payload === "string") {
+    try {
+      payload = JSON.parse(payload);
+    } catch (e) {
+      console.error("Error parseando mensaje WS:", e);
+      return;
+    }
+  }
+
+  const { game: updatedGame, round: updatedRound } = payload;
+
+  // Si no es payload compuesto, ignorar
+  if (!updatedGame) return;
+
+  setGame(updatedGame);
+
+  // Si empieza el juego → navegar
+  if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board?.id) {
+    navigate(`/board/${updatedRound.board.id}`, {
+      state: { game: updatedGame, round: updatedRound }
+    });
+  }
+  }, [socketMessage]);
 
 
   // Navegación automática cuando el juego comienza
-  useEffect(() => {
+  /*useEffect(() => {
   if (game?.gameStatus === "ONGOING" && round?.board?.id) {
     navigate(`/board/${round.board.id}`, { state: { game } });
   }
 }, [game?.gameStatus, round?.board?.id, navigate, game]);
-
+  */
 
   // Lógica para unirse al juego (solo no-creadores)
   useEffect(() => {

@@ -37,15 +37,13 @@ public class RoundRestController {
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
     private final GameService gameService;
-    private final SimpMessagingTemplate messagingTemplate;
 
     
     @Autowired
-    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService, SimpMessagingTemplate messagingTemplate) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService) {
         this.roundService = roundService;
         this.objectMapper = objectMapper;
         this.gameService = gameService;
-        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -123,7 +121,7 @@ public class RoundRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @PostMapping("/initialize/{gameId}")
+    /*@PostMapping("/initialize/{gameId}")
     public ResponseEntity<Round> initializeRound(@PathVariable Integer gameId) {
         Game game = gameService.findGame(gameId);
 
@@ -131,5 +129,5 @@ public class RoundRestController {
         Round round = roundService.initializeRound(game, 1);
 
         return ResponseEntity.ok(round);
-    }
+    } */
 }

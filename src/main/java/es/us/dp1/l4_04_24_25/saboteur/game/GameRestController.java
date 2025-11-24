@@ -180,16 +180,34 @@ class GameRestController {
     Game gamePatched = objectMapper.updateValue(game, updates);
     Game savedGame = gameService.updateGame(gamePatched, id);
 
-    if (updates.containsKey("gameStatus") && updates.get("gameStatus").equals("ONGOING")) {
-        Game fullGameForSocket = gameService.findGame(id); //Debería traer el game ya con las rondas inicializadas
-        // TRUCO: Accedemos a la lista de rondas explícitamente para forzar su carga 
-        // antes de enviarlo, evitando LazyInitializationException.
-        // Solo si rounds no es null.
-        if (fullGameForSocket.getRounds() != null) {
-            fullGameForSocket.getRounds().size(); 
-        }
-        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), fullGameForSocket);
+    System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
+    if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
+
+    System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+
+    // 1. Obtener la ronda actual
+    List<Round> rounds = roundService.findByGameId(id);
+
+    if (rounds.isEmpty()) {
+        System.out.println(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
     }
+
+    Round currentRound = rounds.get(rounds.size() - 1);
+
+    // 2. Cargar el game completo
+    Game fullGame = gameService.findGame(id);
+
+    // 3. Montar payload explícito
+    Map<String, Object> payload = Map.of(
+        "game", fullGame,
+        "round", currentRound
+    );
+
+    System.out.println(">>> ENVIANDO PAYLOAD AL SOCKET:");
+    System.out.println(payload);
+
+    messagingTemplate.convertAndSend("/topic/game/" + id, payload);
+}
 
     return new ResponseEntity<>(savedGame, HttpStatus.OK);
 }
