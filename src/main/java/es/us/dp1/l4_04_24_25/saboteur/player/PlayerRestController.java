@@ -83,6 +83,13 @@ public class PlayerRestController {
         return new ResponseEntity<>(playerService.findPlayerDTO(id), HttpStatus.OK);
     }
 
+    @GetMapping(value = "{id}/friends")
+    public ResponseEntity<List<Player>> findFriends(@PathVariable("id") Integer id) {
+        RestPreconditions.checkNotNull(playerService.findPlayer(id), "Player", "ID", id);
+        List<Player> friends = playerService.findPlayer(id).getFriends();
+        return new ResponseEntity<>(friends, HttpStatus.OK);
+    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -140,6 +147,24 @@ public class PlayerRestController {
         Player playerPatched = objectMapper.updateValue(player, updates);
         playerService.updatePlayer(playerPatched, id);
         return new ResponseEntity<>(playerPatched, HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "{id}/addFriends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Player> addFriend(@PathVariable("id") Integer id, @PathVariable("friendId") Integer friendId){
+        RestPreconditions.checkNotNull(playerService.findPlayer(id), "Player", "ID", id);
+        RestPreconditions.checkNotNull(playerService.findPlayer(friendId), "Player", "ID", friendId);
+        Player player = playerService.addFriend(id, friendId);
+        return new ResponseEntity<>(player, HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "{id}/removeFriends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Player> removeFriend(@PathVariable("id") Integer id, @PathVariable("friendId") Integer friendId){
+        RestPreconditions.checkNotNull(playerService.findPlayer(id), "Player", "ID", id);
+        RestPreconditions.checkNotNull(playerService.findPlayer(friendId), "Player", "ID", friendId);
+        Player player = playerService.removeFriend(id, friendId);
+        return new ResponseEntity<>(player, HttpStatus.OK);
     }
 
 
