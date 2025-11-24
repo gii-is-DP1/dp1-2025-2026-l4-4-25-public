@@ -62,35 +62,10 @@ const CreateGame = () => {
 
   // WebSocket para actualizaciones en tiempo real
   const socketMessage = useWebSocket(
-    `/topic/game/${game?.id}`,
-    `/topic/private/${loggedInUser?.username}`,
-    jwt
+    `/topic/game/${game?.id}`
   );
 
   // Efecto para procesar el mensaje que viene del socket
-  /*useEffect(() => {
-    console.log("Este es el mensaje del socket", socketMessage);
-    if (socketMessage) {
-      // Si el mensaje es sobre este juego, actualizamos el estado
-      if (socketMessage.id === game?.id) {
-        setGame(socketMessage);
-        console.log("Status:", socketMessage.gameStatus);
-        console.log("Rounds:", socketMessage.rounds);
-        // Si el juego pasa a ONGOING y tiene rondas, actualizamos la ronda localmente
-        // Esto es CRUCIAL para los jugadores que NO son el creador
-        if (socketMessage.gameStatus === "ONGOING" && socketMessage.rounds && socketMessage.rounds.length > 0) {
-            // Asumimos que la última ronda es la actual
-            const currentRound = socketMessage.rounds[socketMessage.rounds.length - 1];
-            // Necesitamos forzar la navegación. 
-            // Como 'round' viene del hook useLobbyData, podemos navegar directamente aquí o 
-            // usar un estado local temporal si round es null.
-            console.log("Juego iniciado. Navegando al tablero:", currentRound.board.id);
-            navigate(`/board/${currentRound.board.id}`, { state: { game: socketMessage, round: currentRound} });
-        }
-      }
-    }
-  },[socketMessage, game?.id, navigate]);
-*/
   useEffect(() => {
   console.log("Mensaje recibido del socket:", socketMessage);
 
@@ -109,15 +84,16 @@ const CreateGame = () => {
   }
 
   const { game: updatedGame, round: updatedRound } = payload;
-
+  console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
+  console.log(" BOARD EN EL ROUND:", updatedRound?.board);
   // Si no es payload compuesto, ignorar
   if (!updatedGame) return;
 
   setGame(updatedGame);
 
   // Si empieza el juego → navegar
-  if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board?.id) {
-    navigate(`/board/${updatedRound.board.id}`, {
+  if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board) {
+    navigate(`/board/${updatedRound.board}`, {
       state: { game: updatedGame, round: updatedRound }
     });
   }
