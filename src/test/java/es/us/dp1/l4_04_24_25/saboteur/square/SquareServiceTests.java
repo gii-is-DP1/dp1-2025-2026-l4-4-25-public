@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import io.qameta.allure.Epic;
@@ -24,6 +25,7 @@ import io.qameta.allure.Feature;
 //@Owner("DP1-tutors")
 @SpringBootTest
 @AutoConfigureTestDatabase
+@Transactional
 class SquareServiceTests {
 
     @Autowired
