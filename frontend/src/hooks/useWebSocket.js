@@ -3,36 +3,35 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import tokenService from '../services/token.service';
 
-const useWebSocket = (endpoint, topic, payload = {}) => {
+const useWebSocket = (topic) => {
     const [data, setData] = useState(null);
     const jwt = tokenService.getLocalAccessToken();
 
     useEffect(() => {
-        const socket = new SockJS('http://localhost:8080/ws');
-        const stompClient = Stomp.over(() => socket);
+        if (!topic) return;
 
-        stompClient.connect({ Authorization: `Bearer ${jwt}` }, (frame) => {
-            // Nos suscribimos al tema específico del lobby
-            stompClient.subscribe(topic, (response) => {
-                setData(JSON.parse(response.body));
-            });
+        const socket = new SockJS("http://localhost:8080/ws");
+        const stompClient = Stomp.over(socket);
 
-            // Envía el payload una sola vez al conectar
-            stompClient.send(endpoint, {}, JSON.stringify(payload));
-        }, (error) => {
-             console.error('WebSocket connection error:', error);
-             setTimeout(() => {
-                 console.log("Reconnecting...");
-                 stompClient.activate(); // Intenta reconectar
-             }, 5000);
-         });
+        stompClient.connect(
+            { Authorization: `Bearer ${jwt}` },
+            () => {
+                stompClient.subscribe(topic, (message) => {
+                    try {
+                        const body = JSON.parse(message.body);
+                        setData(body);
+                    } catch (error) {
+                        console.error("Error parsing WS:", error);
+                    }
+                });
+            },
+            (error) => console.error("WebSocket error:", error)
+        );
 
         return () => {
-            if (stompClient) {
-                stompClient.disconnect();
-            }
+            if (stompClient.connected) stompClient.disconnect();
         };
-    }, [endpoint, topic, jwt]); // Dependencias para que se ejecute solo cuando cambian estos valores
+    }, [topic, jwt]);
 
     return data;
 };
