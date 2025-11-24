@@ -173,6 +173,11 @@ public class PlayerService {
     public Player addFriend (Integer id, Integer friendId) {
         Player player = findPlayer(id);
         Player friend = findPlayer(friendId);
+
+        if(id.equals(friendId)) {
+            throw new IllegalArgumentException("A player cannot add themselves as a friend.");
+        }
+        
         player.getFriends().add(friend);
         friend.getFriends().add(player);
         return playerRepository.save(player);
