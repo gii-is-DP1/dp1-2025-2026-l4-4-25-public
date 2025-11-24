@@ -533,11 +533,29 @@ export default function Board() {
           const row = sq.coordinateY;
           const col = sq.coordinateX;
           if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+            const existing = baseBoard[row][col];
+            const isSpecial = existing && (existing.type === 'start' || existing.type === 'objective');
+            if (isSpecial) {
+              return; //Las cartas objetivo y de inicio no se sobreescriben
+            }
+
+            const cardFromBackend = sq.card;
+            if (!cardFromBackend) {
+              return; // Se deja la celda como null si no hay carta,
+            }
+            const fullCard =
+              cardFromBackend?.image
+                ? cardFromBackend
+                : (ListCards || []).find(c => c.id === cardFromBackend?.id) || cardFromBackend;
+
             baseBoard[row][col] = {
               squareId: sq.id,
               backendType: sq.type,
               occupied: sq.occupation,
-              card: sq.card,
+              card: fullCard,
+              type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
+              image: fullCard?.image,
+              rotation: fullCard?.rotation,
             };
           }
         })
@@ -550,7 +568,7 @@ export default function Board() {
     };
 
     loadBoard();
-  }, [round]);
+  }, [round, ListCards]);
 
    //Hace un pacth cada vez que se cambia que hay un cambio en una square
   useEffect(() => {
