@@ -109,47 +109,54 @@ export default function Board() {
   const rotatedOnly = getRotatedCards(ListCards);
   const nonRotatedOnly = getNonRotatedCards(ListCards);
 
-  const handleCardDrop = (row, col, card, cardIndex, squareId) => {
+    const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (isSpectator) {
-      addPrivateLog("ℹ️ Spectators cannot place cards", "warning");
-      return;}
+      addPrivateLog("Spectators cannot place cards", "warning");
+      return;
+    }
+
+    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
 
     if (loggedInUser.username !== currentPlayer) {
       toast.warning("It's not your turn!");
-      return;}
+      return;
+    }
 
     patchSquare(squareId, {
-    occupation: true,
-    card: card,
-    board: round.board
-  });
+      occupation: true,
+      card: card?.id || card,
+      board: boardId,
+    });
 
-  setBoardCells(prev => {
-    const next = prev.map(r => r.slice());
-    next[row][col] = {
-      ...prev[row][col],   
-      ...card,
-      type: 'tunnel',
-      owner: loggedInUser?.username || 'unknown',
-      placedAt: Date.now(),
-      occupied: true,
-    };
-    return next;
-  });
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      next[row][col] = {
+        ...prev[row][col],
+        ...card,
+        type: 'tunnel',
+        owner: loggedInUser?.username || 'unknown',
+        placedAt: Date.now(),
+        occupied: true,
+      };
+      return next;
+    });
 
     if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(cardIndex);}
+      window.removeCardAndDraw(cardIndex);
+    }
     setDeckCount(prev => Math.max(0, prev - 1));
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
     addColoredLog(
       currentIndex,
       currentPlayer,
-      `🃏 placed a tunnel card in (${row}, ${col})`);
+      `Placed a tunnel card in (${row}, ${col})`
+    );
 
-    toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : '🔴No more cards in deck.'}`);
-    nextTurn();};
+    toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
+    nextTurn();
+  };
 
-  const handleActionCard = (card, targetPlayer, cardIndex) => {
+const handleActionCard = (card, targetPlayer, cardIndex) => {
     handleActionCardUtil(card, targetPlayer, cardIndex, {
       isSpectator,
       loggedInUser,
