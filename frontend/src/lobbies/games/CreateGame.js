@@ -257,7 +257,7 @@ const CreateGame = () => {
       setpatchgame(newGame);
       const newRound = await postround(newGame.id, 1);  
       toast.success("¡Game started successfully!");
-      navigate(`/board/${newRound.board}`, { state: { game: newGame } });
+      navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
     } catch (error) {
       console.error(error);
       toast.error('Dont connect with the server.');

@@ -51,8 +51,8 @@ export default function DroppableCell({
         if (validation.valid) {
           console.log('Calling onDrop');
           if (onDrop) {
-            onDrop(row, col, card, parseInt(cardIndex));
-          }
+          onDrop(row, col, card, parseInt(cardIndex), cell?.squareId);
+            }
         } else {
           console.log('Cannot place card:', validation.message);
           toast.warning(validation.message);

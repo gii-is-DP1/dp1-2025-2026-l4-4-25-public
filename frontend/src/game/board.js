@@ -48,6 +48,8 @@ export default function Board() {
   const [privateLog, setPrivateLog] = useState([]);
     //  ESTADOS DE LAS HERRAMIENTAS, DICCIONARIO {username:{candle:true,wagon:true,pickaxe:true}}
   const [playerTools, setPlayerTools] = useState({});
+  //round del navigate
+  const [round, setRound] = useState(location.state?.round || null);
   
   // Estados del tablero
   const BOARD_COLS = 11;
@@ -78,6 +80,8 @@ export default function Board() {
     return initialBoard;
   });
 
+  const hasPatchedBoardBusy = useRef(false);
+
   const boardGridRef = useRef(null);
 
   // Hook personalizado para cargar datos del juego
@@ -94,14 +98,18 @@ export default function Board() {
     getChat,
     fetchCards,
     fetchAndSetLoggedActivePlayer,
-    deck
+    deck,
+    squaresById,
+    patchSquare,
+    pactchBoard,
+    getBoard,
   } = useGameData(game);
 
-  // Cartas Rotadas y No Rotadas
+  
   const rotatedOnly = getRotatedCards(ListCards);
   const nonRotatedOnly = getNonRotatedCards(ListCards);
 
-  const handleCardDrop = (row, col, card, cardIndex) => {
+  const handleCardDrop = (row, col, card, cardIndex, squareId) => {
     if (isSpectator) {
       addPrivateLog("ℹ️ Spectators cannot place cards", "warning");
       return;}
@@ -110,16 +118,24 @@ export default function Board() {
       toast.warning("It's not your turn!");
       return;}
 
-    setBoardCells(prev => {
-      const next = prev.map(r => r.slice());
-      next[row][col] = {
-        ...card,
-        type: 'tunnel',
-        owner: loggedInUser?.username || 'unknown',
-        placedAt: Date.now()
-      };
-      return next;
-    });
+    patchSquare(squareId, {
+    occupation: true,
+    card: card,
+    board: round.board
+  });
+
+  setBoardCells(prev => {
+    const next = prev.map(r => r.slice());
+    next[row][col] = {
+      ...prev[row][col],   
+      ...card,
+      type: 'tunnel',
+      owner: loggedInUser?.username || 'unknown',
+      placedAt: Date.now(),
+      occupied: true,
+    };
+    return next;
+  });
 
     if (window.removeCardAndDraw) {
       window.removeCardAndDraw(cardIndex);}
@@ -483,6 +499,79 @@ export default function Board() {
     fetchSquares(); 
 
   }, []);
+
+  
+  //asociar el board con los squares usando getBoard para asegurar busy
+  useEffect(() => {
+    if (!round || !round.board || !squaresById) return;
+
+    const loadBoard = async () => {
+      const boardId = typeof round.board === 'number' ? round.board : round.board.id;
+      if (!boardId) return;
+
+      let busyIds = [];
+      if (Array.isArray(round.board.busy) && round.board.busy.length > 0) {
+        busyIds = round.board.busy;
+      } else {
+        const boardData = await getBoard(boardId);
+        busyIds = (boardData?.busy || []).map(sq => sq.id ?? sq);
+      }
+
+      const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
+        Array.from({ length: BOARD_COLS }, () => null)
+      );
+      baseBoard[4][1] = { type: 'start', owner: 'system', fixed: true };
+      baseBoard[4][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[2][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[6][9] = { type: 'objective', owner: 'system', fixed: true };
+
+      await Promise.all(
+        busyIds.map(async (squareId) => {
+          const sq = await squaresById(squareId);
+          if (!sq) return;
+
+          const row = sq.coordinateY;
+          const col = sq.coordinateX;
+          if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+            baseBoard[row][col] = {
+              squareId: sq.id,
+              backendType: sq.type,
+              occupied: sq.occupation,
+              card: sq.card,
+            };
+          }
+        })
+      );
+
+      setBoardCells(baseBoard);
+      if (busyIds.length > 0) {
+        pactchBoard(boardId, { busy: busyIds });
+      }
+    };
+
+    loadBoard();
+  }, [round]);
+
+   //Hace un pacth cada vez que se cambia que hay un cambio en una square
+  useEffect(() => {
+    if (!round?.board) return;
+
+    const busySquareIds = boardCells
+      .flat()
+      .filter(cell => cell && cell.squareId && cell.type !== 'start' && cell.type !== 'objective') //que no sean ni final ni objetivo
+      .map(cell => cell.squareId);
+
+    if (!hasPatchedBoardBusy.current && busySquareIds.length === 0) {
+      return;
+    }
+
+    hasPatchedBoardBusy.current = true;
+    pactchBoard(round.board, { busy: busySquareIds });
+    console.log("he hecho este patch")
+  }, [boardCells, round]);
+
+
+
   // Render 
   return (
     <div className="board-container">
