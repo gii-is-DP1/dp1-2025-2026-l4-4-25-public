@@ -32,11 +32,11 @@ class UserServiceTests {
 
 
 	@Test
-	@WithMockUser(username = "player1", password = "0wn3r")
-	void shouldFindCurrentUser() {
-		User user = this.userService.findCurrentUser();
-		assertEquals("player1", user.getUsername());
-	}
+    @WithMockUser(username = "Carlosbox2k", authorities = {"PLAYER"}) 
+    void shouldFindCurrentUser() {
+        User user = this.userService.findCurrentUser();
+        assertEquals("Carlosbox2k", user.getUsername());
+    }
 	
 	@Test
 	@WithMockUser(username = "prueba")
