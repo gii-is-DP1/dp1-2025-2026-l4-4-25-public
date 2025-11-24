@@ -67,46 +67,35 @@ const CreateGame = () => {
 
   // Efecto para procesar el mensaje que viene del socket
   useEffect(() => {
-  console.log("Mensaje recibido del socket:", socketMessage);
+    console.log("Mensaje recibido del socket:", socketMessage);
 
-  if (!socketMessage) return;
+    if (!socketMessage) return;
 
-  let payload = socketMessage;
+    let payload = socketMessage;
 
-  // Si viene como string → parsear
-  if (typeof payload === "string") {
-    try {
-      payload = JSON.parse(payload);
-    } catch (e) {
-      console.error("Error parseando mensaje WS:", e);
-      return;
+    if (typeof payload === "string") {
+      try {
+        payload = JSON.parse(payload);
+      } catch (e) {
+        console.error("Error parseando mensaje WS:", e);
+        return;
+      }
     }
-  }
 
-  const { game: updatedGame, round: updatedRound } = payload;
-  console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
-  console.log(" BOARD EN EL ROUND:", updatedRound?.board);
-  // Si no es payload compuesto, ignorar
-  if (!updatedGame) return;
+    const { game: updatedGame, round: updatedRound } = payload;
+    console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
+    console.log(" BOARD EN EL ROUND:", updatedRound?.board);
 
-  setGame(updatedGame);
+    if (!updatedGame) return;
 
-  // Si empieza el juego → navegar
-  if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board) {
-    navigate(`/board/${updatedRound.board}`, {
-      state: { game: updatedGame, round: updatedRound }
-    });
-  }
+    setGame(updatedGame);
+
+    if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board) {
+      navigate(`/board/${updatedRound.board}`, {
+        state: { game: updatedGame, round: updatedRound }
+      });
+    }
   }, [socketMessage]);
-
-
-  // Navegación automática cuando el juego comienza
-  /*useEffect(() => {
-  if (game?.gameStatus === "ONGOING" && round?.board?.id) {
-    navigate(`/board/${round.board.id}`, { state: { game } });
-  }
-}, [game?.gameStatus, round?.board?.id, navigate, game]);
-  */
 
   // Lógica para unirse al juego (solo no-creadores)
   useEffect(() => {

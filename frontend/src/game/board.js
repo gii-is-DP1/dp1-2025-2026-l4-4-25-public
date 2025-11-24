@@ -24,6 +24,8 @@ import { useGameData } from './hooks/useGameData';
 import '../App.css';
 import '../static/css/home/home.css';
 import '../static/css/game/game.css';
+import useWebSocket from "../hooks/useWebSocket";
+
 
 const jwt = tokenService.getLocalAccessToken();
 const timeturn = 10;
@@ -106,8 +108,12 @@ export default function Board() {
   } = useGameData(game);
 
   
-  const rotatedOnly = getRotatedCards(ListCards);
-  const nonRotatedOnly = getNonRotatedCards(ListCards);
+    const rotatedOnly = getRotatedCards(ListCards);
+    const nonRotatedOnly = getNonRotatedCards(ListCards);
+
+    const socketMessage = useWebSocket(
+      `/topic/game/${game?.id}`
+    );
 
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (isSpectator) {

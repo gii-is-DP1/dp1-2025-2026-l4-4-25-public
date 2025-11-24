@@ -183,31 +183,31 @@ class GameRestController {
     System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
     if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
 
-    System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+        System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
 
-    // 1. Obtener la ronda actual
-    List<Round> rounds = roundService.findByGameId(id);
+        // 1. Obtener la ronda actual
+        List<Round> rounds = roundService.findByGameId(id);
 
-    if (rounds.isEmpty()) {
-        System.out.println(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
+        if (rounds.isEmpty()) {
+            System.out.println(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
+        }
+
+        Round currentRound = rounds.get(rounds.size() - 1);
+
+        // 2. Cargar el game completo
+        Game fullGame = gameService.findGame(id);
+
+        // 3. Montar payload explícito
+        Map<String, Object> payload = Map.of(
+            "game", fullGame,
+            "round", currentRound
+        );
+
+        System.out.println(">>> ENVIANDO PAYLOAD AL SOCKET:");
+        System.out.println(payload);
+
+        messagingTemplate.convertAndSend("/topic/game/" + id, payload);
     }
-
-    Round currentRound = rounds.get(rounds.size() - 1);
-
-    // 2. Cargar el game completo
-    Game fullGame = gameService.findGame(id);
-
-    // 3. Montar payload explícito
-    Map<String, Object> payload = Map.of(
-        "game", fullGame,
-        "round", currentRound
-    );
-
-    System.out.println(">>> ENVIANDO PAYLOAD AL SOCKET:");
-    System.out.println(payload);
-
-    messagingTemplate.convertAndSend("/topic/game/" + id, payload);
-}
 
     return new ResponseEntity<>(savedGame, HttpStatus.OK);
 }
