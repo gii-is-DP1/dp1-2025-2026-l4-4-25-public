@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,12 +37,15 @@ public class RoundRestController {
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
     private final GameService gameService;
+    private final SimpMessagingTemplate messagingTemplate;
+
     
     @Autowired
-    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService, SimpMessagingTemplate messagingTemplate) {
         this.roundService = roundService;
         this.objectMapper = objectMapper;
         this.gameService = gameService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -60,7 +64,7 @@ public class RoundRestController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Round> create(@RequestParam @Valid Integer gameId, @RequestParam @Valid Integer roundNumber) {
         Game game = gameService.findGame(gameId);
-        Round newRound = roundService.initializeRound(game, roundNumber);         
+        Round newRound = roundService.initializeRound(game, roundNumber);    
         return new ResponseEntity<>(newRound, HttpStatus.CREATED);
     }
 

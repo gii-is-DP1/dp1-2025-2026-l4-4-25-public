@@ -178,13 +178,20 @@ class GameRestController {
     }
 
     Game gamePatched = objectMapper.updateValue(game, updates);
-    gameService.updateGame(gamePatched, id);
+    Game savedGame = gameService.updateGame(gamePatched, id);
 
     if (updates.containsKey("gameStatus") && updates.get("gameStatus").equals("ONGOING")) {
-        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gamePatched);
+        Game fullGameForSocket = gameService.findGame(id); //Debería traer el game ya con las rondas inicializadas
+        // TRUCO: Accedemos a la lista de rondas explícitamente para forzar su carga 
+        // antes de enviarlo, evitando LazyInitializationException.
+        // Solo si rounds no es null.
+        if (fullGameForSocket.getRounds() != null) {
+            fullGameForSocket.getRounds().size(); 
+        }
+        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), fullGameForSocket);
     }
 
-    return new ResponseEntity<>(gamePatched, HttpStatus.OK);
+    return new ResponseEntity<>(savedGame, HttpStatus.OK);
 }
 
     @DeleteMapping(value = "{gameId}")

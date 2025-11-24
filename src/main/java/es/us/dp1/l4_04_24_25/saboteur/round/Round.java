@@ -55,6 +55,7 @@ public class Round extends BaseEntity{
     //Relacion n rondas pertenecen a 1 partida
     @ManyToOne
     @JoinColumn(name = "game_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore 
     private Game game;
 
     // Relacion 1 ronda tiene 1 tablero (Lado Inverso)

@@ -67,6 +67,28 @@ const CreateGame = () => {
     jwt
   );
 
+  // Efecto para procesar el mensaje que viene del socket
+  useEffect(() => {
+    if (socketMessage) {
+      // Si el mensaje es sobre este juego, actualizamos el estado
+      if (socketMessage.id === game?.id) {
+        setGame(socketMessage);
+        
+        // Si el juego pasa a ONGOING y tiene rondas, actualizamos la ronda localmente
+        // Esto es CRUCIAL para los jugadores que NO son el creador
+        if (socketMessage.gameStatus === "ONGOING" && socketMessage.rounds && socketMessage.rounds.length > 0) {
+            // Asumimos que la última ronda es la actual
+            const currentRound = socketMessage.rounds[socketMessage.rounds.length - 1];
+            // Necesitamos forzar la navegación. 
+            // Como 'round' viene del hook useLobbyData, podemos navegar directamente aquí o 
+            // usar un estado local temporal si round es null.
+            navigate(`/board/${currentRound.board.id}`, { state: { game: socketMessage } });
+        }
+      }
+    }
+  },[socketMessage, game?.id, navigate]);
+
+
   // Navegación automática cuando el juego comienza
   useEffect(() => {
   if (game?.gameStatus === "ONGOING" && round?.board?.id) {
@@ -253,13 +275,13 @@ const CreateGame = () => {
     };
 
     try {
-      const newGame = await updateGame(request);
-      setpatchgame(newGame);
-      const newRound = await postround(newGame.id, 1);  
-      toast.success("¡Game started successfully!");
-      navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
+      const newRound = await postround(game.id, 1);
+      const updatedGame = await updateGame(request);
+      setpatchgame(updatedGame);  
+      toast.success("Game started successfully!");
+      // navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
     } catch (error) {
-      console.error(error);
+      console.error(error); 
       toast.error('Dont connect with the server.');
     }
   };
