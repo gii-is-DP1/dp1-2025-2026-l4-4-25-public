@@ -111,10 +111,62 @@ export default function Board() {
     const rotatedOnly = getRotatedCards(ListCards);
     const nonRotatedOnly = getNonRotatedCards(ListCards);
 
-    const socketMessage = useWebSocket(
-      `/topic/game/${game?.id}`
-    );
+    const socketMessage = useWebSocket(`/topic/game/${game?.id}`);
 
+    useEffect(() => {
+      if(!socketMessage) return;
+
+      console.log("WS recibido:", socketMessage);
+
+      const {action} = socketMessage;
+
+      switch(action){
+        case "CARD_PLACED":
+          handleWsCardPlaced(socketMessage);
+          break;
+
+        case "CARD_DESTROYED":
+          handleWsCardDestroyed(socketMessage);
+          break;
+        
+        case "TURN_CHANGED":
+          setCurrentPlayer(socketMessage.nextPlayer);
+          break;
+        
+        default:
+          console.warn("WS action unrecognized:", action);
+      }
+    },[socketMessage]);
+
+    //Modularizar estas funciones
+    const handleWsCardPlaced = ({row, col, card, player})=>{
+      setBoardCells(prev => {
+        const next = prev.map(r => r.slice());
+        next[row][col] = {
+          ...card,
+          type: "tunnel",
+          owner: player,
+          placedAt: Date.now(),
+          occupied: true
+        };
+        return next;
+      });
+          addLog(`<b>${player}</b> placed a card at (${row}, ${col})`, "action");
+    }
+
+    const handleWsCardDestroyed = ({ row, col, player }) => {
+      setBoardCells(prev => {
+          const next = prev.map(r => r.slice());
+          next[row][col] = null;
+          return next;
+      });
+
+      addLog(`<b>${player}</b> destroyed a card at (${row}, ${col})`, "action");
+    };
+
+
+    // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
+    
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (isSpectator) {
       addPrivateLog("Spectators cannot place cards", "warning");
