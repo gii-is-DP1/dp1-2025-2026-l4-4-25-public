@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
@@ -69,19 +70,11 @@ class LogRestController {
     }
 
     @PatchMapping("/{logId}")
-    public ResponseEntity<Log> patchLog(@PathVariable Integer logId, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<Log> patchLog(@PathVariable Integer logId, @RequestBody Map<String, Object> updates) throws JsonMappingException{
         Log existingLog = logService.findLog(logId);
         RestPreconditions.checkNotNull(existingLog, "Log", "id", logId);
-        if (updates.containsKey("round")) {
-            Integer roundId = (Integer) updates.get("round");
-            Round round = roundService.findRound(roundId);
-            RestPreconditions.checkNotNull(round, "Round", "id", roundId);
-            if (!existingLog.getRound().equals(round)){
-                existingLog.getRound().setLog(null);
-                existingLog.setRound(round);
-                round.setLog(existingLog);
-            }
-        }
+        Log logPatched = objectMapper.updateValue(existingLog, updates);
+        logService.updateLog(logPatched, logId);
         Log updatedLog =logService.saveLog(existingLog);
         roundService.saveRound(existingLog.getRound());
         return new ResponseEntity<>(updatedLog, HttpStatus.OK);
