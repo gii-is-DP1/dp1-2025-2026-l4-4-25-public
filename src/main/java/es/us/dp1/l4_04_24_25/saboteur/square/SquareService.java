@@ -93,5 +93,10 @@ public class SquareService {
         return squareRepository.save(sq);
     }
 
+    @Transactional(readOnly = true)
+    public Square findByBoardIdAndCoordinates(Board board, Integer coordinateX, Integer coordinateY) {
+        return squareRepository.findByCoordinateXAndCoordinateYAndBoard(coordinateX, coordinateY, board);
+    }
+
         
 }

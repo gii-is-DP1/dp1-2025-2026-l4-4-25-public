@@ -149,4 +149,14 @@ public class SquareRestController {
         Square res = squareService.findByCoordinates(coordinateX, coordinateY);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
+
+    @GetMapping("byBoardAndCoordinates")
+    public ResponseEntity<Square> findByBoardAndCoordinates(
+        @RequestParam Integer boardId,
+        @RequestParam Integer coordinateX, 
+        @RequestParam Integer coordinateY) {
+            Board board = boardService.findBoard(boardId);
+        Square res = squareService.findByBoardIdAndCoordinates(board, coordinateX, coordinateY);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
 }
