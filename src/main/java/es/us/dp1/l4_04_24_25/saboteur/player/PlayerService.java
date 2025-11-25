@@ -169,6 +169,33 @@ public class PlayerService {
         return playerRepository.save(player);
     }
 
+    @Transactional
+    public Player addFriend (Integer id, Integer friendId) {
+        Player player = findPlayer(id);
+        Player friend = findPlayer(friendId);
+
+        if(id.equals(friendId)) {
+            throw new IllegalArgumentException("A player cannot add themselves as a friend.");
+        }
+        
+        player.getFriends().add(friend);
+        friend.getFriends().add(player);
+        return playerRepository.save(player);
+    }
+
+    @Transactional
+    public Player removeFriend (Integer id, Integer friendId) {
+        Player player = findPlayer(id);
+        Player friend = findPlayer(friendId);
+            if (player.getFriends().contains(friend) && friend.getFriends().contains(player)) {
+                player.getFriends().remove(friend);
+                friend.getFriends().remove(player);
+            }
+        return playerRepository.save(player);
+        
+        }    
+    
+
 
 
 

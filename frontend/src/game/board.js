@@ -105,11 +105,12 @@ export default function Board() {
     patchSquare,
     pactchBoard,
     getBoard,
+    getSquareByCoordinates,
   } = useGameData(game);
 
   
-    const rotatedOnly = getRotatedCards(ListCards);
-    const nonRotatedOnly = getNonRotatedCards(ListCards);
+    const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
 
     const socketMessage = useWebSocket(`/topic/game/${game?.id}`);
 
@@ -180,7 +181,19 @@ export default function Board() {
       return;
     }
 
-    patchSquare(squareId, {
+    // If squareId is not provided, fetch it by coordinates
+    let actualSquareId = squareId;
+    if (!actualSquareId) {
+      const square = await getSquareByCoordinates(boardId, col, row);
+      if (square) {
+        actualSquareId = square.id;
+      } else {
+        toast.error('Could not find square at this position');
+        return;
+      }
+    }
+
+    patchSquare(actualSquareId, {
       occupation: true,
       card: card?.id || card,
       board: boardId,

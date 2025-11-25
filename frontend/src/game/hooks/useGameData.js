@@ -335,6 +335,76 @@ export const useGameData = (game) => {
     }
   }
 
+  const getSquareByCoordinates = async (boardId, coordinateX, coordinateY) => {
+    try {
+      const response = await fetch(
+        `/api/v1/squares/byBoardAndCoordinates?boardId=${boardId}&coordinateX=${coordinateX}&coordinateY=${coordinateY}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwt}`
+          },
+        }
+      );
+      if (response.ok) {
+        const square = await response.json();
+        return square;
+      } else {
+        console.error('Respuesta no OK al obtener square por coordenadas:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener square por coordenadas:', error);
+      return null;
+    }
+  }
+
+  const getLog = async (logId) => { 
+    try {
+      const response = await fetch(`/api/v1/logs/${logId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+      }); 
+      if (response.ok) {
+        const logData = await response.json();
+        return logData;
+      } else {
+        console.error('Respuesta no OK al obtener log:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener log:', error);
+      return null;
+    }
+  }
+
+  const patchLog = async (logId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/logs/${logId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      }); 
+      if (response.ok) {
+        const updatedLog = await response.json();
+        return updatedLog;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del log:', error);
+      return null;
+    }
+  };
+
   return {
     activePlayers,
     chat,
@@ -354,6 +424,9 @@ export const useGameData = (game) => {
     patchSquare,
     pactchBoard,
     getBoard,
+    getSquareByCoordinates,
+    getLog,
+    patchLog
   };
 };
   

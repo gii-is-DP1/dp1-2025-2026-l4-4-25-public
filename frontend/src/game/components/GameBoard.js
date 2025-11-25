@@ -27,7 +27,7 @@ export default function GameBoard({
     }};
 
   const renderCellContent = (row, col, cell) => {
-    const card = ListCards.find(c => c.id === 34);
+    const card = Array.isArray(ListCards) ? ListCards.find(c => c.id === 34) : null;
 
     if (!cell) {
       return <div className="cell-coords">{row},{col}</div>;}
