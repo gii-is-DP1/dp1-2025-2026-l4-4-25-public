@@ -111,33 +111,37 @@ export default function Board() {
   
     const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
     const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
-
-    const socketMessage = useWebSocket(`/topic/game/${game?.id}`);
+    
+    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
+    const boardMessage = useWebSocket(`/topic/game/${boardId}`);
+    const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
 
     useEffect(() => {
-      if(!socketMessage) return;
+      if(!boardMessage) return;
 
-      console.log("WS recibido:", socketMessage);
-
-      const {action} = socketMessage;
+      console.log("WS recibido:", boardMessage);
+      console.log("Keys del mensaje WS:", Object.keys(boardMessage));
+      const {action} = boardMessage;
 
       switch(action){
         case "CARD_PLACED":
-          handleWsCardPlaced(socketMessage);
+          handleWsCardPlaced(boardMessage);
           break;
 
         case "CARD_DESTROYED":
-          handleWsCardDestroyed(socketMessage);
-          break;
-        
-        case "TURN_CHANGED":
-          setCurrentPlayer(socketMessage.nextPlayer);
+          handleWsCardDestroyed(boardMessage);
           break;
         
         default:
           console.warn("WS action unrecognized:", action);
       }
-    },[socketMessage]);
+    },[boardMessage]);
+
+    useEffect(() => {
+      if(!gameMessage) return;
+      const { action } = gameMessage;
+      if(action === "TURN_CHANGED") setCurrentPlayer(gameMessage.nextPlayer);
+    }, [gameMessage]);
 
     //Modularizar estas funciones
     const handleWsCardPlaced = ({row, col, card, player})=>{
