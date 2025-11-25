@@ -45,6 +45,7 @@ export default function Board() {
   const [currentPlayer, setCurrentPlayer] = useState();
   const [cont, setCont] = useState(timeturn);
   const [gameLog, setGameLog] = useState([]);
+  const [logData, setLogData] = useState(null);
   const [playerOrder, setPlayerOrder] = useState([]);
   const [playerRol, setPlayerRol] = useState([]);
   const [privateLog, setPrivateLog] = useState([]);
@@ -106,6 +107,8 @@ export default function Board() {
     pactchBoard,
     getBoard,
     getSquareByCoordinates,
+    getLog,
+    patchLog
   } = useGameData(game);
 
   
@@ -264,7 +267,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
 
   // Funciones de logs
   const addLog = (msg, type = "info") => {
-    setGameLog(prev => [...prev, { msg, type }]);
+    appendAndPersistLog(msg, type);
   };
 
   const addPrivateLog = (msg, type = "info") => {
@@ -343,6 +346,15 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
     }
   };
 
+  const resolveActivePlayerUsername = () => {
+    if (isSpectator) return loggedInUser?.username;
+    return loggedActivePlayer?.username
+      ?? loggedActivePlayer?.player?.user?.username
+      ?? loggedActivePlayer?.player?.username;
+  };
+
+  const chatIdFromState = () => chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
+
   const SendMessage = async (e) => {
     e.preventDefault();
 
@@ -360,11 +372,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       return;
     }
 
-    const activePlayerUsername = isSpectator
-      ? loggedInUser.username
-      : (loggedActivePlayer?.username
-        ?? loggedActivePlayer?.player?.user?.username
-        ?? loggedActivePlayer?.player?.username);
+    const activePlayerUsername = resolveActivePlayerUsername();
 
     if (!activePlayerUsername) {
       toast.error('Cannot identify your username');
@@ -372,7 +380,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       return;
     }
 
-    const chatId = chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
+    const chatId = chatIdFromState();
 
     if (!chatId) {
       toast.error('Cannot identify the game chat');
@@ -383,6 +391,31 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
     setMessage(prev => [...prev, { author: loggedInUser.username, text: finalMessage }]);
     await postMessage(finalMessage, activePlayerUsername, chatId);
     setNewMessage('');
+  };
+
+  const appendAndPersistLog = async (msg, type = "info") => {
+    setGameLog(prev => [...prev, { msg, type }]);
+
+    const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+    console.log('Log ID para persistencia:', logId);
+    const roundId = typeof round?.id === 'number' ? round.id : round?.round?.id;
+    const chatId = chatIdFromState();
+    const activePlayerUsername = resolveActivePlayerUsername();
+
+    const nextMessages = [...(logData?.messages || []), msg];
+
+    if (logId && roundId) {
+      setLogData(prev => ({
+        ...(prev || {}),
+        id: logId,
+        messages: nextMessages
+      }));
+      patchLog(logId, { round: roundId, messages: nextMessages });
+    }
+
+    if (chatId && activePlayerUsername) {
+      postMessage(msg, activePlayerUsername, chatId);
+    }
   };
 
   // Efectos
@@ -405,6 +438,22 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       toast.info('Spectator mode activated✅');
     }
   }, []);
+
+  useEffect(() => {
+    const fetchLogForRound = async () => {
+      const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+      if (!logId) return;
+
+      const log = await getLog(logId);
+      if (log) {
+        setLogData(log);
+        const mapped = (log.messages || []).map(m => ({ msg: m, type: "info" }));
+        setGameLog(mapped);
+      }
+    };
+
+    fetchLogForRound();
+  }, [round]);
 
   useEffect(() => {
     if (activePlayers.length > 1) {
