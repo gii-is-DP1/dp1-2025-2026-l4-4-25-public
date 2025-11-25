@@ -34,7 +34,7 @@ INSERT INTO board (id, base, height) VALUES (1, 11, 9);
 INSERT INTO board (id, base, height) VALUES (2, 11, 9);
 
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, 
-null,1);
+1,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
