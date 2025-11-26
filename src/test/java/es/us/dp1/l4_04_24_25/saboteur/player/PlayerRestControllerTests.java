@@ -3,6 +3,7 @@ package es.us.dp1.l4_04_24_25.saboteur.player;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -17,7 +19,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +43,10 @@ import es.us.dp1.l4_04_24_25.saboteur.user.UserDTO;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
 
 @WebMvcTest(controllers = PlayerRestController.class)
-@ComponentScan(basePackageClasses = {es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions.class})
+@ComponentScan(basePackageClasses = {
+    es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions.class,
+    es.us.dp1.l4_04_24_25.saboteur.player.PlayerRestController.class 
+})
 class PlayerRestControllerTests {
 
     private static final int TEST_PLAYER_ID = 4;
@@ -264,5 +271,83 @@ class PlayerRestControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testPlayer)))
                 .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindAllByGameId() throws Exception {
+        int gameId = 1;
+        when(playerService.findAllByGameId(gameId)).thenReturn(List.of(testPlayerDTO));
+
+        mockMvc.perform(get(BASE_URL + "/byGameId")
+                .param("gameId", String.valueOf(gameId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value(TEST_USERNAME));
+
+        verify(playerService).findAllByGameId(gameId);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByGameIdAndUsername() throws Exception {
+        int gameId = 1;
+        when(playerService.findByGameIdAndUsername(gameId, TEST_USERNAME)).thenReturn(testPlayerDTO);
+
+        mockMvc.perform(get(BASE_URL + "/byGameIdAndUsername")
+                .param("gameId", String.valueOf(gameId))
+                .param("username", TEST_USERNAME))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(TEST_USERNAME));
+
+        verify(playerService).findByGameIdAndUsername(gameId, TEST_USERNAME);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindFriends() throws Exception {
+        Player friend = new Player();
+        friend.setUsername("Amigo");
+        testPlayer.getFriends().add(friend);
+
+        when(playerService.findPlayer(TEST_PLAYER_ID)).thenReturn(testPlayer);
+
+        mockMvc.perform(get(BASE_URL + "/{id}/friends", TEST_PLAYER_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("Amigo"));
+        
+        
+        verify(playerService, org.mockito.Mockito.times(2)).findPlayer(TEST_PLAYER_ID);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldAddFriend() throws Exception {
+        int friendId = 5;
+        when(playerService.findPlayer(TEST_PLAYER_ID)).thenReturn(testPlayer);
+        when(playerService.findPlayer(friendId)).thenReturn(new Player());
+        
+        when(playerService.addFriend(TEST_PLAYER_ID, friendId)).thenReturn(testPlayer);
+
+        mockMvc.perform(patch(BASE_URL + "/{id}/addFriends/{friendId}", TEST_PLAYER_ID, friendId)
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        verify(playerService).addFriend(TEST_PLAYER_ID, friendId);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldRemoveFriend() throws Exception {
+        int friendId = 5;
+        when(playerService.findPlayer(TEST_PLAYER_ID)).thenReturn(testPlayer);
+        when(playerService.findPlayer(friendId)).thenReturn(new Player());
+        
+        when(playerService.removeFriend(TEST_PLAYER_ID, friendId)).thenReturn(testPlayer);
+
+        mockMvc.perform(patch(BASE_URL + "/{id}/removeFriends/{friendId}", TEST_PLAYER_ID, friendId)
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        verify(playerService).removeFriend(TEST_PLAYER_ID, friendId);
     }
 }

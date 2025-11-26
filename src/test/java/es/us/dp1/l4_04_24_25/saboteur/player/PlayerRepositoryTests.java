@@ -24,6 +24,9 @@ class PlayerRepositoryTests {
     @Autowired
     private AuthoritiesRepository authoritiesRepository;
 
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
+
     private static final int TEST_PLAYER_ID = 4; // es el Carlosbox2k
     private static final int TEST_NON_EXISTENT_PLAYER_ID = 9999;
     private static final String TEST_USERNAME_EXISTS = "Carlosbox2k";
@@ -145,5 +148,38 @@ class PlayerRepositoryTests {
     void shouldNotFindNonExistingUsernameUsingFindByUsername() {
         boolean exists = playerRepository.findByUsername(TEST_USERNAME_NON_EXISTS).isPresent();
         assertFalse(exists);
+    }
+
+
+    @Test
+    @Transactional
+    void shouldFindAllByGameId() {
+        
+        entityManager.createNativeQuery("UPDATE player SET game_id = 1 WHERE id = " + TEST_PLAYER_ID)
+                     .executeUpdate();
+        
+        Iterable<Player> players = playerRepository.findAllByGameId(1);
+        
+        assertThat(players).isNotEmpty();
+        assertThat(players.iterator().next().getUsername()).isEqualTo(TEST_USERNAME_EXISTS);
+    }
+
+    @Test
+    @Transactional
+    void shouldFindByGameIdAndUsername() {
+        
+        entityManager.createNativeQuery("UPDATE player SET game_id = 1 WHERE id = " + TEST_PLAYER_ID)
+                     .executeUpdate();
+
+        Optional<Player> player = playerRepository.findByGameIdAndUsername(1, TEST_USERNAME_EXISTS);
+        
+        assertThat(player).isPresent();
+        assertThat(player.get().getUsername()).isEqualTo(TEST_USERNAME_EXISTS);
+    }
+
+    @Test
+    void shouldNotFindByGameIdAndUsernameIfWrongGame() {
+        Optional<Player> player = playerRepository.findByGameIdAndUsername(999, "Carlosbox2k");
+        assertThat(player).isEmpty();
     }
 }

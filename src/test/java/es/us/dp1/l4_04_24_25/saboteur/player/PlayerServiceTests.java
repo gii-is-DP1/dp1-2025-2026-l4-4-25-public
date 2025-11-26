@@ -12,10 +12,16 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,15 +38,18 @@ import org.springframework.dao.DataAccessException;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementService;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.message.Message;
 import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
 import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
-import jakarta.persistence.EntityManager; // es necesario para el mock de delete
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 @ExtendWith(MockitoExtension.class)
 class PlayerServiceTests {
@@ -105,6 +114,8 @@ class PlayerServiceTests {
         testPlayer.setGame(mockGame);
         testPlayer.getFriends().add(testPlayer); // Simula un amigo (consigo mismo para el test de lista)
         testPlayer.getAccquiredAchievements().add(mockAchievement); // Simula un logro
+
+        org.springframework.test.util.ReflectionTestUtils.setField(playerService, "entityManager", entityManager);
     }
 
     @Test
@@ -231,11 +242,194 @@ class PlayerServiceTests {
         when(playerRepository.save(any(Player.class))).thenReturn(testPlayer); 
 
         Player patchedPlayer = playerService.patchPlayerAchievement(TEST_PLAYER_ID, 
-                                        Collections.singletonMap("accquiredAchievements", (Object)NEW_ACHIEVEMENT_ID));
+                                                            Collections.singletonMap("accquiredAchievements", (Object)NEW_ACHIEVEMENT_ID));
    
         assertEquals(2, patchedPlayer.getAccquiredAchievements().size()); 
         assertTrue(patchedPlayer.getAccquiredAchievements().stream()
-                    .anyMatch(a -> a.getId().equals(NEW_ACHIEVEMENT_ID)));
+                            .anyMatch(a -> a.getId().equals(NEW_ACHIEVEMENT_ID)));
         verify(playerRepository).save(testPlayer);
+    }
+
+
+    @Test
+    void shouldFindAll() {
+        
+        when(playerRepository.findAll()).thenReturn(List.of(testPlayer));
+
+        List<PlayerDTO> results = playerService.findAll();
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(TEST_USERNAME, results.get(0).getUsername());
+    }
+
+    @Test
+    void shouldFindByUsernameDTO() {
+        
+        when(playerRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(testPlayer));
+
+        PlayerDTO result = playerService.findByUsernameDTO(TEST_USERNAME);
+
+        assertNotNull(result);
+        assertEquals(TEST_USERNAME, result.getUsername());
+    }
+
+    @Test
+    void shouldPatchPlayerGame() {
+        
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("game", TEST_GAME_ID);
+
+        when(playerRepository.findById(TEST_PLAYER_ID)).thenReturn(Optional.of(testPlayer));
+        when(gameService.findGame(TEST_GAME_ID)).thenReturn(mockGame);
+        when(playerRepository.save(any(Player.class))).thenAnswer(returnsFirstArg());
+
+        Player patched = playerService.patchPlayer(TEST_PLAYER_ID, updates);
+
+        assertNotNull(patched.getGame());
+        assertEquals(TEST_GAME_ID, patched.getGame().getId());
+        verify(gameService).findGame(TEST_GAME_ID);
+    }
+
+    @Test
+    void shouldPatchPlayerNoGameUpdate() {
+        
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("otherField", "value");
+
+        when(playerRepository.findById(TEST_PLAYER_ID)).thenReturn(Optional.of(testPlayer));
+        when(playerRepository.save(any(Player.class))).thenAnswer(returnsFirstArg());
+
+        Player patched = playerService.patchPlayer(TEST_PLAYER_ID, updates);
+
+        verify(gameService, never()).findGame(anyInt());
+        verify(playerRepository).save(testPlayer);
+    }
+
+    @Test
+    void shouldAddFriend() {
+        int FRIEND_ID = 5;
+        Player friend = new Player();
+        friend.setId(FRIEND_ID);
+        friend.setUsername("Friend");
+
+        when(playerRepository.findById(TEST_PLAYER_ID)).thenReturn(Optional.of(testPlayer));
+        when(playerRepository.findById(FRIEND_ID)).thenReturn(Optional.of(friend));
+        when(playerRepository.save(any(Player.class))).thenAnswer(returnsFirstArg());
+
+        Player result = playerService.addFriend(TEST_PLAYER_ID, FRIEND_ID);
+
+        assertTrue(result.getFriends().contains(friend));
+        assertTrue(friend.getFriends().contains(testPlayer));
+    }
+
+    @Test
+    void shouldRemoveFriendSuccess() {
+        
+        int FRIEND_ID = 5;
+        Player friend = new Player();
+        friend.setId(FRIEND_ID);
+      
+        testPlayer.getFriends().add(friend);
+        friend.getFriends().add(testPlayer);
+
+        when(playerRepository.findById(TEST_PLAYER_ID)).thenReturn(Optional.of(testPlayer));
+        when(playerRepository.findById(FRIEND_ID)).thenReturn(Optional.of(friend));
+        when(playerRepository.save(any(Player.class))).thenAnswer(returnsFirstArg());
+
+        Player result = playerService.removeFriend(TEST_PLAYER_ID, FRIEND_ID);
+
+        assertFalse(result.getFriends().contains(friend));
+        assertFalse(friend.getFriends().contains(testPlayer));
+    }
+
+    @Test
+    void shouldNotRemoveFriendIfNotBidirectional() {
+        
+        int FRIEND_ID = 5;
+        Player friend = new Player();
+        friend.setId(FRIEND_ID);
+        
+        testPlayer.getFriends().add(friend);
+        
+        when(playerRepository.findById(TEST_PLAYER_ID)).thenReturn(Optional.of(testPlayer));
+        when(playerRepository.findById(FRIEND_ID)).thenReturn(Optional.of(friend));
+        when(playerRepository.save(any(Player.class))).thenAnswer(returnsFirstArg());
+
+        Player result = playerService.removeFriend(TEST_PLAYER_ID, FRIEND_ID);
+
+        assertTrue(result.getFriends().contains(friend));
+    }
+
+
+    @Test
+    void shouldDeleteActivePlayerAndDetachAllRelationships() {
+
+        ActivePlayer activePlayer = new ActivePlayer();
+        activePlayer.setId(TEST_PLAYER_ID);
+     
+        if (activePlayer.getCreatedGames() == null) activePlayer.setCreatedGames(new ArrayList<>());
+        if (activePlayer.getWonGame() == null) activePlayer.setWonGame(new ArrayList<>()); 
+        if (activePlayer.getMessages() == null) activePlayer.setMessages(new ArrayList<>());
+
+        Player friend = new Player(); friend.getFriends().add(activePlayer);
+        activePlayer.getFriends().add(friend);
+        
+        activePlayer.getAccquiredAchievements().add(mockAchievement);
+        mockAchievement.getPlayers().add(activePlayer);
+        
+        Game watchingGame = new Game(); watchingGame.getWatchers().add(activePlayer);
+        activePlayer.setGame(watchingGame);
+
+
+        Deck d = new Deck();
+        activePlayer.setDeck(d);
+        
+        Game createdGame = new Game(); createdGame.setCreator(activePlayer);
+        activePlayer.getCreatedGames().add(createdGame);
+        
+        Game wonGame = new Game(); wonGame.setWinner(activePlayer);
+        activePlayer.getWonGame().add(wonGame); 
+        
+        Message msg = new Message(); msg.setActivePlayer(activePlayer);
+        activePlayer.getMessages().add(msg);
+
+        Query mockQuery = mock(Query.class);
+        when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        
+        when(playerRepository.findById(TEST_PLAYER_ID)).thenReturn(Optional.of(activePlayer));
+        
+        Game activeGame = new Game();
+        activeGame.getActivePlayers().add(activePlayer);
+        when(gameService.findAllByActivePlayerId(TEST_PLAYER_ID)).thenReturn(List.of(activeGame));
+
+      
+        playerService.deletePlayer(TEST_PLAYER_ID);
+
+        verify(deckService).saveDeck(d);
+        verify(gameService, times(3)).saveGame(any(Game.class));
+        verify(messageService).saveMessage(msg);
+        verify(entityManager).flush();
+        verify(entityManager, times(2)).createNativeQuery(anyString());
+    }
+    @Test
+    void shouldDeleteRegularPlayer() {
+        
+        Player regularPlayer = new Player();
+        regularPlayer.setId(99);
+
+        Query mockQuery = mock(Query.class);
+        when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        
+        when(playerRepository.findById(99)).thenReturn(Optional.of(regularPlayer));
+
+        playerService.deletePlayer(99);
+
+        verify(deckService, never()).saveDeck(any());
+        verify(gameService, never()).saveGame(any());
+    
+        verify(entityManager, times(1)).createNativeQuery(anyString());
     }
 }
