@@ -117,11 +117,75 @@ export default function Board() {
   
     const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
     const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    
+    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
+    const boardMessage = useWebSocket(`/topic/game/${boardId}`);
+    //const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
 
-    const socketMessage = useWebSocket(
-      `/topic/game/${game?.id}`
-    );
+    useEffect(() => {
+      if(!boardMessage) return;
 
+      console.log("WS recibido:", boardMessage);
+      console.log("Keys del mensaje WS:", Object.keys(boardMessage));
+      const {action} = boardMessage;
+
+      switch(action){
+        case "CARD_PLACED":
+          handleWsCardPlaced(boardMessage);
+          break;
+
+        case "CARD_DESTROYED":
+          handleWsCardDestroyed(boardMessage);
+          break;
+        
+        default:
+          console.warn("WS action unrecognized:", action);
+      }
+    },[boardMessage]);
+
+    // Depuración usuarios duplicados
+    useEffect(() => {
+        console.log("activePlayers en Board:", activePlayers);
+    }, [activePlayers]);
+
+    useEffect(() => {
+      console.log("playerOrder:", playerOrder);
+    }, [playerOrder]);
+    /*useEffect(() => {
+      if(!gameMessage) return;
+      const { action } = gameMessage;
+      if(action === "TURN_CHANGED") setCurrentPlayer(gameMessage.nextPlayer);
+    }, [gameMessage]);
+  */
+    //Modularizar estas funciones
+    const handleWsCardPlaced = ({row, col, card, player})=>{
+      setBoardCells(prev => {
+        const next = prev.map(r => r.slice());
+        next[row][col] = {
+          ...card,
+          type: "tunnel",
+          owner: player,
+          placedAt: Date.now(),
+          occupied: true
+        };
+        return next;
+      });
+          addLog(`<b>${player}</b> placed a card at (${row}, ${col})`, "action");
+    }
+
+    const handleWsCardDestroyed = ({ row, col, player }) => {
+      setBoardCells(prev => {
+          const next = prev.map(r => r.slice());
+          next[row][col] = null;
+          return next;
+      });
+
+      addLog(`<b>${player}</b> destroyed a card at (${row}, ${col})`, "action");
+    };
+
+
+    // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
+    
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (processingAction.current) return;
     processingAction.current = true;
