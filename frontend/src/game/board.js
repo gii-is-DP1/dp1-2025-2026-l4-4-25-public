@@ -807,20 +807,31 @@ const activateCollapseMode = (card, cardIndex) => {
     }
 
     try {
-    
       const messages = await getmessagebychatId(chatId);
+      console.log('Mensajes obtenidos:', messages);
       
       if (Array.isArray(messages)) {
         const formattedMessages = messages.map(msg => {
+          // Extraer username de diferentes estructuras posibles
+          let author = 'Unknown';
           
-          
+          if (msg.activePlayer?.player?.user?.username) {
+            author = msg.activePlayer.player.user.username;
+          } else if (msg.activePlayer?.player?.username) {
+            author = msg.activePlayer.player.username;
+          } else if (msg.activePlayer?.username) {
+            author = msg.activePlayer.username;
+          } else if (typeof msg.activePlayer === 'string') {
+            author = msg.activePlayer;
+          }
           
           return {
-            author: msg.activePlayer?.player?.user?.username || msg.activePlayer?.player?.username || 'Unknown',
+            author: author,
             text: msg.content || ''
           };
         });
         
+        console.log('Mensajes formateados:', formattedMessages);
         setMessage(formattedMessages);
       }
     } catch (error) {
@@ -828,7 +839,7 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
- 
+  // Fetch inicial
   fetchChatMessages();
 
   // Polling cada 1 segundo
