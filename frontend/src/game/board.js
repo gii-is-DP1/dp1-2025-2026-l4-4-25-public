@@ -43,6 +43,7 @@ export default function Board() {
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState('1');
   const [currentPlayer, setCurrentPlayer] = useState();
+  console.log('Render Board. currentPlayer:', currentPlayer);
   const [cont, setCont] = useState(timeturn);
   const [gameLog, setGameLog] = useState([]);
   const [logData, setLogData] = useState(null);
@@ -86,6 +87,8 @@ export default function Board() {
   const hasPatchedBoardBusy = useRef(false);
 
   const boardGridRef = useRef(null);
+  const processingAction = useRef(false);
+  const isTurnChanging = useRef(false);
 
   // Hook personalizado para cargar datos del juego
   const {
@@ -120,100 +123,122 @@ export default function Board() {
     );
 
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
-    if (isSpectator) {
-      addPrivateLog("Spectators cannot place cards", "warning");
-      return;
-    }
+    if (processingAction.current) return;
+    processingAction.current = true;
 
-    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
-
-    if (loggedInUser.username !== currentPlayer) {
-      toast.warning("It's not your turn!");
-      return;
-    }
-
-    // If squareId is not provided, fetch it by coordinates
-    let actualSquareId = squareId;
-    if (!actualSquareId) {
-      const square = await getSquareByCoordinates(boardId, col, row);
-      if (square) {
-        actualSquareId = square.id;
-      } else {
-        toast.error('Could not find square at this position');
+    try {
+      if (isSpectator) {
+        addPrivateLog("Spectators cannot place cards", "warning");
         return;
       }
+
+      const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
+
+      if (loggedInUser.username !== currentPlayer) {
+        toast.warning("It's not your turn!");
+        return;
+      }
+      setCont(timeturn);
+
+      // If squareId is not provided, fetch it by coordinates
+      let actualSquareId = squareId;
+      if (!actualSquareId) {
+        const square = await getSquareByCoordinates(boardId, col, row);
+        if (square) {
+          actualSquareId = square.id;
+        } else {
+          toast.error('Could not find square at this position');
+          return;
+        }
+      }
+
+      patchSquare(actualSquareId, {
+        occupation: true,
+        card: card?.id || card,
+        board: boardId,
+      });
+
+      setBoardCells(prev => {
+        const next = prev.map(r => r.slice());
+        next[row][col] = {
+          ...prev[row][col],
+          ...card,
+          type: 'tunnel',
+          owner: loggedInUser?.username || 'unknown',
+          placedAt: Date.now(),
+          occupied: true,
+        };
+        return next;
+      });
+
+      if (window.removeCardAndDraw) {
+        window.removeCardAndDraw(cardIndex);
+      }
+      setDeckCount(prev => Math.max(0, prev - 1));
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      addColoredLog(
+        currentIndex,
+        currentPlayer,
+        `Placed a tunnel card in (${row}, ${col})`
+      );
+
+      toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
+      nextTurn();
+    } finally {
+      processingAction.current = false;
     }
-
-    patchSquare(actualSquareId, {
-      occupation: true,
-      card: card?.id || card,
-      board: boardId,
-    });
-
-    setBoardCells(prev => {
-      const next = prev.map(r => r.slice());
-      next[row][col] = {
-        ...prev[row][col],
-        ...card,
-        type: 'tunnel',
-        owner: loggedInUser?.username || 'unknown',
-        placedAt: Date.now(),
-        occupied: true,
-      };
-      return next;
-    });
-
-    if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(cardIndex);
-    }
-    setDeckCount(prev => Math.max(0, prev - 1));
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    addColoredLog(
-      currentIndex,
-      currentPlayer,
-      `Placed a tunnel card in (${row}, ${col})`
-    );
-
-    toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
-    nextTurn();
   };
 
 const handleActionCard = (card, targetPlayer, cardIndex) => {
-    handleActionCardUtil(card, targetPlayer, cardIndex, {
-      isSpectator,
-      loggedInUser,
-      currentPlayer,
-      playerTools,
-      setPlayerTools,
-      addLog,
-      addPrivateLog,
-      nextTurn,
-      setDeckCount
-    });
+    if (processingAction.current) return;
+    processingAction.current = true;
+    try {
+      setCont(timeturn);
+      handleActionCardUtil(card, targetPlayer, cardIndex, {
+        isSpectator,
+        loggedInUser,
+        currentPlayer,
+        playerTools,
+        setPlayerTools,
+        addLog,
+        addPrivateLog,
+        nextTurn,
+        setDeckCount
+      });
+    } finally {
+      processingAction.current = false;
+    }
   };
 
   const handleMapCard = (card, objectivePosition, cardIndex) => {
-    if (isSpectator) {
-      addPrivateLog("ℹ️ Spectators cannot use this", "warning");
-      return;}
+    if (processingAction.current) return;
+    processingAction.current = true;
+    try {
+      if (isSpectator) {
+        addPrivateLog("ℹ️ Spectators cannot use this", "warning");
+        return;}
+      setCont(timeturn);
 
-    const objectiveCardType = objectiveCards[objectivePosition];
-    console.log(`🔍 Revealing objective at ${objectivePosition}: ${objectiveCardType}`);
-    setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); // Solo para el jugador que usa la carta
-    toast.info(`🔍 Revealing objective... Look at the board!`);
-    setTimeout(() => {
-      setRevealedObjective(null);
-      addPrivateLog('🔍 Objective card hidden again', 'info');
-    }, 5000);
+      const objectiveCardType = objectiveCards[objectivePosition];
+      console.log(`🔍 Revealing objective at ${objectivePosition}: ${objectiveCardType}`);
+      setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); // Solo para el jugador que usa la carta
+      toast.info(`🔍 Revealing objective... Look at the board!`);
+      setTimeout(() => {
+        setRevealedObjective(null);
+        addPrivateLog('🔍 Objective card hidden again', 'info');
+      }, 5000);
 
-    if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(cardIndex);}
+      if (window.removeCardAndDraw) {
+        window.removeCardAndDraw(cardIndex);}
 
-    setDeckCount(prev => Math.max(0, prev - 1));
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    addColoredLog(currentIndex,currentPlayer,`🗺️ Used a map card to reveal an objective`);
-    
-    nextTurn();
+      setDeckCount(prev => Math.max(0, prev - 1));
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      addColoredLog(currentIndex,currentPlayer,`🗺️ Used a map card to reveal an objective`);
+      
+      nextTurn();
+    } finally {
+      processingAction.current = false;
+    }
   };
 
   const activateCollapseMode = (card, cardIndex) => {
@@ -228,15 +253,22 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       return;
     }
     
+    if (processingAction.current) return;
+    processingAction.current = true;
+
     const cell = boardCells[row][col];
     console.log('Contenido:', cell);
     
     if (!cell || cell.type === 'start' || cell.type === 'objective') { // No permitir destruir cartas iniciales u objetivos
+      processingAction.current = false;
       return;}
     
     if (cell.type !== 'tunnel') {
       toast.warning('🔴You can only destroy tunnel cards');
+      processingAction.current = false;
       return;}
+
+    setCont(timeturn);
     setDestroyingCell({ row, col });
     setTimeout(() => {
       setBoardCells(prev => {
@@ -256,7 +288,9 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       setCollapseMode({ active: false, card: null, cardIndex: null });
       setDestroyingCell(null);
       nextTurn();
-    }, 800);};
+      processingAction.current = false;
+    }, 800);
+  };
 
   useEffect(() => {
     window.activateCollapseMode = activateCollapseMode;
@@ -280,10 +314,21 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
   };
 
   // Función para cambiar de turno
+  // Función para cambiar de turno
   const nextTurn = () => {
+    if (isTurnChanging.current) return;
+    isTurnChanging.current = true;
+    setTimeout(() => { isTurnChanging.current = false; }, 500);
+
+    console.log('nextTurn called. playerOrder:', playerOrder);
     if (playerOrder.length === 0) return;
+    
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    console.log('Current player:', currentPlayer, 'Index:', currentIndex);
+    
     const nextIndex = (currentIndex + 1) % playerOrder.length;
+    console.log('Next index:', nextIndex, 'Next player:', playerOrder[nextIndex].username);
+    
     setCurrentPlayer(playerOrder[nextIndex].username);
     setCont(timeturn);
     const nextName = playerOrder[nextIndex].username;
@@ -292,28 +337,36 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
   };
 
   // Función para descartar carta
+  // Función para descartar carta
   const handleDiscard = () => {
-    if (isSpectator) {
-      addPrivateLog("ℹ️ Spectators cannot discard cards", "warning");
-      return;
-    }
+    if (processingAction.current) return;
+    processingAction.current = true;
+    try {
+      if (isSpectator) {
+        addPrivateLog("ℹ️ Spectators cannot discard cards", "warning");
+        return;
+      }
 
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    if (loggedInUser.username !== currentPlayer) {
-      toast.warning("It's not your turn!");
-      return;
-    }
-    if (window.discardSelectedCard && window.discardSelectedCard()) {
-      setDeckCount(p => Math.max(0, p - 1));
-      nextTurn();
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      if (loggedInUser.username !== currentPlayer) {
+        toast.warning("It's not your turn!");
+        return;
+      }
       setCont(timeturn);
-      addColoredLog(
-        currentIndex,
-        playerOrder[currentIndex].username,
-        `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
-      toast.success('Card discarded successfully!');
-    } else {
-      toast.warning("Please select a card to discard (right-click in the card)");}
+      if (window.discardSelectedCard && window.discardSelectedCard()) {
+        setDeckCount(p => Math.max(0, p - 1));
+        nextTurn();
+        setCont(timeturn);
+        addColoredLog(
+          currentIndex,
+          playerOrder[currentIndex].username,
+          `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
+        toast.success('Card discarded successfully!');
+      } else {
+        toast.warning("Please select a card to discard (right-click in the card)");}
+    } finally {
+      processingAction.current = false;
+    }
   };
 
   // Función para enviar mensajes
@@ -456,10 +509,18 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
   }, [round]);
 
   useEffect(() => {
+    console.log('useEffect [activePlayers] triggered. activePlayers:', activePlayers);
     if (activePlayers.length > 1) {
       const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
       setPlayerOrder(res);
-      setCurrentPlayer(res[0].username);
+      
+      setCurrentPlayer(prev => {
+        if (prev && res.find(p => p.username === prev)) {
+          return prev;
+        }
+        return res[0].username;
+      });
+      
       console.log('ORDEN ACTUALIZADO', res);
     }
   }, [activePlayers]);
