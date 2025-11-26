@@ -3,8 +3,11 @@ package es.us.dp1.l4_04_24_25.saboteur.game;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.time.Duration;
+
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +15,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -160,5 +165,90 @@ class GameServiceTests {
         Integer activePlayerId = 4; // existe en data.sql es el Carlosbox2k
         List<Game> games = (List<Game>) this.gameService.findAllByActivePlayerId(activePlayerId);
         assertNotNull(games);
+    }
+
+    
+    @Test
+    void shouldCheckCanAddPlayerLogic() {
+        
+        Game game = new Game();
+        game.setMaxPlayers(2);
+        game.setActivePlayers(new ArrayList<>());
+
+        assertTrue(game.canAddPlayer());
+
+        game.getActivePlayers().add(new ActivePlayer());
+        assertTrue(game.canAddPlayer()); // 1 < 2
+
+        game.getActivePlayers().add(new ActivePlayer());
+        assertFalse(game.canAddPlayer()); 
+    }
+
+    @Test
+    void shouldAddRoundsCorrectly() {
+        
+        Game game = new Game();
+        game.setRounds(new ArrayList<>()); 
+
+        Round r1 = new Round();
+        game.agregarRonda(r1);
+
+        assertEquals(1, game.getRounds().size());
+        assertEquals(game, r1.getGame()); 
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingTooManyRounds() {
+        
+        Game game = new Game();
+        game.setRounds(new ArrayList<>());
+
+        game.agregarRonda(new Round());
+        game.agregarRonda(new Round());
+        game.agregarRonda(new Round());
+        
+        
+        Round r4 = new Round();
+        
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            game.agregarRonda(r4);
+        });
+
+        assertEquals("Una partida no puede tener más de 3 rondas", exception.getMessage());
+    }
+
+    @Test
+    @Transactional
+    void shouldHandleDurationConverter() {
+        
+        Game newGame = new Game();
+        newGame.setLink("duration-test-link");
+        newGame.setPrivate(false);
+        newGame.setMaxPlayers(4);
+        newGame.setGameStatus(gameStatus.CREATED);
+       
+        Duration duration = Duration.ofMinutes(5); 
+        newGame.setTime(duration);
+
+        Game savedGame = gameService.saveGame(newGame);
+        
+        Game retrievedGame = gameService.findGame(savedGame.getId());
+        
+        assertEquals(300, retrievedGame.getTime().getSeconds());
+        assertEquals(duration, retrievedGame.getTime());
+    }
+    
+    @Test
+    void shouldHandleDurationConverterNulls() {
+       
+        DurationSecondsConverter converter = new DurationSecondsConverter();
+     
+        assertNull(converter.convertToDatabaseColumn(null));
+     
+        assertEquals(60L, converter.convertToDatabaseColumn(Duration.ofMinutes(1)));
+     
+        assertNull(converter.convertToEntityAttribute(null));
+      
+        assertEquals(Duration.ofSeconds(60), converter.convertToEntityAttribute(60L));
     }
 }

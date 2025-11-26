@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.BeanUtils;
 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import io.qameta.allure.Epic;
@@ -150,6 +151,92 @@ class UserServiceTests {
 		int finalCount = ((List<UserDTO>) this.userService.findAll()).size();
 		assertEquals(count + 1, finalCount);
 		}
+
+	@Test
+    @Transactional
+    void shouldUpdateUserPassword() {
+        
+        int idToUpdate = 1;
+        User userToUpdate = this.userService.findUser(idToUpdate);
+        String oldPassword = userToUpdate.getPassword();
+        
+        userToUpdate.setPassword("newSuperSecretPassword");
+        
+        User updatedUser = userService.updateUser(userToUpdate, idToUpdate);
+       
+        assertNotEquals(oldPassword, updatedUser.getPassword());
+    }
+
+    @Test
+    @Transactional
+    void shouldNotUpdateUserPasswordIfEmpty() {
+        int idToUpdate = 1;
+        
+        User originalUser = this.userService.findUser(idToUpdate);
+        String oldPassword = originalUser.getPassword();
+    
+        User inputUser = new User();
+        BeanUtils.copyProperties(originalUser, inputUser);
+        inputUser.setPassword(""); 
+      
+        User updatedUser = userService.updateUser(inputUser, idToUpdate);
+      
+        assertEquals(oldPassword, updatedUser.getPassword());
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdateUserAuthority() {
+        
+        int idToUpdate = 1;
+        User userToUpdate = this.userService.findUser(idToUpdate);
+      
+        Authorities adminAuth = authService.findByAuthority("ADMIN");
+        userToUpdate.setAuthority(adminAuth);
+        
+        User updatedUser = userService.updateUser(userToUpdate, idToUpdate);
+        
+        assertEquals("ADMIN", updatedUser.getAuthority().getAuthority());
+    }
+
+    @Test
+    @Transactional
+    void shouldSaveUserAsAdmin() {
+        
+        User adminUser = new User();
+        adminUser.setUsername("AdminTest");
+        adminUser.setName("Admin Name");
+        adminUser.setPassword("pass");
+        adminUser.setBirthDate("2000-01-01");
+        adminUser.setEmail("admin@test.com");
+        adminUser.setImage("img.png");
+        adminUser.setAuthority(authService.findByAuthority("ADMIN"));
+
+        User saved = userService.saveUser(adminUser);
+      
+        assertNotNull(saved.getId());
+        assertEquals("ADMIN", saved.getAuthority().getAuthority());
+    }
+
+    @Test
+    @Transactional
+    void shouldSaveUserAsPlayerDefault() {
+        
+        User playerUser = new User();
+        playerUser.setUsername("PlayerTestNew");
+        playerUser.setName("Player Name");
+        playerUser.setPassword("pass");
+        playerUser.setBirthDate("2000-01-01");
+        playerUser.setEmail("player@test.com");
+        playerUser.setImage("img.png");
+        
+        playerUser.setAuthority(authService.findByAuthority("PLAYER"));
+
+        User saved = userService.saveUser(playerUser);
+        
+        assertNotNull(saved.getId());
+        assertEquals("PLAYER", saved.getAuthority().getAuthority());
+    }
 
 	/*
 	@Test
