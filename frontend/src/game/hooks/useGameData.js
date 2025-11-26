@@ -405,6 +405,28 @@ export const useGameData = (game) => {
     }
   };
 
+  const getmessagebychatId = async (chatId) => {
+    try {
+      const response = await fetch(`/api/v1/messages/byChatId?chatId=${chatId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const messages = await response.json();
+        return messages;
+      } else {
+        console.error('Respuesta no OK al obtener mensajes por chatId:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener mensajes por chatId:', error);
+      return null;
+    }
+  };
+
   return {
     activePlayers,
     chat,
@@ -426,7 +448,8 @@ export const useGameData = (game) => {
     getBoard,
     getSquareByCoordinates,
     getLog,
-    patchLog
+    patchLog,
+    getmessagebychatId
   };
 };
   

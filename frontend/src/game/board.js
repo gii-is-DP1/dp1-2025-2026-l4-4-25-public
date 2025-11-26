@@ -116,7 +116,8 @@ export default function Board() {
     getBoard,
     getSquareByCoordinates,
     getLog,
-    patchLog
+    patchLog,
+    getmessagebychatId
   } = useGameData(game);
 
   
@@ -416,13 +417,13 @@ const activateCollapseMode = (card, cardIndex) => {
 
 
   // Función para descartar carta
-  // Función para descartar carta
   const handleDiscard = () => {
     if (processingAction.current) return;
     processingAction.current = true;
     try {
       if (isSpectator) {
-        addPrivateLog("ℹ️ Spectators cannot discard cards", "warning");
+        toast.info("🔍 Spectators cannot discard cards");
+        //addPrivateLog("ℹ️ Spectators cannot discard cards", "warning");
         return;
       }
 
@@ -531,8 +532,6 @@ const activateCollapseMode = (card, cardIndex) => {
     const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
     console.log('Log ID para persistencia:', logId);
     const roundId = typeof round?.id === 'number' ? round.id : round?.round?.id;
-    const chatId = chatIdFromState();
-    const activePlayerUsername = resolveActivePlayerUsername();
 
     const nextMessages = [...(logData?.messages || []), msg];
 
@@ -543,10 +542,6 @@ const activateCollapseMode = (card, cardIndex) => {
         messages: nextMessages
       }));
       patchLog(logId, { round: roundId, messages: nextMessages });
-    }
-
-    if (chatId && activePlayerUsername) {
-      postMessage(msg, activePlayerUsername, chatId);
     }
   };
 
@@ -803,6 +798,45 @@ const activateCollapseMode = (card, cardIndex) => {
     console.log("he hecho este patch")
   }, [boardCells, round]);
 
+  useEffect(() => {
+  const fetchChatMessages = async () => {
+    const chatId = chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
+    
+    if (!chatId) {
+      return;
+    }
+
+    try {
+    
+      const messages = await getmessagebychatId(chatId);
+      
+      if (Array.isArray(messages)) {
+        const formattedMessages = messages.map(msg => {
+          
+          
+          
+          return {
+            author: msg.activePlayer?.player?.user?.username || msg.activePlayer?.player?.username || 'Unknown',
+            text: msg.content || ''
+          };
+        });
+        
+        setMessage(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+    }
+  };
+
+ 
+  fetchChatMessages();
+
+  // Polling cada 1 segundo
+  const pollInterval = setInterval(fetchChatMessages, 1000);
+
+  // Cleanup al desmontar
+  return () => clearInterval(pollInterval);
+}, [chat, game]); 
 
 
   // Render 
