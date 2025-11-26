@@ -87,6 +87,9 @@ export default function Board() {
   const hasPatchedBoardBusy = useRef(false);
   const lastLoggedTurn = useRef(null);
   const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
+  const lastObjectiveHideLog = useRef(0);
+  const lastCollapseLog = useRef(0);
+  const seenPrivateMessages = useRef(new Set());
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
@@ -192,10 +195,7 @@ export default function Board() {
           next[row][col] = null;
           return next;
       });
-
-      addLog(`<b>${player}</b> destroyed a card at (${row}, ${col})`, "action");
     };
-
 
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
     
@@ -295,7 +295,11 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       toast.info(`🔍 Revealing objective... Look at the board!`);
       setTimeout(() => {
         setRevealedObjective(null);
-        addPrivateLog('🔍 Objective card hidden again', 'info');
+        const now = Date.now();
+        if (now - lastObjectiveHideLog.current > 2000) {
+          addPrivateLog('🔍 Objective card hidden again', 'info');
+          lastObjectiveHideLog.current = now;
+        }
       }, 5000);
 
       if (window.removeCardAndDraw) {
@@ -311,10 +315,14 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
     }
   };
 
-  const activateCollapseMode = (card, cardIndex) => {
+const activateCollapseMode = (card, cardIndex) => {
     setCollapseMode({ active: true, card, cardIndex });
     toast.info('💣Click on a tunnel card to destroy it');
-    addPrivateLog('💣Click on a tunnel card in the board to destroy it', 'info');
+    const now = Date.now();
+    if (now - lastCollapseLog.current > 2000) {
+      addPrivateLog('💣Click on a tunnel card in the board to destroy it', 'info');
+      lastCollapseLog.current = now;
+    }
   };
 
   const handleCellClick = (row, col) => {
@@ -374,16 +382,14 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
     appendAndPersistLog(msg, type);
   };
 
-  const addPrivateLog = (msg, type = "info") => {
-    setPrivateLog(prev => [...prev, { msg, type }]);
-  };
+  // Private log deshabilitado
+  const addPrivateLog = () => {};
 
   const addColoredLog = (playerIndex, playerName, action) => {
     const coloredName = `<span class="player${playerIndex + 1}">${playerName}</span>`;
     addLog(`${coloredName} ${action}`, "action");
   };
 
-  // Funci?n para cambiar de turno
   // Funci?n para cambiar de turno
   const nextTurn = ({ force = false } = {}) => {
     if (isTurnChanging.current && !force) return false;
