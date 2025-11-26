@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.achievement;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -8,12 +9,16 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +40,7 @@ import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementService;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Metric;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
@@ -82,6 +88,8 @@ class AchievementRestControllerTests {
         achievement.setThreshold(50);
         achievement.setMetric(Metric.BUILDED_PATHS);
         achievement.setCreator(creator);
+        
+        achievement.setPlayers(new ArrayList<>());
     }
 
     @Test
@@ -172,7 +180,7 @@ class AchievementRestControllerTests {
     @Test
     @WithMockUser(value = "admin")
     void shouldDeleteAchievement() throws Exception {
-       
+        
         when(achievementService.findAchievement(TEST_ID)).thenReturn(achievement);
         doNothing().when(achievementService).deleteAchievement(TEST_ID);
 
@@ -192,5 +200,118 @@ class AchievementRestControllerTests {
                 .param("tittle", TEST_TITTLE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tittle").value(TEST_TITTLE));
+    }
+
+    @Test
+    @WithMockUser(value = "admin")
+    void shouldPatchAchievementPlayers() throws Exception {
+        
+        Player oldPlayer = new Player(); 
+        oldPlayer.setUsername("OldPlayer"); 
+        oldPlayer.setId(10);
+        oldPlayer.setAccquiredAchievements(new java.util.ArrayList<>(List.of(achievement)));
+        achievement.getPlayers().add(oldPlayer);
+
+        String newPlayerName = "NewPlayer";
+        Player newPlayer = new Player(); 
+        newPlayer.setUsername(newPlayerName); 
+        newPlayer.setId(20);
+        newPlayer.setAccquiredAchievements(new ArrayList<>());
+      
+        when(achievementService.findAchievement(TEST_ID)).thenReturn(achievement);
+        when(playerService.findByUsername(newPlayerName)).thenReturn(newPlayer);
+      
+        when(playerService.patchPlayerAchievement(eq(20), any())).thenReturn(newPlayer);
+      
+        when(achievementService.updateAchievement(any(Achievement.class), eq(TEST_ID))).thenReturn(achievement);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("players", List.of(newPlayerName));
+
+        mockMvc.perform(patch("/api/v1/achievements/{id}", TEST_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updates)))
+                .andExpect(status().isOk());
+
+        verify(playerService).savePlayer(oldPlayer);
+        
+        verify(playerService).patchPlayerAchievement(eq(20), any());
+    }
+
+    @Test
+    @WithMockUser(value = "admin")
+    void shouldFailCreateDuplicateAchievement() throws Exception {
+        
+        when(achievementService.existsByTittle(any())).thenReturn(true);
+        
+        String json = objectMapper.writeValueAsString(achievement);
+
+        mockMvc.perform(post("/api/v1/achievements")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedAchievementException));
+    }
+
+    @Test
+    @WithMockUser(value = "admin")
+    void shouldPatchSimpleFields() throws Exception {
+        
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("description", "Patched Desc");
+
+        when(achievementService.findAchievement(TEST_ID)).thenReturn(achievement);
+        when(achievementService.updateAchievement(any(Achievement.class), eq(TEST_ID))).thenReturn(achievement);
+
+        mockMvc.perform(patch("/api/v1/achievements/{id}", TEST_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updates)))
+                .andExpect(status().isOk());
+        
+        verify(achievementService).updateAchievement(any(Achievement.class), eq(TEST_ID));
+    }
+
+    @Test
+    @WithMockUser(value = "admin")
+    void shouldPatchRemoveAllPlayers() throws Exception {
+        
+        Player oldPlayer = new Player(); 
+        oldPlayer.setUsername("OldPlayer"); 
+        oldPlayer.setId(10);
+        oldPlayer.setAccquiredAchievements(new java.util.ArrayList<>(List.of(achievement)));
+        achievement.getPlayers().add(oldPlayer);
+
+        when(achievementService.findAchievement(TEST_ID)).thenReturn(achievement);
+        
+        when(achievementService.updateAchievement(any(Achievement.class), eq(TEST_ID))).thenReturn(achievement);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("players", new ArrayList<>());
+
+        mockMvc.perform(patch("/api/v1/achievements/{id}", TEST_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updates)))
+                .andExpect(status().isOk());
+
+        verify(playerService).savePlayer(oldPlayer);
+    }
+
+    @Test
+    @WithMockUser(value = "admin")
+    void shouldFailUpdateIdMismatch() throws Exception {
+        when(achievementService.findAchievement(TEST_ID)).thenReturn(achievement);
+
+        achievement.setId(999);
+        String json = objectMapper.writeValueAsString(achievement);
+
+        mockMvc.perform(put("/api/v1/achievements/{id}", TEST_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.BadRequestException));
     }
 }
