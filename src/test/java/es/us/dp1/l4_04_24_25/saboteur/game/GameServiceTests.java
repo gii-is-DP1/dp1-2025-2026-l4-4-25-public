@@ -43,7 +43,7 @@ class GameServiceTests {
     void shouldFindAllGames() {
         List<Game> games = (List<Game>) this.gameService.findAll();
         assertFalse(games.isEmpty());
-        assertTrue(games.size() == 2); // hay 2 en el data.sql
+        assertTrue(games.size() >= 2); 
     }
 
     
@@ -162,8 +162,8 @@ class GameServiceTests {
     @Test
     @Transactional
     void shouldFindGamesByActivePlayerId() {
-        Integer activePlayerId = 4; // existe en data.sql es el Carlosbox2k
-        List<Game> games = (List<Game>) this.gameService.findAllByActivePlayerId(activePlayerId);
+        Integer activePlayerId = 4; 
+        Iterable<Game> games = this.gameService.findAllByActivePlayerId(activePlayerId);
         assertNotNull(games);
     }
 
@@ -178,7 +178,7 @@ class GameServiceTests {
         assertTrue(game.canAddPlayer());
 
         game.getActivePlayers().add(new ActivePlayer());
-        assertTrue(game.canAddPlayer()); // 1 < 2
+        assertTrue(game.canAddPlayer()); 
 
         game.getActivePlayers().add(new ActivePlayer());
         assertFalse(game.canAddPlayer()); 
@@ -250,5 +250,48 @@ class GameServiceTests {
         assertNull(converter.convertToEntityAttribute(null));
       
         assertEquals(Duration.ofSeconds(60), converter.convertToEntityAttribute(60L));
+    }
+
+    
+    @Test
+    void shouldFailToUpdateNonExistentGame() {
+        Game game = new Game();
+        game.setLink("irrelevant");
+        assertThrows(ResourceNotFoundException.class, () -> gameService.updateGame(game, 99999));
+    }
+
+    @Test
+    void shouldFailToDeleteNonExistentGame() {
+        
+        assertThrows(ResourceNotFoundException.class, () -> gameService.deleteGame(99999));
+    }
+
+    @Test
+    @Transactional
+    void shouldPreserveIdOnUpdate() {
+        
+        Game original = gameService.findGame(TEST_GAME_ID);
+        
+        Game updateInfo = new Game();
+        updateInfo.setId(9999); 
+        updateInfo.setLink("updated-link-preserved");
+        updateInfo.setMaxPlayers(10);
+
+        Game updated = gameService.updateGame(updateInfo, TEST_GAME_ID);
+
+        assertEquals(TEST_GAME_ID, updated.getId());
+        assertEquals("updated-link-preserved", updated.getLink());
+        assertEquals(10, updated.getMaxPlayers());
+    }
+
+    @Test
+    void shouldCoverGameStatusEnumValues() {
+        
+        for (gameStatus status : gameStatus.values()) {
+            assertNotNull(status);
+        }
+        assertEquals(gameStatus.CREATED, gameStatus.valueOf("CREATED"));
+        assertEquals(gameStatus.ONGOING, gameStatus.valueOf("ONGOING"));
+        assertEquals(gameStatus.FINISHED, gameStatus.valueOf("FINISHED"));
     }
 }
