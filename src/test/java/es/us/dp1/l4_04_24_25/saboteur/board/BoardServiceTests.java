@@ -139,4 +139,77 @@ class BoardServiceTests {
         assertEquals(TEST_BASE, boards.get(0).getBase());
         assertEquals(TEST_HEIGHT, boards.get(0).getHeight());
     }
+
+
+    @Test
+    void shouldFindAllBoards() {
+        
+        when(boardRepository.findAll()).thenReturn(List.of(testBoard));
+        Iterable<Board> boards = boardService.findAll();
+        assertNotNull(boards);
+        assertEquals(testBoard, boards.iterator().next());
+    }
+
+    @Test
+    void shouldDeleteBoardWithNonExistingId() {
+        
+        when(boardRepository.findById(999)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> boardService.deleteBoard(999));
+    }
+    
+    @Test
+    void shouldReturnEmptyListWhenFindByBaseNotFound() {
+        when(boardRepository.findByBase(999)).thenReturn(List.of());
+        List<Board> result = boardService.findByBase(999);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenFindByHeightNotFound() {
+        when(boardRepository.findByHeight(999)).thenReturn(List.of());
+        List<Board> result = boardService.findByHeigth(999);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenFindByBaseAndHeightNotFound() {
+        when(boardRepository.findByBaseAndHeight(999, 999)).thenReturn(List.of());
+        List<Board> result = boardService.findByBaseAndHeigth(999, 999);
+        assertEquals(0, result.size());
+    }
+
+    
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingNonExistingBoard() {
+        
+        when(boardRepository.findById(999)).thenReturn(Optional.empty());
+        
+        Board dummyBoard = new Board();
+        assertThrows(ResourceNotFoundException.class, () -> boardService.updateBoard(dummyBoard, 999));
+    }
+
+    @Test
+    void shouldPreserveIdOnUpdate() {
+       
+        when(boardRepository.findById(TEST_BOARD_ID)).thenReturn(Optional.of(testBoard));
+        when(boardRepository.save(any(Board.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Board malformedUpdate = new Board();
+        malformedUpdate.setId(9999); 
+        malformedUpdate.setBase(20);
+
+        Board updated = boardService.updateBoard(malformedUpdate, TEST_BOARD_ID);
+
+        assertEquals(TEST_BOARD_ID, updated.getId()); 
+        assertEquals(20, updated.getBase()); 
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoBoardsFoundInFindAll() {
+        
+        when(boardRepository.findAll()).thenReturn(List.of());
+        Iterable<Board> result = boardService.findAll();
+        assertEquals(0, ((List<Board>) result).size());
+    }
 }
