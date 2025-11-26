@@ -85,6 +85,8 @@ export default function Board() {
   });
 
   const hasPatchedBoardBusy = useRef(false);
+  const lastLoggedTurn = useRef(null);
+  const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
@@ -159,6 +161,17 @@ export default function Board() {
   */
     //Modularizar estas funciones
     const handleWsCardPlaced = ({row, col, card, player})=>{
+      const actor = player || currentPlayer || 'unknown';
+      const now = Date.now();
+      const sameAsLast =
+        lastPlacedLog.current &&
+        lastPlacedLog.current.row === row &&
+        lastPlacedLog.current.col === col &&
+        now - lastPlacedLog.current.ts < 1500;
+
+      if (sameAsLast) return;
+      lastPlacedLog.current = { player: actor, row, col, ts: now };
+
       setBoardCells(prev => {
         const next = prev.map(r => r.slice());
         next[row][col] = {
@@ -170,7 +183,7 @@ export default function Board() {
         };
         return next;
       });
-          addLog(`<b>${player}</b> placed a card at (${row}, ${col})`, "action");
+      addLog(`<b>${actor}</b> placed a card at (${row}, ${col})`, "action");
     }
 
     const handleWsCardDestroyed = ({ row, col, player }) => {
@@ -239,13 +252,6 @@ export default function Board() {
         window.removeCardAndDraw(cardIndex);
       }
       setDeckCount(prev => Math.max(0, prev - 1));
-      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-      addColoredLog(
-        currentIndex,
-        currentPlayer,
-        `Placed a tunnel card in (${row}, ${col})`
-      );
-
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
       nextTurn();
     } finally {
@@ -377,28 +383,31 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
     addLog(`${coloredName} ${action}`, "action");
   };
 
-  // Función para cambiar de turno
-  // Función para cambiar de turno
-  const nextTurn = () => {
-    if (isTurnChanging.current) return;
+  // Funci?n para cambiar de turno
+  // Funci?n para cambiar de turno
+  const nextTurn = ({ force = false } = {}) => {
+    if (isTurnChanging.current && !force) return false;
+    if (playerOrder.length === 0) return false;
+
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = (safeCurrentIndex + 1) % playerOrder.length;
+    const nextName = playerOrder[nextIndex].username;
+    const nextClass = `player${nextIndex + 1}`;
+
     isTurnChanging.current = true;
     setTimeout(() => { isTurnChanging.current = false; }, 500);
 
-    console.log('nextTurn called. playerOrder:', playerOrder);
-    if (playerOrder.length === 0) return;
-    
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    console.log('Current player:', currentPlayer, 'Index:', currentIndex);
-    
-    const nextIndex = (currentIndex + 1) % playerOrder.length;
-    console.log('Next index:', nextIndex, 'Next player:', playerOrder[nextIndex].username);
-    
-    setCurrentPlayer(playerOrder[nextIndex].username);
+    setCurrentPlayer(nextName);
     setCont(timeturn);
-    const nextName = playerOrder[nextIndex].username;
-    const nextClass = `player${nextIndex + 1}`;
-    addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
+    if (lastLoggedTurn.current !== nextName) {
+      addLog(`Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
+      lastLoggedTurn.current = nextName;
+    }
+    return true;
   };
+
+
 
   // Función para descartar carta
   // Función para descartar carta
@@ -655,8 +664,8 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
     const time = setInterval(() => {
       setCont(p => {
         if (p <= 1) {
-          nextTurn();
-          return timeturn;
+          const changed = nextTurn({ force: true });
+          return changed ? timeturn : 0;
         }
         return p - 1;
       });
