@@ -14,7 +14,9 @@ INSERT INTO chat (id) VALUES (2);
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 100, 10, 0, 0, 0, false, 5, 3);
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (5, 0, 0, 0, 0, 0, false, 5, 3);
 
+--Requests por defecto
 
+INSERT INTO request(id, status, sender_id, receiver_id) VALUES (1, 'PENDING', 4, 5);
 
 INSERT INTO deck (id) VALUES (1);
 INSERT INTO deck (id) VALUES (2);

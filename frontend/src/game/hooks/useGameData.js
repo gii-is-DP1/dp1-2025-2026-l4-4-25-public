@@ -11,6 +11,7 @@ export const useGameData = (game) => {
   const [loggedActivePlayer, setLoggedActivePlayer] = useState(null);
   const [ListCards, setListCards] = useState([]);
   const [deck, setDeck] = useState();
+  const [round, setRound] = useState();
 
   const fetchPlayerByUsername = async (username) => {
     try {
@@ -244,6 +245,165 @@ export const useGameData = (game) => {
     }
   };
 
+  const squaresById = async (id) => {
+    try {
+      const response = await fetch(`/api/v1/squares/${id}`, { 
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error('Respuesta no OK al obtener square:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener square:', error);
+      return null;
+    }
+  };
+
+  const patchSquare = async (squareId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/squares/${squareId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      }); 
+      if (response.ok) {
+        const updatedSquare = await response.json();
+        return updatedSquare;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del square:', error);
+      return null;
+    }
+  };
+
+  const pactchBoard = async (boardId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      }); 
+      if (response.ok) {
+        const updatedBoard = await response.json();
+        return updatedBoard;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del board:', error);
+      return null;
+    }
+  };
+
+  const getBoard = async (boardId) => { 
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+      }); 
+      if (response.ok) {
+        const boardData = await response.json();
+        return boardData;
+      } else {
+        console.error('Respuesta no OK al obtener board:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener board:', error);
+      return null;
+    }
+  }
+
+  const getSquareByCoordinates = async (boardId, coordinateX, coordinateY) => {
+    try {
+      const response = await fetch(
+        `/api/v1/squares/byBoardAndCoordinates?boardId=${boardId}&coordinateX=${coordinateX}&coordinateY=${coordinateY}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwt}`
+          },
+        }
+      );
+      if (response.ok) {
+        const square = await response.json();
+        return square;
+      } else {
+        console.error('Respuesta no OK al obtener square por coordenadas:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener square por coordenadas:', error);
+      return null;
+    }
+  }
+
+  const getLog = async (logId) => { 
+    try {
+      const response = await fetch(`/api/v1/logs/${logId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+      }); 
+      if (response.ok) {
+        const logData = await response.json();
+        return logData;
+      } else {
+        console.error('Respuesta no OK al obtener log:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener log:', error);
+      return null;
+    }
+  }
+
+  const patchLog = async (logId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/logs/${logId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      }); 
+      if (response.ok) {
+        const updatedLog = await response.json();
+        return updatedLog;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del log:', error);
+      return null;
+    }
+  };
 
   return {
     activePlayers,
@@ -260,6 +420,13 @@ export const useGameData = (game) => {
     patchDeck,
     findActivePlayerUsername,
     fetchActivePlayerByUsername,
+    squaresById,
+    patchSquare,
+    pactchBoard,
+    getBoard,
+    getSquareByCoordinates,
+    getLog,
+    patchLog
   };
 };
   

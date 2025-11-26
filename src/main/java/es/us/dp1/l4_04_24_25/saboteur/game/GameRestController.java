@@ -178,13 +178,38 @@ class GameRestController {
     }
 
     Game gamePatched = objectMapper.updateValue(game, updates);
-    gameService.updateGame(gamePatched, id);
+    Game savedGame = gameService.updateGame(gamePatched, id);
 
-    if (updates.containsKey("gameStatus") && updates.get("gameStatus").equals("ONGOING")) {
-        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gamePatched);
+    System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
+    if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
+
+        System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+
+        // 1. Obtener la ronda actual
+        List<Round> rounds = roundService.findByGameId(id);
+
+        if (rounds.isEmpty()) {
+            System.out.println(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
+        }
+
+        Round currentRound = rounds.get(rounds.size() - 1);
+
+        // 2. Cargar el game completo
+        Game fullGame = gameService.findGame(id);
+
+        // 3. Montar payload explícito
+        Map<String, Object> payload = Map.of(
+            "game", fullGame,
+            "round", currentRound
+        );
+
+        System.out.println(">>> ENVIANDO PAYLOAD AL SOCKET:");
+        System.out.println(payload);
+
+        messagingTemplate.convertAndSend("/topic/game/" + id, payload);
     }
 
-    return new ResponseEntity<>(gamePatched, HttpStatus.OK);
+    return new ResponseEntity<>(savedGame, HttpStatus.OK);
 }
 
     @DeleteMapping(value = "{gameId}")

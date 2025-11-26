@@ -32,6 +32,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 
 @RestController
 @RequestMapping("/api/v1/squares")
@@ -41,14 +43,16 @@ public class SquareRestController {
     private final SquareService squareService;
     private final BoardService boardService;
     private final ObjectMapper objectMapper;
-    private final CardService cardService; 
+    private final CardService cardService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public SquareRestController(SquareService squareService, BoardService boardService, ObjectMapper objectMapper, CardService cardService) {
+    public SquareRestController(SquareService squareService, BoardService boardService, ObjectMapper objectMapper, CardService cardService, SimpMessagingTemplate messagingTemplate) {
         this.squareService = squareService;
         this.boardService = boardService;
         this.objectMapper = objectMapper;
         this.cardService = cardService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -113,10 +117,26 @@ public class SquareRestController {
             Integer cardId = (Integer)updates.get("card");
             Card card = cardService.findCard(cardId);
             square.setCard(card);
+            square.setOccupation(true);
         }
         Square squarePatched = objectMapper.updateValue(square, updates);
 
         squareService.saveSquare(squarePatched);
+
+        // ENVIAR DATOS AL CANAL WEBSOCKET
+        Board board = squarePatched.getBoard();
+        Integer boardId = board.getId();
+
+        Map<String,Object> payload = Map.of(
+            "action", "CARD_PLACED",
+            "row", squarePatched.getCoordinateY(),
+            "col", squarePatched.getCoordinateX(),
+            "card", squarePatched.getCard(),
+            "squareId", squarePatched.getId()
+        );
+
+        messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
+
         return new ResponseEntity<>(squarePatched,HttpStatus.OK);
     }
 
@@ -147,6 +167,16 @@ public class SquareRestController {
         @RequestParam Integer coordinateX, 
         @RequestParam Integer coordinateY) {
         Square res = squareService.findByCoordinates(coordinateX, coordinateY);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("byBoardAndCoordinates")
+    public ResponseEntity<Square> findByBoardAndCoordinates(
+        @RequestParam Integer boardId,
+        @RequestParam Integer coordinateX, 
+        @RequestParam Integer coordinateY) {
+            Board board = boardService.findBoard(boardId);
+        Square res = squareService.findByBoardIdAndCoordinates(board, coordinateX, coordinateY);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

@@ -198,3 +198,41 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
   
   return hasAtLeastOneAdjacent;
 }
+
+// VALIDACIONES DE LAS CARTAS (HISTORIA DE USUARIO SOBRE LOS AVISOS SOBRE LAS RESTRICCIONES AL COLOCARLAS)
+// Lo exportamos como función para poder usarlo en el dropableCell
+export function validateCardPlacement(board, row, col, c) {
+  const directions = [{ name: 'arriba', dr: -1, dc: 0 },{ name: 'abajo', dr: 1, dc: 0 },{ name: 'izquierda', dr: 0, dc: -1 },{ name: 'derecha', dr: 0, dc: 1 }];
+  if (!c) {
+    return { valid:false,message:'⚠️ There are not card selected!' };}
+  
+  if (!isTunnelCard(c)) {
+    return { valid:false,message:'⚠️ Only tunnel cards can be placed on the board!' };}
+  
+  const cellOccupied = board[row] && board[row][col] !== null;
+  if (cellOccupied) {
+    return { valid:false,message:'⚠️ This cell is already occupied!' };}
+  
+  let hasAdjacent = false;
+  for (const dir of directions) {
+    const newRow = row + dir.dr;
+    const newCol = col + dir.dc;
+    if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+      if (board[newRow][newCol]) {
+        hasAdjacent = true;
+        break;}}}
+  
+  if (!hasAdjacent) {
+    return { valid:false,message:'⚠️ Card must be placed adjacent to an existing path' };}
+  
+  const hasValidConnection = checkAdjacentCardsWithContinuity(board, row, col, c);
+  if (!hasValidConnection) {
+    return { valid:false,message:'⚠️ The paths must connect properly!' };}
+
+  const hasPathToStart = hasPathFromStart(board, row, col, c);
+  if (!hasPathToStart) {
+    return { valid:false,message:'⚠️ This card must be connected to the starting path!' };}
+  
+  return { valid:true,message:'✅ Valid placement' };
+}
+

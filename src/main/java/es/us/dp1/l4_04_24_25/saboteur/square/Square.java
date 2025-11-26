@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardSerializer;
+import com.fasterxml.jackson.annotation.JsonIgnore; 
 
 @Table(name="Squares")
 @Entity

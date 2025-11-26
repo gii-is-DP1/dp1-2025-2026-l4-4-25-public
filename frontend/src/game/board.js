@@ -24,6 +24,8 @@ import { useGameData } from './hooks/useGameData';
 import '../App.css';
 import '../static/css/home/home.css';
 import '../static/css/game/game.css';
+import useWebSocket from "../hooks/useWebSocket";
+
 
 const jwt = tokenService.getLocalAccessToken();
 const timeturn = 10;
@@ -48,6 +50,8 @@ export default function Board() {
   const [privateLog, setPrivateLog] = useState([]);
     //  ESTADOS DE LAS HERRAMIENTAS, DICCIONARIO {username:{candle:true,wagon:true,pickaxe:true}}
   const [playerTools, setPlayerTools] = useState({});
+  //round del navigate
+  const [round, setRound] = useState(location.state?.round || null);
   
   // Estados del tablero
   const BOARD_COLS = 11;
@@ -78,6 +82,8 @@ export default function Board() {
     return initialBoard;
   });
 
+  const hasPatchedBoardBusy = useRef(false);
+
   const boardGridRef = useRef(null);
 
   // Hook personalizado para cargar datos del juego
@@ -94,46 +100,146 @@ export default function Board() {
     getChat,
     fetchCards,
     fetchAndSetLoggedActivePlayer,
-    deck
+    deck,
+    squaresById,
+    patchSquare,
+    pactchBoard,
+    getBoard,
+    getSquareByCoordinates,
   } = useGameData(game);
 
-  // Cartas Rotadas y No Rotadas
-  const rotatedOnly = getRotatedCards(ListCards);
-  const nonRotatedOnly = getNonRotatedCards(ListCards);
+  
+    const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    
+    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
+    const boardMessage = useWebSocket(`/topic/game/${boardId}`);
+    //const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
 
-  const handleCardDrop = (row, col, card, cardIndex) => {
+    useEffect(() => {
+      if(!boardMessage) return;
+
+      console.log("WS recibido:", boardMessage);
+      console.log("Keys del mensaje WS:", Object.keys(boardMessage));
+      const {action} = boardMessage;
+
+      switch(action){
+        case "CARD_PLACED":
+          handleWsCardPlaced(boardMessage);
+          break;
+
+        case "CARD_DESTROYED":
+          handleWsCardDestroyed(boardMessage);
+          break;
+        
+        default:
+          console.warn("WS action unrecognized:", action);
+      }
+    },[boardMessage]);
+
+    // Depuración usuarios duplicados
+    useEffect(() => {
+        console.log("activePlayers en Board:", activePlayers);
+    }, [activePlayers]);
+
+    useEffect(() => {
+      console.log("playerOrder:", playerOrder);
+    }, [playerOrder]);
+    /*useEffect(() => {
+      if(!gameMessage) return;
+      const { action } = gameMessage;
+      if(action === "TURN_CHANGED") setCurrentPlayer(gameMessage.nextPlayer);
+    }, [gameMessage]);
+  */
+    //Modularizar estas funciones
+    const handleWsCardPlaced = ({row, col, card, player})=>{
+      setBoardCells(prev => {
+        const next = prev.map(r => r.slice());
+        next[row][col] = {
+          ...card,
+          type: "tunnel",
+          owner: player,
+          placedAt: Date.now(),
+          occupied: true
+        };
+        return next;
+      });
+          addLog(`<b>${player}</b> placed a card at (${row}, ${col})`, "action");
+    }
+
+    const handleWsCardDestroyed = ({ row, col, player }) => {
+      setBoardCells(prev => {
+          const next = prev.map(r => r.slice());
+          next[row][col] = null;
+          return next;
+      });
+
+      addLog(`<b>${player}</b> destroyed a card at (${row}, ${col})`, "action");
+    };
+
+
+    // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
+    
+    const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (isSpectator) {
-      addPrivateLog("ℹ️ Spectators cannot place cards", "warning");
-      return;}
+      addPrivateLog("Spectators cannot place cards", "warning");
+      return;
+    }
+
+    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
 
     if (loggedInUser.username !== currentPlayer) {
       toast.warning("It's not your turn!");
-      return;}
+      return;
+    }
+
+    // If squareId is not provided, fetch it by coordinates
+    let actualSquareId = squareId;
+    if (!actualSquareId) {
+      const square = await getSquareByCoordinates(boardId, col, row);
+      if (square) {
+        actualSquareId = square.id;
+      } else {
+        toast.error('Could not find square at this position');
+        return;
+      }
+    }
+
+    patchSquare(actualSquareId, {
+      occupation: true,
+      card: card?.id || card,
+      board: boardId,
+    });
 
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
       next[row][col] = {
+        ...prev[row][col],
         ...card,
         type: 'tunnel',
         owner: loggedInUser?.username || 'unknown',
-        placedAt: Date.now()
+        placedAt: Date.now(),
+        occupied: true,
       };
       return next;
     });
 
     if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(cardIndex);}
+      window.removeCardAndDraw(cardIndex);
+    }
     setDeckCount(prev => Math.max(0, prev - 1));
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
     addColoredLog(
       currentIndex,
       currentPlayer,
-      `🃏 placed a tunnel card in (${row}, ${col})`);
+      `Placed a tunnel card in (${row}, ${col})`
+    );
 
-    toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : '🔴No more cards in deck.'}`);
-    nextTurn();};
+    toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
+    nextTurn();
+  };
 
-  const handleActionCard = (card, targetPlayer, cardIndex) => {
+const handleActionCard = (card, targetPlayer, cardIndex) => {
     handleActionCardUtil(card, targetPlayer, cardIndex, {
       isSpectator,
       loggedInUser,
@@ -483,6 +589,97 @@ export default function Board() {
     fetchSquares(); 
 
   }, []);
+
+  
+  //asociar el board con los squares usando getBoard para asegurar busy
+  useEffect(() => {
+    if (!round || !round.board || !squaresById) return;
+
+    const loadBoard = async () => {
+      const boardId = typeof round.board === 'number' ? round.board : round.board.id;
+      if (!boardId) return;
+
+      let busyIds = [];
+      if (Array.isArray(round.board.busy) && round.board.busy.length > 0) {
+        busyIds = round.board.busy;
+      } else {
+        const boardData = await getBoard(boardId);
+        busyIds = (boardData?.busy || []).map(sq => sq.id ?? sq);
+      }
+
+      const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
+        Array.from({ length: BOARD_COLS }, () => null)
+      );
+      baseBoard[4][1] = { type: 'start', owner: 'system', fixed: true };
+      baseBoard[4][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[2][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[6][9] = { type: 'objective', owner: 'system', fixed: true };
+
+      await Promise.all(
+        busyIds.map(async (squareId) => {
+          const sq = await squaresById(squareId);
+          if (!sq) return;
+
+          const row = sq.coordinateY;
+          const col = sq.coordinateX;
+          if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+            const existing = baseBoard[row][col];
+            const isSpecial = existing && (existing.type === 'start' || existing.type === 'objective');
+            if (isSpecial) {
+              return; //Las cartas objetivo y de inicio no se sobreescriben
+            }
+
+            const cardFromBackend = sq.card;
+            if (!cardFromBackend) {
+              return; // Se deja la celda como null si no hay carta,
+            }
+            const fullCard =
+              cardFromBackend?.image
+                ? cardFromBackend
+                : (ListCards || []).find(c => c.id === cardFromBackend?.id) || cardFromBackend;
+
+            baseBoard[row][col] = {
+              squareId: sq.id,
+              backendType: sq.type,
+              occupied: sq.occupation,
+              card: fullCard,
+              type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
+              image: fullCard?.image,
+              rotation: fullCard?.rotation,
+            };
+          }
+        })
+      );
+
+      setBoardCells(baseBoard);
+      if (busyIds.length > 0) {
+        pactchBoard(boardId, { busy: busyIds });
+      }
+    };
+
+    loadBoard();
+  }, [round, ListCards]);
+
+   //Hace un pacth cada vez que se cambia que hay un cambio en una square
+  useEffect(() => {
+    if (!round?.board) return;
+
+    const busySquareIds = boardCells
+      .flat()
+      .filter(cell => cell && cell.squareId && cell.type !== 'start' && cell.type !== 'objective') //que no sean ni final ni objetivo
+      .map(cell => cell.squareId);
+
+    if (!hasPatchedBoardBusy.current && busySquareIds.length === 0) {
+      return;
+    }
+
+    hasPatchedBoardBusy.current = true;
+    pactchBoard(round.board, { busy: busySquareIds });
+    console.log("he hecho este patch")
+  }, [boardCells, round]);
+
+
+
   // Render 
   return (
     <div className="board-container">

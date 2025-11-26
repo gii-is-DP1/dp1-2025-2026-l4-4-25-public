@@ -48,7 +48,9 @@ const CreateGame = () => {
     updateGame,
     deleteGame,
     sendMessage,
-    deleteMessages
+    deleteMessages,
+    postround,
+    round
   } = useLobbyData(game?.id, jwt, isCreator);
 
   // Sincronizar el estado del juego con el hook
@@ -60,33 +62,57 @@ const CreateGame = () => {
 
   // WebSocket para actualizaciones en tiempo real
   const socketMessage = useWebSocket(
-    `/topic/game/${game?.id}`,
-    `/topic/private/${loggedInUser?.username}`,
-    jwt
+    `/topic/game/${game?.id}`
   );
 
-  // Navegación automática cuando el juego comienza
+  // Efecto para procesar el mensaje que viene del socket
   useEffect(() => {
-    if (game?.gameStatus === "ONGOING") {
-      navigate(`/board/${game.id}`, { state: { game } });
+    console.log("Mensaje recibido del socket:", socketMessage);
+
+    if (!socketMessage) return;
+
+    let payload = socketMessage;
+
+    if (typeof payload === "string") {
+      try {
+        payload = JSON.parse(payload);
+      } catch (e) {
+        console.error("Error parseando mensaje WS:", e);
+        return;
+      }
     }
-  }, [game?.gameStatus, game?.id, navigate, game]);
+
+    const { game: updatedGame, round: updatedRound } = payload;
+    console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
+    console.log(" BOARD EN EL ROUND:", updatedRound?.board);
+
+    if (!updatedGame) return;
+
+    setGame(updatedGame);
+
+    if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board) {
+      navigate(`/board/${updatedRound.board}`, {
+        state: { game: updatedGame, round: updatedRound }
+      });
+    }
+  }, [socketMessage]);
 
   // Lógica para unirse al juego (solo no-creadores)
   useEffect(() => {
-    if (!game?.id || isCreator) return;
+    if (!game?.id) return;
+
+    const currentUsername = loggedInUser?.username;
+    const currentActivePlayers = game?.activePlayers ?? [];
+
+    // 🔒 NO CREATOR, NO DUPLICADOS
+    if (isCreator) return;
+    if (!currentUsername) return;
+    if (currentActivePlayers.includes(currentUsername)) return;
 
     const joinGame = async () => {
       try {
-        const currentUsername = loggedInUser?.username;
-        const currentActivePlayers = game.activePlayers ?? [];
-
-        if (isPlayerInLobby(currentActivePlayers, currentUsername)) {
-          console.log("Ya estás en la partida");
-          return;
-        }
-
         const updatedActivePlayerList = [...currentActivePlayers, currentUsername];
+
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
           method: "PATCH",
           headers: {
@@ -99,7 +125,7 @@ const CreateGame = () => {
         if (patchResponse.ok) {
           const updatedGame = await patchResponse.json();
           setGame(updatedGame);
-          console.log("Unido a la partida con éxito");
+          SetLobbyIn(true);
         } else {
           toast.error("Error al intentar unirse a la partida");
           navigate("/ListGames");
@@ -112,7 +138,8 @@ const CreateGame = () => {
     };
 
     joinGame();
-  }, [game?.id]);
+
+}, [game?.id, game?.activePlayers]);
 
   // Postear mensaje de bienvenida y obtener info del jugador (solo creador)
   useEffect(() => {
@@ -250,12 +277,13 @@ const CreateGame = () => {
     };
 
     try {
-      const newGame = await updateGame(request);
-      setpatchgame(newGame);
-      toast.success("¡Game started successfully!");
-      navigate(`/board/${newGame.id}`, { state: { game: newGame } });
+      const newRound = await postround(game.id, 1);
+      const updatedGame = await updateGame(request);
+      setpatchgame(updatedGame);  
+      toast.success("Game started successfully!");
+      // navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
     } catch (error) {
-      console.error(error);
+      console.error(error); 
       toast.error('Dont connect with the server.');
     }
   };
