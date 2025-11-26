@@ -114,7 +114,7 @@ export default function Board() {
     
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
-    const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
+    //const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -137,12 +137,20 @@ export default function Board() {
       }
     },[boardMessage]);
 
+    // Depuración usuarios duplicados
     useEffect(() => {
+        console.log("activePlayers en Board:", activePlayers);
+    }, [activePlayers]);
+
+    useEffect(() => {
+      console.log("playerOrder:", playerOrder);
+    }, [playerOrder]);
+    /*useEffect(() => {
       if(!gameMessage) return;
       const { action } = gameMessage;
       if(action === "TURN_CHANGED") setCurrentPlayer(gameMessage.nextPlayer);
     }, [gameMessage]);
-
+  */
     //Modularizar estas funciones
     const handleWsCardPlaced = ({row, col, card, player})=>{
       setBoardCells(prev => {

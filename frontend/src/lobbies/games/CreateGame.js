@@ -99,19 +99,20 @@ const CreateGame = () => {
 
   // Lógica para unirse al juego (solo no-creadores)
   useEffect(() => {
-    if (!game?.id || isCreator) return;
+    if (!game?.id) return;
+
+    const currentUsername = loggedInUser?.username;
+    const currentActivePlayers = game?.activePlayers ?? [];
+
+    // 🔒 NO CREATOR, NO DUPLICADOS
+    if (isCreator) return;
+    if (!currentUsername) return;
+    if (currentActivePlayers.includes(currentUsername)) return;
 
     const joinGame = async () => {
       try {
-        const currentUsername = loggedInUser?.username;
-        const currentActivePlayers = game.activePlayers ?? [];
-
-        if (isPlayerInLobby(currentActivePlayers, currentUsername)) {
-          console.log("Ya estás en la partida");
-          return;
-        }
-
         const updatedActivePlayerList = [...currentActivePlayers, currentUsername];
+
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
           method: "PATCH",
           headers: {
@@ -124,7 +125,7 @@ const CreateGame = () => {
         if (patchResponse.ok) {
           const updatedGame = await patchResponse.json();
           setGame(updatedGame);
-          console.log("Unido a la partida con éxito");
+          SetLobbyIn(true);
         } else {
           toast.error("Error al intentar unirse a la partida");
           navigate("/ListGames");
@@ -137,7 +138,8 @@ const CreateGame = () => {
     };
 
     joinGame();
-  }, [game?.id]);
+
+}, [game?.id, game?.activePlayers]);
 
   // Postear mensaje de bienvenida y obtener info del jugador (solo creador)
   useEffect(() => {
