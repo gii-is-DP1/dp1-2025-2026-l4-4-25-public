@@ -1,16 +1,18 @@
 import saboteurRol from '../cards-images/roles/saboteurRol.png';
 import minerRol from '../cards-images/roles/minerRol.png';
 
+export const calculateSaboteurCount = (n) => {
+  if (n === 3 || n === 4) return 1;
+  if (n === 5 || n === 6) return 2;
+  if (n === 7 || n === 8) return 3;
+  if (n === 9 || n === 10) return 4;
+  if (n === 11 || n === 12) return 5;
+  return 1;
+};
+
 export const assignRolesGame = (activePlayers) => {
   const n = activePlayers.length;
-  let numSaboteur = 0;
-
-  if (n === 3 || n === 4) { numSaboteur = 1; }
-  else if (n === 5 || n === 6) { numSaboteur = 2; }
-  else if (n === 7 || n === 8) { numSaboteur = 3; }
-  else if (n === 9 || n === 10) { numSaboteur = 4; }
-  else if (n === 11 || n === 12) { numSaboteur = 5; }
-  else { numSaboteur = 1; } 
+  const numSaboteur = calculateSaboteurCount(n);
 
   const shuffleArray = (array) => {
     const res = [...array];

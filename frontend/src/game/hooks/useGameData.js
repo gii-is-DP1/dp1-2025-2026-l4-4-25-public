@@ -53,6 +53,7 @@ export const useGameData = (game) => {
             birthDate: activePlayer.birthDate,
             profileImage: activePlayer.image || avatar,
             wins: activePlayer.wonGames ?? activePlayer.wins ?? 0,
+            rol: activePlayer.rol,
             pickaxeState: activePlayer.pickaxeState,
             candleState: activePlayer.candleState,
             cartState: activePlayer.cartState,
@@ -458,6 +459,28 @@ export const useGameData = (game) => {
   }
 };
 
+const getActivePlayersbyId = async (activePlayerId) => {
+    try {
+      const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const activePlayer = await response.json();
+        return activePlayer;
+      } else {
+        console.error('Respuesta no OK al obtener activePlayer por ID:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener activePlayer por ID:', error);
+      return null;
+    }
+  };
+
   return {
     activePlayers,
     chat,
@@ -481,7 +504,8 @@ export const useGameData = (game) => {
     getLog,
     patchLog,
     getmessagebychatId,
-    patchActivePlayer
+    patchActivePlayer,
+    getActivePlayersbyId
   };
 };
   

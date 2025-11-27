@@ -15,6 +15,7 @@ import InviteFriends from "./components/InviteFriends";
 import LobbyControls from "./components/LobbyControls";
 
 import "../../static/css/lobbies/games/CreateGame.css";
+import { useGameData } from "../../game/hooks/useGameData";
 
 const CreateGame = () => {
   const navigate = useNavigate();
@@ -52,6 +53,11 @@ const CreateGame = () => {
     postround,
     round
   } = useLobbyData(game?.id, jwt, isCreator);
+
+  const {
+    patchActivePlayer,
+    fetchActivePlayerByUsername,
+  } = useGameData(game);
 
   // Sincronizar el estado del juego con el hook
   useEffect(() => {
@@ -275,8 +281,18 @@ const CreateGame = () => {
     const request = {
       gameStatus: "ONGOING",
     };
-
+    const tools = {
+      pickaxeState: true,
+      cartState: true,
+      candleState: true,
+      goldNuggets: 0
+    }
     try {
+      console.log("Starting game:", game);
+      for (const player of game.activePlayers) {
+        const playerData = await fetchActivePlayerByUsername(player);
+        const resettools = await patchActivePlayer(playerData.id, tools);
+      }
       const newRound = await postround(game.id, 1);
       const updatedGame = await updateGame(request);
       setpatchgame(updatedGame);  
