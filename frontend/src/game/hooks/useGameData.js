@@ -458,6 +458,52 @@ export const useGameData = (game) => {
   }
 };
 
+  const patchRound = async (roundId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      });
+      if (response.ok) {
+        const updatedRound = await response.json();
+        console.log('Round actualizado:', updatedRound);
+        return updatedRound;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al hacer PATCH del round:', error);
+      return null;
+    }
+  };
+
+  const postRound = async (roundId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      });
+      if (response.ok) {
+        const newRound = await response.json();
+        console.log('Round creado:', newRound);
+        return newRound;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al hacer POST del round:', error);
+      return null;
+    }
+  };
+
   return {
     activePlayers,
     chat,
@@ -481,7 +527,10 @@ export const useGameData = (game) => {
     getLog,
     patchLog,
     getmessagebychatId,
-    patchActivePlayer
+    patchActivePlayer,
+    patchRound,
+    postRound
+
   };
 };
   

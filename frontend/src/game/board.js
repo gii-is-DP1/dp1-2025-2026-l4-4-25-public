@@ -16,6 +16,7 @@ import ChatBox from './components/ChatBox';
 // Utilidades
 import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
+import { checkRoundEnd, distributeGold } from './utils/roundEndLogic';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
@@ -119,6 +120,8 @@ export default function Board() {
     patchLog,
     getmessagebychatId,
     patchActivePlayer,
+    patchRound,
+    postRound
   } = useGameData(game);
 
   
@@ -256,6 +259,9 @@ export default function Board() {
       setDeckCount(prev => Math.max(0, prev - 1));
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
       nextTurn();
+      
+      // Evaluar fin de ronda después de colocar carta (puede que se haya encontrado el oro)
+      checkForRoundEnd();
     } finally {
       processingAction.current = false;
     }
@@ -414,7 +420,57 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
       lastLoggedTurn.current = nextName;
     }
+    
+    // Evaluar fin de ronda después de cambiar de turno
+    checkForRoundEnd();
+    
     return true;
+  };
+
+  // Función para evaluar si la ronda ha terminado
+  const checkForRoundEnd = () => {
+    const roundEndResult = checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
+    
+    if (roundEndResult.ended) {
+      handleRoundEnd(roundEndResult);
+    }
+  };
+
+  // Funcion para manejar el final de la última ronda
+  const handleLastRoundEnd = (result) => {
+
+  };
+
+  // Función para manejar el final de ronda
+  const handleRoundEnd = (result) => {
+    const { reason, winnerTeam, goldPosition } = result;
+    if (round.roundNumber === 3){
+      handleLastRoundEnd(result);
+    }
+    // Mostrar mensaje de final de ronda
+    if (reason === 'GOLD_REACHED') {
+      addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
+      toast.success(`🏆 The ${winnerTeam} won! Gold found!`);
+      
+      if (revealedObjective?.position !== goldPosition) {
+        setRevealedObjective({ position: goldPosition, cardType: 'gold' });
+      }
+    } else if (reason === 'NO_CARDS') {
+      addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
+      toast.success(`🏆 The ${winnerTeam} won! No more cards.`);
+    }
+
+    // Distribuir pepitas de oro
+    const winnerRol = winnerTeam === 'MINERS' ? false : true;
+    distributeGold(activePlayers, winnerRol);
+    
+    // Aquí podrías añadir lógica adicional:
+    // - Actualizar el estado del round en el backend
+    // - Preparar nueva ronda si es necesario
+    // - Mostrar pantalla de resultados
+    // - etc.
+    patchRound(round.id, {winnerRol: winnerRol });
+    postRound({gameId: game.id, roundNumber: round.roundNumber + 1});
   };
 
 
@@ -445,6 +501,9 @@ const activateCollapseMode = (card, cardIndex) => {
           playerOrder[currentIndex].username,
           `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
         toast.success('Card discarded successfully!');
+        
+        // Evaluar fin de ronda después de descartar (puede que se hayan acabado las cartas)
+        checkForRoundEnd();
       } else {
         toast.warning("Please select a card to discard (right-click in the card)");}
     } finally {

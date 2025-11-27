@@ -19,14 +19,14 @@ export function isMapCard(c) {
 }
 
 function getCardConnections(card) {
-  if (!card) return { arriba: false, abajo: false, izquierda: false, derecha: false };
+  if (!card) return { arriba: false, abajo: false, izquierda: false, derecha: false, centro: false };
   
   // Si la carta es start u objective, tienen conexión en todas las direcciones
   if (card.type === 'start' || card.type === 'objective') {
     return { arriba: true, abajo: true, izquierda: true, derecha: true };
   }
   
-  const rotation = card.rotation || 0;
+  const rotation = card.rotation || false;
   let connections = {
     arriba: card.arriba || false,
     abajo: card.abajo || false,
@@ -35,7 +35,7 @@ function getCardConnections(card) {
   };
   
   // Aplicar rotación de 180 grados si existe
-  if (rotation === 180) {
+  if (rotation === true) {
     connections = {
       arriba: card.abajo || false,
       abajo: card.arriba || false,
@@ -67,7 +67,7 @@ function checkPathContinuity(card1Connections, card2Connections, direction) {
  * Verifica si hay un camino válido desde la carta de inicio hasta la posición objetivo
  * usando BFS (Breadth-First Search)
  */
-function hasPathFromStart(board, targetRow, targetCol, cardToPlace) {
+export function hasPathFromStart(board, targetRow, targetCol, cardToPlace) {
   const start = { row: 4, col: 1 };
   if (!start) return false;
   
