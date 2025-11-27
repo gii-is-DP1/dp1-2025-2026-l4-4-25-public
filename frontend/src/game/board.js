@@ -117,7 +117,8 @@ export default function Board() {
     getSquareByCoordinates,
     getLog,
     patchLog,
-    getmessagebychatId
+    getmessagebychatId,
+    patchActivePlayer,
   } = useGameData(game);
 
   
@@ -261,25 +262,27 @@ export default function Board() {
   };
 
 const handleActionCard = (card, targetPlayer, cardIndex) => {
-    if (processingAction.current) return;
-    processingAction.current = true;
-    try {
-      setCont(timeturn);
-      handleActionCardUtil(card, targetPlayer, cardIndex, {
-        isSpectator,
-        loggedInUser,
-        currentPlayer,
-        playerTools,
-        setPlayerTools,
-        addLog,
-        addPrivateLog,
-        nextTurn,
-        setDeckCount
-      });
-    } finally {
-      processingAction.current = false;
-    }
-  };
+  if (processingAction.current) return;
+  processingAction.current = true;
+  try {
+    setCont(timeturn);
+    handleActionCardUtil(card, targetPlayer, cardIndex, {
+      isSpectator,
+      loggedInUser,
+      currentPlayer,
+      playerTools,
+      setPlayerTools,
+      addLog,
+      addPrivateLog,
+      nextTurn,
+      setDeckCount,
+      activePlayers,
+      patchActivePlayer,
+    });
+  } finally {
+    processingAction.current = false;
+  }
+};
 
   const handleMapCard = (card, objectivePosition, cardIndex) => {
     if (processingAction.current) return;
@@ -652,12 +655,13 @@ const activateCollapseMode = (card, cardIndex) => {
       const initialTools = {};
       activePlayers.forEach(player => {
         initialTools[player.username] = {
-          candle: true,
-          wagon: true,
-          pickaxe: true
-        };});
+          candle: player.candleState ?? true,
+          wagon: player.cartState ?? player.wagon ?? true,
+          pickaxe: player.pickaxeState ?? true
+        };
+      });
       setPlayerTools(initialTools);
-      console.log('Herramientas inicializadas (siempre tienen que estar a True):', initialTools);
+      console.log('Herramientas inicializadas desde backend:', initialTools);
     }
   }, [activePlayers]);
 
