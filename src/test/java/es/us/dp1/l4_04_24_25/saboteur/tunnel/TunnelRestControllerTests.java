@@ -2,6 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.tunnel;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -204,7 +205,8 @@ class TunnelRestControllerTests {
         when(tunnelService.findTunnel(TEST_TUNNEL_ID)).thenReturn(testTunnel);
 
         mockMvc.perform(delete(BASE_URL + "/{id}", TEST_TUNNEL_ID)
-                .with(csrf()))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Tunnel deleted!"));
 
@@ -218,9 +220,225 @@ class TunnelRestControllerTests {
                 .thenThrow(new ResourceNotFoundException("Tunnel", "id", TEST_TUNNEL_ID));
 
         mockMvc.perform(delete(BASE_URL + "/{id}", TEST_TUNNEL_ID)
-                .with(csrf()))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         verify(tunnelService, never()).deleteTunnel(anyInt());
+    }
+
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldReturnNotFoundWhenPatchingNonExistingTunnel() throws Exception {
+        when(tunnelService.findTunnel(TEST_TUNNEL_ID))
+                .thenThrow(new ResourceNotFoundException("Tunnel", "id", TEST_TUNNEL_ID));
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("image", "new.png");
+
+        mockMvc.perform(patch(BASE_URL + "/{id}", TEST_TUNNEL_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updates)))
+                .andExpect(status().isNotFound());
+
+        verify(tunnelService, never()).updateTunnel(any(Tunnel.class), anyInt());
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByRotacion() throws Exception {
+        when(tunnelService.findByRotacion(anyBoolean())).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byRotacion").param("rotacion", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_TUNNEL_ID));
+        verify(tunnelService).findByRotacion(false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArriba() throws Exception {
+        when(tunnelService.findByArriba(anyBoolean())).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArriba").param("arriba", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_TUNNEL_ID));
+        verify(tunnelService).findByArriba(true);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByAbajo() throws Exception {
+        when(tunnelService.findByAbajo(anyBoolean())).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byAbajo").param("abajo", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_TUNNEL_ID));
+        verify(tunnelService).findByAbajo(false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByDerecha() throws Exception {
+        when(tunnelService.findByDerecha(anyBoolean())).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byDerecha").param("derecha", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_TUNNEL_ID));
+        verify(tunnelService).findByDerecha(true);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByIzquierda() throws Exception {
+        when(tunnelService.findByIzquierda(anyBoolean())).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byIzquierda").param("izquierda", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_TUNNEL_ID));
+        verify(tunnelService).findByIzquierda(false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArribaAndAbajo() throws Exception {
+        when(tunnelService.findByArribaAndAbajo(true, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArribaAndAbajo")
+                .param("arriba", "true")
+                .param("abajo", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_TUNNEL_ID));
+        verify(tunnelService).findByArribaAndAbajo(true, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArribaAndDerecha() throws Exception {
+        when(tunnelService.findByArribaAndDerecha(true, true)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArribaAndDerecha")
+                .param("arriba", "true")
+                .param("derecha", "true"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByArribaAndDerecha(true, true);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArribaAndIzquierda() throws Exception {
+        when(tunnelService.findByArribaAndIzquierda(true, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArribaAndIzquierda")
+                .param("arriba", "true")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByArribaAndIzquierda(true, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByAbajoAndDerecha() throws Exception {
+        when(tunnelService.findByAbajoAndDerecha(false, true)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byAbajoAndDerecha")
+                .param("abajo", "false")
+                .param("derecha", "true"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByAbajoAndDerecha(false, true);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByAbajoAndIzquierda() throws Exception {
+        when(tunnelService.findByAbajoAndIzquierda(false, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byAbajoAndIzquierda")
+                .param("abajo", "false")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByAbajoAndIzquierda(false, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByDerechaAndIzquierda() throws Exception {
+        when(tunnelService.findByDerechaAndIzquierda(true, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byDerechaAndIzquierda")
+                .param("derecha", "true")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByDerechaAndIzquierda(true, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArribaAndAbajoAndDerecha() throws Exception {
+        when(tunnelService.findByArribaAndAbajoAndDerecha(true, false, true)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArribaAndAbajoAndDerecha")
+                .param("arriba", "true")
+                .param("abajo", "false")
+                .param("derecha", "true"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByArribaAndAbajoAndDerecha(true, false, true);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArribaAndAbajoAndIzquierda() throws Exception {
+        when(tunnelService.findByArribaAndAbajoAndIzquierda(true, false, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArribaAndAbajoAndIzquierda")
+                .param("arriba", "true")
+                .param("abajo", "false")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByArribaAndAbajoAndIzquierda(true, false, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByArribaAndDerechaAndIzquierda() throws Exception {
+        when(tunnelService.findByArribaAndDerechaAndIzquierda(true, true, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byArribaAndDerechaAndIzquierda")
+                .param("arriba", "true")
+                .param("derecha", "true")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByArribaAndDerechaAndIzquierda(true, true, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByAbajoAndDerechaAndIzquierda() throws Exception {
+        when(tunnelService.findByAbajoAndDerechaAndIzquierda(false, true, false)).thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byAbajoAndDerechaAndIzquierda")
+                .param("abajo", "false")
+                .param("derecha", "true")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByAbajoAndDerechaAndIzquierda(false, true, false);
+    }
+
+    @Test
+    @WithMockUser(value = "spring")
+    void shouldFindByAllConnections() throws Exception {
+        // Endpoint is /byAllConnections
+        when(tunnelService.findByArribaAndAbajoAndDerechaAndIzquierda(true, false, true, false))
+                .thenReturn(List.of(testTunnel));
+
+        mockMvc.perform(get(BASE_URL + "/byAllConnections")
+                .param("arriba", "true")
+                .param("abajo", "false")
+                .param("derecha", "true")
+                .param("izquierda", "false"))
+                .andExpect(status().isOk());
+        verify(tunnelService).findByArribaAndAbajoAndDerechaAndIzquierda(true, false, true, false);
     }
 }
