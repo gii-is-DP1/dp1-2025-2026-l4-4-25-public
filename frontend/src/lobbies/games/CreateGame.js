@@ -285,7 +285,8 @@ const CreateGame = () => {
       pickaxeState: true,
       cartState: true,
       candleState: true,
-      goldNuggets: 0
+      goldNuggets: 0,
+      rol: false
     }
     try {
       console.log("Starting game:", game);

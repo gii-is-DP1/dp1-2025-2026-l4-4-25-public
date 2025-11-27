@@ -14,8 +14,10 @@ import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
 
 // Utilidades
-import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
+import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
+import saboteurRol from './cards-images/roles/saboteurRol.png';
+import minerRol from './cards-images/roles/minerRol.png';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
@@ -90,6 +92,7 @@ export default function Board() {
   const lastObjectiveHideLog = useRef(0);
   const lastCollapseLog = useRef(0);
   const seenPrivateMessages = useRef(new Set());
+  const lastPublishedRoles = useRef([]);
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
@@ -638,31 +641,97 @@ const activateCollapseMode = (card, cardIndex) => {
   }, []);
 
   useEffect(() => {
-    if (activePlayers.length > 0) {
-      const rolesAssigned = assignRolesGame(activePlayers);
-      setPlayerRol(rolesAssigned);
-      if (!isSpectator) {
-        const currentPlayerRole = rolesAssigned.find(p => p.username === loggedInUser.username);
-        if (currentPlayerRole) {
-          setMyRole(currentPlayerRole);
-          setShowRoleNotification(true);
-          setTimeout(() => {
-            setShowRoleNotification(false);
-          }, 5000);
-        }
+    if (activePlayers.length === 0) return;
+
+    const initialTools = {};
+    activePlayers.forEach(player => {
+      initialTools[player.username] = {
+        candle: player.candleState ?? true,
+        wagon: player.cartState ?? player.wagon ?? true,
+        pickaxe: player.pickaxeState ?? true
+      };
+    });
+    setPlayerTools(initialTools);
+    console.log('Herramientas inicializadas desde backend:', initialTools);
+
+    let cancelled = false;
+
+    const buildRolesFromBackend = () =>
+      activePlayers
+        .filter(player => typeof player.rol === 'boolean')
+        .map(player => ({
+          username: player.username,
+          role: player.rol ? 'SABOTEUR' : 'MINER',
+          roleImg: player.rol ? saboteurRol : minerRol,
+          roleName: player.rol ? 'SABOTEUR' : 'MINER'
+        }));
+
+    const sameRoles = (prev, next) => {
+      if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+      if (prev.length !== next.length) return false;
+      const sortByUser = (arr) => [...arr].sort((a, b) => a.username.localeCompare(b.username));
+      const a = sortByUser(prev);
+      const b = sortByUser(next);
+      return a.every((item, idx) => item.username === b[idx].username && item.role === b[idx].role);
+    };
+
+    const publishRoles = (rolesList) => {
+      if (cancelled) return;
+      if (sameRoles(lastPublishedRoles.current, rolesList)) return;
+
+      lastPublishedRoles.current = rolesList.map(({ username, role }) => ({ username, role }));
+      setPlayerRol(rolesList);
+      if (isSpectator) return;
+
+      const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
+      if (currentPlayerRole) {
+        setMyRole(currentPlayerRole);
+        setShowRoleNotification(true);
+        setTimeout(() => setShowRoleNotification(false), 5000);
       }
-      
-      const initialTools = {};
-      activePlayers.forEach(player => {
-        initialTools[player.username] = {
-          candle: player.candleState ?? true,
-          wagon: player.cartState ?? player.wagon ?? true,
-          pickaxe: player.pickaxeState ?? true
-        };
-      });
-      setPlayerTools(initialTools);
-      console.log('Herramientas inicializadas desde backend:', initialTools);
-    }
+    };
+
+    const persistRoles = async (rolesList) => {
+      const updates = rolesList
+        .map(roleInfo => {
+          const target = activePlayers.find(p => p.username === roleInfo.username);
+          if (!target?.id) return null;
+          return patchActivePlayer(target.id, { rol: roleInfo.role === 'SABOTEUR' });
+        })
+        .filter(Boolean);
+
+      if (updates.length === 0) return;
+
+      try {
+        await Promise.all(updates);
+        await loadActivePlayers();
+      } catch (err) {
+        console.error('Error al persistir roles:', err);
+        toast.error('Error al guardar los roles asignados');
+      }
+    };
+
+    const syncRoles = async () => {
+      const expectedSaboteurs = calculateSaboteurCount(activePlayers.length);
+      const backendRoles = buildRolesFromBackend();
+      const saboteursAlready = backendRoles.filter(r => r.role === 'SABOTEUR').length;
+      const rolesComplete =
+        backendRoles.length === activePlayers.length &&
+        saboteursAlready === expectedSaboteurs;
+
+      if (rolesComplete) {
+        publishRoles(backendRoles);
+        return;
+      }
+
+      const rolesAssigned = assignRolesGame(activePlayers);
+      publishRoles(rolesAssigned);
+      await persistRoles(rolesAssigned);
+    };
+
+    syncRoles();
+
+    return () => { cancelled = true; };
   }, [activePlayers]);
 
   useEffect(() => {
