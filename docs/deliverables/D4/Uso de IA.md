@@ -18,28 +18,10 @@ Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
 
 Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 
-## 1. Introducción
-
-Este documento describe el uso que se ha echo de la IA en el proyecto. El objetivo es ser transparentes sobre el uso de IA realizado. Como recordatorio, al alumnado incluimos un resumen de lo indicado en el Syllabus de la asignatura:
-
-### 📃Declaración de Política y Compromiso
-
-> **Principios guía generales (resumen):**  
-> - **Dimensión Cognitiva:** El trabajo con IA **no** debe reducir su capacidad de pensar con claridad; úsela para **facilitar**—no obstaculizar—el aprendizaje.  
-> - **Dimensión Ética :** La utilización de IA debe ser **transparente** y **alineada** con la integridad académica.
-
-**Normas específicas de la asignatura:**
-- ✅ **IA para código:** Se permite usar tecnología generativa para **completar o generar ejemplos de código** en las tareas, pero **debe citarse explícitamente** la procedencia del mismo. Así mismo el alumno debe **entender** y poder **modificar bajo demanda** cualquier código entregado, siendo el responsable de cualquier comportamiento del código que ha conmitado, ante el profesor y sus compañeros. Recuerde: **Usted es responsable** de dicho código.
-- ❌ **IA para narrativa:** Salvo indicación en contrario, **no** se permite usar IA generativa para **redactar narrativa** de las entregas. Se puede usar como **recurso** durante el proceso, **no** para **responder por usted** a los ejercicios.
-
-**Marco ético US:** Consulte y cumpla lo indicado en **Guías de Ética e IA** de la US: https://guiasbus.us.es/ia/etica
-
-**Rellenar este documento es Obligatorio:** La **documentación del uso de IA** es un **entregable** del proyecto.
-
 ## 📑 Resumen por Sprint (1–4)
 ### 💻Sprint 1 — Resumen de uso de IA
 
-Usos registrados: <!-- nº -->
+Usos registrados: 2
 
 **Ámbitos principales:** Generación de assets visuales (favicon, imágenes para el background de distintas pantallas de la aplicación, logo, imágenes de avatares por defecto...), explicación de distintos fragmentos de código (tanto backend como frontend) para ponernos en el contexto programático de la aplicación y generación de código CSS para el cambio de estilo de algunos componentes de la aplicación. 
 
@@ -65,7 +47,7 @@ Checklist de cumplimiento de uso ético de la IA del sprint X:
 
 ### 💻Sprint 2 — Resumen de uso de IA
 
-Usos registrados: <!-- nº -->
+Usos registrados: 10
 
 **Ámbitos principales:** 
 - **Depuración / Diagnóstico:**
@@ -107,10 +89,58 @@ Checklist de cumplimiento de uso ético de la IA del sprint X:
 
 - [x] Se usó la IA sin dar datos personales/sensibles que puedieran quedar expuestos a herramientas externas.
 
+### 💻 Sprint 3 — Resumen de uso de IA
+
+Usos registrados: 8
+
+**Ámbitos principales:**
+
+- **Frontend — Animaciones / UI:**
+Creación y ajuste de animaciones (explosión/destrucción de túnel, pantalla de carga, notificación de rol al iniciar partida) y ficheros CSS/JS asociados. (3.1, 3.2, 3.6)
+- **Comunicación en tiempo real:**
+Implementación y ayuda en la integración de WebSockets para sincronización entre jugadores. (3.3)
+- **Algoritmos de juego (Lógica de tablero):**
+Implementación y validación del algoritmo BFS para detectar conectividad desde el inicio hasta la pepita o entre caminos. (3.4)
+- **Backend — Modelado de datos / Compilación:**
+Ayuda en la inclusión de la tabla intermedia Request para solicitudes de amistad y resolución de errores de compilación por el mismo. (3.5)
+- **Pruebas automatizadas:**
+Generación y ajuste de tests unitarios para aumentar cobertura. (3.7, 3.8)
+
+**Valor aportado:**
+
+- Aceleración en la implementación de animaciones y elementos visuales complejos.
+- Resolución de bloqueos técnicos en WebSocket y compilación backend.
+-Mejora de la robustez del juego mediante la incorporación del BFS para comprobar conectividad y con pruebas unitarias que elevaron la cobertura.
+
+**Riesgos relevantes y mitigaciones:**
+· **Riesgos**
+- Código generado incorrecto o incompleto que afecte la jugabilidad o el estilo visual (animaciones/CSS).
+- Introducción de fallos por copiar/pegar soluciones automáticas (lógica de juego, WebSockets, DB).
+- Tests mal configurados.
+
+· **Mitigaciones**
+
+- Revisión manual y pruebas en entorno local antes de merge (se verificó cada artefacto con casos reales probandolos en el juego).
+- No se acepta el código de IA sin adaptar: contextuar en la conversación, pedir explicaciones y entender la lógica propuesta en todos los casos.
+- Uso de pruebas unitarias y ejecuciones de integración para validar cambios (maven run, ejecución de suites de tests).
+- Comparación cruzada con otras herramientas (ej. Ask/Copilot) cuando procedió.
+
+**Lecciones aprendidas (Sprint 3)**
+
+- La IA es especialmente eficiente para prototipado rápido de UI (animaciones, pantallas), pero requiere adaptación manual para asegurar rendimiento y de coherencia visual.
+- Cuando la IA sugiere cambios que afectan al flujo del juego (WebSocket, BFS, DB), es imprescindible probar escenarios multi-jugador y casos límite para el buen funcionamiento del mismo.
+- Mantener un flujo de revisión humano para evita introducir regresiones provenientes de sugerencias automáticas.
+- Las pruebas unitarias generadas por IA son un buen punto de partida, aunque hay que ampliarlas y parametrizarlas para casos del dominio.
+
+Checklist de cumplimiento de uso ético de la IA (Sprint 3)
+
+- [x]Toda interacción significativa está en el Registro Detallado con enlace a conversación (cuando aplica).
+- [x] No se usó IA para narrativa sin autorización.
+- [x] Toda pieza aceptada fue comprendida y verificada por los desarrolladores.
+- [x] Citas / Atribuciones incluidas cuando corresponde (en la tabla original aparecen enlaces a las mismas).
+- [x] No se compartieron datos personales/sensibles con herramientas externas.
+
 ## Registro detallado de uso de AI por Sprint
-
-**Use una fila por “uso realmente significativo”** (idea sugerida por la IA, trozo de código importante modificado, depuración de error que no eras capaz de resolver por tu cuenta, generación de pruebas para el código de producción, etc.). No incluya filas para detalles nímios como el autocompletado de variables o signaturas de métodos, o la generación de código simple (recorridos y procesamiento de estructuras de datos, formateo  y/o creación de estilos CSS, etc.).
-
 ### Sprint 1 registro detallado de uso de IA por sprint
 
 | # | Fecha y hora | Sprint | Integrante(s) | **Herramienta & versión** | **Acceso** | **Enlace a conversación / Prompt** | **Finalidad** | **Artefactos afectados** | **Verificación humana** | **Riesgos & mitigaciones** | **Resultado** |
@@ -144,8 +174,8 @@ Checklist de cumplimiento de uso ético de la IA del sprint X:
 | 3.4 | 15/11/2025 18:00  | 3 | Carlos |  ChatGPT | Web | https://chatgpt.com/share/69286fff-e75c-800a-b3f8-5867de9c187f | Ayuda en la implementación del algoritmo de BFS que ayuda a saber si desde el inicio hay un camino conectado hasta la pepita | Se ha verificado mediante varias pruebas dentro del juego, probando todas las posibles casuísticas en la colocación de las cartas (sobre todo cuando destruyes un camino). También se ha contrastado con el modo Ask de Copilot en Visual Studio | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
 | 3.5 | 16/11/2025 16:00  | 3 | Lorenzo |  Copilot PRO | Visual Studio | Se adjunta el prompt correspondiente: *"He añadido una tabla intermedia para las solicitudes de amistad llamadas Request. El problema reside en el datasql porque me da error al compilar"* | Ayuda para la implementación de una tabla en las solicitudes de amistad de la Sección de amigos | Se ha verificado añadiendo request (peticiones de amistad), haciendo *maven run* ya que no compilaba el código que anteriormente estaba hecho | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
 | 3.6 | 20/11/2025 16:30  | 3 | Alejandro |  Copilot PRO | Visual Studio | Se adjunta el prompt correspondiente: *"Creame una animación que al entrar en la partida me indique el rol que se me ha asignado a la misma con una pestaña despregable de pocos segundos en el que salga la foto del rol y debajo el nombre"* | Ayuda para la creación de una animación bastante vistosa para el reparto de roles justo al empezar una partida y navegar al /board --> La lógica se encuentra en [board.js] y [game.css] | Se ha verificado con el inicio de las partidas en varias ocasiones dando los resultados esperando tras varios cambios manuales en la configuración del código aportado | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
-| 3.7 | 20/11/2025 16:30  | 3 | Diego |  Gemini Pro | Web | PONER ENLACE | Realziaicón de pruebas unitarias...PONER | Se ha verificado .... PONER | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
-| 3.8 | 20/11/2025 16:30  | 3 | Diego |  Gemini Pro | Web | PONER ENLACE | Realziaicón de pruebas unitarias...PONER | Se ha verificado .... PONER | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
+| 3.7 | 24/11/2025 16:45  | 3 | Diego |  Gemini Pro | Web | https://gemini.google.com/share/6d1febf92d34 & https://gemini.google.com/share/ec6468412ff4 | Realización de pruebas unitarias del sistema | Se ha verificado ejecutando las pruebas y obteniendo el informa del porcentaje de cobertura de nuestro sistema  | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
+| 3.8 | 26/11/2025 17:00  | 3 | Diego |  Gemini Pro | Web | https://gemini.google.com/share/b201a020d461 | Realización de pruebas unitarias del sistema para alcanzar el máximo posible de cobertura. | Se ha verificado ejecutando las pruebas y obteniendo el informa del porcentaje de cobertura de nuestro sistema | **Riesgos**: <br> Generación de código incorrecto. <br> Aparición de nuevos errores generados por el código proporcionado por la IA (trabajo extra de depuración). <br> Falta de precisión en la explicación del error. <br>  **Mitigaciones:** No copiar y pegar directamente el código proporcionado con la IA, analizar la coherencia del código, dar contexto previo en la conversación para reducir número de errores...  | Aceptado |
 
 
 ### Sprint 4

@@ -1485,19 +1485,39 @@ function App() {
 - Ahora podemos navegar entre pantallas de manera fluida e incluyendo todas las pantallas descritas en el documento D1.
     
 ### · Refactorización 4: 
-//
-#### Estado inicial del código
-```css 
 
-``` 
+Esta refactorización se ha basado en la **modularización** en componentes de todas las funcionalidades del juego Saboteur, quitando la abundancia excesiva de código del *board.js*, hemos dividido en los siguienes componentes:
+**- ChatBox.js** (sobre el chat de texto entre los jugadores)
+**- DroppableCell.js** (despregable de las cartas de acción)
+**- GameBoard.js** (lógica sobre el tablero de juego)
+**- GameControls.js** (otros votones y funcionalidades importantes, como el turno o el contador)
+**- GameLog.js** (log público y privado de las acciones de los jugadores)
+**- InteractiveCard.js** (Interacción sobre una carta-tablero que tiene un jugador)
+**- PlayerCards.js** (mazo de cartas que tiene un jugador)
+**- PlayerRol.js** (rol asignado a un jugador en la partida)
+**- PlayersList.js** (lista de los jugadores de la partida con el estado de las herramientas y el contador de pepitas)
+**- RoundEnd.js** (lógica sobre la finalización de la ronda)
+**- SpectatorIndicator.js** (configuración cuando un usuario entra en modo espectador)
 
-#### Estado del código refactorizado
+Además de crear el hooks **useGameData.js** y vgameUtils.js** que engloba funcionalidad importante a la hora de jugar en nuestro juego.
 
-```CSS
+*- Nota: No se incluye el código actual ni el antiguo debido al tamaño del mismo.*
 
-```
 #### Problema que nos hizo realizar la refactorización
-- 
+- Abundancia excesiva de código en *[board.js]*, *[CreateGame.js]* y *[ListGame.js]*,  sobre la funcionalidad de una partida. Además, también se ha dividido por componentes el *[lobby.js]*,
 #### Ventajas que presenta la nueva versión del código respecto de la versión original
-- 
+- El código es más fácil de entender y de mantener, además nos sirve para ser reutilizado en diferentes partes del juego, separando la lógica del jugador, la interfaz, etc. entre distintos modulos. 
+
+### · Refactorización 5: 
+
+Con el objetivo de mejorar la mantenibilidad y escalabilidad del código, se ha llevado a cabo una refactorización para introducir el **patrón de diseño Builder** en la creación de las rondas de una partida. Este patrón se aplicó debido a la complejidad de la entidad, la cual requiere de múltiples parámetros opcionales y configuraciones variables, con este patrón se ha implementado de manera eficiente a como estaba anteriormente.
+
+*- Nota: No se incluye el código actual ni el antiguo debido al tamaño del mismo.*
+
+#### Problema que nos hizo realizar la refactorización
+- Aplicar un patrón de diseño más eficiente.
+- Había que duplicar la lógica para la construcción de las rondas.
+#### Ventajas que presenta la nueva versión del código respecto de la versión original
+- Facilidad para extender nuevas configuraciones sin romper el código que ya existe.
+- La separación entre la representación del objeto Round y su proceso de construcción.
 ---
