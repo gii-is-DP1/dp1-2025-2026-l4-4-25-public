@@ -19,11 +19,11 @@ export function isMapCard(c) {
 }
 
 function getCardConnections(card) {
-  if (!card) return { arriba: false, abajo: false, izquierda: false, derecha: false };
+  if (!card) return { arriba: false, abajo: false, izquierda: false, derecha: false, centro: false };
   
-  // Si la carta es start u objective, tienen conexión en todas las direcciones
+  // Si la carta es start u objective, tienen conexión en todas las direcciones y centro abierto
   if (card.type === 'start' || card.type === 'objective') {
-    return { arriba: true, abajo: true, izquierda: true, derecha: true };
+    return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
   }
   
   const rotation = card.rotation || 0;
@@ -31,16 +31,18 @@ function getCardConnections(card) {
     arriba: card.arriba || false,
     abajo: card.abajo || false,
     izquierda: card.izquierda || false,
-    derecha: card.derecha || false
+    derecha: card.derecha || false,
+    centro: card.centro || false  // true = centro cerrado, false = centro abierto
   };
   
-  // Aplicar rotación de 180 grados si existe
+  // Aplicar rotación de 180 grados si existe (el centro no cambia con rotación)
   if (rotation === 180) {
     connections = {
       arriba: card.abajo || false,
       abajo: card.arriba || false,
       izquierda: card.derecha || false,
-      derecha: card.izquierda || false
+      derecha: card.izquierda || false,
+      centro: card.centro || false
     };
   }
   
@@ -56,10 +58,11 @@ function checkPathContinuity(card1Connections, card2Connections, direction) {
   };
   
   // La carta que se quiere colocar debe tener camino en la dirección hacia la carta adyacente
-  const hasPathToNeighbor = card1Connections[direction]; //
+  const hasPathToNeighbor = card1Connections[direction];
   // La carta adyacente debe tener camino en la dirección opuesta hacia la carta que se coloca
   const neighborHasPathBack = card2Connections[oppositeDirection[direction]];
   
+  // Para que haya continuidad: debe haber caminos en ambas direcciones
   return hasPathToNeighbor && neighborHasPathBack;
 }
 
@@ -99,6 +102,11 @@ function hasPathFromStart(board, targetRow, targetCol, cardToPlace) {
     if (!currentCard) continue;
     
     const currentConnections = getCardConnections(currentCard);
+    
+    // Si el centro está bloqueado (centro=true), no se puede atravesar esta carta
+    if (currentConnections.centro) {
+      continue;
+    }
     
     // Explorar vecinos
     for (const [dirName, [dr, dc]] of Object.entries(directions)) {
@@ -189,10 +197,23 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
       hasAtLeastOneAdjacent = true;
       const adjacentConnections = getCardConnections(adjacentCard);
       
-      // Si hay una carta adyacente, DEBE haber continuidad de camino
-      if (!checkPathContinuity(cardConnections, adjacentConnections, dir.name)) {
-        return false; // No hay continuidad, la colocación es inválida
+      // Solo validar continuidad si alguna de las dos cartas tiene conexión en esa dirección
+      const cardHasConnection = cardConnections[dir.name];
+      const oppositeDirection = {
+        'arriba': 'abajo',
+        'abajo': 'arriba',
+        'izquierda': 'derecha',
+        'derecha': 'izquierda'
+      };
+      const adjacentHasConnection = adjacentConnections[oppositeDirection[dir.name]];
+      
+      // Si alguna tiene conexión pero no hay continuidad válida, es inválido
+      if (cardHasConnection || adjacentHasConnection) {
+        if (!checkPathContinuity(cardConnections, adjacentConnections, dir.name)) {
+          return false; // Una de las cartas tiene conexión pero no hay continuidad
+        }
       }
+      // Si ninguna tiene conexión en esa dirección, está bien (no se conectan por ese lado)
     }
   }
   
