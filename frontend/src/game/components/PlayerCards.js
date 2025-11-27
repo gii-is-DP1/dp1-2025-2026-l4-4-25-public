@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer } from '../utils/gameUtils';
+import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer, isRotatedImage } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
 export default function PlayerCards({
@@ -28,15 +28,111 @@ export default function PlayerCards({
   const [deckChecked, setDeckChecked] = useState(false);
   const [cardRotations, setCardRotations] = useState({}); 
 
+  const normalizeImagePath = (imagePath = '') =>
+    String(imagePath || '')
+      .split('?')[0]
+      .trim()
+      .toLowerCase();
+
+  const fileName = (imagePath = '') => {
+    const normalized = normalizeImagePath(imagePath);
+    const parts = normalized.split('/');
+    return parts[parts.length - 1];
+  };
+
+  const coreName = (name = '') =>
+    fileName(name)
+      .replace(/_rotated(?=\.[a-z]+$)/i, '')
+      .replace(/\.(png|jpe?g)$/i, '');
+
+  const resolveDeckUsername = () => {
+    if (currentUsername) return currentUsername;
+    if (Array.isArray(activePlayers)) {
+      return findActivePlayerUsername(activePlayers);
+    }
+    return null;
+  };
+
+  const buildRotatedImageName = (imagePath) => {
+    const cleaned = fileName(imagePath);
+    if (!cleaned.match(/\.(png|jpe?g)$/i)) return null;
+    return cleaned.replace(/\.(png|jpe?g)$/i, '_rotated.png');
+  };
+
+  const buildBaseImageName = (imagePath) => {
+    const cleaned = fileName(imagePath);
+    if (!cleaned.toLowerCase().includes('_rotated')) return null;
+    return cleaned.replace(/_rotated(\.(png|jpe?g))$/i, '$1');
+  };
+
+  const findRotationPair = (card) => {
+    if (!card?.image) return null;
+
+    const currentPath = normalizeImagePath(card.image);
+    const currentFile = fileName(currentPath);
+    const currentCore = coreName(currentFile);
+    const lookingForRotated = !isRotatedImage(currentPath);
+
+    const targetName = lookingForRotated
+      ? buildRotatedImageName(currentFile)
+      : buildBaseImageName(currentFile);
+
+    const pool = [
+      ...(Array.isArray(ListCards) ? ListCards : []),
+      ...(Array.isArray(availableCards) ? availableCards : []),
+      ...(Array.isArray(hand) ? hand : [])
+    ];
+
+    console.log('[rotation] search', {
+      currentFile,
+      currentCore,
+      lookingForRotated,
+      targetName,
+      poolSize: pool.length,
+      poolPreview: pool.slice(0, 8).map(c => ({
+        id: c?.id,
+        file: c?.image ? fileName(c.image) : null,
+        core: c?.image ? coreName(fileName(c.image)) : null
+      }))
+    });
+
+    const match = pool.find(candidate => {
+      if (!candidate?.image) return false;
+      if (candidate.id === card.id) return false;
+      const candidatePath = normalizeImagePath(candidate.image);
+      const candidateFile = fileName(candidatePath);
+      const candidateCore = coreName(candidateFile);
+      const coreMatch = candidateCore === currentCore && candidateFile !== currentFile;
+      const targetMatch = targetName ? candidateFile === targetName : false;
+      return coreMatch || targetMatch;
+    });
+
+    if (!match) {
+      console.warn('[rotation] Rotation pair not found for', currentFile, 'target', targetName || currentCore);
+    } else {
+      console.log('[rotation] pair found', {
+        current: { id: card.id, file: currentFile },
+        match: { id: match.id, file: fileName(match.image) }
+      });
+    }
+
+    return match;
+  };
 
 
   // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
+    const username = resolveDeckUsername();
+    if (!username) {
+      console.warn('[rotation] No username found to sync deck');
+      return;
+    }
+    const ids = nextHand.map(card => card.id);
+    console.log('[rotation] PATCH deck for', username, 'cards:', ids);
     try {
-      const ids = nextHand.map(card => card.id);
-      await patchDeck(currentUsername, ids);
+      await patchDeck(username, ids);
     } catch (e) {
-      console.error('Error sincronizando deck en servidor:', e);
+      console.error('[rotation] Error sincronizando deck en servidor:', e);
     }
   };
 
@@ -187,11 +283,40 @@ export default function PlayerCards({
   };
 
   const toggleCardRotation = (index) => {
+    console.log('[rotation] toggleCardRotation index', index);
+    const currentCard = hand[index];
+    if (!currentCard) {
+      console.warn('[rotation] No card found at index', index);
+      return;
+    }
+
+    const counterpart = findRotationPair(currentCard);
+
+    if (counterpart) {
+      console.log('[rotation] Swap to counterpart', {
+        fromId: currentCard.id,
+        fromImg: fileName(currentCard.image),
+        toId: counterpart.id,
+        toImg: fileName(counterpart.image)
+      });
+      const newHand = [...hand];
+      newHand[index] = counterpart;
+      setHand(newHand);
+      setCardRotations(prev => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
+      syncServerDeck(newHand);
+      return;
+    }
+
+    console.warn('[rotation] No counterpart found, applying visual rotation only');
+    const toggledRotation = (cardRotations[index] || 0) === 180 ? 0 : 180;
     setCardRotations(prev => ({
       ...prev,
-      [index]: prev[index] === 180 ? 0 : 180
+      [index]: toggledRotation
     }));
-    console.log(`🔄 Card ${index} rotated to ${cardRotations[index] === 180 ? 0 : 180}°`);
   };
 
   useEffect(() => {
