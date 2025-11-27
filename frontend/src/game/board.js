@@ -326,7 +326,7 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  const handleCellClick = (row, col) => {
+  /* const handleCellClick = (row, col) => {
     // Solo permitir clicks si el modo colapso está activo
     if (!collapseMode.active) {
       return;
@@ -369,7 +369,66 @@ const activateCollapseMode = (card, cardIndex) => {
       nextTurn();
       processingAction.current = false;
     }, 800);
-  };
+
+    
+  };*/
+
+  const handleCellClick = async (row, col) => {
+  if (!collapseMode.active) return;
+  if (processingAction.current) return;
+  processingAction.current = true;
+
+  const cell = boardCells[row][col];
+  if (!cell || cell.type === 'start' || cell.type === 'objective') {
+    processingAction.current = false;
+    return;
+  }
+
+  if (cell.type !== 'tunnel') {
+    toast.warning('🔴You can only destroy tunnel cards');
+    processingAction.current = false;
+    return;
+  }
+
+  setCont(timeturn);
+  setDestroyingCell({ row, col });
+
+  try {
+    //PATCH al backend para reflejar la eliminación de la carta
+    if (cell.squareId) {
+      patchSquare(cell.squareId, {
+        occupation: false,
+        card: null,
+      });
+    }
+
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      next[row][col] = null; // eliminar carta localmente
+      return next;
+    });
+
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(collapseMode.cardIndex);
+    }
+    setDeckCount(prev => Math.max(0, prev - 1));
+
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    addColoredLog(
+      currentIndex,
+      playerOrder[currentIndex].username,
+      `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`
+    );
+
+    toast.success('Tunnel card destroyed!');
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+    setDestroyingCell(null);
+    nextTurn();
+  } finally {
+    processingAction.current = false;
+  }
+};
+
 
   useEffect(() => {
     window.activateCollapseMode = activateCollapseMode;
