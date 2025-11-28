@@ -383,7 +383,7 @@ const activateCollapseMode = (card, cardIndex) => {
     processingAction.current = false;
     return;
   }
-
+ 
   if (cell.type !== 'tunnel') {
     toast.warning('🔴You can only destroy tunnel cards');
     processingAction.current = false;
@@ -393,13 +393,16 @@ const activateCollapseMode = (card, cardIndex) => {
   setCont(timeturn);
   setDestroyingCell({ row, col });
 
-  try {
-    //PATCH al backend para reflejar la eliminación de la carta
+  try {  
     if (cell.squareId) {
       patchSquare(cell.squareId, {
         occupation: false,
         card: null,
       });
+    } else {
+      console.error(`❌ ERROR CRÍTICO: Intentando destruir celda [${row},${col}] pero no tiene squareId. La petición al servidor se ha cancelado.`);
+      toast.error("Error de sincronización: No se pudo destruir la carta en el servidor.");
+      return; // Detenemos la ejecución para que no se borre visualmente si falló el server
     }
 
     setBoardCells(prev => {
