@@ -343,6 +343,7 @@ export const useGameData = (game) => {
   }
 
   const getSquareByCoordinates = async (boardId, coordinateX, coordinateY) => {
+    console.log('🔍 getSquareByCoordinates llamado con:', { boardId, coordinateX, coordinateY });
     try {
       const response = await fetch(
         `/api/v1/squares/byBoardAndCoordinates?boardId=${boardId}&coordinateX=${coordinateX}&coordinateY=${coordinateY}`,
@@ -354,8 +355,15 @@ export const useGameData = (game) => {
           },
         }
       );
+      console.log('🔍 Respuesta del servidor:', response.status);
       if (response.ok) {
-        const square = await response.json();
+        const text = await response.text();
+        if (!text) {
+          console.warn('Square no encontrado para coordenadas:', coordinateX, coordinateY);
+          return null;
+        }
+        const square = JSON.parse(text);
+        console.log('🔍 Square encontrado:', square);
         return square;
       } else {
         console.error('Respuesta no OK al obtener square por coordenadas:', response.status);

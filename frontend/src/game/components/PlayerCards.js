@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer, isRotatedImage } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
@@ -83,19 +84,6 @@ export default function PlayerCards({
       ...(Array.isArray(hand) ? hand : [])
     ];
 
-    console.log('[rotation] search', {
-      currentFile,
-      currentCore,
-      lookingForRotated,
-      targetName,
-      poolSize: pool.length,
-      poolPreview: pool.slice(0, 8).map(c => ({
-        id: c?.id,
-        file: c?.image ? fileName(c.image) : null,
-        core: c?.image ? coreName(fileName(c.image)) : null
-      }))
-    });
-
     const match = pool.find(candidate => {
       if (!candidate?.image) return false;
       if (candidate.id === card.id) return false;
@@ -107,15 +95,6 @@ export default function PlayerCards({
       return coreMatch || targetMatch;
     });
 
-    if (!match) {
-      console.warn('[rotation] Rotation pair not found for', currentFile, 'target', targetName || currentCore);
-    } else {
-      console.log('[rotation] pair found', {
-        current: { id: card.id, file: currentFile },
-        match: { id: match.id, file: fileName(match.image) }
-      });
-    }
-
     return match;
   };
 
@@ -123,16 +102,14 @@ export default function PlayerCards({
   // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
     const username = resolveDeckUsername();
-    if (!username) {
-      console.warn('[rotation] No username found to sync deck');
-      return;
-    }
+    if (!username) return false;
     const ids = nextHand.map(card => card.id);
-    console.log('[rotation] PATCH deck for', username, 'cards:', ids);
     try {
-      await patchDeck(username, ids);
+      const result = await patchDeck(username, ids);
+      return !!result;
     } catch (e) {
-      console.error('[rotation] Error sincronizando deck en servidor:', e);
+      console.error('Error sincronizando deck en servidor:', e);
+      return false;
     }
   };
 
@@ -282,23 +259,13 @@ export default function PlayerCards({
     setSelectedCardIndex(prev => prev === index ? null : index);
   };
 
-  const toggleCardRotation = (index) => {
-    console.log('[rotation] toggleCardRotation index', index);
+  const toggleCardRotation = async (index) => {
     const currentCard = hand[index];
-    if (!currentCard) {
-      console.warn('[rotation] No card found at index', index);
-      return;
-    }
+    if (!currentCard) return;
 
     const counterpart = findRotationPair(currentCard);
 
     if (counterpart) {
-      console.log('[rotation] Swap to counterpart', {
-        fromId: currentCard.id,
-        fromImg: fileName(currentCard.image),
-        toId: counterpart.id,
-        toImg: fileName(counterpart.image)
-      });
       const newHand = [...hand];
       newHand[index] = counterpart;
       setHand(newHand);
@@ -307,11 +274,15 @@ export default function PlayerCards({
         delete next[index];
         return next;
       });
-      syncServerDeck(newHand);
+      const success = await syncServerDeck(newHand);
+      if (!success) {
+        toast.error('Failed to sync rotation with server');
+      }
       return;
     }
 
-    console.warn('[rotation] No counterpart found, applying visual rotation only');
+    // No hay carta rotada en el backend, usar rotación visual CSS
+    console.warn('[rotation] No rotated card found for:', fileName(currentCard.image));
     const toggledRotation = (cardRotations[index] || 0) === 180 ? 0 : 180;
     setCardRotations(prev => ({
       ...prev,

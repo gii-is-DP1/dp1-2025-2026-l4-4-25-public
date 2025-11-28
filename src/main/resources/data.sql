@@ -487,3 +487,71 @@ INSERT INTO card (id, deck_id, status, image)
 VALUES (70, null, FALSE, '/images/card-images/tunnel-cards/abajo_centro.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (70, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE);
+
+
+
+    -- ROTATED: arriba_abajo_izquierda_derecha_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (71, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_izquierda_derecha_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (71, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+
+    -- ROTATED: abajo_izquierda_derecha_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (72, null, FALSE, '/images/card-images/tunnel-cards/abajo_izquierda_derecha_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (72, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE);
+
+    -- ROTATED: arriba_izquierda_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (73, null, FALSE, '/images/card-images/tunnel-cards/arriba_izquierda_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (73, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE);
+
+    -- ROTATED: arriba_abajo_izquierda_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (74, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_izquierda_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (74, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE);
+
+    -- ROTATED: abajo_izquierda_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (75, null, FALSE, '/images/card-images/tunnel-cards/abajo_izquierda_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (75, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE);
+
+    -- ROTATED: izquierda_derecha_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (76, null, FALSE, '/images/card-images/tunnel-cards/izquierda_derecha_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (76, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE);
+
+    -- ROTATED: arriba_abajo_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (77, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (77, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE);
+
+    -- ROTATED: abajo_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (78, null, FALSE, '/images/card-images/tunnel-cards/abajo_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (78, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE);
+
+    -- ROTATED: arriba_abajo (simétrica pero añadimos para consistencia)
+INSERT INTO card (id, deck_id, status, image)
+VALUES (79, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (79, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
+
+    -- ROTATED: izquierda_derecha
+INSERT INTO card (id, deck_id, status, image)
+VALUES (80, null, FALSE, '/images/card-images/tunnel-cards/izquierda_derecha_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (80, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE);
+
+    -- ROTATED: arriba_izquierda (se convierte en abajo_derecha)
+INSERT INTO card (id, deck_id, status, image)
+VALUES (81, null, FALSE, '/images/card-images/tunnel-cards/arriba_izquierda_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (81, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE);
