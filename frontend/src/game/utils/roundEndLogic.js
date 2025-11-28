@@ -137,23 +137,66 @@ const checkPathToGold = (boardCells, objectiveCards) => {
 };
 
 // Reparto de pepitas según las reglas del Saboteur
+// Retorna un array con la distribución de oro para mostrar en el modal
 export const distributeGold = (players, winnerRol) => {
+    const goldDistribution = [];
     const winners = players.filter(p => p.role === winnerRol);
+    
     if (winnerRol === true) {
+      // Saboteurs win
       const saboteurCount = winners.length;
+      let nuggetsPerSaboteur = 0;
+      
       if (saboteurCount === 1) {
-        patchActivePlayer(winners[0].id, { goldNugget: winners[0].goldNugget + 4 });
+        nuggetsPerSaboteur = 4;
       } else if (saboteurCount === 2 || saboteurCount === 3) {
-        winners.forEach(p => patchActivePlayer(p.id, { goldNugget: p.goldNugget + 3 })); 
+        nuggetsPerSaboteur = 3;
       } else if (saboteurCount === 4) {
-        winners.forEach(p => patchActivePlayer(p.id, { goldNugget: p.goldNugget + 2 }));
-    }
-  } else {
-      winners.forEach(p => {
-        const randomGold = Math.floor(Math.random() * 3) + 1; // 1, 2 o 3
-        patchActivePlayer(p.id, { goldNugget: p.goldNugget + randomGold });
+        nuggetsPerSaboteur = 2;
+      }
+      
+      players.forEach(p => {
+        if (p.role === winnerRol) {
+          patchActivePlayer(p.id, { goldNugget: p.goldNugget + nuggetsPerSaboteur });
+          goldDistribution.push({
+            username: p.user?.username || p.username,
+            role: p.role,
+            nuggetsEarned: nuggetsPerSaboteur,
+            totalNuggets: p.goldNugget + nuggetsPerSaboteur
+          });
+        } else {
+          goldDistribution.push({
+            username: p.user?.username || p.username,
+            role: p.role,
+            nuggetsEarned: 0,
+            totalNuggets: p.goldNugget
+          });
+        }
       });
-  }
+    } else {
+      // Miners win
+      players.forEach(p => {
+        if (p.role === winnerRol) {
+          const randomGold = Math.floor(Math.random() * 3) + 1; // 1, 2 o 3
+          patchActivePlayer(p.id, { goldNugget: p.goldNugget + randomGold });
+          goldDistribution.push({
+            username: p.user?.username || p.username,
+            role: p.role,
+            nuggetsEarned: randomGold,
+            totalNuggets: p.goldNugget + randomGold
+          });
+        } else {
+          goldDistribution.push({
+            username: p.user?.username || p.username,
+            role: p.role,
+            nuggetsEarned: 0,
+            totalNuggets: p.goldNugget
+          });
+        }
+      });
+    }
+    
+    return goldDistribution;
 }
 
 export const prepareNewRound = (currentRoundNumber) => {

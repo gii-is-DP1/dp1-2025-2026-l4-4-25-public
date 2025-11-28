@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import tokenService from '../services/token.service.js';
 
 // Componentes
@@ -12,6 +12,7 @@ import GameBoard from './components/GameBoard';
 import PlayersList from './components/PlayersList';
 import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
+import RoundEndModal from './components/RoundEnd';
 
 // Utilidades
 import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
@@ -76,6 +77,11 @@ export default function Board() {
   const [myRole, setMyRole] = useState(null);
   const [destroyingCell, setDestroyingCell] = useState(null); 
 
+  // Estado para el modal de fin de ronda
+  const [roundEndData, setRoundEndData] = useState(null);
+  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  const navigate = useNavigate();
+
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
       Array.from({ length: BOARD_COLS }, () => null)
@@ -106,6 +112,7 @@ export default function Board() {
     postDeck,
     getDeck,
     patchDeck,
+    fetchOtherPlayerDeck,
     findActivePlayerUsername,
     loadActivePlayers,
     loggedActivePlayer,
@@ -523,36 +530,76 @@ const activateCollapseMode = (card, cardIndex) => {
   // Función para manejar el final de ronda
   const handleRoundEnd = (result) => {
     const { reason, winnerTeam, goldPosition } = result;
-    if (round.roundNumber === 3){
-      handleLastRoundEnd(result);
-    }
+    
     // Mostrar mensaje de final de ronda
     if (reason === 'GOLD_REACHED') {
       addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
-      toast.success(`🏆 The ${winnerTeam} won! Gold found!`);
       
       if (revealedObjective?.position !== goldPosition) {
         setRevealedObjective({ position: goldPosition, cardType: 'gold' });
       }
     } else if (reason === 'NO_CARDS') {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
-      toast.success(`🏆 The ${winnerTeam} won! No more cards.`);
     }
 
-    // Distribuir pepitas de oro
+    // Distribuir pepitas de oro y obtener la distribución para el modal
     const winnerRol = winnerTeam === 'MINERS' ? false : true;
-    distributeGold(activePlayers, winnerRol);
+    const goldDistribution = distributeGold(activePlayers, winnerRol);
     
-    // Aquí podrías añadir lógica adicional:
-    // - Actualizar el estado del round en el backend
-    // - Preparar nueva ronda si es necesario
-    // - Mostrar pantalla de resultados
-    // - etc.
-    patchRound(round.id, {winnerRol: winnerRol });
-    postRound({gameId: game.id, roundNumber: round.roundNumber + 1});
+    // Preparar datos de roles para el modal
+    const playerRolesData = activePlayers.map(p => ({
+      username: p.user?.username || p.username,
+      role: p.role
+    }));
+    
+    // Mostrar el modal de fin de ronda
+    setRoundEndData({
+      winnerTeam,
+      reason,
+      goldDistribution,
+      playerRoles: playerRolesData
+    });
+    setRoundEndCountdown(10);
+    
+    // Actualizar el estado del round en el backend
+    patchRound(round.id, { winnerRol: winnerRol });
+    
+    // Si es la ronda 3, manejar el final del juego
+    if (round.roundNumber === 3) {
+      handleLastRoundEnd(result);
+      return;
+    }
   };
 
-
+  // Efecto para manejar el countdown y la navegación a la nueva ronda
+  useEffect(() => {
+    if (!roundEndData) return;
+    
+    if (roundEndCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRoundEndCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      // Countdown terminado, crear nueva ronda y navegar
+      const createAndNavigateToNewRound = async () => {
+        try {
+          const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
+          if (newRound && newRound.id) {
+            // Navegar al board de la nueva ronda
+            setRoundEndData(null);
+            navigate(`/game/${game.id}/round/${newRound.id}/board`, {
+              state: { game, round: newRound, isSpectator }
+            });
+          }
+        } catch (error) {
+          console.error('Error al crear nueva ronda:', error);
+          toast.error('Error creating new round');
+        }
+      };
+      createAndNavigateToNewRound();
+    }
+  }, [roundEndData, roundEndCountdown]);
 
   // Función para descartar carta
   const handleDiscard = () => {
@@ -1057,6 +1104,18 @@ const activateCollapseMode = (card, cardIndex) => {
           </div>
         </div>)}
 
+      {/* Modal de fin de ronda */}
+      {roundEndData && (
+        <RoundEndModal
+          winnerTeam={roundEndData.winnerTeam}
+          reason={roundEndData.reason}
+          goldDistribution={roundEndData.goldDistribution}
+          playerRoles={roundEndData.playerRoles}
+          countdown={roundEndCountdown}
+          roundNumber={round.roundNumber}
+        />
+      )}
+
       <div className="logo-container">
         <img src="/logo1-recortado.png" alt="logo" className="logo-img1" />
       </div>
@@ -1068,6 +1127,7 @@ const activateCollapseMode = (card, cardIndex) => {
         postDeck={postDeck} 
         getDeck={getDeck}
         patchDeck={patchDeck}
+        fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
         CardPorPlayer={CardPorPlayer} 
         isSpectator={isSpectator}
