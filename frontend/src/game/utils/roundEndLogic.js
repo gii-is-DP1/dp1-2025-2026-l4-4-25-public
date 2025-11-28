@@ -6,6 +6,29 @@ import { hasPathFromStart } from './cardUtils';
 
 const jwt = tokenService.getLocalAccessToken();
 
+
+  const getActivePlayerDeck = async (activePlayerId) => {
+  try {
+    const response = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayerId}`, {
+      method: "GET",
+      headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+        });
+        if (response.ok) {
+          const activePlayer = await response.json();
+          return activePlayer;
+        } else {
+          console.error('Respuesta no OK al obtener el deck del activePlayerId:', response.status);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error de red al obtener el deck del activePlayerId:', error);
+        return null;
+      }
+    };
+
 const patchActivePlayer = async (activePlayerId, data) => {
   try {
     const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
@@ -43,7 +66,14 @@ export const checkRoundEnd = (boardCells, deckCount, players, objectiveCards) =>
       goldPosition: goldReached.position
     };
   }
-  if (deckCount <= 0) {
+
+  const playersDecks = players.map(async (player) => {
+    const deck = await getActivePlayerDeck(player.id);
+    return deck;
+  });
+
+  const allPlayersOutOfCards = playersDecks.every(deck => deck && deck.cards.length === 0);
+  if (deckCount <= 0 && allPlayersOutOfCards) {
     return {
       ended: true,
       reason: 'NO_CARDS',
