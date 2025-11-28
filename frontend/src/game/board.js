@@ -224,6 +224,17 @@ export default function Board() {
         toast.warning("It's not your turn!");
         return;
       }
+      
+      // Verificar si el jugador tiene alguna herramienta rota
+      const currentPlayerTools = playerTools[loggedInUser.username];
+      if (currentPlayerTools) {
+        const hasBrokenTool = !currentPlayerTools.pickaxe || !currentPlayerTools.candle || !currentPlayerTools.wagon;
+        if (hasBrokenTool) {
+          toast.error("🔧 You can't place tunnel cards while you have a broken tool!");
+          return;
+        }
+      }
+      
       setCont(timeturn);
 
       // If squareId is not provided, fetch it by coordinates
