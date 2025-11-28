@@ -2,7 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.util.List;
 import java.util.Map;
-
+import java.util.HashMap;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -113,11 +113,24 @@ public class SquareRestController {
             }
         }
 
-        if(updates.containsKey("card")){
+        /*if(updates.containsKey("card")){
             Integer cardId = (Integer)updates.get("card");
             Card card = cardService.findCard(cardId);
             square.setCard(card);
             square.setOccupation(true);
+        }*/
+        if(updates.containsKey("card")) {
+            Object cardIdObj = updates.get("card");
+            if(cardIdObj != null) {
+                Integer cardId = (Integer) cardIdObj;
+                Card card = cardService.findCard(cardId);
+                square.setCard(card);
+                square.setOccupation(true);
+            } else {
+                // Carta eliminada
+                square.setCard(null);
+                square.setOccupation(false);
+            }
         }
         Square squarePatched = objectMapper.updateValue(square, updates);
 
@@ -127,13 +140,14 @@ public class SquareRestController {
         Board board = squarePatched.getBoard();
         Integer boardId = board.getId();
 
-        Map<String,Object> payload = Map.of(
-            "action", "CARD_PLACED",
-            "row", squarePatched.getCoordinateY(),
-            "col", squarePatched.getCoordinateX(),
-            "card", squarePatched.getCard(),
-            "squareId", squarePatched.getId()
-        );
+        String action = (squarePatched.getCard() != null) ? "CARD_PLACED" : "CARD_DESTROYED";
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("action", action);
+        payload.put("row", squarePatched.getCoordinateY());
+        payload.put("col", squarePatched.getCoordinateX());
+        payload.put("card", squarePatched.getCard()); 
+        payload.put("squareId", squarePatched.getId());
 
         messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
 
