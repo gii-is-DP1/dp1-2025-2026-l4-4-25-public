@@ -14,14 +14,10 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.action.Action;
-import es.us.dp1.l4_04_24_25.saboteur.action.nameAction;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import es.us.dp1.l4_04_24_25.saboteur.card.effectValue;
-import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel; 
-
+import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -33,55 +29,53 @@ class CardServiceTests {
     @Autowired
     private DeckService deckService; 
 
-    
     private static final int TEST_DECK_ID = 1;
+    
     private static final int TEST_ACTION_CARD_ID = 25; 
+    
     private static final int TEST_TUNNEL_CARD_ID_TO_DELETE = 31;
 
    @Test
     @Transactional
     void shouldFindAllCards() {
         List<Card> cards = (List<Card>) this.cardService.findAll();
-        assertTrue(cards.size() == 70); 
+        assertTrue(cards.size() == 81); 
     }
    
     @Test
     void shouldFindCardById() {
-      
         Card card = this.cardService.findCard(TEST_ACTION_CARD_ID);
-       
         assertNotNull(card);
         assertEquals(TEST_ACTION_CARD_ID, card.getId());
     }
 
     @Test
     void shouldThrowExceptionWhenFindingNonExistingCard() {
-        
         assertThrows(ResourceNotFoundException.class, () -> this.cardService.findCard(99999));
     }
     
     @Test
     @Transactional
     void shouldInsertNewTunnel() {
-       
         int initialCount = ((Collection<Card>) this.cardService.findAll()).size();
         Deck deckRef = deckService.findDeck(TEST_DECK_ID);
         
-        Action newCard = new Action();
+        Tunnel newCard = new Tunnel();
         newCard.setStatus(true);
-        newCard.setImage("a");
+        newCard.setImage("tunnel_test_image.png");
         newCard.setDeck(deckRef);
-        newCard.setNameAction(nameAction.REVEAL);
-        newCard.setEffectValue(effectValue.REVEAL);
-        newCard.setObjectAffect(false);
-        
+
+        newCard.setArriba(true);
+        newCard.setAbajo(true);
+        newCard.setIzquierda(true);
+        newCard.setDerecha(true);
+        newCard.setCentro(false);
+        newCard.setRotacion(false);
         
         Card savedCard = this.cardService.saveCard(newCard);
         
-        
         assertNotNull(savedCard.getId());
-        assertEquals("a", savedCard.getImage());
-        
+        assertEquals("tunnel_test_image.png", savedCard.getImage());
         
         int finalCount = ((Collection<Card>) this.cardService.findAll()).size();
         assertTrue(finalCount > initialCount);
@@ -90,8 +84,7 @@ class CardServiceTests {
     @Test
     @Transactional
     void shouldUpdateCardImage() {
-       
-        String newImage = "a";
+        String newImage = "new_image_path.png";
         Card card = this.cardService.findCard(TEST_ACTION_CARD_ID);
         
         card.setImage(newImage);
@@ -104,7 +97,6 @@ class CardServiceTests {
     @Test
     @Transactional
     void shouldDeleteCard() {
-        
         Card cardToDelete = this.cardService.findCard(TEST_TUNNEL_CARD_ID_TO_DELETE);
         assertNotNull(cardToDelete);
 
