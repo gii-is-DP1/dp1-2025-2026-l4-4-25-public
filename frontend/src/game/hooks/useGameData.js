@@ -170,6 +170,33 @@ export const useGameData = (game) => {
     }
   };
 
+  // Obtiene el deck de otro jugador sin modificar el estado local
+  const fetchOtherPlayerDeck = async (username) => {
+    try {
+      const activePlayer = await fetchActivePlayerByUsername(username);
+      if (!activePlayer?.id) {
+        return null;
+      }
+
+      const response = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayer.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error al obtener deck de otro jugador:', error);
+      return null;
+    }
+  };
+
   // Actualiza (PATCH) el deck de un ActivePlayer por username con la lista de IDs de cartas
   const patchDeck = async (username, cardIds) => {
     try {
@@ -467,27 +494,73 @@ export const useGameData = (game) => {
   }
 };
 
-const getActivePlayersbyId = async (activePlayerId) => {
+  const patchRound = async (roundId, updates) => {
     try {
-      const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
-        method: "GET",
-        headers: {
+      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+        method: "PATCH",
+        headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          "Authorization": `Bearer ${jwt}` 
         },
+        body: JSON.stringify(updates),
       });
       if (response.ok) {
-        const activePlayer = await response.json();
-        return activePlayer;
+        const updatedRound = await response.json();
+        console.log('Round actualizado:', updatedRound);
+        return updatedRound;
       } else {
-        console.error('Respuesta no OK al obtener activePlayer por ID:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Error de red al obtener activePlayer por ID:', error);
+      console.error('Error de red al hacer PATCH del round:', error);
       return null;
     }
   };
+
+  const postRound = async (roundId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      });
+      if (response.ok) {
+        const newRound = await response.json();
+        console.log('Round creado:', newRound);
+        return newRound;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al hacer POST del round:', error);
+      return null;
+    }
+  };
+
+  const getActivePlayersbyId = async (activePlayerId) => {
+  try {
+    const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
+      method: "GET",
+      headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+        });
+        if (response.ok) {
+          const activePlayer = await response.json();
+          return activePlayer;
+        } else {
+          console.error('Respuesta no OK al obtener activePlayer por ID:', response.status);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error de red al obtener activePlayer por ID:', error);
+        return null;
+      }
+    };
 
   return {
     activePlayers,
@@ -502,6 +575,7 @@ const getActivePlayersbyId = async (activePlayerId) => {
     postDeck,
     getDeck,
     patchDeck,
+    fetchOtherPlayerDeck,
     findActivePlayerUsername,
     fetchActivePlayerByUsername,
     squaresById,
@@ -513,6 +587,8 @@ const getActivePlayersbyId = async (activePlayerId) => {
     patchLog,
     getmessagebychatId,
     patchActivePlayer,
+    patchRound,
+    postRound,
     getActivePlayersbyId
   };
 };
