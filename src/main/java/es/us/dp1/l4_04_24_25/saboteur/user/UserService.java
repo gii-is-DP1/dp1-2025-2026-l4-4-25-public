@@ -15,6 +15,8 @@
  */
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +81,23 @@ public class UserService {
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
+
+		// Validar que birthDate sea anterior a la fecha actual
+		if (user.getBirthDate() != null) {
+			try {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				LocalDate birthDate = LocalDate.parse(user.getBirthDate(), formatter);
+				if (birthDate.isAfter(LocalDate.now()) || birthDate.isEqual(LocalDate.now())) {
+					throw new IllegalArgumentException("Birth date must be before current date");
+				}
+			} catch (Exception e) {
+				if (e instanceof IllegalArgumentException) {
+					throw e;
+				}
+				throw new IllegalArgumentException("Invalid birth date format. Expected yyyy-MM-dd");
+			}
+		}
+
 		ActivePlayer activePlayer = new ActivePlayer();
 		activePlayer.setUsername(user.getUsername());
 		activePlayer.setPassword(user.getPassword());
@@ -89,6 +108,8 @@ public class UserService {
 		String strRoles = user.getAuthority().authority;
 		Authorities role;
 
+		
+
 		switch (strRoles.toLowerCase()) {
 		case "admin":
 			role = authoritiesService.findByAuthority("ADMIN");
@@ -98,16 +119,7 @@ public class UserService {
 		default:
 			role = authoritiesService.findByAuthority("PLAYER");
 			activePlayer.setAuthority(role);
-			//activePlayerService.saveActivePlayer(activePlayer);
-			/*Player player = new Player();
-			player.setFirstName(request.getFirstName());
-			player.setLastName(request.getLastName());
-			player.setAddress(request.getAddress());
-			player.setCity(request.getCity());
-			player.setTelephone(request.getTelephone());
-			player.setUser(user);
-			playerService.savePlayer(player);
-			*/
+			
 		}
 		return activePlayerRepository.save(activePlayer); 
 	}
@@ -189,6 +201,23 @@ public class UserService {
 	@Transactional
 	public User updateUser(@Valid User user, Integer idToUpdate) {
     User toUpdate = findUser(idToUpdate);
+    
+	// Validar que birthDate sea anterior a la fecha actual si se está actualizando
+	if (user.getBirthDate() != null && !user.getBirthDate().trim().isEmpty()) {
+		try {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			LocalDate birthDate = LocalDate.parse(user.getBirthDate(), formatter);
+			if (birthDate.isAfter(LocalDate.now()) || birthDate.isEqual(LocalDate.now())) {
+				throw new IllegalArgumentException("Birth date must be before current date");
+			}
+		} catch (Exception e) {
+			if (e instanceof IllegalArgumentException) {
+				throw e;
+			}
+			throw new IllegalArgumentException("Invalid birth date format. Expected yyyy-MM-dd");
+		}
+	}
+    
     BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password");
     String newPassword = user.getPassword();
 	Authorities authority = user.getAuthority();
