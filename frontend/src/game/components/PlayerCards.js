@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer, isRotatedImage } from '../utils/gameUtils';
+import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
 export default function PlayerCards({
@@ -18,7 +17,8 @@ export default function PlayerCards({
   currentUsername,
   currentPlayer,
   deckCount,
-  CardPorPlayer,
+  playerCardsCount,
+  setPlayerCardsCount,
   isSpectator,
   deck,
 }) {
@@ -29,95 +29,36 @@ export default function PlayerCards({
   const [deckChecked, setDeckChecked] = useState(false);
   const [cardRotations, setCardRotations] = useState({}); 
 
-  const normalizeImagePath = (imagePath = '') =>
-    String(imagePath || '')
-      .split('?')[0]
-      .trim()
-      .toLowerCase();
-
-  const fileName = (imagePath = '') => {
-    const normalized = normalizeImagePath(imagePath);
-    const parts = normalized.split('/');
-    return parts[parts.length - 1];
-  };
-
-  const coreName = (name = '') =>
-    fileName(name)
-      .replace(/_rotated(?=\.[a-z]+$)/i, '')
-      .replace(/\.(png|jpe?g)$/i, '');
-
-  const resolveDeckUsername = () => {
-    if (currentUsername) return currentUsername;
-    if (Array.isArray(activePlayers)) {
-      return findActivePlayerUsername(activePlayers);
-    }
-    return null;
-  };
-
-  const buildRotatedImageName = (imagePath) => {
-    const cleaned = fileName(imagePath);
-    if (!cleaned.match(/\.(png|jpe?g)$/i)) return null;
-    return cleaned.replace(/\.(png|jpe?g)$/i, '_rotated.png');
-  };
-
-  const buildBaseImageName = (imagePath) => {
-    const cleaned = fileName(imagePath);
-    if (!cleaned.toLowerCase().includes('_rotated')) return null;
-    return cleaned.replace(/_rotated(\.(png|jpe?g))$/i, '$1');
-  };
-
-  const findRotationPair = (card) => {
-    if (!card?.image) return null;
-
-    const currentPath = normalizeImagePath(card.image);
-    const currentFile = fileName(currentPath);
-    const currentCore = coreName(currentFile);
-    const lookingForRotated = !isRotatedImage(currentPath);
-
-    const targetName = lookingForRotated
-      ? buildRotatedImageName(currentFile)
-      : buildBaseImageName(currentFile);
-
-    const pool = [
-      ...(Array.isArray(ListCards) ? ListCards : []),
-      ...(Array.isArray(availableCards) ? availableCards : []),
-      ...(Array.isArray(hand) ? hand : [])
-    ];
-
-    const match = pool.find(candidate => {
-      if (!candidate?.image) return false;
-      if (candidate.id === card.id) return false;
-      const candidatePath = normalizeImagePath(candidate.image);
-      const candidateFile = fileName(candidatePath);
-      const candidateCore = coreName(candidateFile);
-      const coreMatch = candidateCore === currentCore && candidateFile !== currentFile;
-      const targetMatch = targetName ? candidateFile === targetName : false;
-      return coreMatch || targetMatch;
-    });
-
-    return match;
-  };
-
+  useEffect(() => {
+    if (setPlayerCardsCount && !isSpectator && currentUsername) {
+      setPlayerCardsCount(prev => ({
+        ...prev,
+        [currentUsername]: hand.length}));
+      console.log('Updated card count:',currentUsername,':', hand.length);}
+  }, [hand.length, setPlayerCardsCount, isSpectator, currentUsername]);
 
   // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
-    const username = resolveDeckUsername();
-    if (!username) return false;
-    const ids = nextHand.map(card => card.id);
     try {
-      const result = await patchDeck(username, ids);
-      return !!result;
+      const ids = nextHand.map(card => card.id);
+      await patchDeck(currentUsername, ids);
     } catch (e) {
       console.error('Error sincronizando deck en servidor:', e);
-      return false;
     }
   };
 
+  
   const pickRandomNonRotated = (cards, count = 5) => {
     const pool = getNonRotatedCards(cards).slice();
     shuffleInPlace(pool);
     return pool.slice(0, Math.min(count, pool.length));
   };
+
+  useEffect(() => {
+  window.getCurrentHandSize = () => hand.length;
+  return () => { delete window.getCurrentHandSize };
+}, [hand]);
+
 
 
   // Comprobar si el jugador tiene un mazo en el servidor si lo tiene hace un getDeck para cargarlo
@@ -204,34 +145,28 @@ export default function PlayerCards({
     
     return drawnCard;
   };
+  useEffect(() => {
+  window.getCurrentHandSize = () => hand.length;
+  return () => { delete window.getCurrentHandSize };
+}, [hand]);
 
-  const removeCardAndDraw = (cardIndex) => {
-    setHand(prevHand => {
-      const newHand = [...prevHand];
-      newHand.splice(cardIndex, 1);
-      const drawnCard = drawCard();
-      if (drawnCard) {
-        newHand.push(drawnCard);
-      }
-      // Sincroniza servidor con la nueva mano
-      syncServerDeck(newHand);
-      return newHand;
-    });
-    
 
-    setCardRotations(prev => {
-      const newRotations = {};
-      Object.keys(prev).forEach(key => {
-        const idx = parseInt(key);
-        if (idx < cardIndex) {
-          newRotations[idx] = prev[idx];
-        } else if (idx > cardIndex) {
-          newRotations[idx - 1] = prev[idx];
-        }
-      });
-      return newRotations;
-    });
-  };
+ const removeCardAndDraw = (cardIndex) => {
+  setHand(prevHand => {
+    const newHand = [...prevHand];
+
+    // Quita carta SIEMPRE
+    newHand.splice(cardIndex, 1);
+
+    // Intenta robar, pero si no hay mazo, NO repone carta
+    const drawnCard = drawCard();
+    if (drawnCard) newHand.push(drawnCard);
+
+    syncServerDeck(newHand);
+    return newHand; // Aquí sí puede quedar en 0 cartas
+  });
+};
+
 
   const discardCard = () => {
     if (selectedCardIndex === null) {
@@ -259,35 +194,12 @@ export default function PlayerCards({
     setSelectedCardIndex(prev => prev === index ? null : index);
   };
 
-  const toggleCardRotation = async (index) => {
-    const currentCard = hand[index];
-    if (!currentCard) return;
-
-    const counterpart = findRotationPair(currentCard);
-
-    if (counterpart) {
-      const newHand = [...hand];
-      newHand[index] = counterpart;
-      setHand(newHand);
-      setCardRotations(prev => {
-        const next = { ...prev };
-        delete next[index];
-        return next;
-      });
-      const success = await syncServerDeck(newHand);
-      if (!success) {
-        toast.error('Failed to sync rotation with server');
-      }
-      return;
-    }
-
-    // No hay carta rotada en el backend, usar rotación visual CSS
-    console.warn('[rotation] No rotated card found for:', fileName(currentCard.image));
-    const toggledRotation = (cardRotations[index] || 0) === 180 ? 0 : 180;
+  const toggleCardRotation = (index) => {
     setCardRotations(prev => ({
       ...prev,
-      [index]: toggledRotation
+      [index]: prev[index] === 180 ? 0 : 180
     }));
+    console.log(`🔄 Card ${index} rotated to ${cardRotations[index] === 180 ? 0 : 180}°`);
   };
 
   useEffect(() => {
