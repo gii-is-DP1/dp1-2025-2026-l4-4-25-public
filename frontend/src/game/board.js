@@ -206,13 +206,23 @@ export default function Board() {
     }
 
     const handleWsCardDestroyed = ({ row, col, player }) => {
-      setBoardCells(prev => {
+
+      // 1. Activar animación visual
+      setDestroyingCell({ row, col });
+
+      // 2. Después de la animación, eliminar la carta visualmente
+      setTimeout(() => {
+        setBoardCells(prev => {
           const next = prev.map(r => r.slice());
           next[row][col] = null;
           return next;
-      });
-    };
+        });
 
+        // limpiar estado visual
+        setDestroyingCell(null);
+
+      }, 800); 
+    };
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
     
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
@@ -356,53 +366,6 @@ const activateCollapseMode = (card, cardIndex) => {
       lastCollapseLog.current = now;
     }
   };
-
-  /* const handleCellClick = (row, col) => {
-    // Solo permitir clicks si el modo colapso está activo
-    if (!collapseMode.active) {
-      return;
-    }
-    
-    if (processingAction.current) return;
-    processingAction.current = true;
-
-    const cell = boardCells[row][col];
-    console.log('Contenido:', cell);
-    
-    if (!cell || cell.type === 'start' || cell.type === 'objective') { // No permitir destruir cartas iniciales u objetivos
-      processingAction.current = false;
-      return;}
-    
-    if (cell.type !== 'tunnel') {
-      toast.warning('🔴You can only destroy tunnel cards');
-      processingAction.current = false;
-      return;}
-
-    setCont(timeturn);
-    setDestroyingCell({ row, col });
-    setTimeout(() => {
-      setBoardCells(prev => {
-        const next = prev.map(r => r.slice());
-        next[row][col] = null;
-        return next;
-      });
-      
-      if (window.removeCardAndDraw) {
-        window.removeCardAndDraw(collapseMode.cardIndex);
-      }
-      setDeckCount(prev => Math.max(0, prev - 1));
-      
-      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-      addColoredLog(currentIndex, playerOrder[currentIndex].username, `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
-      toast.success('Tunnel card destroyed!');
-      setCollapseMode({ active: false, card: null, cardIndex: null });
-      setDestroyingCell(null);
-      nextTurn();
-      processingAction.current = false;
-    }, 800);
-
-    
-  };*/
 
   const handleCellClick = async (row, col) => {
   if (!collapseMode.active) return;
