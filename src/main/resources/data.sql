@@ -36,7 +36,7 @@ INSERT INTO board (id, base, height) VALUES (1, 11, 9);
 INSERT INTO board (id, base, height) VALUES (2, 11, 9);
 
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, 
-1,1);
+null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
@@ -45,7 +45,11 @@ VALUES (101, 1, 4, TRUE, 0, 1, NULL);
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
 VALUES (102, 2, 5, FALSE, 1, 1, NULL);
 
+INSERT INTO card (id, deck_id, status, image) 
+VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
 
+--INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
+--VALUES (200, 0, FALSE, 0);
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
 VALUES (200, 1, 10, 'PRUEBA', 'VICTORIES', 'Gana 10 partidas.', 'Constructor Maestro');
@@ -65,6 +69,19 @@ VALUES (204, 1, 20,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
 
 -- Logros para jugador
 INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 4);
+
+
+
+INSERT INTO card (id, deck_id, status, image) 
+VALUES (205, 1, TRUE, '/images/card-images/action-cards/pickaxe.png');
+INSERT INTO action (id, name_action, object_affect, effect_value) 
+VALUES (205, 'REPAIR', FALSE, 'REPAIR_PICKAXE'); -- ENUMS como STRING, FALSE como booleano.
+
+-- * INSERCIÓN ID 2 (PARA ELIMINAR) *
+INSERT INTO card (id, deck_id, status, image) 
+VALUES (300, 1, TRUE, 'action_destroy_cart.png');
+INSERT INTO action (id, name_action, object_affect, effect_value)  
+VALUES (300, 'DESTROY', FALSE, 'DESTROY_CART');
 
 -- * ACTION CARDS *
     -- DESTROY_PICKAXE
@@ -470,3 +487,71 @@ INSERT INTO card (id, deck_id, status, image)
 VALUES (70, null, FALSE, '/images/card-images/tunnel-cards/abajo_centro.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (70, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE);
+
+
+
+    -- ROTATED: arriba_abajo_izquierda_derecha_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (71, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_izquierda_derecha_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (71, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+
+    -- ROTATED: abajo_izquierda_derecha_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (72, null, FALSE, '/images/card-images/tunnel-cards/abajo_izquierda_derecha_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (72, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE);
+
+    -- ROTATED: arriba_izquierda_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (73, null, FALSE, '/images/card-images/tunnel-cards/arriba_izquierda_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (73, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE);
+
+    -- ROTATED: arriba_abajo_izquierda_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (74, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_izquierda_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (74, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE);
+
+    -- ROTATED: abajo_izquierda_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (75, null, FALSE, '/images/card-images/tunnel-cards/abajo_izquierda_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (75, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE);
+
+    -- ROTATED: izquierda_derecha_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (76, null, FALSE, '/images/card-images/tunnel-cards/izquierda_derecha_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (76, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE);
+
+    -- ROTATED: arriba_abajo_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (77, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (77, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE);
+
+    -- ROTATED: abajo_centro
+INSERT INTO card (id, deck_id, status, image)
+VALUES (78, null, FALSE, '/images/card-images/tunnel-cards/abajo_centro_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (78, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE);
+
+    -- ROTATED: arriba_abajo (simétrica pero añadimos para consistencia)
+INSERT INTO card (id, deck_id, status, image)
+VALUES (79, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (79, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
+
+    -- ROTATED: izquierda_derecha
+INSERT INTO card (id, deck_id, status, image)
+VALUES (80, null, FALSE, '/images/card-images/tunnel-cards/izquierda_derecha_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (80, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE);
+
+    -- ROTATED: arriba_izquierda (se convierte en abajo_derecha)
+INSERT INTO card (id, deck_id, status, image)
+VALUES (81, null, FALSE, '/images/card-images/tunnel-cards/arriba_izquierda_rotated.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (81, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE);

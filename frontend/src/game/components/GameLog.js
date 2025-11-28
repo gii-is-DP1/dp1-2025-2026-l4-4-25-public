@@ -1,8 +1,15 @@
 import React, { useRef, useEffect } from 'react';
+import { useGameData } from '../hooks/useGameData';
 
 export default function GameLog({ gameLog, privateLog }) {
   const messagesEndRef = useRef(null);
   const logContainerRef = useRef(null);
+
+
+  const {
+    getLog,
+    patchLog
+  } = useGameData();
 
   useEffect(() => {
     if (logContainerRef.current && messagesEndRef.current) {

@@ -16,7 +16,7 @@ import { toast } from 'react-toastify';
  * @param {Function} context.nextTurn - Función para pasar al siguiente turno
  * @param {Function} context.setDeckCount - Función para actualizar contador del mazo
  */
-export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
+export const handleActionCard = async (card, targetPlayer, cardIndex, context) => {
   const {
     isSpectator,
     loggedInUser,
@@ -26,7 +26,9 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
     addLog,
     addPrivateLog,
     nextTurn,
-    setDeckCount
+    setDeckCount,
+    activePlayers,
+    patchActivePlayer,
   } = context;
 
   if (isSpectator) {
@@ -56,6 +58,15 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], pickaxe: false }
       }));
+
+      // Buscar el ActivePlayer y hacer patch
+      const targetActivePlayer = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayer && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayer.id, {
+          pickaxeState: false
+        });
+      }
+
       addLog(`⛏️ ${targetUsername}'s pickaxe has been broken!`);
       break;
 
@@ -68,6 +79,14 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], candle: false }
       }));
+
+      const targetActivePlayerLamp = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerLamp && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerLamp.id, {
+          candleState: false
+        });
+      }
+
       addLog(`🔦 ${targetUsername}'s candle has been broken!`);
       break;
 
@@ -80,6 +99,14 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], wagon: false }
       }));
+
+      const targetActivePlayerWagon = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerWagon && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerWagon.id, {
+          cartState: false
+        });
+      }
+
       addLog(`🪨 ${targetUsername}'s wagon has been broken!`);
       break;
 
@@ -92,6 +119,14 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], pickaxe: true }
       }));
+
+      const targetActivePlayerRepairPickaxe = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerRepairPickaxe && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerRepairPickaxe.id, {
+          pickaxeState: true
+        });
+      }
+
       addLog(`⛏️ ${targetUsername}'s pickaxe has been repaired!`);
       break;
 
@@ -104,6 +139,14 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], candle: true }
       }));
+
+      const targetActivePlayerRepairLamp = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerRepairLamp && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerRepairLamp.id, {
+          candleState: true
+        });
+      }
+
       addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
       break;
 
@@ -116,6 +159,14 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], wagon: true }
       }));
+
+      const targetActivePlayerRepairCart = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerRepairCart && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerRepairCart.id, {
+          cartState: true
+        });
+      }
+
       addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
       break;
 
@@ -132,6 +183,15 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], pickaxe: true, candle: true }
       }));
+
+      const targetActivePlayerRepairPickaxeLamp = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerRepairPickaxeLamp && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerRepairPickaxeLamp.id, {
+          pickaxeState: true,
+          candleState: true
+        });
+      }
+
       addLog(`⛏️🔦 ${targetUsername}'s pickaxe and candle have been repaired!`);
       break;
 
@@ -148,6 +208,15 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], pickaxe: true, wagon: true }
       }));
+
+      const targetActivePlayerRepairPickaxeCart = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerRepairPickaxeCart && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerRepairPickaxeCart.id, {
+          pickaxeState: true,
+          cartState: true
+        });
+      }
+
       addLog(`⛏️🪨 ${targetUsername}'s pickaxe and wagon have been repaired!`);
       break;
 
@@ -164,6 +233,15 @@ export const handleActionCard = (card, targetPlayer, cardIndex, context) => {
         ...prev,
         [targetUsername]: { ...prev[targetUsername], wagon: true, candle: true }
       }));
+
+      const targetActivePlayerRepairCartLamp = activePlayers.find(p => p.username === targetUsername);
+      if (targetActivePlayerRepairCartLamp && patchActivePlayer) {
+        await patchActivePlayer(targetActivePlayerRepairCartLamp.id, {
+          cartState: true,
+          candleState: true
+        });
+      }
+
       addLog(`🪨🔦 ${targetUsername}'s wagon and candle have been repaired!`);
       break;
 

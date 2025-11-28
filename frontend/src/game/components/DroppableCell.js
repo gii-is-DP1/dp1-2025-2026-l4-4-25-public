@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { canPlaceCard, validateCardPlacement } from '../cards';
+import { canPlaceCard, validateCardPlacement } from '../utils/cardUtils';
 import { toast } from 'react-toastify';
 
 export default function DroppableCell({ 
