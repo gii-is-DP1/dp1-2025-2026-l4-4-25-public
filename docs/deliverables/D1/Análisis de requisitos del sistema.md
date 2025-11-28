@@ -3,16 +3,15 @@
 **Curso académico:** 2025/2026 
 **Grupo/Equipo:** L4-4  
 **Nombre del proyecto:** Saboteur 
-**Versión documento:** v3.1 *(18-11-2025)* 
+**Versión documento:** v3.2 *(24-11-2025)* 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
-**Integrantes (máx. 6):** <!-- Nombre Apellidos (US-Id / correo @us.es) -->
+**Integrantes (máx. 6):** 
 
 Alejandro Caro Pérez (FQY7185 / alecarper@alum.us.es)
 
 Lorenzo Valderrama Román (WRG8176 / lorvalrom@alum.us.es)
 
 Diego Rey Carmona (RHQ7780 / diereycar@alum.us.es)
-
 
 Marcos Ángel Ayala Blanco (GBK4935 / marayabla@alum.us)
 
@@ -25,21 +24,17 @@ Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 
 ## 1️⃣ Introducción
 
-El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y **gratuito**.
-Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona.
-Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio.
-Una vez asignados los roles y las cartas de cada uno, los **buscadores de oro** intentarán construir el camino hasta donde creen que están las **pepitas de oro** y los **saboteadores** tendrán que poner trabas para impedir que los buscadores puedan lograr su hazaña.
+El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y de forma **gratuita**.
 
-Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
-El vencedor será el jugador que **más** pepitas de oro haya conseguido.
+Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona. Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio, encontraremos los Mineros y Saboteadores.
+Una vez asignados los roles y las cartas de forma aleatoria a cada uno de los jugadores de la partida, los **buscadores de oro** (mineros) intentarán construir el camino hasta donde creen que están las **pepitas de oro**, que es el objetivo de estos durante las partidas, y los **saboteadores** tendrán que poner trabas para impedir que los buscadores puedan lograr su hazaña, a través de la ruptura de las herramientas de los mineros, destruyendo caminos, etc, pero siempre desde el sigilo de no ser descubierto.
 
+Las partidas tienen una duración media de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
 
-
-Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
-El vencedor será el jugador que **más** pepitas de oro haya conseguido.
+El vencedor será el jugador que **más** pepitas de oro haya conseguido, que se repartiran de forma aleatoria al final de cada ronda según el rol que haya ganado.
 
 
-#### · VIDEO EXPLICATIVO :
+#### · VIDEO EXPLICATIVO (YouTube):
 
 <a href="https://www.youtube.com/watch?v=lwxIUdtN4aE" style="display:inline-block;padding:10px 15px;background:#008aff;color:#fff;border-radius:5px;text-decoration:none;">
  🎞 PULSE PARA VER VIDEO

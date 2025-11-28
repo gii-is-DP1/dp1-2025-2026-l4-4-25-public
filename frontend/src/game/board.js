@@ -14,11 +14,8 @@ import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
 
 // Utilidades
-import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
+import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
-import { checkRoundEnd, distributeGold } from './utils/roundEndLogic';
-import saboteurRol from './cards-images/roles/saboteurRol.png';
-import minerRol from './cards-images/roles/minerRol.png';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
@@ -31,7 +28,7 @@ import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 5;
+const timeturn = 10;
 
 export default function Board() {
   const location = useLocation();
@@ -39,7 +36,7 @@ export default function Board() {
 
   // Estados principales
   const [isSpectator] = useState(location.state?.isSpectator || false);
-  const [CardPorPlayer, setCardPorPlayer] = useState(0);
+  const [playerCardsCount, setPlayerCardsCount] = useState({}); 
   const [deckCount, setDeckCount] = useState(60);
   const [game, setGame] = useState(location.state?.game);
   const [message, setMessage] = useState([]);
@@ -93,7 +90,6 @@ export default function Board() {
   const lastObjectiveHideLog = useRef(0);
   const lastCollapseLog = useRef(0);
   const seenPrivateMessages = useRef(new Set());
-  const lastPublishedRoles = useRef([]);
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
@@ -121,10 +117,7 @@ export default function Board() {
     getSquareByCoordinates,
     getLog,
     patchLog,
-    getmessagebychatId,
-    patchActivePlayer,
-    patchRound,
-    postRound
+    getmessagebychatId
   } = useGameData(game);
 
   
@@ -171,7 +164,7 @@ export default function Board() {
     }, [gameMessage]);
   */
     //Modularizar estas funciones
-    const handleWsCardPlaced = ({row, col, card, player, squareId})=>{
+    const handleWsCardPlaced = ({row, col, card, player})=>{
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
       const sameAsLast =
@@ -190,8 +183,7 @@ export default function Board() {
           type: "tunnel",
           owner: player,
           placedAt: Date.now(),
-          occupied: true,
-          squareId: squareId
+          occupied: true
         };
         return next;
       });
@@ -224,17 +216,6 @@ export default function Board() {
         toast.warning("It's not your turn!");
         return;
       }
-      
-      // Verificar si el jugador tiene alguna herramienta rota
-      const currentPlayerTools = playerTools[loggedInUser.username];
-      if (currentPlayerTools) {
-        const hasBrokenTool = !currentPlayerTools.pickaxe || !currentPlayerTools.candle || !currentPlayerTools.wagon;
-        if (hasBrokenTool) {
-          toast.error("🔧 You can't place tunnel cards while you have a broken tool!");
-          return;
-        }
-      }
-      
       setCont(timeturn);
 
       // If squareId is not provided, fetch it by coordinates
@@ -247,11 +228,15 @@ export default function Board() {
           toast.error('Could not find square at this position');
           return;
         }
+        if (window.removeCardAndDraw) {
+    window.removeCardAndDraw(cardIndex);
+}
       }
 
       patchSquare(actualSquareId, {
         occupation: true,
         card: card?.id || card,
+        board: boardId,
       });
 
       setBoardCells(prev => {
@@ -263,7 +248,6 @@ export default function Board() {
           owner: loggedInUser?.username || 'unknown',
           placedAt: Date.now(),
           occupied: true,
-          squareId: actualSquareId,
         };
         return next;
       });
@@ -274,36 +258,60 @@ export default function Board() {
       setDeckCount(prev => Math.max(0, prev - 1));
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
       nextTurn();
-      
-      // Evaluar fin de ronda después de colocar carta (puede que se haya encontrado el oro)
-      checkForRoundEnd();
     } finally {
       processingAction.current = false;
     }
   };
 
+  // Monitorear cuando el jugador actual se queda sin cartas
+  useEffect(() => {
+    const currentPlayerCardCount = playerCardsCount[currentPlayer] || 0;
+    
+    // Solo verificar si no es espectador y es el jugador actual
+    if (!isSpectator && currentPlayer === loggedInUser?.username && currentPlayerCardCount === 0 && playerOrder.length > 0) {
+      console.log('🚫 Player out of cards, removing from turn order');
+      
+      // Eliminar al jugador actual de playerOrder
+      setPlayerOrder(prev => {
+        const filtered = prev.filter(p => p.username !== currentPlayer);
+        
+        // Si quedan jugadores, continuar el juego
+        if (filtered.length > 0) {
+          addLog(`<b>${currentPlayer}</b> has run out of cards and is now spectating`, "warning");
+          return filtered;
+        } else {
+          addLog('⚠️ All players are out of cards! Game over.', 'warning');
+          return prev; // Mantener el orden si todos se quedaron sin cartas
+        }
+      });
+      
+      // Pasar al siguiente turno después de un breve delay
+      setTimeout(() => {
+        nextTurn({ force: true });
+      }, 500);
+    }
+  }, [playerCardsCount, currentPlayer, loggedInUser?.username, isSpectator, playerOrder.length]);
+
 const handleActionCard = (card, targetPlayer, cardIndex) => {
-  if (processingAction.current) return;
-  processingAction.current = true;
-  try {
-    setCont(timeturn);
-    handleActionCardUtil(card, targetPlayer, cardIndex, {
-      isSpectator,
-      loggedInUser,
-      currentPlayer,
-      playerTools,
-      setPlayerTools,
-      addLog,
-      addPrivateLog,
-      nextTurn,
-      setDeckCount,
-      activePlayers,
-      patchActivePlayer,
-    });
-  } finally {
-    processingAction.current = false;
-  }
-};
+    if (processingAction.current) return;
+    processingAction.current = true;
+    try {
+      setCont(timeturn);
+      handleActionCardUtil(card, targetPlayer, cardIndex, {
+        isSpectator,
+        loggedInUser,
+        currentPlayer,
+        playerTools,
+        setPlayerTools,
+        addLog,
+        addPrivateLog,
+        nextTurn,
+        setDeckCount
+      });
+    } finally {
+      processingAction.current = false;
+    }
+  };
 
   const handleMapCard = (card, objectivePosition, cardIndex) => {
     if (processingAction.current) return;
@@ -350,7 +358,7 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  /* const handleCellClick = (row, col) => {
+  const handleCellClick = (row, col) => {
     // Solo permitir clicks si el modo colapso está activo
     if (!collapseMode.active) {
       return;
@@ -393,66 +401,7 @@ const activateCollapseMode = (card, cardIndex) => {
       nextTurn();
       processingAction.current = false;
     }, 800);
-
-    
-  };*/
-
-  const handleCellClick = async (row, col) => {
-  if (!collapseMode.active) return;
-  if (processingAction.current) return;
-  processingAction.current = true;
-
-  const cell = boardCells[row][col];
-  if (!cell || cell.type === 'start' || cell.type === 'objective') {
-    processingAction.current = false;
-    return;
-  }
-
-  if (cell.type !== 'tunnel') {
-    toast.warning('🔴You can only destroy tunnel cards');
-    processingAction.current = false;
-    return;
-  }
-
-  setCont(timeturn);
-  setDestroyingCell({ row, col });
-
-  try {
-    //PATCH al backend para reflejar la eliminación de la carta
-    if (cell.squareId) {
-      patchSquare(cell.squareId, {
-        occupation: false,
-        card: null,
-      });
-    }
-
-    setBoardCells(prev => {
-      const next = prev.map(r => r.slice());
-      next[row][col] = null; // eliminar carta localmente
-      return next;
-    });
-
-    if (window.removeCardAndDraw) {
-      window.removeCardAndDraw(collapseMode.cardIndex);
-    }
-    setDeckCount(prev => Math.max(0, prev - 1));
-
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    addColoredLog(
-      currentIndex,
-      playerOrder[currentIndex].username,
-      `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`
-    );
-
-    toast.success('Tunnel card destroyed!');
-    setCollapseMode({ active: false, card: null, cardIndex: null });
-    setDestroyingCell(null);
-    nextTurn();
-  } finally {
-    processingAction.current = false;
-  }
-};
-
+  };
 
   useEffect(() => {
     window.activateCollapseMode = activateCollapseMode;
@@ -494,62 +443,7 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
       lastLoggedTurn.current = nextName;
     }
-    
-    // Evaluar fin de ronda después de cambiar de turno
-    checkForRoundEnd();
-    
     return true;
-  };
-
-  // Función para evaluar si la ronda ha terminado
-  const checkForRoundEnd = async () => {
-    // No verificar fin de ronda si aún no hay deck creado (evita errores al inicio)
-    if (!deck || !deck.id) {
-      return;
-    }
-    
-    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
-    
-    if (roundEndResult.ended) {
-      handleRoundEnd(roundEndResult);
-    }
-  };
-
-  // Funcion para manejar el final de la última ronda
-  const handleLastRoundEnd = (result) => {
-
-  };
-
-  // Función para manejar el final de ronda
-  const handleRoundEnd = (result) => {
-    const { reason, winnerTeam, goldPosition } = result;
-    if (round.roundNumber === 3){
-      handleLastRoundEnd(result);
-    }
-    // Mostrar mensaje de final de ronda
-    if (reason === 'GOLD_REACHED') {
-      addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
-      toast.success(`🏆 The ${winnerTeam} won! Gold found!`);
-      
-      if (revealedObjective?.position !== goldPosition) {
-        setRevealedObjective({ position: goldPosition, cardType: 'gold' });
-      }
-    } else if (reason === 'NO_CARDS') {
-      addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
-      toast.success(`🏆 The ${winnerTeam} won! No more cards.`);
-    }
-
-    // Distribuir pepitas de oro
-    const winnerRol = winnerTeam === 'MINERS' ? false : true;
-    distributeGold(activePlayers, winnerRol);
-    
-    // Aquí podrías añadir lógica adicional:
-    // - Actualizar el estado del round en el backend
-    // - Preparar nueva ronda si es necesario
-    // - Mostrar pantalla de resultados
-    // - etc.
-    patchRound(round.id, {winnerRol: winnerRol });
-    postRound({gameId: game.id, roundNumber: round.roundNumber + 1});
   };
 
 
@@ -580,9 +474,6 @@ const activateCollapseMode = (card, cardIndex) => {
           playerOrder[currentIndex].username,
           `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
         toast.success('Card discarded successfully!');
-        
-        // Evaluar fin de ronda después de descartar (puede que se hayan acabado las cartas)
-        checkForRoundEnd();
       } else {
         toast.warning("Please select a card to discard (right-click in the card)");}
     } finally {
@@ -776,97 +667,30 @@ const activateCollapseMode = (card, cardIndex) => {
   }, []);
 
   useEffect(() => {
-    if (activePlayers.length === 0) return;
-
-    const initialTools = {};
-    activePlayers.forEach(player => {
-      initialTools[player.username] = {
-        candle: player.candleState ?? true,
-        wagon: player.cartState ?? player.wagon ?? true,
-        pickaxe: player.pickaxeState ?? true
-      };
-    });
-    setPlayerTools(initialTools);
-    console.log('Herramientas inicializadas desde backend:', initialTools);
-
-    let cancelled = false;
-
-    const buildRolesFromBackend = () =>
-      activePlayers
-        .filter(player => typeof player.rol === 'boolean')
-        .map(player => ({
-          username: player.username,
-          role: player.rol ? 'SABOTEUR' : 'MINER',
-          roleImg: player.rol ? saboteurRol : minerRol,
-          roleName: player.rol ? 'SABOTEUR' : 'MINER'
-        }));
-
-    const sameRoles = (prev, next) => {
-      if (!Array.isArray(prev) || !Array.isArray(next)) return false;
-      if (prev.length !== next.length) return false;
-      const sortByUser = (arr) => [...arr].sort((a, b) => a.username.localeCompare(b.username));
-      const a = sortByUser(prev);
-      const b = sortByUser(next);
-      return a.every((item, idx) => item.username === b[idx].username && item.role === b[idx].role);
-    };
-
-    const publishRoles = (rolesList) => {
-      if (cancelled) return;
-      if (sameRoles(lastPublishedRoles.current, rolesList)) return;
-
-      lastPublishedRoles.current = rolesList.map(({ username, role }) => ({ username, role }));
-      setPlayerRol(rolesList);
-      if (isSpectator) return;
-
-      const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
-      if (currentPlayerRole) {
-        setMyRole(currentPlayerRole);
-        setShowRoleNotification(true);
-        setTimeout(() => setShowRoleNotification(false), 5000);
-      }
-    };
-
-    const persistRoles = async (rolesList) => {
-      const updates = rolesList
-        .map(roleInfo => {
-          const target = activePlayers.find(p => p.username === roleInfo.username);
-          if (!target?.id) return null;
-          return patchActivePlayer(target.id, { rol: roleInfo.role === 'SABOTEUR' });
-        })
-        .filter(Boolean);
-
-      if (updates.length === 0) return;
-
-      try {
-        await Promise.all(updates);
-        await loadActivePlayers();
-      } catch (err) {
-        console.error('Error al persistir roles:', err);
-        toast.error('Error al guardar los roles asignados');
-      }
-    };
-
-    const syncRoles = async () => {
-      const expectedSaboteurs = calculateSaboteurCount(activePlayers.length);
-      const backendRoles = buildRolesFromBackend();
-      const saboteursAlready = backendRoles.filter(r => r.role === 'SABOTEUR').length;
-      const rolesComplete =
-        backendRoles.length === activePlayers.length &&
-        saboteursAlready === expectedSaboteurs;
-
-      if (rolesComplete) {
-        publishRoles(backendRoles);
-        return;
-      }
-
+    if (activePlayers.length > 0) {
       const rolesAssigned = assignRolesGame(activePlayers);
-      publishRoles(rolesAssigned);
-      await persistRoles(rolesAssigned);
-    };
-
-    syncRoles();
-
-    return () => { cancelled = true; };
+      setPlayerRol(rolesAssigned);
+      if (!isSpectator) {
+        const currentPlayerRole = rolesAssigned.find(p => p.username === loggedInUser.username);
+        if (currentPlayerRole) {
+          setMyRole(currentPlayerRole);
+          setShowRoleNotification(true);
+          setTimeout(() => {
+            setShowRoleNotification(false);
+          }, 5000);
+        }
+      }
+      
+      const initialTools = {};
+      activePlayers.forEach(player => {
+        initialTools[player.username] = {
+          candle: true,
+          wagon: true,
+          pickaxe: true
+        };});
+      setPlayerTools(initialTools);
+      console.log('Herramientas inicializadas (siempre tienen que estar a True):', initialTools);
+    }
   }, [activePlayers]);
 
   useEffect(() => {
@@ -887,7 +711,7 @@ const activateCollapseMode = (card, cardIndex) => {
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
       setDeckCount(initialDeck);
-      setCardPorPlayer(cardsPerPlayer);
+      setPlayerCardsCount(playerCardsCount);
     }
   }, [activePlayers]);
 
@@ -980,14 +804,31 @@ const activateCollapseMode = (card, cardIndex) => {
       );
 
       setBoardCells(baseBoard);
-      // No hacer patch del board.busy aquí - los squares ya están asociados al board desde el backend
+      if (busyIds.length > 0) {
+        pactchBoard(boardId, { busy: busyIds });
+      }
     };
 
     loadBoard();
   }, [round, ListCards]);
 
-  // ELIMINADO: Este useEffect estaba causando que se borraran los squares del board
-  // porque hacía PATCH con solo los squares ocupados, sobrescribiendo la lista completa
+   //Hace un pacth cada vez que se cambia que hay un cambio en una square
+  useEffect(() => {
+    if (!round?.board) return;
+
+    const busySquareIds = boardCells
+      .flat()
+      .filter(cell => cell && cell.squareId && cell.type !== 'start' && cell.type !== 'objective') //que no sean ni final ni objetivo
+      .map(cell => cell.squareId);
+
+    if (!hasPatchedBoardBusy.current && busySquareIds.length === 0) {
+      return;
+    }
+
+    hasPatchedBoardBusy.current = true;
+    pactchBoard(round.board, { busy: busySquareIds });
+    console.log("he hecho este patch")
+  }, [boardCells, round]);
 
   useEffect(() => {
   const fetchChatMessages = async () => {
@@ -1069,7 +910,8 @@ const activateCollapseMode = (card, cardIndex) => {
         getDeck={getDeck}
         patchDeck={patchDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
-        CardPorPlayer={CardPorPlayer} 
+        playerCardsCount={playerCardsCount}
+        setPlayerCardsCount={setPlayerCardsCount}
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}
@@ -1116,7 +958,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
       <PlayersList 
         activePlayers={playerOrder} 
-        CardPorPlayer={CardPorPlayer}
+        playerCardsCount={playerCardsCount}
         onActionCardDrop={handleActionCard}
         isMyTurn={loggedInUser?.username === currentPlayer}
         currentUsername={loggedInUser?.username}
