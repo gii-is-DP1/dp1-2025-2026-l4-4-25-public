@@ -168,7 +168,7 @@ export default function Board() {
     }, [gameMessage]);
   */
     //Modularizar estas funciones
-    const handleWsCardPlaced = ({row, col, card, player})=>{
+    const handleWsCardPlaced = ({row, col, card, player, squareId})=>{
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
       const sameAsLast =
@@ -187,7 +187,8 @@ export default function Board() {
           type: "tunnel",
           owner: player,
           placedAt: Date.now(),
-          occupied: true
+          occupied: true,
+          squareId: squareId
         };
         return next;
       });
@@ -237,7 +238,6 @@ export default function Board() {
       patchSquare(actualSquareId, {
         occupation: true,
         card: card?.id || card,
-        board: boardId,
       });
 
       setBoardCells(prev => {
@@ -249,6 +249,7 @@ export default function Board() {
           owner: loggedInUser?.username || 'unknown',
           placedAt: Date.now(),
           occupied: true,
+          squareId: actualSquareId,
         };
         return next;
       });
@@ -904,31 +905,14 @@ const activateCollapseMode = (card, cardIndex) => {
       );
 
       setBoardCells(baseBoard);
-      if (busyIds.length > 0) {
-        pactchBoard(boardId, { busy: busyIds });
-      }
+      // No hacer patch del board.busy aquí - los squares ya están asociados al board desde el backend
     };
 
     loadBoard();
   }, [round, ListCards]);
 
-   //Hace un pacth cada vez que se cambia que hay un cambio en una square
-  useEffect(() => {
-    if (!round?.board) return;
-
-    const busySquareIds = boardCells
-      .flat()
-      .filter(cell => cell && cell.squareId && cell.type !== 'start' && cell.type !== 'objective') //que no sean ni final ni objetivo
-      .map(cell => cell.squareId);
-
-    if (!hasPatchedBoardBusy.current && busySquareIds.length === 0) {
-      return;
-    }
-
-    hasPatchedBoardBusy.current = true;
-    pactchBoard(round.board, { busy: busySquareIds });
-    console.log("he hecho este patch")
-  }, [boardCells, round]);
+  // ELIMINADO: Este useEffect estaba causando que se borraran los squares del board
+  // porque hacía PATCH con solo los squares ocupados, sobrescribiendo la lista completa
 
   useEffect(() => {
   const fetchChatMessages = async () => {
