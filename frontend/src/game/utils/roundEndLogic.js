@@ -55,7 +55,12 @@ const patchActivePlayer = async (activePlayerId, data) => {
 };
 
 // La ronda termina si se ha encontrado la pepita o todos los jugadores se han quedado sin cartas
-export const checkRoundEnd = (boardCells, deckCount, players, objectiveCards) => {
+export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCards) => {
+  // Validar que players existe y tiene elementos
+  if (!players || !Array.isArray(players) || players.length === 0) {
+    return { ended: false };
+  }
+
   const goldReached = checkPathToGold(boardCells, objectiveCards);
   
   if (goldReached) {
@@ -66,19 +71,27 @@ export const checkRoundEnd = (boardCells, deckCount, players, objectiveCards) =>
       goldPosition: goldReached.position
     };
   }
+  if (deckCount <= 0) {
+    try {
+      // Obtener los decks de todos los jugadores en paralelo
+      const decksPromises = players.map(player => getActivePlayerDeck(player.id));
+      const decks = await Promise.all(decksPromises);
+      
+      // Verificar si todos los decks están vacíos o no existen
+      // const allPlayersOutOfCards = decks.every(deck => !deck || !deck.cards || deck.cards.length === 0);
+      const allPlayersOutOfCards = decks.every(deck => deck.cards.length === 0);
 
-  const playersDecks = players.map(async (player) => {
-    const deck = await getActivePlayerDeck(player.id);
-    return deck;
-  });
-
-  const allPlayersOutOfCards = playersDecks.every(deck => deck && deck.cards.length === 0);
-  if (deckCount <= 0 && allPlayersOutOfCards) {
-    return {
-      ended: true,
-      reason: 'NO_CARDS',
-      winnerTeam: 'SABOTEURS'
-    };}
+      if (allPlayersOutOfCards) {
+        return {
+          ended: true,
+          reason: 'NO_CARDS',
+          winnerTeam: 'SABOTEURS'
+        };
+      }
+    } catch (error) {
+      console.error('Error al verificar decks de jugadores:', error);
+    }
+  }
 
   return { ended: false };
 };

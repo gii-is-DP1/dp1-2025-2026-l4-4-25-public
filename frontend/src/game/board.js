@@ -31,7 +31,7 @@ import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 10;
+const timeturn = 5;
 
 export default function Board() {
   const location = useLocation();
@@ -491,8 +491,13 @@ const activateCollapseMode = (card, cardIndex) => {
   };
 
   // Función para evaluar si la ronda ha terminado
-  const checkForRoundEnd = () => {
-    const roundEndResult = checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
+  const checkForRoundEnd = async () => {
+    // No verificar fin de ronda si aún no hay deck creado (evita errores al inicio)
+    if (!deck || !deck.id) {
+      return;
+    }
+    
+    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
     
     if (roundEndResult.ended) {
       handleRoundEnd(roundEndResult);
