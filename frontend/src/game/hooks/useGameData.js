@@ -44,15 +44,22 @@ export const useGameData = (game) => {
 
     const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
       try {
-        const player = await fetchPlayerByUsername(username);
-        if (!player) return null;
-        return {
-          id: player.id,
-          username: player.username,
-          birthDate: player.birthDate,
-          profileImage: player.image || avatar,
-          wins: player.wins ?? 0,
-        };
+        // Preferimos obtener el ActivePlayer para incluir el estado de herramientas
+        const activePlayer = await fetchActivePlayerByUsername(username);
+        if (activePlayer) {
+          return {
+            id: activePlayer.id,
+            username: activePlayer.username,
+            birthDate: activePlayer.birthDate,
+            profileImage: activePlayer.image || avatar,
+            wins: activePlayer.wonGames ?? activePlayer.wins ?? 0,
+            rol: activePlayer.rol,
+            pickaxeState: activePlayer.pickaxeState,
+            candleState: activePlayer.candleState,
+            cartState: activePlayer.cartState,
+          };
+        }
+
       } catch (err) {
         console.error(`Error al cargar datos de ${username}:`, err);
         return null;
@@ -336,6 +343,7 @@ export const useGameData = (game) => {
   }
 
   const getSquareByCoordinates = async (boardId, coordinateX, coordinateY) => {
+    console.log('🔍 getSquareByCoordinates llamado con:', { boardId, coordinateX, coordinateY });
     try {
       const response = await fetch(
         `/api/v1/squares/byBoardAndCoordinates?boardId=${boardId}&coordinateX=${coordinateX}&coordinateY=${coordinateY}`,
@@ -347,8 +355,15 @@ export const useGameData = (game) => {
           },
         }
       );
+      console.log('🔍 Respuesta del servidor:', response.status);
       if (response.ok) {
-        const square = await response.json();
+        const text = await response.text();
+        if (!text) {
+          console.warn('Square no encontrado para coordenadas:', coordinateX, coordinateY);
+          return null;
+        }
+        const square = JSON.parse(text);
+        console.log('🔍 Square encontrado:', square);
         return square;
       } else {
         console.error('Respuesta no OK al obtener square por coordenadas:', response.status);
@@ -427,6 +442,53 @@ export const useGameData = (game) => {
     }
   };
 
+  const patchActivePlayer = async (activePlayerId, data) => {
+  try {
+    const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      const updatedPlayer = await response.json();
+      console.log('ActivePlayer actualizado:', updatedPlayer);
+      return updatedPlayer;
+    } else {
+      console.error('Error al actualizar ActivePlayer');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error en patchActivePlayer:', error);
+    return null;
+  }
+};
+
+const getActivePlayersbyId = async (activePlayerId) => {
+    try {
+      const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        const activePlayer = await response.json();
+        return activePlayer;
+      } else {
+        console.error('Respuesta no OK al obtener activePlayer por ID:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al obtener activePlayer por ID:', error);
+      return null;
+    }
+  };
+
   return {
     activePlayers,
     chat,
@@ -449,7 +511,9 @@ export const useGameData = (game) => {
     getSquareByCoordinates,
     getLog,
     patchLog,
-    getmessagebychatId
+    getmessagebychatId,
+    patchActivePlayer,
+    getActivePlayersbyId
   };
 };
   
