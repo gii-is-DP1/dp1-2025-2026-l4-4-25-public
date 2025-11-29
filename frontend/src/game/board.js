@@ -1004,16 +1004,21 @@ const activateCollapseMode = (card, cardIndex) => {
       return a.every((item, idx) => item.username === b[idx].username && item.role === b[idx].role);
     };
 
-    const publishRoles = (rolesList) => {
+    const publishRoles = (rolesList, isConfirmedFromBackend = false) => {
       if (cancelled) return;
-      if (sameRoles(lastPublishedRoles.current, rolesList)) return;
-
-      lastPublishedRoles.current = rolesList.map(({ username, role }) => ({ username, role }));
-      setPlayerRol(rolesList);
+      
+      const rolesUnchanged = sameRoles(lastPublishedRoles.current, rolesList);
+      
+      // Solo actualizar estado si los roles cambiaron
+      if (!rolesUnchanged) {
+        lastPublishedRoles.current = rolesList.map(({ username, role }) => ({ username, role }));
+        setPlayerRol(rolesList);
+      }
+      
       if (isSpectator) return;
 
-      // Solo mostrar notificación si no se ha mostrado antes
-      if (!roleNotificationShown.current) {
+      // Mostrar notificación grande solo cuando los roles están confirmados desde el backend
+      if (isConfirmedFromBackend && !roleNotificationShown.current) {
         const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
         if (currentPlayerRole) {
           roleNotificationShown.current = true;
@@ -1053,12 +1058,12 @@ const activateCollapseMode = (card, cardIndex) => {
         saboteursAlready === expectedSaboteurs;
 
       if (rolesComplete) {
-        publishRoles(backendRoles);
+        publishRoles(backendRoles, true);
         return;
       }
 
       const rolesAssigned = assignRolesGame(activePlayers);
-      publishRoles(rolesAssigned);
+      publishRoles(rolesAssigned, false);
       await persistRoles(rolesAssigned);
     };
 
