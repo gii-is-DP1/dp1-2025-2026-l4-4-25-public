@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import tokenService from '../services/token.service.js';
 
 // Componentes
@@ -12,10 +12,14 @@ import GameBoard from './components/GameBoard';
 import PlayersList from './components/PlayersList';
 import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
+import RoundEndModal from './components/RoundEnd';
 
 // Utilidades
 import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
+import { checkRoundEnd, distributeGold } from './utils/roundEndLogic';
+import saboteurRol from './cards-images/roles/saboteurRol.png';
+import minerRol from './cards-images/roles/minerRol.png';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
@@ -28,7 +32,7 @@ import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 10;
+const timeturn = 5;
 
 export default function Board() {
   const location = useLocation();
@@ -73,6 +77,11 @@ export default function Board() {
   const [myRole, setMyRole] = useState(null);
   const [destroyingCell, setDestroyingCell] = useState(null); 
 
+  // Estado para el modal de fin de ronda
+  const [roundEndData, setRoundEndData] = useState(null);
+  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  const navigate = useNavigate();
+
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
       Array.from({ length: BOARD_COLS }, () => null)
@@ -102,6 +111,7 @@ export default function Board() {
     postDeck,
     getDeck,
     patchDeck,
+    fetchOtherPlayerDeck,
     findActivePlayerUsername,
     loadActivePlayers,
     loggedActivePlayer,
@@ -117,7 +127,10 @@ export default function Board() {
     getSquareByCoordinates,
     getLog,
     patchLog,
-    getmessagebychatId
+    getmessagebychatId,
+    patchActivePlayer,
+    patchRound,
+    postRound
   } = useGameData(game);
 
   
@@ -191,13 +204,23 @@ export default function Board() {
     }
 
     const handleWsCardDestroyed = ({ row, col, player }) => {
-      setBoardCells(prev => {
+
+      // 1. Activar animación visual
+      setDestroyingCell({ row, col });
+
+      // 2. Después de la animación, eliminar la carta visualmente
+      setTimeout(() => {
+        setBoardCells(prev => {
           const next = prev.map(r => r.slice());
           next[row][col] = null;
           return next;
-      });
-    };
+        });
 
+        // limpiar estado visual
+        setDestroyingCell(null);
+
+      }, 800); 
+    };
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
     
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
@@ -216,6 +239,17 @@ export default function Board() {
         toast.warning("It's not your turn!");
         return;
       }
+      
+      // Verificar si el jugador tiene alguna herramienta rota
+      const currentPlayerTools = playerTools[loggedInUser.username];
+      if (currentPlayerTools) {
+        const hasBrokenTool = !currentPlayerTools.pickaxe || !currentPlayerTools.candle || !currentPlayerTools.wagon;
+        if (hasBrokenTool) {
+          toast.error("🔧 You can't place tunnel cards while you have a broken tool!");
+          return;
+        }
+      }
+      
       setCont(timeturn);
 
       // If squareId is not provided, fetch it by coordinates
@@ -258,6 +292,9 @@ export default function Board() {
       setDeckCount(prev => Math.max(0, prev - 1));
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
       nextTurn();
+      
+      // Evaluar fin de ronda después de colocar carta (puede que se haya encontrado el oro)
+      checkForRoundEnd();
     } finally {
       processingAction.current = false;
     }
@@ -358,50 +395,65 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  const handleCellClick = (row, col) => {
-    // Solo permitir clicks si el modo colapso está activo
-    if (!collapseMode.active) {
-      return;
-    }
-    
-    if (processingAction.current) return;
-    processingAction.current = true;
+  const handleCellClick = async (row, col) => {
+  if (!collapseMode.active) return;
+  if (processingAction.current) return;
+  processingAction.current = true;
 
-    const cell = boardCells[row][col];
-    console.log('Contenido:', cell);
-    
-    if (!cell || cell.type === 'start' || cell.type === 'objective') { // No permitir destruir cartas iniciales u objetivos
-      processingAction.current = false;
-      return;}
-    
-    if (cell.type !== 'tunnel') {
-      toast.warning('🔴You can only destroy tunnel cards');
-      processingAction.current = false;
-      return;}
+  const cell = boardCells[row][col];
+  if (!cell || cell.type === 'start' || cell.type === 'objective') {
+    processingAction.current = false;
+    return;
+  }
+ 
+  if (cell.type !== 'tunnel') {
+    toast.warning('🔴You can only destroy tunnel cards');
+    processingAction.current = false;
+    return;
+  }
 
-    setCont(timeturn);
-    setDestroyingCell({ row, col });
-    setTimeout(() => {
-      setBoardCells(prev => {
-        const next = prev.map(r => r.slice());
-        next[row][col] = null;
-        return next;
+  setCont(timeturn);
+  setDestroyingCell({ row, col });
+
+  try {  
+    if (cell.squareId) {
+      patchSquare(cell.squareId, {
+        occupation: false,
+        card: null,
       });
-      
-      if (window.removeCardAndDraw) {
-        window.removeCardAndDraw(collapseMode.cardIndex);
-      }
-      setDeckCount(prev => Math.max(0, prev - 1));
-      
-      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-      addColoredLog(currentIndex, playerOrder[currentIndex].username, `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
-      toast.success('Tunnel card destroyed!');
-      setCollapseMode({ active: false, card: null, cardIndex: null });
-      setDestroyingCell(null);
-      nextTurn();
-      processingAction.current = false;
-    }, 800);
-  };
+    } else {
+      console.error(`❌ ERROR CRÍTICO: Intentando destruir celda [${row},${col}] pero no tiene squareId. La petición al servidor se ha cancelado.`);
+      toast.error("Error de sincronización: No se pudo destruir la carta en el servidor.");
+      return; // Detenemos la ejecución para que no se borre visualmente si falló el server
+    }
+
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      next[row][col] = null; // eliminar carta localmente
+      return next;
+    });
+
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(collapseMode.cardIndex);
+    }
+    setDeckCount(prev => Math.max(0, prev - 1));
+
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    addColoredLog(
+      currentIndex,
+      playerOrder[currentIndex].username,
+      `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`
+    );
+
+    toast.success('Tunnel card destroyed!');
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+    setDestroyingCell(null);
+    nextTurn();
+  } finally {
+    processingAction.current = false;
+  }
+};
+
 
   useEffect(() => {
     window.activateCollapseMode = activateCollapseMode;
@@ -443,10 +495,105 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
       lastLoggedTurn.current = nextName;
     }
+    
+    // Evaluar fin de ronda después de cambiar de turno
+    checkForRoundEnd();
+    
     return true;
   };
 
+  // Función para evaluar si la ronda ha terminado
+  const checkForRoundEnd = async () => {
+    // No verificar fin de ronda si aún no hay deck creado (evita errores al inicio)
+    if (!deck || !deck.id) {
+      return;
+    }
+    
+    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
+    
+    if (roundEndResult.ended) {
+      handleRoundEnd(roundEndResult);
+    }
+  };
 
+  // Funcion para manejar el final de la última ronda
+  const handleLastRoundEnd = (result) => {
+
+  };
+
+  // Función para manejar el final de ronda
+  const handleRoundEnd = (result) => {
+    const { reason, winnerTeam, goldPosition } = result;
+    
+    // Mostrar mensaje de final de ronda
+    if (reason === 'GOLD_REACHED') {
+      addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
+      
+      if (revealedObjective?.position !== goldPosition) {
+        setRevealedObjective({ position: goldPosition, cardType: 'gold' });
+      }
+    } else if (reason === 'NO_CARDS') {
+      addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
+    }
+
+    // Distribuir pepitas de oro y obtener la distribución para el modal
+    const winnerRol = winnerTeam === 'MINERS' ? false : true;
+    const goldDistribution = distributeGold(activePlayers, winnerRol);
+    
+    // Preparar datos de roles para el modal
+    const playerRolesData = activePlayers.map(p => ({
+      username: p.user?.username || p.username,
+      role: p.role
+    }));
+    
+    // Mostrar el modal de fin de ronda
+    setRoundEndData({
+      winnerTeam,
+      reason,
+      goldDistribution,
+      playerRoles: playerRolesData
+    });
+    setRoundEndCountdown(10);
+    
+    // Actualizar el estado del round en el backend
+    patchRound(round.id, { winnerRol: winnerRol });
+    
+    // Si es la ronda 3, manejar el final del juego
+    if (round.roundNumber === 3) {
+      handleLastRoundEnd(result);
+      return;
+    }
+  };
+
+  // Efecto para manejar el countdown y la navegación a la nueva ronda
+  useEffect(() => {
+    if (!roundEndData) return;
+    
+    if (roundEndCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRoundEndCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      // Countdown terminado, crear nueva ronda y navegar
+      const createAndNavigateToNewRound = async () => {
+        try {
+          const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
+          if (newRound && newRound.id) {
+            // Navegar al board de la nueva ronda
+            setRoundEndData(null);
+            navigate(`/game/${game.id}/round/${newRound.id}/board`, {
+              state: { game, round: newRound, isSpectator }
+            });
+          }
+        } catch (error) {
+          console.error('Error al crear nueva ronda:', error);
+          toast.error('Error creating new round');
+        }
+      };
+      createAndNavigateToNewRound();
+    }
+  }, [roundEndData, roundEndCountdown]);
 
   // Función para descartar carta
   const handleDiscard = () => {
@@ -474,6 +621,9 @@ const activateCollapseMode = (card, cardIndex) => {
           playerOrder[currentIndex].username,
           `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
         toast.success('Card discarded successfully!');
+        
+        // Evaluar fin de ronda después de descartar (puede que se hayan acabado las cartas)
+        checkForRoundEnd();
       } else {
         toast.warning("Please select a card to discard (right-click in the card)");}
     } finally {
@@ -898,6 +1048,18 @@ const activateCollapseMode = (card, cardIndex) => {
           </div>
         </div>)}
 
+      {/* Modal de fin de ronda */}
+      {roundEndData && (
+        <RoundEndModal
+          winnerTeam={roundEndData.winnerTeam}
+          reason={roundEndData.reason}
+          goldDistribution={roundEndData.goldDistribution}
+          playerRoles={roundEndData.playerRoles}
+          countdown={roundEndCountdown}
+          roundNumber={round.roundNumber}
+        />
+      )}
+
       <div className="logo-container">
         <img src="/logo1-recortado.png" alt="logo" className="logo-img1" />
       </div>
@@ -909,6 +1071,7 @@ const activateCollapseMode = (card, cardIndex) => {
         postDeck={postDeck} 
         getDeck={getDeck}
         patchDeck={patchDeck}
+        fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
         playerCardsCount={playerCardsCount}
         setPlayerCardsCount={setPlayerCardsCount}

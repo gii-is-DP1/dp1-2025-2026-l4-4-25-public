@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../cards';
+import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../utils/cardUtils';
 
 export default function InteractiveCard({ 
   card, 

@@ -26,7 +26,7 @@ function getCardConnections(card) {
     return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
   }
   
-  const rotation = card.rotation || 0;
+  const rotation = card.rotation || false;
   let connections = {
     arriba: card.arriba || false,
     abajo: card.abajo || false,
@@ -35,8 +35,8 @@ function getCardConnections(card) {
     centro: card.centro || false  // true = centro cerrado, false = centro abierto
   };
   
-  // Aplicar rotación de 180 grados si existe (el centro no cambia con rotación)
-  if (rotation === 180) {
+  // Aplicar rotación de 180 grados si existe
+  if (rotation === true) {
     connections = {
       arriba: card.abajo || false,
       abajo: card.arriba || false,
@@ -70,7 +70,7 @@ function checkPathContinuity(card1Connections, card2Connections, direction) {
  * Verifica si hay un camino válido desde la carta de inicio hasta la posición objetivo
  * usando BFS (Breadth-First Search)
  */
-function hasPathFromStart(board, targetRow, targetCol, cardToPlace) {
+export function hasPathFromStart(board, targetRow, targetCol, cardToPlace) {
   const start = { row: 4, col: 1 };
   if (!start) return false;
   
