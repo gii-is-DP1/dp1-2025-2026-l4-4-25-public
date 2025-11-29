@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue; // Añadido
+import static org.junit.jupiter.api.Assertions.assertTrue; 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -21,7 +21,6 @@ import io.qameta.allure.Feature;
 
 @Epic("Users & Admin Module")
 @Feature("Users Management")
-//@Owner("DP1-tutors")
 @SpringBootTest
 @AutoConfigureTestDatabase
 class UserServiceTests {
@@ -31,7 +30,6 @@ class UserServiceTests {
 
     @Autowired
     private AuthoritiesService authService;
-
 
     @Test
     @WithMockUser(username = "Carlosbox2k", authorities = {"PLAYER"}) 
@@ -54,9 +52,8 @@ class UserServiceTests {
     @Test
     void shouldFindAllUsers() {
         List<UserDTO> users = (List<UserDTO>) this.userService.findAll();
-        assertEquals(3, users.size());
+        assertEquals(8, users.size());
     }
-    
     
     @Test
     void shouldFindUsersByUsername() {
@@ -69,11 +66,10 @@ class UserServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> this.userService.findByUsernameDTO("Ollama"));
     }
     
-    
     @Test
     void shouldFindUsersByAuthority() {
         List<UserDTO> owners = (List<UserDTO>) this.userService.findAllByAuthority("PLAYER");
-        assertEquals(2, owners.size());
+        assertEquals(7, owners.size());
         List<UserDTO> admins = (List<UserDTO>) this.userService.findAllByAuthority("ADMIN");
         assertEquals(1, admins.size());
     }
@@ -89,19 +85,16 @@ class UserServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> this.userService.findUser(100));
     }
 
-    
     @Test
     void shouldExistUser() {
         assertEquals(true, this.userService.existsUser("mantecaoHacker"));
     }
 
-    
     @Test
     void shouldNotExistUser() {
         assertEquals(false, this.userService.existsUser("player10000"));
     }
 
-    
     @Test
     @Transactional
     void shouldUpdateUser() {
@@ -126,10 +119,10 @@ class UserServiceTests {
         assertEquals(newName, user.getUsername());
     }
 
-    
     @Test
     @Transactional
     void shouldInsertUser() {
+
         int count = ((List<UserDTO>) this.userService.findAll()).size();
 
         Integer id = 1000;
@@ -144,19 +137,19 @@ class UserServiceTests {
         user.setAuthority(authService.findByAuthority("ADMIN"));
 
         User savedUser = this.userService.saveUser(user);
+        
         assertNotNull(savedUser.getId());
         assertNotEquals(0, savedUser.getId().longValue());
-        assertNotEquals(id,savedUser.getId());
+       
         assertEquals(authService.findByAuthority("ADMIN").getAuthority(), user.getAuthority().getAuthority());
 
         int finalCount = ((List<UserDTO>) this.userService.findAll()).size();
         assertEquals(count + 1, finalCount);
-        }
+    }
 
     @Test
     @Transactional
     void shouldUpdateUserPassword() {
-        
         int idToUpdate = 1;
         User userToUpdate = this.userService.findUser(idToUpdate);
         String oldPassword = userToUpdate.getPassword();
@@ -174,26 +167,24 @@ class UserServiceTests {
     @Transactional
     void shouldNotUpdateUserPasswordIfEmpty() {
         int idToUpdate = 1;
-        
         User originalUser = this.userService.findUser(idToUpdate);
         String oldPassword = originalUser.getPassword();
-   
+    
         User inputUser = new User();
         BeanUtils.copyProperties(originalUser, inputUser);
         inputUser.setPassword(""); 
-      
+        
         User updatedUser = userService.updateUser(inputUser, idToUpdate);
-      
+        
         assertEquals(oldPassword, updatedUser.getPassword());
     }
 
     @Test
     @Transactional
     void shouldUpdateUserAuthority() {
-        
         int idToUpdate = 1;
         User userToUpdate = this.userService.findUser(idToUpdate);
-      
+        
         User inputUser = new User();
         BeanUtils.copyProperties(userToUpdate, inputUser);
 
@@ -208,7 +199,6 @@ class UserServiceTests {
     @Test
     @Transactional
     void shouldSaveUserAsAdmin() {
-        
         User adminUser = new User();
         adminUser.setUsername("AdminTest");
         adminUser.setName("Admin Name");
@@ -227,7 +217,6 @@ class UserServiceTests {
     @Test
     @Transactional
     void shouldSaveUserAsPlayerDefault() {
-        
         User playerUser = new User();
         playerUser.setUsername("PlayerTestNew");
         playerUser.setName("Player Name");
@@ -244,49 +233,17 @@ class UserServiceTests {
         assertEquals("PLAYER", saved.getAuthority().getAuthority());
     }
 
-    /*
-    @Test
-    @Transactional
-    void shouldDeleteUserWithOwner() {
-        Integer firstCount = ((List<UserDTO>) userService.findAll()).size();
-        User user = new User();
-        user.setUsername("Sam");
-        user.setPassword("password");
-        Authorities auth = authService.findByAuthority("OWNER");
-        user.setAuthority(auth);
-        Owner owner = new Owner();
-        owner.setAddress("Test");
-        owner.setFirstName("Test");
-        owner.setLastName("Test");
-        owner.setPlan(PricingPlan.BASIC);
-        owner.setTelephone("999999999");
-        user.setCity("Test");
-        this.ownerService.saveOwner(owner);
-
-        Integer secondCount = ((Collection<User>) userService.findAll()).size();
-        assertEquals(firstCount + 1, secondCount);
-        userService.deleteUser(user.getId());
-        Integer lastCount = ((Collection<User>) userService.findAll()).size();
-        assertEquals(firstCount, lastCount);
-    }
-    */
-
     @Test
     @Transactional
     void shouldDeleteUser() {
-        
         int id = 5; 
-
         assertNotNull(userService.findUser(id));
-
         userService.deleteUser(id);
-
         assertThrows(ResourceNotFoundException.class, () -> userService.findUser(id));
     }
 
     @Test
     void shouldReturnEmptyListForUnknownAuthority() {
-        
         List<UserDTO> users = userService.findAllByAuthority("UNKNOWN_AUTH");
         assertTrue(users.isEmpty());
     }

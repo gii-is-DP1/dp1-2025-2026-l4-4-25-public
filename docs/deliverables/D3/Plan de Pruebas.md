@@ -59,12 +59,12 @@ Las pruebas se ejecutarán en el entorno de desarrollo y, eventualmente, en el e
 ### 5.1 Estado y trazadibilidad de Pruebas por Módulo y Épica
 
 El informe de estado de las pruebas (con trazabilidad de éstas hacia los módulos y las épicas/historias de usaurio) se encuentra [aquí](
-https://gii-is-dp1.github.io/group-project-seed/deliverables/D3/status/#behaviors).
+https://gii-is-DP1.github.io/dp1-2025-2026-l4-4-25/deliverables/D3/status/#behaviors).
 
 ### 5.2 Cobertura de Pruebas
 
 El informe de cobertura de pruebas se puede consultar [aquí](
-https://gii-is-dp1.github.io/group-project-seed/deliverables/D3/coverage/).
+https://gii-is-DP1.github.io/dp1-2025-2026-l4-4-25/deliverables/D3/coverage/).
 
 
 
