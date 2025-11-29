@@ -23,6 +23,7 @@ import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 import Achievements from "./lobbies/profiles/Achievements";
 import EditAchievements from "./admin/achievements/EditAchievements";
+import Ranking from "./lobbies/ranking/Ranking";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -95,6 +96,7 @@ function App() {
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
+        <Route path="/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
       </>
     )
   }

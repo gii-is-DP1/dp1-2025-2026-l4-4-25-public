@@ -7,6 +7,56 @@ INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
 INSERT INTO appusers(id,username,name,birthDate,joined, password,image,email,authority) VALUES (4,'Carlosbox2k','Carlos Borrego Ortiz','2005-02-04','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/carlos.png', 'carlos@saboteur.es', 2);
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2); -- Probar Null en la imagen para probar que funciona el defaultProfile en los usuarios por defecto
 
+--Datos para probar Ranking (5 jugadores ficticios)
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (101, 'MineroPro', 'Minero Profesional', '1995-05-05', '2023-01-01 10:00:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Minero', 'minero@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (101, 50, 45, 120, 200, 10, false, 5, 5);
+
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (102, 'SaboteadorX', 'Saboteador Experto', '1998-08-20', '2023-02-15 14:30:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Sabo', 'sabo@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (102, 40, 20, 50, 100, 50, false, 10, 2);
+
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (103, 'PicoRoto', 'Novato del Pico', '2000-12-12', '2024-01-01 09:00:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Pico', 'pico@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (103, 10, 2, 5, 20, 2, false, 1, 0);
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (104, 'Exploradora_99', 'Dora la Exploradora', '1999-09-09', '2024-03-10 16:20:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Explora', 'explora@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (104, 12, 8, 15, 45, 2, false, 3, 1);
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (105, 'PepitaHunter', 'Cazador de Oro', '2001-01-01', '2024-05-01 12:00:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Hunter', 'hunter@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (105, 5, 2, 5, 10, 1, false, 0, 0);
+
+
+
 INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
 
