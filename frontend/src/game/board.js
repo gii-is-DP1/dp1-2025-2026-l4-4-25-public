@@ -859,16 +859,20 @@ const activateCollapseMode = (card, cardIndex) => {
       const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
       setPlayerOrder(res);
       
+      const initialTurnIndex = round?.turn || 0;
+      const safeIndex = initialTurnIndex % res.length;
+      const initialPlayerUsername = res[safeIndex].username;
+
       setCurrentPlayer(prev => {
         if (prev && res.find(p => p.username === prev)) {
           return prev;
         }
-        return res[0].username;
+        return initialPlayerUsername;
       });
       
       console.log('ORDEN ACTUALIZADO', res);
     }
-  }, [activePlayers]);
+  }, [activePlayers, round]);
 
   useEffect(() => {
     if (boardGridRef.current) {

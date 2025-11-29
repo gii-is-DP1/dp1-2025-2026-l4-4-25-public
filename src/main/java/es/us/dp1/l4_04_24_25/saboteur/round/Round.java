@@ -48,7 +48,7 @@ public class Round extends BaseEntity{
     @Column(name = "winner_rol")
     private Boolean winnerRol = null;
 
-    private Integer turn = 1;
+    private Integer turn = 0;
 
     @JsonSerialize(using = GameSerializer.class)
     @JsonDeserialize(using = GameDeserializer.class)
