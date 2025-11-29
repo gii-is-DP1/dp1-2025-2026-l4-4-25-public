@@ -741,12 +741,10 @@ const activateCollapseMode = (card, cardIndex) => {
         toast.warning("It's not your turn!");
         return;
       }
-      setCont(timeturn);
       if (window.discardSelectedCard && window.discardSelectedCard()) {
         const newDeckCount = Math.max(0, deckCount - 1);
         setDeckCount(newDeckCount);
         nextTurn({newDeckCount: newDeckCount});
-        setCont(timeturn);
         addColoredLog(
           currentIndex,
           playerOrder[currentIndex].username,
