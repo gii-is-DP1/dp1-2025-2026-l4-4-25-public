@@ -905,7 +905,14 @@ const activateCollapseMode = (card, cardIndex) => {
       }
     };
 
+    // Fetch inicial
     fetchLogForRound();
+
+    // Polling cada 1 segundo para mantener el log actualizado
+    const pollInterval = setInterval(fetchLogForRound, 1000);
+
+    // Cleanup al desmontar
+    return () => clearInterval(pollInterval);
   }, [round]);
 
   useEffect(() => {
