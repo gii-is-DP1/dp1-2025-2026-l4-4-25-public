@@ -23,6 +23,8 @@ import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 import Achievements from "./lobbies/profiles/Achievements";
 import EditAchievements from "./admin/achievements/EditAchievements";
+import Stats from "./lobbies/profiles/Stats";
+import GameInvitationListener from "./components/GameInvitationListener";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -73,6 +75,7 @@ function App() {
           <Route path="/profile/editProfile" element={<EditProfile />} />
           <Route path="/GamesPlayed" element={<GamesPlayed />} />
           <Route path="/Achievement" element={<Achievements />} />
+          <Route path="/stats" element={<Stats />} />
 
         </>)
     }    
@@ -103,6 +106,7 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
         <AppNavbar />
+        {jwt && <GameInvitationListener />}
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Routes>
           <Route path="/" exact={true} element={<Home />} />
