@@ -32,7 +32,7 @@ import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 5;
+const timeturn = 10;
 
 export default function Board() {
   const location = useLocation();
@@ -105,6 +105,11 @@ export default function Board() {
   const processingAction = useRef(false);
   const isTurnChanging = useRef(false);
 
+  const lastTurnToast = useRef({username: null, ts: 0}); 
+  const lastTimeoutToastTs = useRef(0);
+  const lastReceivedTurnKey = useRef({ key: null, ts: 0 });
+
+
   // Hook personalizado para cargar datos del juego
   const {
     ListCards,
@@ -140,7 +145,7 @@ export default function Board() {
     
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
-    //const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
+    const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -163,6 +168,23 @@ export default function Board() {
       }
     },[boardMessage]);
 
+    useEffect(()=>{
+      if(!gameMessage) return; 
+      console.log("WS Partida:", gameMessage); 
+      const {action} = gameMessage; 
+      switch (action) {
+      case "TURN_CHANGED":
+        handleWsTurnChanged(gameMessage);
+        break;
+
+      case "GAME_FINISHED": // Por si implementamos esto luego
+        // handleGameFinished(gameMessage);
+        break;
+
+      default:
+        break;
+    }
+    },[gameMessage])
     // Depuración usuarios duplicados
     useEffect(() => {
         console.log("activePlayers en Board:", activePlayers);
@@ -171,12 +193,8 @@ export default function Board() {
     useEffect(() => {
       console.log("playerOrder:", playerOrder);
     }, [playerOrder]);
-    /*useEffect(() => {
-      if(!gameMessage) return;
-      const { action } = gameMessage;
-      if(action === "TURN_CHANGED") setCurrentPlayer(gameMessage.nextPlayer);
-    }, [gameMessage]);
-  */
+   
+    
     //Modularizar estas funciones
     const handleWsCardPlaced = ({row, col, card, player, squareId})=>{
       const actor = player || currentPlayer || 'unknown';
@@ -223,6 +241,58 @@ export default function Board() {
 
       }, 800); 
     };
+
+    const handleWsTurnChanged = async (message) =>{
+      const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
+      const { newTurnIndex, roundId, leftCards } = payload;
+      console.log("🔄 WS Turn Change:", newTurnIndex);
+
+      const turnKey = `${roundId}:${newTurnIndex}`;
+      const now = Date.now();
+      if (lastReceivedTurnKey.current.key === turnKey && (now - lastReceivedTurnKey.current.ts) < 2000) {
+          console.log("Ignored duplicate TURN_CHANGED:", turnKey);
+          return;
+      }
+      lastReceivedTurnKey.current = { key: turnKey, ts: now };
+
+      setRound(prev => ({ ...prev, id: roundId, turn: newTurnIndex }));
+
+      if(leftCards !== undefined && leftCards !== null){
+        setDeckCount(leftCards);
+      }
+
+      if (playerOrder && playerOrder.length > 0) {
+      // Aseguramos que el índice sea válido usando el módulo
+        const safeIndex = newTurnIndex % playerOrder.length;
+        const nextPlayerObj = playerOrder[safeIndex];
+
+        if (nextPlayerObj) {
+          const nextUsername = nextPlayerObj.username;
+          const nextClass = `player${safeIndex + 1}`; // Clase CSS para el color
+
+          setCurrentPlayer(nextUsername);
+        
+          setCont(timeturn);
+
+          if (lastLoggedTurn.current !== nextUsername) {
+            addLog(`Turn of <span class="${nextClass}">${nextUsername}</span>`, "turn");
+            lastLoggedTurn.current = nextUsername;
+          }
+
+          if (nextUsername === loggedInUser.username) {
+            const now2 = Date.now(); 
+            const last = lastTurnToast.current;
+            if (last.username !== nextUsername || (now2 - last.ts) > 3000) {
+              toast.info("🎲 IT´S YOUR TURN! 🎲");
+              lastTurnToast.current = { username: nextUsername, ts: now2 };
+            } else {
+              console.log("Skipped duplicate YOUR TURN toast for", nextUsername);
+            }
+          }
+          await checkForRoundEnd(); 
+        }
+      }
+    }; 
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
     
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
@@ -288,12 +358,13 @@ export default function Board() {
       if (window.removeCardAndDraw) {
         window.removeCardAndDraw(cardIndex);
       }
-      setDeckCount(prev => Math.max(0, prev - 1));
+      const newDeckCount = Math.max(0, deckCount - 1);
+      setDeckCount(newDeckCount);
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
-      nextTurn();
+      nextTurn({newDeckCount: newDeckCount});
       
       // Evaluar fin de ronda después de colocar carta (puede que se haya encontrado el oro)
-      checkForRoundEnd();
+      //checkForRoundEnd(); //Evaluar el checkForRoundEnd() solo en webSocket
     } finally {
       processingAction.current = false;
     }
@@ -347,11 +418,12 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       if (window.removeCardAndDraw) {
         window.removeCardAndDraw(cardIndex);}
 
-      setDeckCount(prev => Math.max(0, prev - 1));
+      const newDeckCount = Math.max(0, deckCount - 1);
+      setDeckCount(newDeckCount);
       const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
       addColoredLog(currentIndex,currentPlayer,`🗺️ Used a map card to reveal an objective`);
       
-      nextTurn();
+      nextTurn({newDeckCount: newDeckCount});
     } finally {
       processingAction.current = false;
     }
@@ -408,19 +480,21 @@ const activateCollapseMode = (card, cardIndex) => {
     if (window.removeCardAndDraw) {
       window.removeCardAndDraw(collapseMode.cardIndex);
     }
-    setDeckCount(prev => Math.max(0, prev - 1));
+
+    const newDeckCount = Math.max(0, deckCount - 1);
+    setDeckCount(newDeckCount);
 
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
     addColoredLog(
       currentIndex,
       playerOrder[currentIndex].username,
-      `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`
+      `💣 Destroyed a tunnel card at [${row},${col}]. ${newDeckCount} cards left in the deck.`
     );
 
     toast.success('Tunnel card destroyed!');
     setCollapseMode({ active: false, card: null, cardIndex: null });
     setDestroyingCell(null);
-    nextTurn();
+    nextTurn({newDeckCount: newDeckCount});
   } finally {
     processingAction.current = false;
   }
@@ -447,31 +521,42 @@ const activateCollapseMode = (card, cardIndex) => {
     addLog(`${coloredName} ${action}`, "action");
   };
 
-  // Funci?n para cambiar de turno
-  const nextTurn = ({ force = false } = {}) => {
+  // Función para cambiar de turno--->Ahora llama al PATCH de Round para modificar el atributo turno
+  
+
+  const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
     if (isTurnChanging.current && !force) return false;
     if (playerOrder.length === 0) return false;
 
-    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
-    const nextIndex = (safeCurrentIndex + 1) % playerOrder.length;
-    const nextName = playerOrder[nextIndex].username;
-    const nextClass = `player${nextIndex + 1}`;
-
     isTurnChanging.current = true;
-    setTimeout(() => { isTurnChanging.current = false; }, 500);
+    setTimeout(() => { isTurnChanging.current = false; }, 1000);
 
-    setCurrentPlayer(nextName);
-    setCont(timeturn);
-    if (lastLoggedTurn.current !== nextName) {
-      addLog(`Turn of <span class="${nextClass}">${nextName}</span>`, "turn");
-      lastLoggedTurn.current = nextName;
+    const currentTurnIndex = round?.turn || 0; 
+
+    const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
+
+    console.log(`Paso de turno (Backend): ${currentTurnIndex} -> ${nextIndex}`);
+    try{
+      if(round && round.id){
+        const patchBody = {turn: nextIndex};
+        //Mapear el newDeckCount al atributo de backend leftCards
+        if(newDeckCount !== null){
+          patchBody.leftCards = newDeckCount; 
+        }
+
+        patchRound(round.id, patchBody);
+
+      }else{
+        console.error("No hay ID de ronda disponible");
+      }
+      //Ahora no hacemos el setCurrentPlayer aquí, esperamos a que el webSocket lo diga
+      return true; 
+    } catch(error){
+      console.error("Error passing turn:", error);
+      toast.error("Error al pasar turno.");
+      isTurnChanging.current = false;
+      return false;
     }
-    
-    // Evaluar fin de ronda después de cambiar de turno
-    checkForRoundEnd();
-    
-    return true;
   };
 
   // Función para evaluar si la ronda ha terminado
@@ -585,22 +670,38 @@ const activateCollapseMode = (card, cardIndex) => {
       }
       setCont(timeturn);
       if (window.discardSelectedCard && window.discardSelectedCard()) {
-        setDeckCount(p => Math.max(0, p - 1));
-        nextTurn();
+        const newDeckCount = Math.max(0, deckCount - 1);
+        setDeckCount(newDeckCount);
+        nextTurn({newDeckCount: newDeckCount});
         setCont(timeturn);
         addColoredLog(
           currentIndex,
           playerOrder[currentIndex].username,
-          `🎴 Discarded a card and take one. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
+          `🎴 Discarded a card and take one. ${newDeckCount} cards left in the deck.`);
         toast.success('Card discarded successfully!');
         
         // Evaluar fin de ronda después de descartar (puede que se hayan acabado las cartas)
-        checkForRoundEnd();
+        //checkForRoundEnd();
       } else {
         toast.warning("Please select a card to discard (right-click in the card)");}
     } finally {
       processingAction.current = false;
     }
+  };
+
+  // Función auxiliar para cuando se acaba el tiempo
+  const handleTurnTimeOut = () => {
+    // Evitamos llamar varias veces si ya se está procesando
+    if (processingAction.current) return;
+    // Evitamos toasts repetidos por timeout que puedan dispararse varias veces
+    const now = Date.now();
+      if ((now - lastTimeoutToastTs.current) > 3000) {
+        toast.error("⌛ Time's up! Passing turn...");
+        lastTimeoutToastTs.current = now;
+      } else {
+        console.log("Skipped duplicate Time's up toast");
+      }
+    nextTurn({ force: true });
   };
 
   // Función para enviar mensajes
@@ -883,17 +984,27 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [activePlayers]);
 
   useEffect(() => {
+    if(!currentPlayer || playerOrder.length === 0) return;
+
+    if(loggedInUser.username !== currentPlayer){
+      setCont(timeturn);
+      return; 
+    }
+
     const time = setInterval(() => {
-      setCont(p => {
-        if (p <= 1) {
-          const changed = nextTurn({ force: true });
-          return changed ? timeturn : 0;
+      setCont((prevCont) => {
+        if (prevCont <= 1) {
+          // El tiempo se ha acabado -> Forzamos cambio de turno
+          clearInterval(time);
+          handleTurnTimeOut(); 
+          return 0;
         }
-        return p - 1;
+        return prevCont - 1;
       });
     }, 1000);
+
     return () => clearInterval(time);
-  }, [currentPlayer, playerOrder]);
+  }, [currentPlayer, loggedInUser.username, playerOrder]);
 
   useEffect(() => {
     if (activePlayers.length > 0) {
@@ -997,7 +1108,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
 
     loadBoard();
-  }, [round, ListCards]);
+  }, [round?.id, ListCards]);
 
   // ELIMINADO: Este useEffect estaba causando que se borraran los squares del board
   // porque hacía PATCH con solo los squares ocupados, sobrescribiendo la lista completa

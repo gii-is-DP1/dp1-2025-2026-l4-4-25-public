@@ -2,7 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.round;
 
 import java.util.List;
 import java.util.Map;
-
+import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,13 +37,15 @@ public class RoundRestController {
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
     private final GameService gameService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     
     @Autowired
-    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService, SimpMessagingTemplate messagingTemplate) {
         this.roundService = roundService;
         this.objectMapper = objectMapper;
         this.gameService = gameService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -81,6 +83,18 @@ public class RoundRestController {
         Round round = roundService.findRound(id);
         Round roundPatched = objectMapper.updateValue(round, updates);
         roundService.updateRound(roundPatched, id);
+        if(updates.containsKey("turn")){
+            //Obtenemos ID del juego para saber a que topic enviarlo
+            Integer gameId = roundPatched.getGame().getId();
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("action", "TURN_CHANGED");
+            payload.put("newTurnIndex", roundPatched.getTurn());
+            payload.put("roundId", roundPatched.getId());
+            payload.put("leftCards", roundPatched.getLeftCards());
+            
+            System.out.println(">>> WS: Enviando cambio de turno a /topic/game/" + gameId);
+            messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
+        }
         return new ResponseEntity<>(roundPatched,HttpStatus.OK);
     }
 
