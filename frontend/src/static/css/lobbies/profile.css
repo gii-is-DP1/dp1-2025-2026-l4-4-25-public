@@ -80,6 +80,7 @@
 }
 
 .edit-profile-container {
+  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: flex-start;
