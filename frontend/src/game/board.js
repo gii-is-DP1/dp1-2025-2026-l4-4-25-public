@@ -177,6 +177,9 @@ export default function Board() {
         handleWsTurnChanged(gameMessage);
         break;
 
+      case "TOOLS_CHANGED":
+        handleWsToolsChanged(gameMessage);
+        break;
       case "GAME_FINISHED": // Por si implementamos esto luego
         // handleGameFinished(gameMessage);
         break;
@@ -293,6 +296,19 @@ export default function Board() {
         }
       }
     }; 
+
+    const handleWsToolsChanged = (message) =>{
+      const {username, tools} = message; 
+      console.log(`🔧 Herramientas actualizadas para ${username}:`, tools);
+      setPlayerTools(prev => ({
+        ...prev,
+        [username]:{
+          pickaxe: tools.pickaxe,
+          candle: tools.candle,
+          wagon: tools.wagon
+        }
+      }));
+    };
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
     
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
