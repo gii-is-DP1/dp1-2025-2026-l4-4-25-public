@@ -1,0 +1,207 @@
+.friends-dropdown {
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 12px;
+  padding: 15px;
+  width: 390px;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);}
+
+.dropdown-header {
+  margin-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;}
+
+.dropdown-header h4 {
+  color: #fff;
+  font-size: 18px;
+  margin: 0;
+  text-align: center;}
+
+.dropdown-tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 12px;}
+
+.tab, .tab-active {
+  flex: 1;
+  padding: 8px 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;}
+
+.tab {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;}
+
+.tab-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;}
+
+.dropdown-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;}
+
+.search-input-small {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 13px;}
+
+.search-input-small:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 0.1);}
+
+.search-input-small::placeholder {
+  color: rgba(255, 255, 255, 0.4);}
+
+.search-btn-small {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;}
+
+.search-btn-small:hover:not(:disabled) {
+  transform: scale(1.05);}
+
+.search-btn-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;}
+
+.dropdown-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 340px;
+  padding-right: 5px;}
+
+.dropdown-content::-webkit-scrollbar {
+  width: 6px;}
+
+.dropdown-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);}
+
+.dropdown-friend-card, .dropdown-request-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;}
+
+.dropdown-friend-card:hover, .dropdown-request-card:hover {
+  background: rgba(255, 255, 255, 0.1);}
+
+.friend-info-small {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;}
+
+.friend-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.2);}
+
+.friend-info-small strong {
+  color: #fff;
+  font-size: 14px;
+  display: block;}
+
+.friend-name-small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  margin-top: 2px;}
+
+.status-pending-small {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border-radius: 8px;
+  font-size: 10px;
+  margin-top: 3px;}
+
+.request-actions-small {
+  display: flex;
+  gap: 5px;}
+
+.btn-accept-small, .btn-reject-small, .btn-remove-small, 
+.btn-cancel-small, .btn-add-small {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;}
+
+.btn-accept-small {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: #fff;}
+
+.btn-accept-small:hover:not(:disabled) {
+  transform: scale(1.05);}
+
+.btn-reject-small, .btn-remove-small {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #fff;}
+
+.btn-reject-small:hover:not(:disabled), .btn-remove-small:hover:not(:disabled) {
+  transform: scale(1.05);}
+
+.btn-cancel-small {
+  background: linear-gradient(135deg, #ffd89b 0%, #ff6a00 100%);
+  color: #fff;}
+
+.btn-cancel-small:hover:not(:disabled) {
+  transform: scale(1.05);}
+
+.btn-add-small {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;}
+
+.btn-add-small:hover:not(:disabled) {
+  transform: scale(1.05);}
+
+.btn-accept-small:disabled, .btn-reject-small:disabled, 
+.btn-remove-small:disabled, .btn-cancel-small:disabled, 
+.btn-add-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;}
+
+.empty-state {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  padding: 30px 15px;}

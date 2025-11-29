@@ -58,6 +58,7 @@ export default function Board() {
   const [playerTools, setPlayerTools] = useState({});
   //round del navigate
   const [round, setRound] = useState(location.state?.round || null);
+  const [gameStartTime] = useState(Date.now()); 
   
   // Estados del tablero
   const BOARD_COLS = 11;
@@ -300,13 +301,13 @@ export default function Board() {
     }
   };
 
-  // Monitorear cuando el jugador actual se queda sin cartas
   useEffect(() => {
     const currentPlayerCardCount = playerCardsCount[currentPlayer] || 0;
+    const gameElapsedTime = Date.now() - gameStartTime; 
+    const minimumGameTime = 60000; 
     
-    // Solo verificar si no es espectador y es el jugador actual
-    if (!isSpectator && currentPlayer === loggedInUser?.username && currentPlayerCardCount === 0 && playerOrder.length > 0) {
-      console.log('🚫 Player out of cards, removing from turn order');
+    if (!isSpectator && currentPlayer === loggedInUser?.username && currentPlayerCardCount === 0 && gameElapsedTime >= minimumGameTime && playerOrder.length > 0) {
+      console.log('Player out of cards:', currentPlayer);
       
       // Eliminar al jugador actual de playerOrder
       setPlayerOrder(prev => {
@@ -327,7 +328,7 @@ export default function Board() {
         nextTurn({ force: true });
       }, 500);
     }
-  }, [playerCardsCount, currentPlayer, loggedInUser?.username, isSpectator, playerOrder.length]);
+  }, [playerCardsCount, currentPlayer, loggedInUser?.username, isSpectator, playerOrder.length, gameStartTime]);
 
 const handleActionCard = (card, targetPlayer, cardIndex) => {
     if (processingAction.current) return;

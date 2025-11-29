@@ -37,12 +37,33 @@ const useListGames = () => {
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const response = await fetch("/api/v1/friends", {
+        const currentUser = tokenService.getUser();
+        if (!currentUser?.username) return;
+        
+        const response = await fetch(`/api/v1/players/byUsername?username=${currentUser.username}`, {
           headers: { Authorization: `Bearer ${jwt}` },
         });
         if (response.ok) {
-          const data = await response.json();
-          setFriendsList(data);
+          const playerData = await response.json();
+          
+          if (playerData.friends && playerData.friends.length > 0) {
+            if (typeof playerData.friends[0] === 'string') {
+              const friendsData = await Promise.all(
+                playerData.friends.map(async (username) => {
+                  const friendResponse = await fetch(`/api/v1/players/byUsername?username=${username}`, {
+                    headers: { Authorization: `Bearer ${jwt}` },
+                  });
+                  if (friendResponse.ok) {
+                    return await friendResponse.json();
+                  }
+                  return null;
+                })
+              );
+              setFriendsList(friendsData.filter(f => f !== null));
+            } else {
+              setFriendsList(playerData.friends);
+            }
+          }
         }
       } catch (error) {
         console.error("Error al obtener amigos:", error);
