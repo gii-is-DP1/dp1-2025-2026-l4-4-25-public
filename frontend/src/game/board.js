@@ -34,18 +34,39 @@ import useWebSocket from "../hooks/useWebSocket";
 const jwt = tokenService.getLocalAccessToken();
 const timeturn = 5;
 
+// Obtener datos iniciales fuera del componente para evitar problemas con re-renders
+const getSavedRoundData = () => {
+  const savedData = sessionStorage.getItem('newRoundData');
+  if (savedData) {
+    sessionStorage.removeItem('newRoundData');
+    return JSON.parse(savedData);
+  }
+  return null;
+};
+
+const savedRoundData = getSavedRoundData();
+
 export default function Board() {
   const location = useLocation();
   const loggedInUser = tokenService.getUser();
 
+  // Usar datos guardados o los de location.state
+  const initialState = savedRoundData || {
+    game: location.state?.game,
+    round: location.state?.round || null,
+    isSpectator: location.state?.isSpectator || false
+  };
+  
+  console.log('initialState:', initialState);
+
   // Estados principales
-  const [isSpectator] = useState(location.state?.isSpectator || false);
+  const [isSpectator] = useState(initialState.isSpectator);
   const [CardPorPlayer, setCardPorPlayer] = useState(0);
   const [deckCount, setDeckCount] = useState(60);
-  const [game, setGame] = useState(location.state?.game);
+  const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [numRound, setNumRound] = useState('1');
+  const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
   console.log('Render Board. currentPlayer:', currentPlayer);
   const [cont, setCont] = useState(timeturn);
@@ -57,7 +78,7 @@ export default function Board() {
     //  ESTADOS DE LAS HERRAMIENTAS, DICCIONARIO {username:{candle:true,wagon:true,pickaxe:true}}
   const [playerTools, setPlayerTools] = useState({});
   //round del navigate
-  const [round, setRound] = useState(location.state?.round || null);
+  const [round, setRound] = useState(initialState.round);
   
   // Estados del tablero
   const BOARD_COLS = 11;
@@ -100,10 +121,13 @@ export default function Board() {
   const lastCollapseLog = useRef(0);
   const seenPrivateMessages = useRef(new Set());
   const lastPublishedRoles = useRef([]);
+  const roleNotificationShown = useRef(false);
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
   const isTurnChanging = useRef(false);
+  const isNavigatingToNewRound = useRef(false);
+  const roundEndedRef = useRef(false);
 
   // Hook personalizado para cargar datos del juego
   const {
@@ -357,53 +381,6 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  /* const handleCellClick = (row, col) => {
-    // Solo permitir clicks si el modo colapso está activo
-    if (!collapseMode.active) {
-      return;
-    }
-    
-    if (processingAction.current) return;
-    processingAction.current = true;
-
-    const cell = boardCells[row][col];
-    console.log('Contenido:', cell);
-    
-    if (!cell || cell.type === 'start' || cell.type === 'objective') { // No permitir destruir cartas iniciales u objetivos
-      processingAction.current = false;
-      return;}
-    
-    if (cell.type !== 'tunnel') {
-      toast.warning('🔴You can only destroy tunnel cards');
-      processingAction.current = false;
-      return;}
-
-    setCont(timeturn);
-    setDestroyingCell({ row, col });
-    setTimeout(() => {
-      setBoardCells(prev => {
-        const next = prev.map(r => r.slice());
-        next[row][col] = null;
-        return next;
-      });
-      
-      if (window.removeCardAndDraw) {
-        window.removeCardAndDraw(collapseMode.cardIndex);
-      }
-      setDeckCount(prev => Math.max(0, prev - 1));
-      
-      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-      addColoredLog(currentIndex, playerOrder[currentIndex].username, `💣 Destroyed a tunnel card at [${row},${col}]. ${Math.max(0, deckCount - 1)} cards left in the deck.`);
-      toast.success('Tunnel card destroyed!');
-      setCollapseMode({ active: false, card: null, cardIndex: null });
-      setDestroyingCell(null);
-      nextTurn();
-      processingAction.current = false;
-    }, 800);
-
-    
-  };*/
-
   const handleCellClick = async (row, col) => {
   if (!collapseMode.active) return;
   if (processingAction.current) return;
@@ -510,6 +487,11 @@ const activateCollapseMode = (card, cardIndex) => {
 
   // Función para evaluar si la ronda ha terminado
   const checkForRoundEnd = async () => {
+    // No verificar si ya terminó la ronda (usar ref para evitar problemas de closure)
+    if (roundEndedRef.current) {
+      return;
+    }
+    
     // No verificar fin de ronda si aún no hay deck creado (evita errores al inicio)
     if (!deck || !deck.id) {
       return;
@@ -518,6 +500,7 @@ const activateCollapseMode = (card, cardIndex) => {
     const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
     
     if (roundEndResult.ended) {
+      roundEndedRef.current = true; // Marcar que la ronda terminó
       handleRoundEnd(roundEndResult);
     }
   };
@@ -528,7 +511,7 @@ const activateCollapseMode = (card, cardIndex) => {
   };
 
   // Función para manejar el final de ronda
-  const handleRoundEnd = (result) => {
+  const handleRoundEnd = async (result) => {
     const { reason, winnerTeam, goldPosition } = result;
     
     // Mostrar mensaje de final de ronda
@@ -544,13 +527,16 @@ const activateCollapseMode = (card, cardIndex) => {
 
     // Distribuir pepitas de oro y obtener la distribución para el modal
     const winnerRol = winnerTeam === 'MINERS' ? false : true;
-    const goldDistribution = distributeGold(activePlayers, winnerRol);
+    const goldDistribution = await distributeGold(activePlayers, winnerRol);
     
-    // Preparar datos de roles para el modal
+    // Preparar datos de roles para el modal (p.rol es booleano: true = SABOTEUR, false = MINER)
     const playerRolesData = activePlayers.map(p => ({
-      username: p.user?.username || p.username,
-      role: p.role
+      username: p.username,
+      role: p.rol === true ? 'SABOTEUR' : 'MINER'
     }));
+    
+    // Resetear el flag de navegación para esta nueva ronda
+    isNavigatingToNewRound.current = false;
     
     // Mostrar el modal de fin de ronda
     setRoundEndData({
@@ -571,35 +557,59 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Efecto para manejar el countdown y la navegación a la nueva ronda
+  // Efect para manejar el countdown y la navegación a la nueva ronda
   useEffect(() => {
     if (!roundEndData) return;
     
-    if (roundEndCountdown > 0) {
-      const timer = setTimeout(() => {
-        setRoundEndCountdown(prev => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else {
-      // Countdown terminado, crear nueva ronda y navegar
-      const createAndNavigateToNewRound = async () => {
-        try {
-          const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
-          if (newRound && newRound.id) {
-            // Navegar al board de la nueva ronda
-            setRoundEndData(null);
-            navigate(`/game/${game.id}/round/${newRound.id}/board`, {
-              state: { game, round: newRound, isSpectator }
-            });
-          }
-        } catch (error) {
-          console.error('Error al crear nueva ronda:', error);
-          toast.error('Error creating new round');
+    const interval = setInterval(() => {
+      setRoundEndCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
         }
-      };
-      createAndNavigateToNewRound();
-    }
-  }, [roundEndData, roundEndCountdown]);
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [roundEndData]); // Solo depende de roundEndData, no del countdown
+
+  // Efecto separado para navegar cuando el countdown llega a 0
+  useEffect(() => {
+    if (!roundEndData || roundEndCountdown > 0) return;
+    if (isNavigatingToNewRound.current) return; // Evitar múltiples navegaciones
+    
+    isNavigatingToNewRound.current = true;
+    
+    const createAndNavigateToNewRound = async () => {
+      try {
+        console.log('Creando nueva ronda...');
+        const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
+        console.log('Nueva ronda creada:', newRound);
+        
+        if (newRound && newRound.id) {
+          // Guardar datos en sessionStorage para recuperarlos después del reload
+          sessionStorage.setItem('newRoundData', JSON.stringify({
+            game: game,
+            round: newRound,
+            isSpectator: isSpectator
+          }));
+          
+          // Navegar y forzar reload para reiniciar todo el estado
+          window.location.href = `/board/${newRound.board}`;
+        } else {
+          console.error('Nueva ronda no tiene ID válido:', newRound);
+          isNavigatingToNewRound.current = false;
+        }
+      } catch (error) {
+        console.error('Error al crear nueva ronda:', error);
+        toast.error('Error creating new round');
+        isNavigatingToNewRound.current = false;
+      }
+    };
+    
+    createAndNavigateToNewRound();
+  }, [roundEndCountdown]);
 
   // Función para descartar carta
   const handleDiscard = () => {
@@ -669,9 +679,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
   const resolveActivePlayerUsername = () => {
     if (isSpectator) return loggedInUser?.username;
-    return loggedActivePlayer?.username
-      ?? loggedActivePlayer?.player?.user?.username
-      ?? loggedActivePlayer?.player?.username;
+    return loggedActivePlayer?.username;
   };
 
   const chatIdFromState = () => chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
@@ -865,11 +873,15 @@ const activateCollapseMode = (card, cardIndex) => {
       setPlayerRol(rolesList);
       if (isSpectator) return;
 
-      const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
-      if (currentPlayerRole) {
-        setMyRole(currentPlayerRole);
-        setShowRoleNotification(true);
-        setTimeout(() => setShowRoleNotification(false), 5000);
+      // Solo mostrar notificación si no se ha mostrado antes
+      if (!roleNotificationShown.current) {
+        const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
+        if (currentPlayerRole) {
+          roleNotificationShown.current = true;
+          setMyRole(currentPlayerRole);
+          setShowRoleNotification(true);
+          setTimeout(() => setShowRoleNotification(false), 5000);
+        }
       }
     };
 

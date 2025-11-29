@@ -138,7 +138,7 @@ const checkPathToGold = (boardCells, objectiveCards) => {
 
 // Reparto de pepitas según las reglas del Saboteur
 // Retorna un array con la distribución de oro para mostrar en el modal
-export const distributeGold = (players, winnerRol) => {
+export const distributeGold = async (players, winnerRol) => {
     const goldDistribution = [];
     const winners = players.filter(p => p.role === winnerRol);
     
@@ -155,9 +155,9 @@ export const distributeGold = (players, winnerRol) => {
         nuggetsPerSaboteur = 2;
       }
       
-      players.forEach(p => {
+      players.forEach(async(p) => {
         if (p.role === winnerRol) {
-          patchActivePlayer(p.id, { goldNugget: p.goldNugget + nuggetsPerSaboteur });
+          await patchActivePlayer(p.id, { goldNugget: p.goldNugget + nuggetsPerSaboteur });
           goldDistribution.push({
             username: p.user?.username || p.username,
             role: p.role,
