@@ -1058,3 +1058,133 @@
   border-radius: 4px;
   transition: width 1s linear;
 }
+
+/* ===== GAME END MODAL ===== */
+.game-end-card {
+  max-width: 600px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.5), 0 0 100px rgba(255, 215, 0, 0.2);
+}
+
+.game-end-title {
+  font-size: 2.5rem;
+  text-align: center;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5);
+  margin-bottom: 25px;
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+@keyframes pulse-gold {
+  0%, 100% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5); }
+  50% { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 215, 0, 0.7); }
+}
+
+.game-winner-section {
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 170, 0, 0.1) 100%);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.winner-announcement {
+  font-size: 1.5rem;
+  color: #ffd700;
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.winner-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px 25px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+}
+
+.winner-emoji {
+  font-size: 2.5rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.winner-name {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #1a1a2e;
+  text-transform: uppercase;
+}
+
+.winner-nuggets {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.rankings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.ranking-row:hover {
+  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ranking-first {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 170, 0, 0.2) 100%);
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.ranking-second {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(150, 150, 150, 0.2) 100%);
+  border: 2px solid #c0c0c0;
+}
+
+.ranking-third {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.2) 0%, rgba(180, 100, 40, 0.2) 100%);
+  border: 2px solid #cd7f32;
+}
+
+.ranking-position {
+  font-size: 1.8rem;
+  min-width: 50px;
+  text-align: center;
+}
+
+.ranking-username {
+  flex: 1;
+  font-size: 1.2rem;
+  color: #fff;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.ranking-nuggets {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffd700;
+}

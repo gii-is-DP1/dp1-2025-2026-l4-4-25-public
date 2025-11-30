@@ -746,8 +746,8 @@ const activateCollapseMode = (card, cardIndex) => {
       // Distribuir pepitas de oro y obtener la distribución para el modal
       const winnerRol = winnerTeam === 'MINERS' ? false : true;
       const goldDistribution = await distributeGold(activePlayers, winnerRol);
-      
-      // Recargar activePlayers para actualizar goldNugget en la UI
+
+           // Recargar activePlayers para actualizar goldNugget en la UI
       console.log('♻️ Recargando activePlayers después de distribuir oro...');
       await loadActivePlayers();
       
