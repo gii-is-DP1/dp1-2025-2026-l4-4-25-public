@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -77,12 +78,12 @@ class RequestRestControllerTests {
         sender = new Player();
         sender.setId(10);
         sender.setUsername("Sender");
-        sender.setFriends(new ArrayList<>());
+        sender.setFriends(new HashSet<>());
 
         receiver = new Player();
         receiver.setId(20);
         receiver.setUsername("Receiver");
-        receiver.setFriends(new ArrayList<>());
+        receiver.setFriends(new HashSet<>());
 
         request = new Request();
         request.setId(TEST_REQUEST_ID);

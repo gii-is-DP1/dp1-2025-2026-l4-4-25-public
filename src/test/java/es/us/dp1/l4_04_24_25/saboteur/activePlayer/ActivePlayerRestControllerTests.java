@@ -12,16 +12,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.simp.SimpMessagingTemplate; // IMPORT AÑADIDO
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -40,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService; // IMPORT AÑADIDO
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
@@ -78,6 +78,14 @@ class ActivePlayerRestControllerTests {
     @MockBean
     private PasswordEncoder encoder;
 
+    // --- MOCKS AÑADIDOS PARA ARREGLAR EL CONTEXTO ---
+    @MockBean
+    private GameService gameService;
+
+    @MockBean
+    private SimpMessagingTemplate messagingTemplate;
+    // ------------------------------------------------
+
     private ActivePlayer activePlayer;
 
     @BeforeEach
@@ -98,7 +106,7 @@ class ActivePlayerRestControllerTests {
         activePlayer.setCreatedGames(new ArrayList<>());
         activePlayer.setWonGame(new ArrayList<>());
         activePlayer.setMessages(new ArrayList<>());
-        activePlayer.setFriends(new ArrayList<>());
+        activePlayer.setFriends(new HashSet<>());
         activePlayer.setAccquiredAchievements(new ArrayList<>());
        
         activePlayer.setRol(true); 
