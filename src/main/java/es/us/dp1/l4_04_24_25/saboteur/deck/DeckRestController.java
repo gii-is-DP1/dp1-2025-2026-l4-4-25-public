@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,13 +43,15 @@ public class DeckRestController {
     private final ObjectMapper objectMapper;
     private final ActivePlayerService activePlayerService;
     private final CardService cardService;
+    private final SimpMessagingTemplate messagingTemplate; 
 
     @Autowired
-    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService) {
+    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService, SimpMessagingTemplate messagingTemplate) {
         this.deckService = deckService;
         this.objectMapper = objectMapper;
         this.activePlayerService = activePlayerService;
         this.cardService = cardService;
+        this.messagingTemplate = messagingTemplate; 
     }
 
     @GetMapping
@@ -173,12 +176,22 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
                 updatedCards.add(card);
             }
         }
-
+        
         deck.setCards(updatedCards);
     }
+        Deck updatedDeck = deckService.saveDeck(deck); 
 
-    
-    Deck updatedDeck = deckService.saveDeck(deck);
+        if(deck.getActivePlayer() != null){
+            String username = deck.getActivePlayer().getUsername();
+            Integer leftCards = updatedDeck.getCards() != null ? updatedDeck.getCards().size() : 0;
+
+            // Enviar mensaje a todos los suscriptores de /topic/deck-count
+            messagingTemplate.convertAndSend("/topic/deck/" + deck.getId(), Map.of(
+                "action", "DECK_COUNT", 
+                "username", username,
+                "leftCards", leftCards
+            ));
+        }
 
     return new ResponseEntity<>(updatedDeck, HttpStatus.OK);
 }
