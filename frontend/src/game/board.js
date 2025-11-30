@@ -13,6 +13,7 @@ import PlayersList from './components/PlayersList';
 import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
 import RoundEndModal from './components/RoundEnd';
+import GameEndModal from './components/GameEnd';
 import LoadingScreen from './components/LoadingScreen';
 
 // Utilidades
@@ -110,6 +111,11 @@ export default function Board() {
   // Estado para el modal de fin de ronda
   const [roundEndData, setRoundEndData] = useState(null);
   const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  
+  // Estado para el modal de fin de partida
+  const [gameEndData, setGameEndData] = useState(null);
+  const [gameEndCountdown, setGameEndCountdown] = useState(10);
+  
   const navigate = useNavigate();
 
   const [boardCells, setBoardCells] = useState(() => {
@@ -716,9 +722,24 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Funcion para manejar el final de la última ronda
-  const handleLastRoundEnd = (result) => {
-
+  // Ref para guardar los datos de fin de partida hasta que termine el modal de ronda
+  const pendingGameEndData = useRef(null);
+  
+  // Funcion para manejar el final de la última ronda (ronda 3 = fin de partida)
+  const handleLastRoundEnd = (result, goldDistribution) => {
+    console.log('🏁 GAME OVER - Preparando fin de partida...');
+    console.log('🪙 goldDistribution para ranking:', goldDistribution);
+    
+    // Preparar el ranking final con los totales de cada jugador
+    const playerRankings = (goldDistribution || []).map(player => ({
+      username: player.username,
+      totalNuggets: player.totalNuggets || 0
+    }));
+    
+    console.log('🏆 playerRankings final:', playerRankings);
+    
+    // Guardar los datos para mostrar después del countdown de ronda
+    pendingGameEndData.current = { playerRankings };
   };
 
   // Función para manejar el final de ronda
@@ -765,14 +786,14 @@ const activateCollapseMode = (card, cardIndex) => {
       console.log('patchRound ya ejecutado o error:', e);
     }
     
-    // Mostrar modal directamente
+    // Mostrar modal de fin de ronda
     setRoundEndData({ winnerTeam, reason, goldDistribution, playerRoles: playerRolesData });
     setRoundEndCountdown(10);
     
-    // Si es la ronda 3, manejar el final del juego
+    // Si es la ronda 3, preparar los datos de fin de partida (se mostrarán después del countdown de ronda)
     if (round.roundNumber === 3) {
-      handleLastRoundEnd(result);
-      return;
+      // Guardar goldDistribution para el modal de fin de partida
+      handleLastRoundEnd(result, goldDistribution);
     }
   };
 
@@ -793,9 +814,23 @@ const activateCollapseMode = (card, cardIndex) => {
     return () => clearInterval(interval);
   }, [roundEndData]); // Solo depende de roundEndData, no del countdown
 
-  // Efecto separado para navegar cuando el countdown llega a 0
+  // Efecto separado para navegar cuando el countdown de ronda llega a 0
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
+    
+    // Si es la ronda 3, cerrar el modal de ronda y mostrar el de fin de partida
+    if (round.roundNumber === 3) {
+      console.log('🏁 Ronda 3 terminada, mostrando GameEndModal...');
+      setRoundEndData(null); // Cerrar modal de ronda
+      
+      // Ahora activar el modal de fin de partida con los datos guardados
+      if (pendingGameEndData.current) {
+        setGameEndData(pendingGameEndData.current);
+        setGameEndCountdown(10);
+        pendingGameEndData.current = null;
+      }
+      return;
+    }
     
     const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
     
@@ -836,6 +871,31 @@ const activateCollapseMode = (card, cardIndex) => {
     
     createNewRound();
   }, [roundEndCountdown]);
+
+  // Efecto para manejar el countdown del fin de partida
+  useEffect(() => {
+    if (!gameEndData) return;
+    
+    const interval = setInterval(() => {
+      setGameEndCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [gameEndData]);
+
+  // Efecto para navegar al lobby cuando el countdown de fin de partida llega a 0
+  useEffect(() => {
+    if (!gameEndData || gameEndCountdown > 0) return;
+    
+    console.log('🏠 Navegando al lobby...');
+    window.location.href = '/lobby';
+  }, [gameEndCountdown, gameEndData]);
 
   // Función para descartar carta
   const handleDiscard = () => {
@@ -1423,6 +1483,14 @@ const activateCollapseMode = (card, cardIndex) => {
           playerRoles={roundEndData.playerRoles}
           countdown={roundEndCountdown}
           roundNumber={round.roundNumber}
+        />
+      )}
+
+      {/* Modal de fin de partida */}
+      {gameEndData && (
+        <GameEndModal
+          playerRankings={gameEndData.playerRankings}
+          countdown={gameEndCountdown}
         />
       )}
 
