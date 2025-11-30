@@ -1,0 +1,212 @@
+.loading-screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;}
+
+.loading-background-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  object-fit: cover;
+  opacity: 1;}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }}
+
+.loading-screen-container {
+  position: relative;
+  z-index: 0;
+  text-align: center;
+  max-width: 600px;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);}
+
+.loading-screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px}
+
+.loading-miner-animation {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px}
+
+.miner-icon {
+  font-size: 60px;
+  animation: mining 1.5s ease-in-out infinite;
+  position: relative;
+  z-index: 2}
+
+@keyframes mining {
+  0%, 100% { transform: rotate(-15deg) translateY(0)}
+  50% { transform: rotate(15deg) translateY(-10px)}}
+
+.digging-effect {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: rgba(139, 69, 19, 0.5);
+  border-radius: 50%;
+  animation: dig 1.5s ease-in-out infinite}
+
+@keyframes dig {
+  0%, 100% { 
+    width: 40px;
+    opacity: 0.3;
+  }
+  50% { 
+    width: 70px;
+    opacity: 0.7}}
+
+.loading-title {
+  font-size: 48px;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3),
+    2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 4px;
+  margin: 0;
+  animation: glow 2s ease-in-out infinite}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3); }
+  50% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.5)}}
+
+.loading-message {
+  font-size: 20px;
+  color: #e0e0e0;
+  font-weight: 500;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 5px}
+
+.loading-points {
+  display: inline-block;
+  width: 20px;
+  text-align: left;
+  color: #ffd700}
+
+.loading-progress-container {
+  width: 100%;
+  position: relative;
+  margin: 20px 0}
+
+.loading-progress-bar {
+  height: 30px;
+  background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 50%, #CDDC39 100%);
+  border-radius: 15px;
+  transition: width 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 8px rgba(76, 175, 80, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2)}
+
+.loading-progress-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent);
+  animation: shine 2s infinite}
+
+@keyframes shine {
+  to { left: 100%; }}
+
+.loading-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  z-index: 1}
+
+.loading-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px}
+
+.loading-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: all 0.3s ease}
+
+.loading-step.completed {
+  background: rgba(76, 175, 80, 0.2);
+  border-left: 3px solid #4CAF50}
+
+.loading-step.pending {
+  opacity: 0.6}
+
+.step-icon {
+  font-size: 18px;
+  width: 24px}
+
+.step-label {
+  font-size: 14px;
+  color: #e0e0e0;
+  flex: 1;
+  text-align: left}
+
+.loading-tip {
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 3px solid #ffd700;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #e0e0e0;
+  font-style: italic;
+  max-width: 90%}
+
+@media (max-width: 768px) {
+  .loading-screen-container {
+    padding: 20px;
+    max-width: 90%}
+
+  .loading-title {
+    font-size: 36px}
+
+  .loading-message {
+    font-size: 16px}
+
+  .miner-icon {
+    font-size: 48px}}

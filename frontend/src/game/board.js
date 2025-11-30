@@ -13,6 +13,7 @@ import PlayersList from './components/PlayersList';
 import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
 import RoundEndModal from './components/RoundEnd';
+import LoadingScreen from './components/LoadingScreen';
 
 // Utilidades
 import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
@@ -97,6 +98,20 @@ export default function Board() {
   const [showRoleNotification, setShowRoleNotification] = useState(false);
   const [myRole, setMyRole] = useState(null);
   const [destroyingCell, setDestroyingCell] = useState(null); 
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingSteps, setLoadingSteps] = useState([{label: 'Loading Game Data', completed:false}, 
+    {label: 'Loading Players', completed:false}, {label: 'Loading Board', completed:false}, {label: 'Loading Cards', completed:false}, 
+    {label: 'Loading Chat', completed:false}, {label: 'Assigning Rols', completed:false}, {label: 'Initializing Game State', completed:false}]);
+
+  const updateLoadingStep = (stepIndex, completed = true) => {
+    setLoadingSteps(prev => {
+      const up = [...prev];
+      up[stepIndex].completed = completed;
+      const completedCont = up.filter(s => s.completed).length;
+      const progress = Math.round((completedCont/up.length)*100);
+      setLoadingProgress(progress);
+      return up})}; 
 
   // Estado para el modal de fin de ronda
   const [roundEndData, setRoundEndData] = useState(null);
@@ -310,7 +325,7 @@ export default function Board() {
             const now2 = Date.now(); 
             const last = lastTurnToast.current;
             if (last.username !== nextUsername || (now2 - last.ts) > 3000) {
-              toast.info("🎲 IT´S YOUR TURN! 🎲");
+              toast.info("🎲 It's your turn! 🎲");
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             } else {
               console.log("Skipped duplicate YOUR TURN toast for", nextUsername);
@@ -871,25 +886,51 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Efectos
+
   useEffect(() => {
-    fetchCards();
-    loadActivePlayers();
-    getChat();
-    fetchAndSetLoggedActivePlayer();
+    const initializeGame = async () => {
+      try {
+        updateLoadingStep(0);
+        await fetchCards();
+        updateLoadingStep(1);
+        await loadActivePlayers();
+        updateLoadingStep(2);
+        const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+        if (logId) {
+          const log = await getLog(logId);
+          if (log) {
+            setLogData(log);
+            const mapped = (log.messages || []).map(m => ({ msg: m, type: "info" }));
+            setGameLog(mapped);}}
+        
+        updateLoadingStep(3);
+        updateLoadingStep(4);
+        await getChat();
+        await fetchAndSetLoggedActivePlayer();
+        updateLoadingStep(5);
 
-    async function handlerounds() {
-      const irounds = game?.rounds?.length || 0;
-      if (irounds <= 0) {
-        setNumRound(1);
+        async function handlerounds() {
+          const irounds = game?.rounds?.length || 0;
+          if (irounds <= 0) {
+            setNumRound(1);}}
+        await handlerounds();
+        updateLoadingStep(6);
+
+        if (isSpectator) {
+          addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
+          toast.info('Spectator mode activated✅');}
+
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error('Error initializing game:', error);
+        toast.error('Error loading game data');
+        setIsLoading(false);
       }
-    }
-    handlerounds();
+    };
 
-    if (isSpectator) {
-      addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
-      toast.info('Spectator mode activated✅');
-    }
+    initializeGame();
   }, []);
 
   useEffect(() => {
@@ -1245,6 +1286,9 @@ const activateCollapseMode = (card, cardIndex) => {
 
 
   // Render 
+  if (isLoading) {
+    return <LoadingScreen progress={loadingProgress} loadingSteps={loadingSteps} />;}
+
   return (
     <div className="board-container">
       {showRoleNotification && myRole && (

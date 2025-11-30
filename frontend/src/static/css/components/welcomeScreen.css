@@ -5,14 +5,26 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e, #0f3460);
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite, fadeIn 0.5s ease;
+  background: #000;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 99999;
   overflow: hidden;
+}
+
+.welcome-background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  object-fit: cover;
+  opacity: 0.5;
 }
 
 @keyframes gradientShift {
@@ -29,6 +41,7 @@
   height: 100%;
   overflow: hidden;
   pointer-events: none;
+  z-index: 2;
 }
 
 .particle {
@@ -59,6 +72,7 @@
   position: relative;
   width: 90%;
   max-width: 900px;
+  z-index: 3;
 }
 
 .floating-tools {
