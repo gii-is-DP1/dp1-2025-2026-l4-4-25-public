@@ -51,13 +51,21 @@ export default function WelcomeScreen({ username, onComplete }) {
 
   return (
     <div className="welcome-screen-overlay">
+      <video 
+        className="welcome-background-video" 
+        autoPlay 
+        loop 
+        muted 
+        playsInline>
+        <source src="/LOADINGVIDEO.mp4" type="video/mp4" />
+      </video>
       <div className="background-particles">
         {[...Array(20)].map((_, i) => (
           <div key={i} className={`particle particle-${i % 5}`}></div>
         ))}
       </div>
       <div className="welcome-screen-content">
-        <div className="floating-tools">
+        {/*<div className="floating-tools">
           <span className="tool pickaxe">⛏️</span>
           <span className="tool shovel">🔨</span>
           <span className="tool lantern">🔦</span>
@@ -66,7 +74,7 @@ export default function WelcomeScreen({ username, onComplete }) {
           <span className="tool dynamite">💣</span>
           <span className="tool coin">🪙</span>
           <span className="tool gem">💍</span>
-        </div>
+        </div>*/}
 
         <div className="welcome-title-container">
           <div className="title-background-glow"></div>
@@ -77,7 +85,7 @@ export default function WelcomeScreen({ username, onComplete }) {
           </div>
         </div>
 
-        <div className="welcome-roles">
+     {/*  <div className="welcome-roles">
           <div className="role-card role-left">
             <img src={minerRol} alt="Miner" className="role-image" />
             <p className="role-name">MINER</p>
@@ -89,7 +97,7 @@ export default function WelcomeScreen({ username, onComplete }) {
             <img src={saboteurRol} alt="Saboteur" className="role-image" />
             <p className="role-name">SABOTEUR</p>
           </div>
-        </div>
+        </div> */}
 
         <div className="welcome-user">
           <p className="user-greeting">

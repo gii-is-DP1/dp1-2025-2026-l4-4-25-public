@@ -138,9 +138,15 @@ const checkPathToGold = (boardCells, objectiveCards) => {
 
 // Reparto de pepitas según las reglas del Saboteur
 // Retorna un array con la distribución de oro para mostrar en el modal
+// winnerRol: true = SABOTEURS ganan, false = MINERS ganan
 export const distributeGold = async (players, winnerRol) => {
     const goldDistribution = [];
-    const winners = players.filter(p => p.role === winnerRol);
+    // p.rol es booleano: true = SABOTEUR, false = MINER
+    const winners = players.filter(p => p.rol === winnerRol);
+    
+    console.log('distributeGold - players:', players);
+    console.log('distributeGold - winnerRol:', winnerRol);
+    console.log('distributeGold - winners:', winners);
     
     if (winnerRol === true) {
       // Saboteurs win
@@ -155,47 +161,50 @@ export const distributeGold = async (players, winnerRol) => {
         nuggetsPerSaboteur = 2;
       }
       
-      players.forEach(async(p) => {
-        if (p.role === winnerRol) {
-          await patchActivePlayer(p.id, { goldNugget: p.goldNugget + nuggetsPerSaboteur });
+      for (const p of players) {
+        const roleName = p.rol === true ? 'SABOTEUR' : 'MINER';
+        if (p.rol === winnerRol) {
+          await patchActivePlayer(p.id, { goldNugget: (p.goldNugget || 0) + nuggetsPerSaboteur });
           goldDistribution.push({
             username: p.user?.username || p.username,
-            role: p.role,
+            rol: roleName,
             nuggetsEarned: nuggetsPerSaboteur,
-            totalNuggets: p.goldNugget + nuggetsPerSaboteur
+            totalNuggets: (p.goldNugget || 0) + nuggetsPerSaboteur
           });
         } else {
           goldDistribution.push({
             username: p.user?.username || p.username,
-            role: p.role,
+            rol: roleName,
             nuggetsEarned: 0,
-            totalNuggets: p.goldNugget
+            totalNuggets: p.goldNugget || 0
           });
         }
-      });
+      }
     } else {
       // Miners win
-      players.forEach(p => {
-        if (p.role === winnerRol) {
+      for (const p of players) {
+        const roleName = p.rol === true ? 'SABOTEUR' : 'MINER';
+        if (p.rol === winnerRol) {
           const randomGold = Math.floor(Math.random() * 3) + 1; // 1, 2 o 3
-          patchActivePlayer(p.id, { goldNugget: p.goldNugget + randomGold });
+          await patchActivePlayer(p.id, { goldNugget: (p.goldNugget || 0) + randomGold });
           goldDistribution.push({
             username: p.user?.username || p.username,
-            role: p.role,
+            rol: roleName,
             nuggetsEarned: randomGold,
-            totalNuggets: p.goldNugget + randomGold
+            totalNuggets: (p.goldNugget || 0) + randomGold
           });
         } else {
           goldDistribution.push({
             username: p.user?.username || p.username,
-            role: p.role,
+            rol: roleName,
             nuggetsEarned: 0,
-            totalNuggets: p.goldNugget
+            totalNuggets: p.goldNugget || 0
           });
         }
-      });
+      }
     }
     
+    console.log('distributeGold - goldDistribution:', goldDistribution);
     return goldDistribution;
 }
 

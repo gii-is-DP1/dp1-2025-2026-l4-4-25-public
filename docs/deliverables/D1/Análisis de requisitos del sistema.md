@@ -370,7 +370,7 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 
 ## 4️⃣ Diagrama conceptual del sistema
 
-![Acceda al Diagrama Conceptual](D1_images/Diagrama_conceptual.svg)
+![Acceda al Diagrama Conceptual](D1_images/Diagrama_conceptual_Sprint3.svg)
 > [ACCEDA AL ENLACE DE NUESTRO DIAGRAMA EN DRAW.IO PARA UNA MEJOR VISIÓN INTERACTIVA](https://drive.google.com/file/d/1iKzdVrxEugiz7iYnUBxZkghGzazHpXUN/view?usp=sharing)
 
 >💡 Para acceder correctamente al enlace es necesario estar registrado en Draw.io. Este enlace llevará a una pantalla de Google Drive en la que habrá que seleccionar la opción "Abrir con - Draw.io"
