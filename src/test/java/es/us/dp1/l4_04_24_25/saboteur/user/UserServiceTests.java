@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -259,5 +260,69 @@ class UserServiceTests {
     @Test
     void shouldFailFindUserDTOByInvalidId() {
         assertThrows(ResourceNotFoundException.class, () -> userService.findUserDTO(999));
+    }
+
+    @Test
+    void shouldThrowExceptionForFutureBirthDateInSave() {
+        User user = new User();
+        user.setUsername("FutureUser");
+        user.setPassword("password");
+        
+        user.setBirthDate(LocalDate.now().plusDays(1).toString()); 
+        user.setAuthority(authService.findByAuthority("PLAYER"));
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.saveUser(user);
+        });
+        assertEquals("Birth date must be before current date", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionForInvalidBirthDateFormatInSave() {
+        User user = new User();
+        user.setUsername("BadFormatUser");
+        user.setPassword("password");
+     
+        user.setBirthDate("12/12/2025"); 
+        user.setAuthority(authService.findByAuthority("PLAYER"));
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.saveUser(user);
+        });
+        assertEquals("Invalid birth date format. Expected yyyy-MM-dd", exception.getMessage());
+    }
+    
+    @Test
+    @Transactional
+    void shouldThrowExceptionForFutureBirthDateInUpdate() {
+        int idToUpdate = 1;
+        User userToUpdate = userService.findUser(idToUpdate);
+        
+        User inputUser = new User();
+        BeanUtils.copyProperties(userToUpdate, inputUser);
+        
+        inputUser.setBirthDate(LocalDate.now().plusDays(1).toString());
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateUser(inputUser, idToUpdate);
+        });
+        assertEquals("Birth date must be before current date", exception.getMessage());
+    }
+
+    @Test
+    @Transactional
+    void shouldThrowExceptionForInvalidBirthDateFormatInUpdate() {
+        int idToUpdate = 1;
+        User userToUpdate = userService.findUser(idToUpdate);
+        
+        User inputUser = new User();
+        BeanUtils.copyProperties(userToUpdate, inputUser);
+ 
+        inputUser.setBirthDate("bad-date-format");
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateUser(inputUser, idToUpdate);
+        });
+        assertEquals("Invalid birth date format. Expected yyyy-MM-dd", exception.getMessage());
     }
 }
