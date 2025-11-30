@@ -59,13 +59,40 @@ const ROTATED_RE = /_rotated\.png$/i;
 
 export const isRotatedImage = (image) => ROTATED_RE.test(cleanImageName(image));
 
-// Cartas cuya imagen termina en "_rotated.png"
+// Cartas con la propiedad rotacion = true
 export const getRotatedCards = (cards) =>
-  (cards ?? []).filter((c) => isRotatedImage(c.image));
+  (cards ?? []).filter((c) => c.rotacion === true);
 
-// Cartas cuya imagen NO termina en "_rotated.png"
+// Cartas con la propiedad rotacion = false o sin rotacion
 export const getNonRotatedCards = (cards) =>
-  (cards ?? []).filter((c) => !isRotatedImage(c.image));
+  (cards ?? []).filter((c) => c.rotacion !== true && c.id >= 1 && c.id <= 70);
+
+/**
+ * Encuentra la pareja rotada de una carta en el array de cartas disponibles
+ * Si la carta actual tiene rotacion=false, busca una con las mismas conexiones pero rotacion=true
+ * Si la carta actual tiene rotacion=true, busca una con las mismas conexiones pero rotacion=false
+ */
+export const findRotatedPair = (card, allCards) => {
+  if (!card || !allCards || allCards.length === 0) return null;
+  
+  // Buscar por nombre de imagen: si termina en _rotated.png, buscar sin _rotated
+  // Si no termina en _rotated.png, buscar con _rotated
+  const isRotated = card.image && card.image.includes('_rotated.png');
+  
+  let targetImage;
+  if (isRotated) {
+    // Quitar el _rotated
+    targetImage = card.image.replace('_rotated.png', '.png');
+  } else {
+    // Agregar el _rotated
+    targetImage = card.image.replace('.png', '_rotated.png');
+  }
+  
+  // Buscar carta con la imagen objetivo
+  const pair = allCards.find(c => c.image === targetImage);
+  
+  return pair || null;
+};
 
 //Elegir cartas al azar
 export const shuffleInPlace = (arr) => {

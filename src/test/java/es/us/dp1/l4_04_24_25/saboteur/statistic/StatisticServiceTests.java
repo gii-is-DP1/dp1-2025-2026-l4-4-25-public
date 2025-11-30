@@ -25,7 +25,6 @@ import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
-import es.us.dp1.l4_04_24_25.statistic.StatisticService;
 
 @ExtendWith(MockitoExtension.class)
 class StatisticServiceTests {

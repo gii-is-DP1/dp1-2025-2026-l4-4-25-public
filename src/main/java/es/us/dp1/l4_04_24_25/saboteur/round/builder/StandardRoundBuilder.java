@@ -38,7 +38,7 @@ public class StandardRoundBuilder extends AbstractRoundBuilder {
         
         round.setGame(this.game);
         round.setRoundNumber(this.roundNumber != null ? this.roundNumber : 1);
-        round.setLeftCards(this.leftCards != null ? this.leftCards : 60);
+        round.setLeftCards(this.leftCards != null ? this.leftCards : 70);
         round.setTimeSpent(this.timeSpent != null ? this.timeSpent : Duration.ZERO);
         round.setPlayerTurn(null);
         round.setWinnerRol(this.winnerRol);
