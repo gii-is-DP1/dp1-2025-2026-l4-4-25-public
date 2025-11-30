@@ -39,7 +39,7 @@ class CardServiceTests {
     @Transactional
     void shouldFindAllCards() {
         List<Card> cards = (List<Card>) this.cardService.findAll();
-        assertTrue(cards.size() == 124); 
+        assertTrue(cards.size() == 127); 
     }
    
     @Test

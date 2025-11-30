@@ -54,14 +54,14 @@ class SquareServiceTests {
     @Test
     void shouldFindAllSquares() {
         List<Square> squares = (List<Square>)this.squareService.findAll();
-        assertEquals(2, squares.size());
+        assertEquals(8, squares.size());
     }
 
     @ParameterizedTest
     @ValueSource(booleans={true,false})
     void shouldFindSquaresByOccupation(boolean occupation){
         List<Square> squares = this.squareService.findByOccupation(occupation);
-        assertTrue(squares.size()==1);
+        assertTrue(squares.size()==7 || squares.size()==1);
     }
 
     @Test

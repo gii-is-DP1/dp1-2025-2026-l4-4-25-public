@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
@@ -101,12 +102,17 @@ class RoundRestControllerTests {
         game = new Game();
         game.setId(TEST_GAME_ID);
 
+        // Crear un board mock para evitar NullPointerException en el controlador
+        Board board = new Board();
+        board.setId(1);
+
         round = new Round();
         round.setId(TEST_ROUND_ID);
         round.setRoundNumber(1);
         round.setLeftCards(60);
         round.setTimeSpent(Duration.ZERO);
         round.setGame(game);
+        round.setBoard(board);  // Asignar board al round
         round.setWinnerRol(false);
     }
 
