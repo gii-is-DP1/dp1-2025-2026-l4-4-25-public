@@ -36,6 +36,9 @@ public class Board extends BaseEntity{
     @NotNull 
     protected Integer height = 9;
 
+    @Column(name = "objective_cards_order")
+    private String objectiveCardsOrder;
+
     @JsonSerialize(contentUsing = SquareSerializer.class)
     @JsonDeserialize(contentUsing =  SquareDeserializer.class)
     @OneToMany(mappedBy = "board")

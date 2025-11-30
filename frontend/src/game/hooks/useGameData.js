@@ -541,6 +541,51 @@ export const useGameData = (game) => {
     }
   };
 
+  // Obtener una ronda específica por gameId y roundNumber
+  const getRoundByNumber = async (gameId, roundNumber) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/byGameIdAndNumber?gameId=${gameId}&&roundNumber=${roundNumber}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        }
+      });
+      if (response.ok) {
+        const rounds = await response.json();
+        return rounds;
+      }
+    } catch (error) {
+      console.error('Error al obtener ronda:', error);
+      return null;
+    }
+  };
+
+  // Notificar fin de ronda a todos los jugadores via WebSocket
+  const notifyRoundEnd = async (roundId, roundEndData) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/${roundId}/notifyRoundEnd`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify(roundEndData)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Notificación de fin de ronda enviada');
+        return await response.json();
+      } else {
+        console.error('Error al notificar fin de ronda:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error de red al notificar fin de ronda:', error);
+      return null;
+    }
+  };
+
   const getActivePlayersbyId = async (activePlayerId) => {
   try {
     const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
@@ -590,6 +635,8 @@ export const useGameData = (game) => {
     patchActivePlayer,
     patchRound,
     postRound,
+    getRoundByNumber,
+    notifyRoundEnd,
     getActivePlayersbyId
   };
 };

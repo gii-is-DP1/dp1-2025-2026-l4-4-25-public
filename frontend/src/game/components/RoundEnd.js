@@ -33,10 +33,10 @@ export default function RoundEndModal({
             {playerRoles && playerRoles.map((player, index) => (
               <div 
                 key={index} 
-                className={`role-reveal-card ${player.role === true ? 'saboteur-role' : 'miner-role'}`}>
+                className={`role-reveal-card ${player.rol === 'SABOTEUR' ? 'saboteur-role' : 'miner-role'}`}>
                 <div className="role-reveal-username">{player.username}</div>
                 <div className="role-reveal-role">
-                  {player.role === true ? '💣 SABOTEUR' : '⛏️ MINER'}
+                  {player.rol === 'SABOTEUR' ? '💣 SABOTEUR' : '⛏️ MINER'}
                 </div>
               </div>
             ))}
@@ -51,7 +51,7 @@ export default function RoundEndModal({
               <div key={index} className="nugget-row">
                 <span className="nugget-username">{player.username}</span>
                 <span className="nugget-role">
-                  {player.role === true ? '💣' : '⛏️'}
+                  {player.rol === 'SABOTEUR' ? '💣' : '⛏️'}
                 </span>
                 <span className="nugget-amount">
                   {player.nuggetsEarned > 0 ? (
