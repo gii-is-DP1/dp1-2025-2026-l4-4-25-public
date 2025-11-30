@@ -136,6 +136,30 @@ const checkPathToGold = (boardCells, objectiveCards) => {
   return null;
 };
 
+// Función auxiliar para obtener pepitas actuales del backend
+const fetchCurrentGoldNuggets = async (playerId) => {
+  try {
+    const response = await fetch(`/api/v1/activePlayers/${playerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    if (response.ok) {
+      const playerData = await response.json();
+      return playerData.goldNugget || 0;
+    } else {
+      console.error('Error al obtener goldNuggets del jugador:', response.status);
+      return 0;
+    }
+  } catch (error) {
+    console.error('Error en fetchCurrentGoldNuggets:', error);
+    return 0;
+  }
+};
+
 // Reparto de pepitas según las reglas del Saboteur
 // Retorna un array con la distribución de oro para mostrar en el modal
 // winnerRol: true = SABOTEURS ganan, false = MINERS ganan
@@ -163,20 +187,28 @@ export const distributeGold = async (players, winnerRol) => {
       
       for (const p of players) {
         const roleName = p.rol === true ? 'SABOTEUR' : 'MINER';
+        
+        // Obtener pepitas actuales desde el backend
+        const currentGold = await fetchCurrentGoldNuggets(p.id);
+        console.log(`💰 Player ${p.user?.username || p.username} current gold from backend: ${currentGold}`);
+        
         if (p.rol === winnerRol) {
-          await patchActivePlayer(p.id, { goldNugget: (p.goldNugget || 0) + nuggetsPerSaboteur });
+          const newTotal = currentGold + nuggetsPerSaboteur;
+          await patchActivePlayer(p.id, { goldNugget: newTotal });
+          console.log(`✅ Player ${p.user?.username || p.username} earned ${nuggetsPerSaboteur} gold. Total: ${newTotal}`);
+          
           goldDistribution.push({
             username: p.user?.username || p.username,
             rol: roleName,
             nuggetsEarned: nuggetsPerSaboteur,
-            totalNuggets: (p.goldNugget || 0) + nuggetsPerSaboteur
+            totalNuggets: newTotal
           });
         } else {
           goldDistribution.push({
             username: p.user?.username || p.username,
             rol: roleName,
             nuggetsEarned: 0,
-            totalNuggets: p.goldNugget || 0
+            totalNuggets: currentGold
           });
         }
       }
@@ -184,21 +216,29 @@ export const distributeGold = async (players, winnerRol) => {
       // Miners win
       for (const p of players) {
         const roleName = p.rol === true ? 'SABOTEUR' : 'MINER';
+        
+        // Obtener pepitas actuales desde el backend
+        const currentGold = await fetchCurrentGoldNuggets(p.id);
+        console.log(`💰 Player ${p.user?.username || p.username} current gold from backend: ${currentGold}`);
+        
         if (p.rol === winnerRol) {
           const randomGold = Math.floor(Math.random() * 3) + 1; // 1, 2 o 3
-          await patchActivePlayer(p.id, { goldNugget: (p.goldNugget || 0) + randomGold });
+          const newTotal = currentGold + randomGold;
+          await patchActivePlayer(p.id, { goldNugget: newTotal });
+          console.log(`✅ Player ${p.user?.username || p.username} earned ${randomGold} gold. Total: ${newTotal}`);
+          
           goldDistribution.push({
             username: p.user?.username || p.username,
             rol: roleName,
             nuggetsEarned: randomGold,
-            totalNuggets: (p.goldNugget || 0) + randomGold
+            totalNuggets: newTotal
           });
         } else {
           goldDistribution.push({
             username: p.user?.username || p.username,
             rol: roleName,
             nuggetsEarned: 0,
-            totalNuggets: p.goldNugget || 0
+            totalNuggets: currentGold
           });
         }
       }
@@ -213,4 +253,66 @@ export const prepareNewRound = (currentRoundNumber) => {
     roundNumber: currentRoundNumber + 1,
     // Las pepitas se mantienen acumuladas en el backend
   };
+};
+
+// Función auxiliar para obtener datos actualizados del jugador desde el backend
+const fetchActivePlayerById = async (playerId) => {
+  try {
+    const response = await fetch(`/api/v1/activePlayers/${playerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    if (response.ok) {
+      const playerData = await response.json();
+      return playerData;
+    } else {
+      console.error('Error al obtener activePlayer:', response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error en fetchActivePlayerById:', error);
+    return null;
+  }
+};
+
+// Resetear herramientas de los jugadores al iniciar una nueva ronda
+export const resetToolsForNewRound = async (players) => {
+  try {
+    console.log('🔧 Resetting tools for new round...');
+    
+    for (const player of players) {
+      // Obtener datos actualizados del jugador desde el backend para asegurar que tenemos las pepitas más recientes
+      const currentPlayerData = await fetchActivePlayerById(player.id);
+      
+      if (!currentPlayerData) {
+        console.error(`❌ No se pudo obtener datos actualizados del jugador ${player.id}`);
+        continue;
+      }
+      
+      const currentGoldNuggets = currentPlayerData.goldNugget || 0;
+      const currentRol = currentPlayerData.rol !== undefined ? currentPlayerData.rol : false;
+      
+      console.log(`🔧 Resetting tools for ${currentPlayerData.username || currentPlayerData.user?.username} - Current gold from backend: ${currentGoldNuggets}`);
+      
+      const resetData = {
+        pickaxeState: true,
+        cartState: true,
+        candleState: true,
+        goldNugget: currentGoldNuggets, // Mantener las pepitas actuales del backend
+      };
+      
+      await patchActivePlayer(player.id, resetData);
+      console.log(`✅ Tools reset for player ${currentPlayerData.username || currentPlayerData.user?.username} - Gold preserved: ${currentGoldNuggets}`);
+    }
+    
+    console.log('✅ All tools reset successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error resetting tools:', error);
+    return false;
+  }
 };

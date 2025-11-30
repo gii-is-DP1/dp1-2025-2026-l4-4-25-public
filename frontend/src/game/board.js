@@ -18,7 +18,7 @@ import LoadingScreen from './components/LoadingScreen';
 // Utilidades
 import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
-import { checkRoundEnd, distributeGold } from './utils/roundEndLogic';
+import { checkRoundEnd, distributeGold, resetToolsForNewRound } from './utils/roundEndLogic';
 import saboteurRol from './cards-images/roles/saboteurRol.png';
 import minerRol from './cards-images/roles/minerRol.png';
 
@@ -747,6 +747,10 @@ const activateCollapseMode = (card, cardIndex) => {
       const winnerRol = winnerTeam === 'MINERS' ? false : true;
       const goldDistribution = await distributeGold(activePlayers, winnerRol);
       
+      // Recargar activePlayers para actualizar goldNugget en la UI
+      console.log('♻️ Recargando activePlayers después de distribuir oro...');
+      await loadActivePlayers();
+      
       // Preparar datos de roles para el modal (p.rol es booleano: true = SABOTEUR, false = MINER)
       const playerRolesData = activePlayers.map(p => ({
         username: p.user?.username || p.username,
@@ -822,6 +826,10 @@ const activateCollapseMode = (card, cardIndex) => {
     
     const createNewRound = async () => {
       try {
+        // Resetear herramientas de todos los jugadores antes de crear la nueva ronda
+        console.log('🔧 Resetting tools for all players...');
+        await resetToolsForNewRound(activePlayers);
+        
         const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
         console.log('✅ Nueva ronda creada:', newRound);
         

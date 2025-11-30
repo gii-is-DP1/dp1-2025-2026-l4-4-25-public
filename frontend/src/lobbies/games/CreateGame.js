@@ -292,7 +292,7 @@ const CreateGame = () => {
       pickaxeState: true,
       cartState: true,
       candleState: true,
-      goldNuggets: 0,
+      goldNugget: 0,  // Resetear pepitas a 0 al iniciar la partida
       rol: false
     }
     try {

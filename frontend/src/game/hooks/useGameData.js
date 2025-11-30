@@ -57,6 +57,7 @@ export const useGameData = (game) => {
             pickaxeState: activePlayer.pickaxeState,
             candleState: activePlayer.candleState,
             cartState: activePlayer.cartState,
+            goldNugget: activePlayer.goldNugget || 0,
           };
         }
 
