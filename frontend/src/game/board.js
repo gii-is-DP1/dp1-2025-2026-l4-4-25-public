@@ -141,6 +141,16 @@ export default function Board() {
   const isTurnChanging = useRef(false);
   const isNavigatingToNewRound = useRef(false);
   const roundEndedRef = useRef(false);
+  const lastRoundId = useRef(null);
+
+  // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
+  useEffect(() => {
+    if (round?.id && round.id !== lastRoundId.current) {
+      console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
+      roundEndedRef.current = false;
+      lastRoundId.current = round.id;
+    }
+  }, [round?.id]);
 
   const lastTurnToast = useRef({username: null, ts: 0}); 
   const lastTimeoutToastTs = useRef(0);
@@ -375,8 +385,17 @@ export default function Board() {
     
     // Handler para cuando termina la ronda - mostrar modal con datos sincronizados
     const handleWsRoundEnd = (message) => {
-      const { winnerTeam, reason, goldDistribution, playerRoles } = message;
-      console.log('🏆 WS ROUND_END recibido:', message);
+      const { winnerTeam, reason, goldDistribution, playerRoles, roundId } = message;
+      console.log('🏆 WS ROUND_END recibido:', message, 'round.id actual:', round?.id);
+      
+      // Ignorar mensajes de rondas anteriores
+      if (roundId && round?.id && roundId !== round.id) {
+        console.log('🏆 Ignorando ROUND_END de ronda diferente:', roundId, '!=', round.id);
+        return;
+      }
+      
+      // Marcar la ronda como terminada
+      roundEndedRef.current = true;
       
       // Resetear el flag de navegación
       isNavigatingToNewRound.current = false;
@@ -657,17 +676,22 @@ const activateCollapseMode = (card, cardIndex) => {
 
   // Función para evaluar si la ronda ha terminado
   const checkForRoundEnd = async () => {
+    console.log('🔍 checkForRoundEnd called. roundEndedRef:', roundEndedRef.current, 'deck:', deck?.id, 'deckCount:', deckCount);
+    
     // No verificar si ya terminó la ronda (usar ref para evitar problemas de closure)
     if (roundEndedRef.current) {
+      console.log('🔍 checkForRoundEnd: ronda ya terminada, saliendo');
       return;
     }
     
     // No verificar fin de ronda si aún no hay deck creado (evita errores al inicio)
     if (!deck || !deck.id) {
+      console.log('🔍 checkForRoundEnd: deck no disponible, saliendo');
       return;
     }
     
     const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
+    console.log('🔍 checkForRoundEnd result:', roundEndResult);
     
     if (roundEndResult.ended) {
       roundEndedRef.current = true; // Marcar que la ronda terminó
