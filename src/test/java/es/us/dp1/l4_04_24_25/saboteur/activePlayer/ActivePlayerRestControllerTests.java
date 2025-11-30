@@ -39,8 +39,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
@@ -75,6 +77,12 @@ class ActivePlayerRestControllerTests {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private GameService gameService;
+
+    @MockBean
+    private SimpMessagingTemplate messagingTemplate;
 
     @MockBean
     private PasswordEncoder encoder;
