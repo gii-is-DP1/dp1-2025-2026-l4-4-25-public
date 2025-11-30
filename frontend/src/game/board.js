@@ -61,6 +61,7 @@ export default function Board() {
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
   const [CardPorPlayer, setCardPorPlayer] = useState(0);
+  const [playerCardsCount, setPlayerCardsCount] = useState({});
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
@@ -185,6 +186,7 @@ export default function Board() {
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
+    const deckMessage = useWebSocket(`/topic/deck/${deck?.id}`); 
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -224,6 +226,26 @@ export default function Board() {
         break;
     }
     },[gameMessage])
+    
+    useEffect(() => {
+      if(!deckMessage) return; 
+       const { action } = deckMessage;
+
+      switch (action) {
+        case "DECK_COUNT":
+          const { username, leftCards } = deckMessage;
+          // Actualiza el deck completo
+          setPlayerCardsCount({
+            ...playerCardsCount,
+            [username]: leftCards
+          })
+          break;
+
+        default:
+          console.warn("Unrecognized deckMessage action:", action);
+          break;
+        }
+        }, [deckMessage]); 
     // Depuración usuarios duplicados
     
     useEffect(() => {
@@ -739,12 +761,10 @@ const activateCollapseMode = (card, cardIndex) => {
         toast.warning("It's not your turn!");
         return;
       }
-      setCont(timeturn);
       if (window.discardSelectedCard && window.discardSelectedCard()) {
         const newDeckCount = Math.max(0, deckCount - 1);
         setDeckCount(newDeckCount);
         nextTurn({newDeckCount: newDeckCount});
-        setCont(timeturn);
         addColoredLog(
           currentIndex,
           playerOrder[currentIndex].username,
@@ -1103,7 +1123,12 @@ const activateCollapseMode = (card, cardIndex) => {
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
       setDeckCount(initialDeck);
       setCardPorPlayer(cardsPerPlayer);
-      
+      const initialCounts = {};
+      activePlayers.forEach(p => {
+        const name = p.username || p;
+        initialCounts[name] = cardsPerPlayer;
+      });
+      setPlayerCardsCount(initialCounts);
       // Hacer patch al round con el leftCards calculado para sincronizar con backend
       hasPatchedInitialLeftCards.current = true;
       patchRound(round.id, { leftCards: initialDeck });
@@ -1303,7 +1328,7 @@ const activateCollapseMode = (card, cardIndex) => {
         patchDeck={patchDeck}
         fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
-        CardPorPlayer={CardPorPlayer} 
+        playerCardsCount={playerCardsCount} 
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}
@@ -1350,7 +1375,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
       <PlayersList 
         activePlayers={playerOrder} 
-        CardPorPlayer={CardPorPlayer}
+        playerCardsCount={playerCardsCount}
         onActionCardDrop={handleActionCard}
         isMyTurn={loggedInUser?.username === currentPlayer}
         currentUsername={loggedInUser?.username}
