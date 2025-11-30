@@ -23,9 +23,9 @@ import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 import Achievements from "./lobbies/profiles/Achievements";
 import EditAchievements from "./admin/achievements/EditAchievements";
-import Ranking from "./lobbies/ranking/Ranking";
 import Stats from "./lobbies/profiles/Stats";
 import GameInvitationListener from "./components/GameInvitationListener";
+import Ranking from "./lobbies/ranking/Ranking";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
