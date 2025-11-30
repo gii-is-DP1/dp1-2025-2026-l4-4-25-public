@@ -691,9 +691,10 @@ const activateCollapseMode = (card, cardIndex) => {
     }
     
     const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
-    console.log('🔍 checkForRoundEnd result:', roundEndResult);
+    console.log('🔍 checkForRoundEnd result:', JSON.stringify(roundEndResult));
     
     if (roundEndResult.ended) {
+      console.log('🔍 Ronda terminada! Llamando a handleRoundEnd...');
       roundEndedRef.current = true; // Marcar que la ronda terminó
       handleRoundEnd(roundEndResult);
     }
@@ -708,8 +709,7 @@ const activateCollapseMode = (card, cardIndex) => {
   const handleRoundEnd = async (result) => {
     const { reason, winnerTeam, goldPosition } = result;
     
-    // Verificar si soy el primer jugador (responsable de calcular y enviar datos)
-    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    console.log('🏆 handleRoundEnd llamado con:', result);
     
     // Mostrar mensaje de final de ronda
     if (reason === 'GOLD_REACHED') {
@@ -722,46 +722,36 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
     }
 
-    // Solo el primer jugador calcula y envía los datos del fin de ronda
-    if (isFirstPlayer) {
-      console.log('Soy el primer jugador, calculando distribución de oro...');
-      console.log('activePlayers con roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
-      
-      // Distribuir pepitas de oro y obtener la distribución para el modal
-      const winnerRol = winnerTeam === 'MINERS' ? false : true;
-      const goldDistribution = await distributeGold(activePlayers, winnerRol);
-      
-      // Preparar datos de roles para el modal (p.rol es booleano: true = SABOTEUR, false = MINER)
-      const playerRolesData = activePlayers.map(p => ({
-        username: p.user?.username || p.username,
-        rol: p.rol === true ? 'SABOTEUR' : 'MINER'
-      }));
-      
-      console.log('playerRolesData preparado:', playerRolesData);
-      
-      // Resetear el flag de navegación para esta nueva ronda
-      isNavigatingToNewRound.current = false;
-      
-      // Actualizar el estado del round en el backend
+    // Cada jugador calcula localmente (el oro se guarda en backend, así que es consistente)
+    console.log('🎯 Calculando distribución de oro...');
+    console.log('🎭 activePlayers con roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
+    
+    // Distribuir pepitas de oro y obtener la distribución para el modal
+    const winnerRol = winnerTeam === 'MINERS' ? false : true;
+    const goldDistribution = await distributeGold(activePlayers, winnerRol);
+    
+    // Preparar datos de roles para el modal (p.rol es booleano: true = SABOTEUR, false = MINER)
+    const playerRolesData = activePlayers.map(p => ({
+      username: p.user?.username || p.username,
+      rol: p.rol === true ? 'SABOTEUR' : 'MINER'
+    }));
+    
+    console.log('🎭 playerRolesData preparado:', playerRolesData);
+    console.log('🪙 goldDistribution:', goldDistribution);
+    
+    // Resetear el flag de navegación para esta nueva ronda
+    isNavigatingToNewRound.current = false;
+    
+    // Actualizar el estado del round en el backend (solo si no está ya actualizado)
+    try {
       await patchRound(round.id, { winnerRol: winnerRol });
-      
-      // Notificar a todos los jugadores via WebSocket
-      const result = await notifyRoundEnd(round.id, {
-        winnerTeam,
-        reason,
-        goldDistribution,
-        playerRoles: playerRolesData
-      });
-      
-      if (!result) {
-        // Fallback: mostrar modal localmente si falla el WS
-        setRoundEndData({ winnerTeam, reason, goldDistribution, playerRoles: playerRolesData });
-        setRoundEndCountdown(10);
-      }
-    } else {
-      console.log('No soy el primer jugador, esperando datos del fin de ronda via WebSocket...');
-      // Los demás jugadores esperan el mensaje ROUND_END del WebSocket
+    } catch (e) {
+      console.log('patchRound ya ejecutado o error:', e);
     }
+    
+    // Mostrar modal directamente
+    setRoundEndData({ winnerTeam, reason, goldDistribution, playerRoles: playerRolesData });
+    setRoundEndCountdown(10);
     
     // Si es la ronda 3, manejar el final del juego
     if (round.roundNumber === 3) {
