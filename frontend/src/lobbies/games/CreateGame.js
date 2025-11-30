@@ -382,7 +382,13 @@ const CreateGame = () => {
             onExpelPlayer={handleExpelPlayer}
           />
 
-          <InviteFriends />
+          {isCreator && (
+            <InviteFriends 
+              gameId={game?.id} 
+              chatId={game?.chat} 
+              activePlayers={game?.activePlayers ?? []}
+            />
+          )}
 
           <LobbyControls
             isCreator={isCreator}

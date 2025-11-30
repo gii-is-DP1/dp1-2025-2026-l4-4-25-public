@@ -2,6 +2,7 @@ package es.us.dp1.l4_04_24_25.saboteur.player;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,9 +85,9 @@ public class PlayerRestController {
     }
 
     @GetMapping(value = "{id}/friends")
-    public ResponseEntity<List<Player>> findFriends(@PathVariable("id") Integer id) {
+    public ResponseEntity<Set<Player>> findFriends(@PathVariable("id") Integer id) {
         RestPreconditions.checkNotNull(playerService.findPlayer(id), "Player", "ID", id);
-        List<Player> friends = playerService.findPlayer(id).getFriends();
+        Set<Player> friends = playerService.findPlayer(id).getFriends();
         return new ResponseEntity<>(friends, HttpStatus.OK);
     }
 

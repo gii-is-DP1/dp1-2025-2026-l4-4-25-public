@@ -47,6 +47,14 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
   
   console.log('Effect value:', effectValue);
 
+  const findActivePlayer = (username) => {
+    if (!activePlayers || !Array.isArray(activePlayers)) {
+      console.warn('activePlayers is not available or not an array');
+      return null;
+    }
+    return activePlayers.find(p => p.username === username);
+  };
+
   // Procesar efecto según effect_value
   switch (effectValue) {
     case 'DESTROY_PICKAXE':
@@ -60,7 +68,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       }));
 
       // Buscar el ActivePlayer y hacer patch
-      const targetActivePlayer = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayer = findActivePlayer(targetUsername);
       if (targetActivePlayer && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayer.id, {
           pickaxeState: false
@@ -80,7 +88,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], candle: false }
       }));
 
-      const targetActivePlayerLamp = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerLamp = findActivePlayer(targetUsername);
       if (targetActivePlayerLamp && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerLamp.id, {
           candleState: false
@@ -100,7 +108,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], wagon: false }
       }));
 
-      const targetActivePlayerWagon = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerWagon = findActivePlayer(targetUsername);
       if (targetActivePlayerWagon && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerWagon.id, {
           cartState: false
@@ -120,7 +128,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], pickaxe: true }
       }));
 
-      const targetActivePlayerRepairPickaxe = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerRepairPickaxe = findActivePlayer(targetUsername);
       if (targetActivePlayerRepairPickaxe && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerRepairPickaxe.id, {
           pickaxeState: true
@@ -140,7 +148,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], candle: true }
       }));
 
-      const targetActivePlayerRepairLamp = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerRepairLamp = findActivePlayer(targetUsername);
       if (targetActivePlayerRepairLamp && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerRepairLamp.id, {
           candleState: true
@@ -160,7 +168,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], wagon: true }
       }));
 
-      const targetActivePlayerRepairCart = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerRepairCart = findActivePlayer(targetUsername);
       if (targetActivePlayerRepairCart && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerRepairCart.id, {
           cartState: true
@@ -184,7 +192,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], pickaxe: true, candle: true }
       }));
 
-      const targetActivePlayerRepairPickaxeLamp = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerRepairPickaxeLamp = findActivePlayer(targetUsername);
       if (targetActivePlayerRepairPickaxeLamp && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerRepairPickaxeLamp.id, {
           pickaxeState: true,
@@ -209,7 +217,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], pickaxe: true, wagon: true }
       }));
 
-      const targetActivePlayerRepairPickaxeCart = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerRepairPickaxeCart = findActivePlayer(targetUsername);
       if (targetActivePlayerRepairPickaxeCart && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerRepairPickaxeCart.id, {
           pickaxeState: true,
@@ -234,7 +242,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], wagon: true, candle: true }
       }));
 
-      const targetActivePlayerRepairCartLamp = activePlayers.find(p => p.username === targetUsername);
+      const targetActivePlayerRepairCartLamp = findActivePlayer(targetUsername);
       if (targetActivePlayerRepairCartLamp && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayerRepairCartLamp.id, {
           cartState: true,

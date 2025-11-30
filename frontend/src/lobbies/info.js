@@ -19,7 +19,7 @@ export default function Info() {
                 </Link>
             </div>
 
-            <div className="info-container">
+            <div className="info-container" style={{ maxHeight: 'calc(100vh - 150px)', overflowY: 'auto' }}>
             <div className="info-section">
                 <h2 className="info-title">💻 Repositorio GitHub</h2>
                 <p className="info-text">

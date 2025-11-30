@@ -3,7 +3,7 @@
 **Curso académico:** 2025/2026 
 **Grupo/Equipo:** L4-4  
 **Nombre del proyecto:** Saboteur 
-**Versión:** v3.1 *(18-11-2025)*
+**Versión:** v3.2 *(24-11-2025)*
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** 
 
@@ -19,23 +19,19 @@ Carlos Borrego Ortiz (HKP3295 / carborort@alum.us.es)
 
 Luis Calderón Carmona (JGR9196/ luicalcar@alum.us.es)
 
-## 1️⃣Introducción
+## 1️⃣ Introducción
+
+El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y de forma **gratuita**.
+
+Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona. Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio, encontraremos los Mineros y Saboteadores.
+Una vez asignados los roles y las cartas de forma aleatoria a cada uno de los jugadores de la partida, los **buscadores de oro** (mineros) intentarán construir el camino hasta donde creen que están las **pepitas de oro**, que es el objetivo de estos durante las partidas, y los **saboteadores** tendrán que poner trabas para impedir que los buscadores puedan lograr su hazaña, a través de la ruptura de las herramientas de los mineros, destruyendo caminos, etc, pero siempre desde el sigilo de no ser descubierto.
+
+Las partidas tienen una duración media de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
+
+El vencedor será el jugador que **más** pepitas de oro haya conseguido, que se repartiran de forma aleatoria al final de cada ronda según el rol que haya ganado.
 
 
-El valor que puede aportar nuestro Proyecto **Saboteur** es el de implementar un juego de mesa vía web / online en el que pueden jugar distintos jugadores **simultáneamente** y **gratuito**.
-Los **objetivos** de dicha implementación es jugar de la misma manera que si jugáramos en persona.
-Las partidas tendrán un **mínimo** de 3 jugadores hasta 12 jugadores entre los que se **repartirán** los roles definidos en las reglas de negocio.
-Una vez asignados los roles y las cartas de cada uno, los **buscadores de oro** intentarán construir el camino hasta donde creen que están las **pepitas de oro** y los **saboteadores** tendrán que poner trabas para impedir que los buscadores puedan lograr su hazaña.
-
-Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
-El vencedor será el jugador que **más** pepitas de oro haya conseguido.
-
-
-Las partidas suelen durar de **20 min a 30 min**. Dependiendo de lo rápido que los buscadores lleguen al oro o de que a estos se les agoten las cartas gracias a la eficacia de los saboteadores.
-El vencedor será el jugador que **más** pepitas de oro haya conseguido.
-
-
-#### · VIDEO EXPLICATIVO :
+#### · VIDEO EXPLICATIVO (YouTube):
 
 <a href="https://www.youtube.com/watch?v=lwxIUdtN4aE" style="display:inline-block;padding:10px 15px;background:#008aff;color:#fff;border-radius:5px;text-decoration:none;">
  🎞 PULSE PARA VER VIDEO
@@ -154,9 +150,9 @@ Desde aquí, el usuario puede **crear una partida**, **unirse a una existente**,
 
 - **App – Componente raíz de la aplicación**
   - **Lobby – Pantalla principal del lobby de usuario**
-    - **TopRightButtons – Contenedor de botones superiores (derecha)**
-      - $\color{skyblue}{\textsf{[FriendsButton] – Abre la pestaña de la Sección Social del sistema.}}$
-      - $\color{orange}{\textsf{[ProfileButton] – Redirige al perfil del usuario.}}$
+    - $\color{orange}{\textsf{[TopRightButtons – Contenedor de botones superiores (derecha)}}$
+      - $\color{skyblue}{\textsf{[FriendsDropdown] – Abre la pestaña de la Sección Social del sistema.}}$
+
     - **HeroSection – Zona central con las acciones principales**
       - $\color{blue}{\textsf{[CreateGameButton] – Navega a la pantalla de creación de partida.}}$
       - $\color{red}{\textsf{[JoinGameButton] – Permite unirse a una partida ya creada o espectear una que se encuentra empezada, navegando a la pantalla de JoinGame.}}$
@@ -178,24 +174,23 @@ Una vez creada la partida al darle al botón [CreateGameButton] del lobby, en la
 ### Jerarquía de componentes
 - **App – Componente raíz de la aplicación**
   - **CreateGame – Pantalla de configuración y espera de la partida**
-    -  $\color{blue}{\textsf{Desplegable – Control para modificar el número máximo de jugadores (solo visible para el creador).}}$
-    - $\color{orange}{\textsf{Players (className="active-players-section") – Lista de jugadores unidos.}}$
+    -  $\color{blue}{\textsf{[GameSettings] - Componente para modificar el número de jugadores de la partida (a través de un despregable) y para modificar la privacidad de la partida.}}$
+    - $\color{orange}{\textsf{[PlayersListLobby] - Lista de jugadores activos en el lobby de CreateGame.}}$
       - **[ExpelPlayerButton]** – Botón para expulsar jugadores *(solo visible para el creador)*.
-    - $\color{purple}{\textsf{Switch de privacidad}}$ <div className="privacy-toggle"> – Switch para modificar la privacidad (pública/privada) *(solo visible para el creador)*.
-    - $\color{skyblue}{\textsf{Card-footer <div className="card-footer"> – Contenedor de botones de acción.}}$
-      - 👑 **Si es Creador (`isCreator = true`):**
-        - $\color{red}{\textsf{[SaveChangesButton] – Guarda los cambios realizados en la configuración *(`handleSubmit`)*.}}$
-        - $\color{yellow}{\textsf{[StartButton] – Inicia la partida *(`handleStart`)*.}}$
-        - $\color{green}{\textsf{[CopyLinkButton] – Copia el enlace/URL de la partida *(`handleCopyLink`)*.}}$
-        - $\color{skyblue}{\textsf{[CancelButton] – Cancela o elimina la partida *(`handleCancel`)*.}}$
-      - 🙋‍♂️ **Si es Invitado (`isCreator = false`):**
-        - **[ExitLobbyButton]** – Abandona el lobby de la partida *(`handleExitLobby`)*.
-    - 🟥 **[WaitingIndicator] (`className="waiting-piece"`)** – Indicador visual de espera.
+    - $\color{pink}{\textsf{[InviteFriends] - Componente para invitar a amigos a la partida.}}$
+    - $\color{red}{\textsf{[LobbyControls] – Componente que contiene la lógica de la gestión de la configuración de la partida.}}$
+      $\color{green}{\textsf{- Save Changes: }}$Guarda los cambios en la configuración de la partida.
+        $\color{green}{\textsf{- Start: }}$ Botón para comenzar la partida.
+        $\color{green}{\textsf{- ID:}}$ ID asociada a la partida, nos permitirá indentificarla 
+        $\color{green}{\textsf{- Cancel:}}$ Cancela la partida eliminando y llevando a todos los jugadores al Lobby de Saboteur.
+        $\color{green}{\textsf{- Exit Lobby (solo para jugadores no creadores): Botón para que los jugadores que estén dentro de la espera de comienzo del juego puedan abandonarlo y volver a al lobby de Saboteur.}}$
+       
+    - También se ha añadido el **JoinRequestPannel** que solo le aparece al creador de la partida para Aceptar/Denegar las solicitudes de unión a la partida.
 ---
     
 ## 🧩Mockup: Pantalla de Listar Partida
     
-![](D2_images/mockup-4.png)
+![](D2_images/mockup-3.png)
     
 ### ℹ️Descripción general
     
@@ -205,49 +200,28 @@ Al pulsar el botón **[JoinGameButton]** en el lobby, se navegará a la pantalla
     
 ### · Jerarquía de componentes
 - **App – Componente raíz de la aplicación**
-  - **ListGames – Pantalla para listar y filtrar partidas disponibles** (`<div className="home-page-lobby-container">`)
-      - **[Botón lobby]** – Volver al lobby *(no se encuenbtra visible en la imagen pero se encuentra arriba a la derecha)*
-      - $\color{green}{\textsf{Games List Card (className="listgames-card") – Listado de partidas.}}$
-          - 🫂 **Players List** (`<div className="players-list">`) – Lista de jugadores.
-            - **Player Item** *(`game.activePlayers`)*
-          - 👑 **Game Card Footer** (`<div className="game-card-footer">`) – Botón de acción
-            - **Botones de Acción** *(Según `game.gameStatus` y `game.private`)*:
-              - 📩 **Si Creada y Privada:** **[Request Join Button]** (Navega a `/board/{game.id}`).
-              - $\color{red}{\textsf{📥Si Creada y Pública (No Llena): [Join Button]}}$ (Navega a `/CreateGame/{game.id}`).
-              - ❗ **Si Creada y Pública (Llena):** **[Game Is Full Button]**.
-              - $\color{blue}{\textsf{👁️ Si No Creada: [Spectate Button]}}$ (Navega a `/board/{game.id}`).
-      - $\color{orange}{\textsf{Filters Panel (div className="filters-panel") – Panel de filtros.}}$
-        - 🟠 **Filter Group: Privacy** (`<div className="filter-group">`)
-          - **Select** (`<select name="privacy">`) – Filtro por privacidad.
-        - 🟠 **Filter Group: Status** (`<div className="filter-group">`)
-          - **Select** (`<select name="status">`) – Filtro por estado.
-        - 🟠 **Filter Group: Min Players** (`<div className="filter-group">`)
-          - **Input** (`name="minPlayers">`) – Filtro por mínimo de jugadores.
-        - 🟠 **Filter Group: Search** (`<div className="filter-group">`)
-          - **Input** (`<name="search">`) – Búsqueda por ID o creador.
-        - 🟠 **[Filter Friends Button]** – Botón para filtrar solo partidas de amigos **No implementado**.
-        - 🟠 **[Clear Filters Button]** – Botón para limpiar todos los filtros.
+  - **ListGames – Pantalla para listar y filtrar partidas disponibles** 
+   - $\color{blue}{\textsf{[GameGrid] - Componente que engloba el listado de las partidas.}}$ 
+      - $\color{green}{\textsf{[GameCard] - Componente de cada tarjeta individual de cada aprtida.}}$ Dentro de estas encontramos:
+          $\color{purple}{\textsf{- Información de la partida :}}$ Información acerca del creador, privacidad, jugadores, etc.
+          $\color{purple}{\textsf{- Botón JOIN :}}$ Botón dentro del componente para unirse a una partida (si es pública)
+          $\color{purple}{\textsf{- Botón REQUEST JOIN :}}$ Botón dentro del componente para solicitar unirse a una partida al creador (si es privada)
+          $\color{purple}{\textsf{- Botón SPECTATE :}}$ Botón dentro del componente para espectear una partida (si ya ha empezado)
+          $\color{purple}{\textsf{- Botón GAME IS FULL :}}$ Botón dentro del componente que nos indica que la partida no está comenzada pero no se pueden unir más jugadores (máximo de jugadores alcanzados)
+      - $\color{red}{\textsf{[ListGamesHeader] – Componente para refrescar la pantalla del listado de partidas y para volver al lobby}}$    
+      - $\color{orange}{\textsf{[FiltersPanel] – Panel de filtros del listado de partidas.}}$
+
 
 ***
     
 ## 🧩Mockup: Pantalla de Juego (Tablero)
     
-![](D2_images/mockup-4.png)
+![](D2_images/mockup-04.png)
     
 ### ℹ️Descripción general
     
 Cuando se inicia una partida nos navega al **Tablero de Juego** `/board/gameId` que cada partida tendrá asociada una `ID`, dentro de este tenemos todas las funcionalidades que tiene nuestro juego de Saboteur. Al iniciarla, se asigna los roles de Saboteador y Minero según el número de jugadores, los turnos serán asignados según la fecha de nacimiento (Restricción definida, orden de persona con más edad hasta la que menos). Encontraremos un contador de turno, un componente para saber quien es el turno, para saber las cartas del mazo general, las de cada uno, para descartar cartas, ver el estado de las herramientas, etc. Además, podremos ver el log de las partidas y de las acciones que se realizan, un chat de texto para la comunicación entre jugadores, entre otras, las detallamos a continuación.
 
-### ⚙️Funcionalidades principales
-   
-- Mostrar los **jugadores activos** con su información (nombre y avatar) y el estado de las herramientas.
-- Visualizar el **turno actual** y el **temporizador de turno**.
-- Gestionar el **mazo de cartas** y las acciones de **descartar carta**.
-- Visualizar el **rol de cada usuario** (Minero o Saboteador).
-- Registrar las acciones en el **Game Log** y **Private Log**.
-- Proporcionar un **chat de texto** entre jugadores.
-- Renderizar el **tablero** donde se desarrollará la partida.
-    
 ### · Jerarquía de componentes
 - **App – Componente raíz de la aplicación**
     - **Estados principales (useState):**
@@ -263,77 +237,63 @@ Cuando se inicia una partida nos navega al **Tablero de Juego** `/board/gameId` 
       - `CardPorPlayer` → Número de cartas en mano de cada jugador.  
       - `numRound` → Ronda actual del juego.  
 
-### $\color{fuchsia}{\textsf{1. Player Cards Section}}$
-**· Contenedor:** `<div className="player-cards">`  
-**· Elementos:**
-- Representación de las cartas (botones):
-  ```jsx
-  <button className="card-slot">Card 1</button>
-  ```
-- Se generan según el valor de `CardPorPlayer`. *Funcionalidad aún no disponible.*
+### $\color{pink}{\textsf{1. PlayerCards}}$
+El componente `PlayerCards` representa la zona donde el jugador ve y gestiona sus cartas. Encontramos tres subpartes principales:
+  - Contenedor visual de cartas : Muestra la mano (mazo) del jugador de forma ordenada y actualizada.
+  - Lógica de control de la mano del jugador : Gestiona todo lo que el juadoor puede hacer con sus cartas (funciones clave como robar una carta, descartar una, seleccionar, rotar carta, etc).
+  - Renderización de cartas individuales : Muestra la imagen de la carta, teniendo en cuenta la lógica de selección y rotación.
 
 ---
 
-### $\color{purple}{\textsf{2. My Role Section}}$
-**· Contenedor:** `<div className="my-role">`  
-**· Función:**
+### $\color{purple}{\textsf{2. PlayerRol}}$
 - Mostrar el rol del jugador actual (solo veo el mio).
 - Dos posibles roles (imagenes):
   - `minerRol.png` → Si el rol es **Minero**.
   - `saboteurRol.png` → Si el rol es **Saboteador**.
 
+  Esto se complementa en este componente aunque la lógica se encuentra en `gameUtils.js`.
+
 ---
 
-### $\color{brown}{\textsf{3. Deck and Actions Section}}$
-**· Contenedor:** `<div className="n-deck">` y `<button className="n-discard">`  
-**· Función:**
+### $\color{skyblue}{\textsf{3. GameControls}}$
 - Muestra las cartas restantes en el mazo (`deckCount`).
 - Permitir descartar una carta (`handleDiscard`):
   - Solo se puede usar si es el turno de dicho jugador.
   - Resta una carta al mazo y pasa el turno al siguiente jugador. Si no hay cartas para descartar, se indica en el log con un aviso.
-
----
-
-### $\color{aquamarine}{\textsf{4. Timer Section}}$
-**· Contenedor:** `<div className="time-card">`  
-**· Función:**
 - Muestra el temporizador del turno (`⏰ min:seg`).
-- Se reinicia cada vez que cambia el turno (al llegar a zero se cambia el turni).
-
----
-
-### $\color{skyblue}{\textsf{5. Round Section}}$
-**· Contenedor:** `<div className="round-box">`  
-**· Función:**
+- Se reinicia cada vez que cambia el turno (al llegar a zero se cambia el turno).
 - Indica la ronda actual (`🕓 ROUND {numRound}/3`).
-    *Funcionalidad aún no disponible.*
+
+Esto se complementa con lógica que se encuentra en el propio archivo `board.js`.
 
 ---
 
-### $\color{red}{\textsf{ 6. Board Grid Section}}$
-**· Contenedor:** `<div className="board-grid">`  
-**· Función:**
-- Representa la cuadrícula principal del tablero.
-- Cada celda es un `<div className="board-cell">`.
-- Servirá para colocar las cartas de túnel.
-    *Funcionalidad aún no disponible.*
+### $\color{red}{\textsf{ 4. GameBoard}}$
+- Representa la cuadrícula principal del tablero que se renderiza como celdas. Incluye toda la lógica de la colocación del tablero con drag y drop.
 
----
+    · Se usa boardGridRef para gestionar el scroll del tablero.
+    · Colocación de las cartas iniciales (carbon, pepitas y camino inicial).
 
-### $\color{orange}{\textsf{7. Turn Indicator}}$
-**· Contenedor:** `<div className="turn-box">`  
-**· Función:**
-- Indica visualmente el jugador que tiene el turno.
-- **Ejemplo:** 
-  ```
-  🔴 · TURNO DE Bedilia_Estrada
-  ```
+    **4.1 SubComponente DroppableCell**
+    
+    `DroppableCell` representa cada celda individual del tablero. Sus funciones principales:
+      - Recibir cartas arrastradas y validarlas antes de colocarlas.
+      - Gestionar eventos de drag over, drop y pulsar.
+      - Renderizar el contenido de la celda (carta, rotación, etc).
+      - Aplicar restricciones especiales como el modo *colapso* para destruir túneles.
 
----
 
-### $\color{green}{\textsf{8. Players Sidebar}}$
-**· Contenedor:** `<div className="players-var">`  
-**· Función:**
+    **4.2 SubComponente InteractiveCard**
+
+    `InteractiveCard` representa cada carta en la mano del jugador. Sus funciones principales:
+      - Permitir arrastrar cartas de túnel al tablero.
+      - Gestionar acciones según el tipo de carta (mapa, acción, colapso).
+      - Muestra el menú de selección de jugador / objetivo.
+      - Permitir rotar cartas de túnel y seleccionar cartas para descartarlas
+
+### $\color{green}{\textsf{5. PlayersList}}$
+El componente `PlayersList` muestra la información básica de cada jugador en la partida: avatar, nombre, herramientas, etc.
+
 - Mostrar la lista de jugadores en la partida (`activePlayers`).
 - Cada jugador tiene un recuadro con:
   - Avatar (`player-avatar`)
@@ -351,15 +311,14 @@ Cuando se inicia una partida nos navega al **Tablero de Juego** `/board/gameId` 
     <img src={avatar} alt="player" />
     <div className="player-name">Alexby205</div>
     <div>🔦: 🟢 | 🪨: 🟢 | ⛏️: 🟢</div>
-    <div>🪙: 0 | 🎴: 5</div>
+    <div>🪙: 1 | 🎴: 5</div>
   </div>
   ```
 
 ---
 
-### $\color{wheat}{\textsf{9. Game Log Section}}$
-**· Contenedor:** `<div className="game-log">`  
-**· Subcomponentes:** 
+### $\color{wheat}{\textsf{6. GameLog}}$ 
+El componente `GameLog` se encarga de mostrar el registro de acciones de la partida (global y de carácter privado). Su objetivo es listar mensajes y separar logs públicos y privados.
 - **Cuerpo:** Lista de mensajes de acción.  
   - `gameLog` → Acciones públicas visibles por todos los jugadores.  
   - `privateLog` → Acciones privadas visibles solo por el jugador que ha realizado una determinada acción.   
@@ -367,19 +326,22 @@ Cuando se inicia una partida nos navega al **Tablero de Juego** `/board/gameId` 
   ```jsx
   <p className="log-entry turn">🔁 Turn of <span class="player2">Javi_Osuna</span></p>
   ```
-
+  · Permite el auto-scroll que mantiene siempre la vista en el último mensaje.
 ---
 
-### $\color{gold}{\textsf{10. Chat Section}}$
-**· Contenedor:** `<div className="chat-box">`
+### $\color{gold}{\textsf{7. ChatBox}}$
 
-*Funcionalidad aún no disponible.*
+El componente `ChatBox` se encarga de mostrar el chat del juego y permitir que los jugadores escriban mensajes.
+
+· Formato autor + texto. Controla el scroll automático del chat (Cada vez que llega un nuevo mensaje, el componente baja automáticamente al final del chat). Si el usuario es epectador el input se bloquea.
+
+### 8. SpectatorIndicator:
+
+Este componente engloba a todo lo referente a cuando un jugador espectea una partida (en este caso, no se visualiza en el mockup). Este tiene acceso limitado a muchos aspectos de la partida y tiene reducido las cosas que puede ver de los otros jugadores de la partida.
 
 ---
 
 ## 4️⃣Patrones de diseño y arquitectónicos aplicados
-En esta sección de especificar el conjunto de patrones de diseño y arquitectónicos aplicados durante el proyecto. Para especificar la aplicación de cada patrón puede usar la siguiente plantilla:
-
 ### · Patrón: Single Page Application (SPA)
 *Tipo*: Arquitectónico
 
@@ -563,10 +525,54 @@ Se creó el paquete `states` dentro de `game`, que contiene la clase abstracta d
 
 El uso del patrón **State** permite manejar de forma flexible los distintos estados del juego y encapsular la lógica específica de cada uno, evitando condicionales complejos y facilitando la extensión y el mantenimiento del sistema.  
 
+
+### · Patrón: Builder  
+*Tipo:* Diseño  
+
+*Contexto de Aplicación*
+
+El patrón Builder se ha utilizado principalmente en la generación de objetos complejos dentro del proyecto, especialmente aquellos que requieren múltiples propiedades opcionales o configuraciones variables. Este patrón se ha aplicado en la creación de las rondas.
+
+*Clases o paquetes creados*
+
+Dicha construcción se encuentra en los módulos del Backend dentro del directorio `/round/build`, donde se han definido el Builder para la entidad `Round`, ya que se han definido varios archivos.
+
+
+*Ventajas alcanzadas al aplicar el patrón*
+
+El patrón Builder nos permite crear objetos complejos de manera clara, flexible y escalable, evitando múltiples constructores y reduciendo los errores.
+
+- Facilidad para extender nuevas configuraciones sin romper el código que ya existe.
+- La separación entre la representación del objeto Round y su proceso de construcción.
+
+
+### · Patrón: WebSocket  
+*Tipo:* Diseño  
+
+*Contexto de Aplicación*
+
+WebSocket se ha utilizado para gestionar la comunicación bidireccional en tiempo real entre el servidor y los clientes del juego. Es fundamental sincronizar las acciones del tablero, chat, logs, estados de los jugadores y cualquier evento que requiera actualización instantánea sin necesidad de refrescar la página o realizar peticiones continuas al servidor (polling).
+
+*Clases o módulos creados*
+
+Sitios donde se ha implementado WebSocket: 
+`WebSocketConfig` en el backend (también se le ha dado permisos en el `SecurityConfig`)
+Implementación tal cual del webSocket (donde se llama realmente al webSocket) en el Patch del Game (`GameRestController`). También se hará similar en otros patchs para mantener a los jugadores actualizados constantemente en tiempo real (por ejemplo en el patch de Square, patch de GameLog, patch de board, etc.).
+
+En el frontend se llama en las pantallas `CreateGame` al webSocket, para cuando se le de al botón start llevar a todos los jugadores a la misma pantalla ("board"), además se implementa en la pantalla `Board` para hacer todas las actualizaciones en tiempo real (lanzar cartas, turnos, temporizador, gameLog, chat, cartas de acción...). 
+Muy importante, se ha creado un hook personalizado para el web socket llamado `useWebSocket`, es fundamental para gestionarlo en las pantallas del frontend
+
+*Ventajas alcanzadas al aplicar WebSocket*
+
+El uso de WebSocket proporciona comunicación eficiente y fluida entre los jugadores, permitiendo:
+
+- Actualización instantánea del tablero, creación del juego y estados del juego.
+- Chat en tiempo real sin recarga ni polling, entre otras..
+
+
  ---    
     
 ## 5️⃣Decisiones de diseño
-_En esta sección describiremos las decisiones de diseño que se han tomado a lo largo del desarrollo de la aplicación que vayan más allá de la mera aplicación de patrones de diseño o arquitectónicos._
 
 ### Decisión 1: Importación de datos reales para demostración
 #### Descripción del problema:
@@ -740,8 +746,31 @@ Justificación de la solución adoptada:
 
 Nos decidimos por la opción 1.b, ya que, como otras decisiones escogidas, esta también iba a mejorar bastante la experiencia de usuario del juego, pues la opción 1.a era demasiado simple.
 
+### Decisión 11: Cambio Pantalla y acceso a Estadisticas Globales
+#### Descripción del problema:
 
-    
+Como grupo, se decidió de colocar las estadísticas globales en la pantalla de Lobby y colocar las estadisticas de cada usuario dentro del perfil del mismo.
+
+Alternativas de solución evaluadas:
+
+Alternativa 1.a: La primera y única alternativa es traspasar la información de las estadísticas globales a las estadisticas del usuario dentro del perfil de cada uno, establecimiento así primero las del jugador y después las globales, centrando este modulo en una sola pantalla de manera más intuitiva. 
+
+Justificación de la solución adoptada:
+
+Se ha optado por la única alternativa escogida ya que se observa que es más eficiente y de mejor visualización que la presentada incialmente.
+
+### Decisión 12: Invitación a amigos a una partida (SOLO CREADOR)
+#### Descripción del problema:
+
+Como grupo, se decidió que dentro de *CreateGame* cualquier usuario dentro de esta pantalla podia invitar a cualquier amigo.
+
+Alternativas de solución evaluadas:
+
+Alternativa 1.a: Solo el creador de la partida podrá invitar a sus amigos disponibles, evitando posibles invitaciones no deseadas por el creador de la misma.
+
+Justificación de la solución adoptada:
+
+Se ha optado por la única alternativa escogida ya que se observa que se ajusta a la jugabilidad que se quiere llegar en nuestro juego, siendo el creador la persona con esta potestad y evitar posibles intrusos en nuestras partidas.
 
     
 
@@ -1479,137 +1508,39 @@ function App() {
 - Ahora podemos navegar entre pantallas de manera fluida e incluyendo todas las pantallas descritas en el documento D1.
     
 ### · Refactorización 4: 
-En esta refactorización se ha añadido Hojas de estilo **CSS** que venian dadas y han sido modificadas según el estilo de nuestra aplicación.
-#### Estado inicial del código
-```css 
-.home-page-container{
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('../../images/home_background.jpg');
-    background-size: cover;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
-.hero-div{
-    background-color: rgba(255, 255, 255, 0.3);
-    padding: 2rem;
-    border-radius: 25px;
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
+Esta refactorización se ha basado en la **modularización** en componentes de todas las funcionalidades del juego Saboteur, quitando la abundancia excesiva de código del *board.js*, hemos dividido en los siguienes componentes:
+**- ChatBox.js** (sobre el chat de texto entre los jugadores)
+**- DroppableCell.js** (despregable de las cartas de acción)
+**- GameBoard.js** (lógica sobre el tablero de juego)
+**- GameControls.js** (otros votones y funcionalidades importantes, como el turno o el contador)
+**- GameLog.js** (log público y privado de las acciones de los jugadores)
+**- InteractiveCard.js** (Interacción sobre una carta-tablero que tiene un jugador)
+**- PlayerCards.js** (mazo de cartas que tiene un jugador)
+**- PlayerRol.js** (rol asignado a un jugador en la partida)
+**- PlayersList.js** (lista de los jugadores de la partida con el estado de las herramientas y el contador de pepitas)
+**- RoundEnd.js** (lógica sobre la finalización de la ronda)
+**- SpectatorIndicator.js** (configuración cuando un usuario entra en modo espectador)
 
-.hero-div h1{
-    font-size: 3rem;
-    font-weight: 700;
-    color: #2f324f;
-    text-align: center;
-    text-transform: uppercase;
-}
+Además de crear el hooks **useGameData.js** y vgameUtils.js** que engloba funcionalidad importante a la hora de jugar en nuestro juego.
 
-.hero-div h3{
-    text-align: center;
-}
-``` 
+*- Nota: No se incluye el código actual ni el antiguo debido al tamaño del mismo.*
 
-#### Estado del código refactorizado
-
-```CSS
-.home-page-lobby-container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  background-image: 
-    url('../../images/home_background.jpg');
-  background-size: cover;
-  background-position: center 60%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.hero-div-lobby {
-  padding: 3rem;
-  border-radius: 25px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  padding-top: 50vh;
-}
-
-.hero-div-lobby button {
-  white-space: nowrap;
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  width: auto;}
-
-.hero-div-lobby button:active {
-  transform: scale(0.95);}
-
-.hero-div-lobby button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(240, 199, 38, 0.8);}
-
-.hero-div-lobby .button-crear, 
-.hero-div-lobby .button-unirse,
-.hero-div-lobby .button-users,
-.hero-div-lobby .button-edit,
-.hero-div-lobby .button-jugar,
-.bottom-left-button button,
-.top-right-lobby-buttons button {
-  background: #f1c40f;
-  color: #000;}
-
-.hero-div-lobby .button-crear {
-  margin-top: 00;}
-
-.hero-div-lobby .button-unirse {
-  margin-top: 0;}
-
-  .hero-div-lobby .button-users {
-  margin-top: 0;}
-
-  .hero-div-lobby .button-edit {
-  margin-top: 0;}
-
-.top-right-lobby-buttons {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  z-index: 10;}
-
-
-.bottom-left-button {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  z-index: 10;}
-    .
-    .
-    .
-```
 #### Problema que nos hizo realizar la refactorización
-- Interfaz inicial poco intuitiva y poco desarrollada, también estaba bastante desactualizada respecto al código actual realizado.
+- Abundancia excesiva de código en *[board.js]*, *[CreateGame.js]* y *[ListGame.js]*,  sobre la funcionalidad de una partida. Además, también se ha dividido por componentes el *[lobby.js]*,
 #### Ventajas que presenta la nueva versión del código respecto de la versión original
-- Ahora podemos visualizar las pantallas según los MockUps descritos en el documento D1, nos da una atractiva visual e intuitiva del juego, permitiendo una gran inmersión en nuestro juego.
-    
+- El código es más fácil de entender y de mantener, además nos sirve para ser reutilizado en diferentes partes del juego, separando la lógica del jugador, la interfaz, etc. entre distintos modulos. 
+
+### · Refactorización 5: 
+
+Con el objetivo de mejorar la mantenibilidad y escalabilidad del código, se ha llevado a cabo una refactorización para introducir el **patrón de diseño Builder** en la creación de las rondas de una partida. Este patrón se aplicó debido a la complejidad de la entidad, la cual requiere de múltiples parámetros opcionales y configuraciones variables, con este patrón se ha implementado de manera eficiente a como estaba anteriormente.
+
+*- Nota: No se incluye el código actual ni el antiguo debido al tamaño del mismo.*
+
+#### Problema que nos hizo realizar la refactorización
+- Aplicar un patrón de diseño más eficiente.
+- Había que duplicar la lógica para la construcción de las rondas.
+#### Ventajas que presenta la nueva versión del código respecto de la versión original
+- Facilidad para extender nuevas configuraciones sin romper el código que ya existe.
+- La separación entre la representación del objeto Round y su proceso de construcción.
 ---

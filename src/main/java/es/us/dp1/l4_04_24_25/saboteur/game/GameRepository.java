@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +14,7 @@ public interface GameRepository extends CrudRepository<Game, Integer> {
 
     Optional<Game> findByLink(String link);
 
-    Optional<Game> findByCreatorUsername(String creatorUsername);
+    List<Game> findByCreatorUsername(String creatorUsername);
 
     Boolean existsByLink(String link);
 /* 

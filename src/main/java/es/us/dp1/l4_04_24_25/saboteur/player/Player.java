@@ -1,7 +1,9 @@
 package es.us.dp1.l4_04_24_25.saboteur.player;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -64,7 +66,7 @@ public class Player extends User{
         joinColumns = @JoinColumn(name = "player_id"),
         inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
-    private List<Player> friends = new ArrayList<>();
+    private Set<Player> friends = new HashSet<>();
 
 
 
