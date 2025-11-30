@@ -145,6 +145,7 @@ export default function Board() {
   const isNavigatingToNewRound = useRef(false);
   const roundEndedRef = useRef(false);
   const lastRoundId = useRef(null);
+  const forceRolesReassignment = useRef(false);
 
   // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
@@ -152,6 +153,11 @@ export default function Board() {
       console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
       roundEndedRef.current = false;
       lastRoundId.current = round.id;
+      // Forzar reasignación de roles en la nueva ronda
+      if (lastRoundId.current !== null) {
+        forceRolesReassignment.current = true;
+        console.log('🎭 Marcado para reasignar roles en nueva ronda');
+      }
     }
   }, [round?.id]);
 
@@ -1237,6 +1243,16 @@ const activateCollapseMode = (card, cardIndex) => {
       const rolesComplete =
         backendRoles.length === activePlayers.length &&
         saboteursAlready === expectedSaboteurs;
+
+      // Si se fuerza la reasignación (nueva ronda), siempre reasignar roles
+      if (forceRolesReassignment.current) {
+        console.log('🎭 Forzando reasignación de roles para nueva ronda');
+        forceRolesReassignment.current = false;
+        const rolesAssigned = assignRolesGame(activePlayers);
+        publishRoles(rolesAssigned);
+        await persistRoles(rolesAssigned);
+        return;
+      }
 
       if (rolesComplete) {
         publishRoles(backendRoles);
