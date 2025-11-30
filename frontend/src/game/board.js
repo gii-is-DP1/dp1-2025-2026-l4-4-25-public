@@ -165,7 +165,9 @@ export default function Board() {
 
   
     const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    console.log("Rotated Cards:", rotatedOnly);
     const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    console.log("Non-Rotated Cards:", nonRotatedOnly);
     
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);

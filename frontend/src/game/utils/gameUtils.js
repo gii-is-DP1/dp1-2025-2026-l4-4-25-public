@@ -59,13 +59,13 @@ const ROTATED_RE = /_rotated\.png$/i;
 
 export const isRotatedImage = (image) => ROTATED_RE.test(cleanImageName(image));
 
-// Cartas cuya imagen termina en "_rotated.png"
+// Cartas con la propiedad rotacion = true
 export const getRotatedCards = (cards) =>
-  (cards ?? []).filter((c) => isRotatedImage(c.image));
+  (cards ?? []).filter((c) => c.rotacion === true);
 
-// Cartas cuya imagen NO termina en "_rotated.png"
+// Cartas con la propiedad rotacion = false o sin rotacion
 export const getNonRotatedCards = (cards) =>
-  (cards ?? []).filter((c) => !isRotatedImage(c.image));
+  (cards ?? []).filter((c) => c.rotacion !== true);
 
 //Elegir cartas al azar
 export const shuffleInPlace = (arr) => {
