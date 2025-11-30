@@ -517,21 +517,22 @@ export const useGameData = (game) => {
     }
   };
 
-  const postRound = async (roundId, updates) => {
+  const postRound = async ({ gameId, roundNumber }) => {
     try {
-      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+      const response = await fetch(`/api/v1/rounds?gameId=${gameId}&&roundNumber=${roundNumber}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
-        },
-        body: JSON.stringify(updates),
+        }
       });
       if (response.ok) {
         const newRound = await response.json();
         console.log('Round creado:', newRound);
         return newRound;
       } else {
+        const errorText = await response.text();
+        console.error('Error al crear round:', errorText);
         return null;
       }
     } catch (error) {

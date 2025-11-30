@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import tokenService from "../../services/token.service";
@@ -22,6 +22,9 @@ const CreateGame = () => {
   const location = useLocation();
   const jwt = tokenService.getLocalAccessToken();
   const loggedInUser = tokenService.getUser();
+  
+
+  const welcomeMessageSentRef = useRef(false);
   
   // Estado inicial del juego desde la navegación
   const [game, setGame] = useState(location.state?.game ?? null);
@@ -151,7 +154,11 @@ const CreateGame = () => {
   useEffect(() => {
     if (!game?.creator || !game?.chat) return;
     
-    postFirstMessage(game.creator, game.chat);
+    // Solo enviar el mensaje de bienvenida una vez y solo si el usuario es el creador
+    if (!welcomeMessageSentRef.current && isCreator) {
+      welcomeMessageSentRef.current = true;
+      postFirstMessage(game.creator, game.chat);
+    }
 
     const fetchPlayer = async () => {
       try {
