@@ -62,7 +62,7 @@ export default function Board() {
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
   const [CardPorPlayer, setCardPorPlayer] = useState(0);
-  const [deckCount, setDeckCount] = useState(60);
+  const [deckCount, setDeckCount] = useState(70);
   const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
   const [newMessage, setNewMessage] = useState('');

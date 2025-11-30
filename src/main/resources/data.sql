@@ -7,6 +7,56 @@ INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
 INSERT INTO appusers(id,username,name,birthDate,joined, password,image,email,authority) VALUES (4,'Carlosbox2k','Carlos Borrego Ortiz','2005-02-04','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/carlos.png', 'carlos@saboteur.es', 2);
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2); -- Probar Null en la imagen para probar que funciona el defaultProfile en los usuarios por defecto
 
+--Datos para probar Ranking (5 jugadores ficticios)
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (11, 'MineroPro', 'Minero Profesional', '1995-05-05', '2023-01-01 10:00:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Minero', 'minero@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (11, 50, 45, 120, 200, 10, false, 5, 5);
+
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (12, 'SaboteadorX', 'Saboteador Experto', '1998-08-20', '2023-02-15 14:30:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Sabo', 'sabo@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (12, 40, 20, 50, 100, 50, false, 10, 2);
+
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (13, 'PicoRoto', 'Novato del Pico', '2000-12-12', '2024-01-01 09:00:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Pico', 'pico@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (13, 10, 2, 5, 20, 2, false, 1, 0);
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (14, 'Exploradora_99', 'Dora la Exploradora', '1999-09-09', '2024-03-10 16:20:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Explora', 'explora@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (14, 12, 8, 15, 45, 2, false, 3, 1);
+
+
+INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
+VALUES (15, 'PepitaHunter', 'Cazador de Oro', '2001-01-01', '2024-05-01 12:00:00', 
+        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=Hunter', 'hunter@saboteur.es', 2);
+
+INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
+VALUES (15, 5, 2, 5, 10, 1, false, 0, 0);
+
+
+
 INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
 
@@ -45,11 +95,6 @@ VALUES (101, 1, 4, TRUE, 0, 1, NULL);
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
 VALUES (102, 2, 5, FALSE, 1, 1, NULL);
 
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (200, 1, TRUE, 'action_repair_pickaxe.png');
-
---INSERT INTO action (id, nombre_accion, objeto_afecta, valor_efecto) 
---VALUES (200, 0, FALSE, 0);
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
 VALUES (200, 1, 10, 'PRUEBA', 'VICTORIES', 'Gana 10 partidas.', 'Constructor Maestro');
@@ -71,17 +116,6 @@ VALUES (204, 1, 20,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
 INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 4);
 
 
-
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (205, 1, TRUE, '/images/card-images/action-cards/pickaxe.png');
-INSERT INTO action (id, name_action, object_affect, effect_value) 
-VALUES (205, 'REPAIR', FALSE, 'REPAIR_PICKAXE'); -- ENUMS como STRING, FALSE como booleano.
-
--- * INSERCIÓN ID 2 (PARA ELIMINAR) *
-INSERT INTO card (id, deck_id, status, image) 
-VALUES (300, 1, TRUE, 'action_destroy_cart.png');
-INSERT INTO action (id, name_action, object_affect, effect_value)  
-VALUES (300, 'DESTROY', FALSE, 'DESTROY_CART');
 
 -- * ACTION CARDS *
     -- DESTROY_PICKAXE

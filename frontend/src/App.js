@@ -25,6 +25,7 @@ import Achievements from "./lobbies/profiles/Achievements";
 import EditAchievements from "./admin/achievements/EditAchievements";
 import Stats from "./lobbies/profiles/Stats";
 import GameInvitationListener from "./components/GameInvitationListener";
+import Ranking from "./lobbies/ranking/Ranking";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -98,6 +99,7 @@ function App() {
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
+        <Route path="/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
       </>
     )
   }

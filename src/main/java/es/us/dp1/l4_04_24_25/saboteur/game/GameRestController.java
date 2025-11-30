@@ -81,8 +81,8 @@ class GameRestController {
     }
 
     @GetMapping("byCreator")
-    public ResponseEntity<Game> findByCreator(@RequestParam String creatorUsername){
-        Game res;
+    public ResponseEntity<List<Game>> findByCreator(@RequestParam String creatorUsername){
+        List<Game> res;
         res = gameService.findByCreator(creatorUsername);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }

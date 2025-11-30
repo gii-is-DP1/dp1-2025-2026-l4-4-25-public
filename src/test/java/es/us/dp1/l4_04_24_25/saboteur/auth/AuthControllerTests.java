@@ -30,130 +30,164 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import es.us.dp1.l4_04_24_25.saboteur.auth.AuthController;
-import es.us.dp1.l4_04_24_25.saboteur.auth.AuthService;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.LoginRequest;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.jwt.JwtUtils;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.services.UserDetailsImpl;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
+
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
 
-/**
- * Test class for {@link AuthController}
- *
- */
-
- @Epic("Users & Admin Module")
- @Feature("Authentication")
- @Owner("DP1-tutors")
-@WebMvcTest(value = AuthController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebSecurityConfigurer.class), excludeAutoConfiguration = {
-		SecurityAutoConfiguration.class })
+@Epic("Users & Admin Module")
+@Feature("Authentication")
+@Owner("DP1-tutors")
+@WebMvcTest(
+        value = AuthController.class,
+        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebSecurityConfigurer.class),
+        excludeAutoConfiguration = SecurityAutoConfiguration.class
+)
 class AuthControllerTests {
 
-	private static final String BASE_URL = "/api/v1/auth";
+    private static final String BASE_URL = "/api/v1/auth";
 
-	@SuppressWarnings("unused")
-	@Autowired
-	private AuthController authController;
+    @Autowired
+    private MockMvc mockMvc;
 
-	@MockBean
-	private AuthenticationManager authenticationManager;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-	@MockBean
-	private JwtUtils jwtUtils;
+    @MockBean
+    private AuthenticationManager authenticationManager;
 
-	@MockBean
-	private UserService userService;
+    @MockBean
+    private JwtUtils jwtUtils;
 
-	@MockBean
-	private AuthService authService;
+    @MockBean
+    private UserService userService;
 
-	@Autowired
-	private ObjectMapper objectMapper;
+    @MockBean
+    private AuthService authService;
 
-	@Autowired
-	private MockMvc mockMvc;
+    @MockBean
+    private ActivePlayerService activePlayerService;
 
-	private LoginRequest loginRequest;
-	private SignupRequest signupRequest;
-	private UserDetailsImpl userDetails;
-	private String token;
+    private LoginRequest loginRequest;
+    private SignupRequest signupRequest;
+    private UserDetailsImpl userDetails;
+    private String token;
 
-	@BeforeEach
-	void setup() {
-		loginRequest = new LoginRequest();
-		loginRequest.setUsername("owner");
-		loginRequest.setPassword("password");
+    @BeforeEach
+    void setup() {
 
-		signupRequest = new SignupRequest();
-		signupRequest.setUsername("username");
-		signupRequest.setPassword("password");
-		signupRequest.setName("Name");
-		signupRequest.setBirthDate("2000-01-01");
-		signupRequest.setEmail("hola@gmail.com");
-		signupRequest.setImage("path/to/image");
-		
-		signupRequest.setAuthority("OWNER");
+        loginRequest = new LoginRequest();
+        loginRequest.setUsername("owner");
+        loginRequest.setPassword("password");
 
-		userDetails = new UserDetailsImpl(1, loginRequest.getUsername(), loginRequest.getPassword(),
-				List.of(new SimpleGrantedAuthority("OWNER")));
+        signupRequest = new SignupRequest();
+        signupRequest.setUsername("username");
+        signupRequest.setPassword("password");
+        signupRequest.setName("Name");
+        signupRequest.setBirthDate("2000-01-01");
+        signupRequest.setEmail("hola@gmail.com");
+        signupRequest.setImage("path/to/image");
+        signupRequest.setAuthority("OWNER");
 
-		token = "JWT TOKEN";
-	}
+        userDetails = new UserDetailsImpl(
+                1,
+                loginRequest.getUsername(),
+                loginRequest.getPassword(),
+                List.of(new SimpleGrantedAuthority("OWNER"))
+        );
 
+        token = "JWT TOKEN";
+    }
 
-	@Test
-	void shouldAuthenticateUser() throws Exception {
-		Authentication auth = Mockito.mock(Authentication.class);
+    @Test
+    void shouldAuthenticateUser() throws Exception {
 
-		when(this.jwtUtils.generateJwtToken(any(Authentication.class))).thenReturn(token);
-		when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-		Mockito.doReturn(userDetails).when(auth).getPrincipal();
+        Authentication auth = Mockito.mock(Authentication.class);
 
-		mockMvc.perform(post(BASE_URL + "/signin").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(loginRequest))).andExpect(status().isOk())
-				.andExpect(jsonPath("$.username").value(loginRequest.getUsername()))
-				.andExpect(jsonPath("$.id").value(userDetails.getId())).andExpect(jsonPath("$.token").value(token));
-	}
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(auth);
 
-	@Test
-	void shouldValidateToken() throws Exception {
-		when(this.jwtUtils.validateJwtToken(token)).thenReturn(true);
+        when(jwtUtils.generateJwtToken(auth)).thenReturn(token);
 
-		mockMvc.perform(get(BASE_URL + "/validate").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-				.param("token", token)).andExpect(status().isOk())
-				.andExpect(jsonPath("$").value(true));
-	}
+        Mockito.doReturn(userDetails).when(auth).getPrincipal();
 
-	@Test
-	void shouldNotValidateToken() throws Exception {
-		when(this.jwtUtils.validateJwtToken(token)).thenReturn(false);
+        mockMvc.perform(
+                        post(BASE_URL + "/signin")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(loginRequest))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(loginRequest.getUsername()))
+                .andExpect(jsonPath("$.id").value(userDetails.getId()))
+                .andExpect(jsonPath("$.token").value(token));
+    }
 
-		mockMvc.perform(get(BASE_URL + "/validate").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-				.param("token", token)).andExpect(status().isOk())
-				.andExpect(jsonPath("$").value(false));
-	}
+    @Test
+    void shouldValidateToken() throws Exception {
 
-	@Test
-	void shouldRegisterUser() throws Exception {
-		when(this.userService.existsUser(signupRequest.getUsername())).thenReturn(false);
-		doNothing().when(this.authService).createUser(signupRequest);
+        when(jwtUtils.validateJwtToken(token)).thenReturn(true);
 
-		mockMvc.perform(post(BASE_URL + "/signup").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(signupRequest))).andExpect(status().isOk())
-				.andExpect(jsonPath("$.message").value("User registered successfully!"));
-	}
+        mockMvc.perform(
+                        get(BASE_URL + "/validate")
+                                .with(csrf())
+                                .param("token", token)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(true));
+    }
 
-	@Test
-	void shouldNotRegisterUserWithExistingUsername() throws Exception {
-		when(this.userService.existsUser(signupRequest.getUsername())).thenReturn(true);
+    @Test
+    void shouldNotValidateToken() throws Exception {
 
-		mockMvc.perform(post(BASE_URL + "/signup").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(signupRequest))).andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value("Error: Username is already taken!"));
-	}
+        when(jwtUtils.validateJwtToken(token)).thenReturn(false);
 
+        mockMvc.perform(
+                        get(BASE_URL + "/validate")
+                                .with(csrf())
+                                .param("token", token)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(false));
+    }
+
+    @Test
+    void shouldRegisterUser() throws Exception {
+
+        when(activePlayerService.existsActivePlayer(signupRequest.getUsername()))
+                .thenReturn(false);
+
+        doNothing().when(authService).createUser(signupRequest);
+
+        mockMvc.perform(
+                        post(BASE_URL + "/signup")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(signupRequest))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User registered successfully!"));
+    }
+
+    @Test
+    void shouldNotRegisterUserWithExistingUsername() throws Exception {
+
+        when(activePlayerService.existsActivePlayer(signupRequest.getUsername()))
+                .thenReturn(true);
+
+        mockMvc.perform(
+                        post(BASE_URL + "/signup")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(signupRequest))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Error: Username is already taken!"));
+    }
 }
