@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.jdbc.Sql; 
 
 import es.us.dp1.l4_04_24_25.saboteur.card.effectValue; 
 import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService; 
@@ -57,6 +58,7 @@ class ActionServiceTests {
     
     @Test
     @Transactional
+    @Sql(statements = "ALTER SEQUENCE entity_sequence RESTART WITH 1000") 
     void shouldInsertAction() {
         int initialCount = ((Collection<Action>) this.actionService.findAll()).size();
         
@@ -144,6 +146,5 @@ class ActionServiceTests {
         assertTrue(actions.size() == 27, "Debe haber 27 Action que afecten al jugador.");
         assertFalse(actions.get(0).isObjectAffect());
     }
-    
     
 }

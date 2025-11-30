@@ -30,7 +30,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.messaging.simp.SimpMessagingTemplate; // IMPORT AÑADIDO
+import org.springframework.messaging.simp.SimpMessagingTemplate; 
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -86,13 +86,6 @@ class ActivePlayerRestControllerTests {
     @MockBean
     private PasswordEncoder encoder;
 
-    // --- MOCKS AÑADIDOS PARA ARREGLAR EL CONTEXTO ---
-    @MockBean
-    private GameService gameService;
-
-    @MockBean
-    private SimpMessagingTemplate messagingTemplate;
-    // ------------------------------------------------
 
     private ActivePlayer activePlayer;
 
