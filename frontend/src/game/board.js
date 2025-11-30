@@ -33,7 +33,7 @@ import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 3;
+const timeturn = 10;
 
 // Obtener datos iniciales fuera del componente para evitar problemas con re-renders
 const getSavedRoundData = () => {
