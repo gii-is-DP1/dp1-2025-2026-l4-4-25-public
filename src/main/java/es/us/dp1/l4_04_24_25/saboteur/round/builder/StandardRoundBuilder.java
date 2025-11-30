@@ -2,6 +2,8 @@ package es.us.dp1.l4_04_24_25.saboteur.round.builder;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,11 @@ public class StandardRoundBuilder extends AbstractRoundBuilder {
         Board board = new Board();
         board.setBase(11);
         board.setHeight(9);
+
+        // Generar orden aleatorio de cartas objetivo
+        List<String> objectiveCards = Arrays.asList("gold", "coal_1", "coal_2");
+        Collections.shuffle(objectiveCards);
+        board.setObjectiveCardsOrder(String.join(",", objectiveCards));
 
         List<Square> squares = new ArrayList<>();
         
