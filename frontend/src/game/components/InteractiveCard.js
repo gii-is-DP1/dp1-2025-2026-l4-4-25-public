@@ -14,7 +14,9 @@ export default function InteractiveCard({
   isSelected,
   onToggleSelect,
   rotation = 0,
-  onToggleRotation
+  onToggleRotation,
+  allCards = [], // Array de todas las cartas disponibles para buscar la pareja rotada
+  onCardReplaced = null // Callback para actualizar el deck cuando se usa una carta rotada
 }) {
   const [showPlayerMenu, setShowPlayerMenu] = useState(false);
   const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
@@ -22,16 +24,14 @@ export default function InteractiveCard({
   // LAS CARTAS DE TUNELES SON LAS UNICAS Q SE ARRATRAN
   const handleDragStart = (e) => {
     if (isTunnelCard(card) && isMyTurn) {
-      console.log('Dragging tunnel card:', card, 'with rotation:', rotation);
       e.dataTransfer.effectAllowed = 'move';
-      const cardWithRotation = { ...card, rotation };
-      e.dataTransfer.setData('application/json', JSON.stringify(cardWithRotation));
+      e.dataTransfer.setData('application/json', JSON.stringify(card));
       e.dataTransfer.setData('cardIndex', index.toString());
-      e.dataTransfer.setData('rotation', rotation.toString());
       e.dataTransfer.setData('text/plain', card.id);
     } else {
       e.preventDefault();
-    }};
+    }
+  };
 
   const handleClick = () => {
     if (!isMyTurn) return;
@@ -81,7 +81,6 @@ export default function InteractiveCard({
       e.preventDefault();
       e.stopPropagation();
       onToggleRotation(index);
-      console.log(`🔄 Rotating tunnel card ${index} to ${rotation === 180 ? 0 : 180}°`);
     }
   };
 
@@ -128,10 +127,6 @@ export default function InteractiveCard({
           src={card.image} 
           alt={card.name || 'Card'} 
           className="card-image"
-          style={{ 
-            transform: `rotate(${rotation}deg)`,
-            transition: 'transform 0.3s ease'
-          }}
         />
       </div>
 
