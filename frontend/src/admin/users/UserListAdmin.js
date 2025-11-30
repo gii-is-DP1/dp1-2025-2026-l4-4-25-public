@@ -8,7 +8,8 @@ import getErrorModal from "../../util/getErrorModal";
 import useFetchState from "../../util/useFetchState";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 
-const jwt = tokenService.getLocalAccessToken();
+const jwt = tokenService.getLocalAccessToken(); 
+const loggedInUser = tokenService.getUser(); 
 
 export default function UserListAdmin() {
   const [message, setMessage] = useState(null);
@@ -17,7 +18,7 @@ export default function UserListAdmin() {
   const [users, setUsers] = useFetchState(
     [],
     `/api/v1/users`,
-    jwt,
+    jwt, 
     setMessage,
     setVisible
   );
@@ -83,6 +84,7 @@ export default function UserListAdmin() {
                   setVisible
                 )
               }
+              disabled = {loggedInUser.id === user.id}
               className="action-btn action-delete"
             >
               🗑️ Delete

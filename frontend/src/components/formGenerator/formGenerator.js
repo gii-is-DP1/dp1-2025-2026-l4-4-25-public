@@ -61,17 +61,25 @@ const FormGenerator = forwardRef((props, ref) => {
     e.preventDefault();
     let formValuesCopy = {};
 
+    if (!formInputs.current || formInputs.current.length === 0) {
+      return;
+    }
+
     for (let i = 0; i < props.inputs.length; i++) {
       let input = props.inputs[i];
+      const currentInput = formInputs.current[i];
+
+      if (!currentInput) continue;
+
       if (input.type === "files") {
-        formValuesCopy[input.name] = formInputs.current[i].files.map((file) =>
+        formValuesCopy[input.name] = currentInput.files.map((file) =>
           file.getFileEncodeBase64String()
         );
       } else if (input.type === "interval") {
-        formValuesCopy[`min_${input.name}`] = formInputs.current[i].min;
-        formValuesCopy[`max_${input.name}`] = formInputs.current[i].max;
+        formValuesCopy[`min_${input.name}`] = currentInput.min;
+        formValuesCopy[`max_${input.name}`] = currentInput.max;
       } else {
-        formValuesCopy[input.name] = formInputs.current[i].value;
+        formValuesCopy[input.name] = currentInput.value;
       }
     }
     setFormValues(formValuesCopy);
@@ -106,15 +114,26 @@ const FormGenerator = forwardRef((props, ref) => {
       props.onSubmit({ values: formValues });
       setSubmitForm(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitForm]);
 
   useEffect(() => {
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "Enter" && props.listenEnterKey) {
+    if (!props.listenEnterKey) {
+      return;
+    }
+
+    const listener = (e) => {
+      if (e.key === "Enter") {
         handleSubmit(e);
       }
-    });
-  }, []);
+    };
+
+    document.addEventListener("keyup", listener);
+    return () => {
+      document.removeEventListener("keyup", listener);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.listenEnterKey]);
 
   return (
     <div className="class-profile-form">

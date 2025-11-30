@@ -32,7 +32,17 @@
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  animation: pulse-button 2s infinite;
   width: auto;}
+
+    @keyframes pulse-button {
+  0%, 100% {
+    box-shadow: 0 6px 6px rgba(255, 217, 0, 19);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(255, 217, 0, 0.582);
+  }
+}
 
 .hero-div-lobby button:active {
   transform: scale(0.95);}
@@ -40,6 +50,7 @@
 .hero-div-lobby button:hover {
   transform: scale(1.1);
   box-shadow: 0 0 20px rgba(240, 199, 38, 0.8);}
+
 
 .hero-div-lobby .button-crear, /* Mismo formato de color y fondo en los botones */
 .hero-div-lobby .button-unirse,
@@ -52,7 +63,36 @@
   color: #000;}
 
 .hero-div-lobby .button-crear {
-  margin-top: 00;}
+  margin-top: 00;
+  position: relative;
+  overflow: visible;
+}
+
+.hero-div-lobby .button-crear::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border: 2px solid #f1c40f;
+  border-radius: 10px;
+  animation: ring-expand 1.5s ease-out infinite;
+}
+
+@keyframes ring-expand {
+  0% {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+  }
+  100% {
+    width: 150%;
+    height: 150%;
+    opacity: 0;
+  }
+}
 
 .hero-div-lobby .button-unirse {
   margin-top: 0;}

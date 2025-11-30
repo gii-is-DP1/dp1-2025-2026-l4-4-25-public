@@ -1,196 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import '../App.css';
-import '../static/css/home/home.css'; 
-import { Link, useNavigate} from 'react-router-dom';
-import tokenService from "../services/token.service";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import generateRandomLink from '../util/generateRandomLink';
+import { createGameRequest } from './utils/lobbyHelpers';
+import useLobbyUser from './hooks/useLobbyUser';
 
-export default function Lobby(){
-    const [isAdmin, setisAdmin] = useState(false);
-    const [showFriends, setShowFriends] = useState(false);
-    const [isPrivate, setisPrivate] = useState(false);
-    const [player, setPlayer] = useState()
-    const [link,setlink] = useState("")
-    const [chat,setchat] = useState()
-    const jwt = tokenService.getLocalAccessToken();
-    const navigate = useNavigate();
+// Importar componentes modulares
+import Logo from './components/Logo';
+import TopRightButtons from './components/TopRightButtons';
+import InfoButton from './components/InfoButton';
+import PlayerActions from './components/PlayerActions';
+import AdminActions from './components/AdminActions';
+import RankingButton from './components/RankingButton';
 
+import '../App.css';
+import '../static/css/home/home.css';
 
-    // SIMULAMOS LOS AMIGOS HASTA QUE ESTÉ HECHO EN EL BACKEND
-    const [friends, setFriends] = useState([
-        {username: "Alexby205", status: "A", color: "green" },
-        {username: "LuisCV1", status: "B", color: "orange" },
-        {username: "Julio", status: "C", color: "red" },
-    ]);
+export default function Lobby() {
+  const navigate = useNavigate();
+  const [showFriends, setShowFriends] = useState(false);
+  
+  // Custom hook para manejar usuario, player y amigos
+  const { isAdmin, player, friends, jwt } = useLobbyUser();
 
-    useEffect(() => {
-    const fetchPlayer = async () => {
-          try {
-            const loggedInUser = tokenService.getUser();
-          if (!loggedInUser || !loggedInUser.id) {
-            console.error("No se encontró el ID del usuario.");
-            return;
-        }
-            const response = await fetch(`/api/v1/players/${loggedInUser.id}`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwt}`
-              }
-            });
-            console.log("response del player", response);
-            if (response.ok) {
-              const data = await response.json();
-              console.log("respone 2",data)
-              setPlayer(data);
-            } else {
-              console.error('Respuesta no OK:', response.status);
-              alert('Error al obtener la información del jugador.');
-            }
-          } catch (error) {
-            console.error('Hubo un problema con la petición fetch:', error);
-            alert('Error de red. No se pudo conectar con el servidor.');
-            }
-        };
+  const handleCreateGame = async () => {
+    console.log("este es el player submit", player);
+    
+    try {
+      // Generar enlace aleatorio para el juego
+      const randomPart = generateRandomLink(16);
+      const fullLink = `https://saboteur.com/game/${randomPart}`;
 
-        let admin = false;
-        try {
-            const p = JSON.parse(atob(jwt.split('.')[1]));
-            admin = p.authorities?.includes("ADMIN") || false;
-            setisAdmin(admin);
-        } catch (error) {
-            console.error(error);
-            return; 
-        }
+      // Crear solicitud de juego usando helper
+      const gameRequest = createGameRequest(player, fullLink);
+      console.log('Enviando solicitud de partida:', gameRequest);
 
-        // Solo buscar los datos del jugador si el usuario NO es un admin
-        if (!admin) {
-            fetchPlayer();
-            console.log("entro")
-            console.log("este es  el player", player)
-        }
-  },[jwt])
+      // POST para crear el juego
+      const gameResponse = await fetch("/api/v1/games", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(gameRequest),
+      });
 
-    async function handleSubmit() {
-         console.log("este es  el player submit", player)
-        const jwt = tokenService.getLocalAccessToken();
-        try {
-        const randomPart = generateRandomLink(16);
-        const fullLink = `https://saboteur.com/game/${randomPart}`;
-        setlink(fullLink)
-
-        const gameRequest = {
-            gameStatus: "CREATED",
-            link: fullLink, 
-            maxPlayers: 3,
-            creator: player.username,
-            private: false,
-            activePlayers:[player.username]
-        };
-
-        console.log('Enviando solicitud de partida:', gameRequest);
-
-        const gameResponse = await fetch("/api/v1/games", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwt}` 
-            },
-            body: JSON.stringify(gameRequest),
-        });
-
-        if (gameResponse.ok) {
-            const newGame = await gameResponse.json();
-            alert("¡Partida creada con éxito!");
-            console.log("Partida creada:", newGame);
-            navigate('/CreateGame/' + newGame.id , { state: { game: newGame } });
-        } else {
-            const errorData = await gameResponse.json();
-            alert(`Error al crear la partida: ${errorData.message}`);
-        }
-
+      if (gameResponse.ok) {
+        const newGame = await gameResponse.json();
+        toast.success("¡Partida creada con éxito!");
+        console.log("Partida creada:", newGame);
+        navigate('/CreateGame/' + newGame.id, { state: { game: newGame } });
+      } else {
+        const errorData = await gameResponse.json();
+        toast.warn(`Error al crear la partida: ${errorData.message}`);
+      }
     } catch (error) {
-        console.error('Hubo un problema con la petición fetch:', error);
-        alert('Error de red. No se pudo conectar con el servidor.');
+      console.error('Hubo un problema con la petición fetch:', error);
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
+  };
+
+  const handleToggleFriends = () => {
+    setShowFriends(prev => !prev);
+  };
+
+  return (
+    <div className="home-page-lobby-container">
+      <Logo />
+      
+      <TopRightButtons
+        isAdmin={isAdmin}
+        showFriends={showFriends}
+        onToggleFriends={handleToggleFriends}
+        friends={friends}
+      />
+
+      <InfoButton />
+
+      {!isAdmin && (
+        <PlayerActions onCreateGame={handleCreateGame} />
+      )}
+
+      {isAdmin && <AdminActions />}
+
+      <RankingButton />
+    </div>
+  );
 }
 
-    return(
-        <div className="home-page-lobby-container">
-
-            <div style={{ position: 'absolute', top: 0, left: 0, display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', zIndex: 10 }}>
-                <img src="/logo1-recortado.png" alt="logo" style={{ height: 95, width: 100 }} />
-             </div>
-            <div className="top-right-lobby-buttons">
-                {/*<Link to="/register">
-                    <button className="button-register">📃Register</button>
-                </Link>
-                <Link to="/login">
-                    <button className="button-login">💻Login</button>
-                </Link>
-                */}
-                {!isAdmin && (
-                <div className="friends-dropdown-container">
-                    <button 
-                        className="button-logOut" 
-                        onClick={() => setShowFriends(prev => !prev)}>
-                        🫂Friends
-                    </button>
-                    {showFriends && (
-                        <div className="friends-dropdown">
-                            <h4>🫂Friends Section🫂</h4>
-                            {friends.map((f, idx) => (
-                                <div key={idx} className="friend-item">
-                                    <span>{f.username}</span>
-                                    <span className="friend-status" style={{ backgroundColor: f.color }}></span>
-                                    <span>{f.status}</span>
-                                </div>
-                            ))}
-                            <hr />
-                            <button className="friend-action">📩Friend Request</button>
-                            <button className="friend-action">🔎Find Player</button>
-                        </div>
-                    )}
-                </div>
-                )}
-                <Link to="/profile">
-                    <button className="button-logOut"> 👤Profile</button>
-                </Link>
-            </div>
-            <div className="button-info">
-                <Link to="/info">
-                    <button className="button-info"> ℹ️</button>
-                </Link>
-            </div>
-            {!isAdmin && (
-            <div className="hero-div-lobby">
-                    <button className="button-crear" onClick={handleSubmit}>📑CREATE GAME</button>
-                 <Link to="/ListGames">
-                <button className="button-unirse">📥JOIN A GAME</button>   
-                </Link>
-            </div>
-             )}
-            {isAdmin && (
-                 <div className="hero-div-lobby">
-                <Link to="/users">
-                    <button className="button-users">📑Users</button>
-                </Link>
-                    </div>
-                )}
-             {isAdmin && (
-                 <div className="hero-div-lobby">
-                <Link to="/EditAchievement">
-                    <button className="button-edit">✏️Edit Achievement</button>
-                </Link>
-                    </div>
-                )}
-            <div className="bottom-left-button">
-                <Link to="/Ranking">
-                <button className="button-ranking">🏆RANKING</button>
-                </Link>
-             </div>
-        </div>
-    )
-}
 
 

@@ -3,6 +3,8 @@ import { Route, Routes } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { ErrorBoundary } from "react-error-boundary";
 import AppNavbar from "./AppNavbar";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
@@ -21,6 +23,9 @@ import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 import Achievements from "./lobbies/profiles/Achievements";
 import EditAchievements from "./admin/achievements/EditAchievements";
+import Stats from "./lobbies/profiles/Stats";
+import GameInvitationListener from "./components/GameInvitationListener";
+import Ranking from "./lobbies/ranking/Ranking";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -59,6 +64,7 @@ function App() {
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
           <Route path="/EditAchievement" element={<EditAchievements />} />
+          <Route path="/achievements/admin" element={<PrivateRoute><EditAchievements /></PrivateRoute>} />
         </>)
     }
     if (role === "PLAYER") {
@@ -70,6 +76,7 @@ function App() {
           <Route path="/profile/editProfile" element={<EditProfile />} />
           <Route path="/GamesPlayed" element={<GamesPlayed />} />
           <Route path="/Achievement" element={<Achievements />} />
+          <Route path="/stats" element={<Stats />} />
 
         </>)
     }    
@@ -92,6 +99,7 @@ function App() {
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
+        <Route path="/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
       </>
     )
   }
@@ -100,6 +108,8 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
         <AppNavbar />
+        {jwt && <GameInvitationListener />}
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Routes>
           <Route path="/" exact={true} element={<Home />} />
           {publicRoutes}

@@ -9,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,13 +51,16 @@ class GameRestController {
     private final PlayerService playerService;
     private final ObjectMapper objectMapper;
     private final RoundService roundService;
+    private final SimpMessagingTemplate messagingTemplate;
+
 
     @Autowired
-    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService) {
+    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService,SimpMessagingTemplate messagingTemplate) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.objectMapper = objectMapper;
         this.roundService = roundService;
+        this.messagingTemplate = messagingTemplate;
     }
 
 
@@ -77,8 +81,8 @@ class GameRestController {
     }
 
     @GetMapping("byCreator")
-    public ResponseEntity<Game> findByCreator(@RequestParam String creatorUsername){
-        Game res;
+    public ResponseEntity<List<Game>> findByCreator(@RequestParam String creatorUsername){
+        List<Game> res;
         res = gameService.findByCreator(creatorUsername);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
@@ -174,9 +178,38 @@ class GameRestController {
     }
 
     Game gamePatched = objectMapper.updateValue(game, updates);
-    gameService.updateGame(gamePatched, id);
+    Game savedGame = gameService.updateGame(gamePatched, id);
 
-    return new ResponseEntity<>(gamePatched, HttpStatus.OK);
+    System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
+    if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
+
+        System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+
+        // 1. Obtener la ronda actual
+        List<Round> rounds = roundService.findByGameId(id);
+
+        if (rounds.isEmpty()) {
+            System.out.println(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
+        }
+
+        Round currentRound = rounds.get(rounds.size() - 1);
+
+        // 2. Cargar el game completo
+        Game fullGame = gameService.findGame(id);
+
+        // 3. Montar payload explícito
+        Map<String, Object> payload = Map.of(
+            "game", fullGame,
+            "round", currentRound
+        );
+
+        System.out.println(">>> ENVIANDO PAYLOAD AL SOCKET:");
+        System.out.println(payload);
+
+        messagingTemplate.convertAndSend("/topic/game/" + id, payload);
+    }
+
+    return new ResponseEntity<>(savedGame, HttpStatus.OK);
 }
 
     @DeleteMapping(value = "{gameId}")

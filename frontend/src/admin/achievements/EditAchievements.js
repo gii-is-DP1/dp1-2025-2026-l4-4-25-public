@@ -1,64 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Form, Input, Label } from 'reactstrap';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import tokenService from '../../services/token.service';
-import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png";
+import ProfileLogo from '../../lobbies/profiles/components/ProfileLogo';
 import '../../static/css/lobbies/profile.css';
 import '../../static/css/lobbies/achievements.css';
+import '../../static/css/admin/editAchievements.css';
 
 export default function EditAchievements() {
   const [achievements, setAchievements] = useState([]);
-  const [profile, setProfile] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [message, setMessage] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newAchievement, setNewAchievement] = useState({
+    tittle: '',
+    description: '',
+    badgeImage: '',
+    threshold: 0,
+    metric: 'GAMES_PLAYED'
+  });
 
   const jwt = tokenService.getLocalAccessToken();
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // Verificar si es admin
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const user = tokenService.getUser();
-        if (!user?.id) throw new Error("User ID not found");
-
-        const response = await fetch(`/api/v1/users/${user.id}`, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${jwt}` },
-        });
-        if (!response.ok) throw new Error("Could not fetch profile");
-
-        const data = await response.json();
-        setProfile(data);
-        setIsAdmin(data.authority?.authority === "ADMIN");
-      } catch (err) {
-        console.error(err);
+    try {
+      const payload = JSON.parse(atob(jwt.split('.')[1]));
+      const admin = payload.authorities?.includes("ADMIN") || false;
+      setIsAdmin(admin);
+      if (!admin) {
+        navigate('/lobby');
       }
-    };
-    fetchProfile();
-  }, [jwt]);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      navigate('/lobby');
+    }
+  }, [jwt, navigate]);
 
+  // Fetch achievements
   useEffect(() => {
-    const fetchAchievements = async () => {
-      try {
-        const res = await fetch('/api/v1/achievements', { headers: { Authorization: `Bearer ${jwt}` } });
-        if (!res.ok) throw new Error("Failed to fetch achievements");
-        const data = await res.json();
-        setAchievements(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
     fetchAchievements();
   }, [jwt]);
 
-
-  const handleChange = (index, field, value) => {
-    const newAchievements = [...achievements];
-    newAchievements[index][field] = value;
-    setAchievements(newAchievements);};
-
-  const handleSubmit = async (event, ach) => {
-    event.preventDefault();
+  const fetchAchievements = async () => {
     try {
+      //console.log("Fetching achievements...");
+      const res = await fetch('/api/v1/achievements', { 
+        headers: { Authorization: `Bearer ${jwt}` } 
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error fetching achievements:", errorText);
+        throw new Error(`Failed to fetch achievements: ${res.status} ${errorText}`);
+      }
+      
+      const data = await res.json();
+     // console.log("Achievements loaded:", data);
+      setAchievements(data);
+    } catch (err) {
+      console.error("Error in fetchAchievements:", err);
+      setMessage({ type: 'error', text: `Error loading achievements: ${err.message}` });
+    }
+  };
+
+  const handleEdit = (id) => {
+    setEditingId(editingId === id ? null : id);
+  };
+
+  const handleChange = (id, field, value) => {
+    setAchievements(achievements.map(ach => 
+      ach.id === id ? { ...ach, [field]: value } : ach
+    ));
+  };
+
+  const handleUpdate = async (ach) => {
+    try {
+     // console.log("Updating achievement:", ach);
       const res = await fetch(`/api/v1/achievements/${ach.id}`, {
         method: 'PUT',
         headers: { 
@@ -67,20 +87,285 @@ export default function EditAchievements() {
         },
         body: JSON.stringify(ach),
       });
-      if (!res.ok) throw new Error("Failed to update achievement");
-      setMessage("Achievement updated!");
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error updating achievement:", errorText);
+        throw new Error(`Failed to update achievement: ${errorText}`);
+      }
+      
+      setMessage({ type: 'success', text: 'Achievement updated successfully!' });
+      setEditingId(null);
+      fetchAchievements();
     } catch (err) {
-      console.error(err);
-      setMessage("Error updating achievement");}};
+      console.error("Error in handleUpdate:", err);
+      setMessage({ type: 'error', text: `Error updating achievement: ${err.message}` });
+    }
+  };
 
-  if (!profile) return <div>Loading profile...</div>;
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this achievement?')) return;
+    
+    try {
+    //  console.log("Deleting achievement:", id);
+      const res = await fetch(`/api/v1/achievements/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${jwt}` }
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error deleting achievement:", errorText);
+        throw new Error(`Failed to delete achievement: ${errorText}`);
+      }
+      
+      setMessage({ type: 'success', text: 'Achievement deleted successfully!' });
+      fetchAchievements();
+    } catch (err) {
+      console.error("Error in handleDelete:", err);
+      setMessage({ type: 'error', text: `Error deleting achievement: ${err.message}` });
+    }
+  };
+
+  const handleCreateChange = (field, value) => {
+    setNewAchievement({ ...newAchievement, [field]: value });
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      const user = tokenService.getUser();
+      
+      // El UserDeserializer espera solo un string con el username, no un objeto
+      const achievementData = {
+        tittle: newAchievement.tittle.trim(),
+        description: newAchievement.description.trim(),
+        badgeImage: newAchievement.badgeImage.trim() || null,
+        threshold: parseInt(newAchievement.threshold, 10),
+        metric: newAchievement.metric,
+        creator: user.username  // Solo el string del username
+      };
+      
+     // console.log("Creating achievement with data:", JSON.stringify(achievementData, null, 2));
+      
+      const res = await fetch('/api/v1/achievements', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(achievementData),
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error response:", res.status, errorText);
+        throw new Error(`Failed to create achievement (${res.status}): ${errorText}`);
+      }
+      
+      const result = await res.json();
+     // console.log("Achievement created successfully:", result);
+      
+      setMessage({ type: 'success', text: 'Achievement created successfully!' });
+      setShowCreateForm(false);
+      setNewAchievement({
+        tittle: '',
+        description: '',
+        badgeImage: '',
+        threshold: 0,
+        metric: 'GAMES_PLAYED'
+      });
+      
+      fetchAchievements();
+    } catch (err) {
+      console.error("Error creating achievement:", err);
+      setMessage({ type: 'error', text: err.message || 'Error creating achievement' });
+    }
+  };
+
+  const metrics = [
+    'GAMES_PLAYED',
+    'VICTORIES',
+    'BUILDED_PATHS',
+    'DESTROYED_PATHS',
+    'GOLD_NUGGETS',
+    'TOOLS_DAMAGED',
+    'TOOLS_REPAIRED'
+  ];
+
+  if (!isAdmin) return null;
+
+  const handleBack = () => {
+    // Si vino desde achievements, volver ahí
+    if (location.state?.from === '/achievements' || document.referrer.includes('/Achievement')) {
+      navigate('/Achievement');
+    } else if (isAdmin) {
+      // Si es admin, ir al lobby
+      navigate('/lobby');
+    } else {
+      // Si es player, ir al profile
+      navigate('/profile');
+    }
+  };
 
   return (
     <div className="home-page-container">
+      <ProfileLogo />
       <div className="top-right-lobby-buttons">
-        <Link to="/logout"><button className="button-logOut"> 🔴Log Out</button></Link>
-        <Link to="/lobby"><button className="button-logOut"> ➡️</button></Link>
+        <Link to="/logout"><button className="button-logOut">🔴 Log Out</button></Link>
+        <button className="button-logOut" onClick={handleBack}>⬅️ Back</button>
       </div>
-     </div>
+
+      <div className="achievement-overlay">
+        <h1 className="achievements-title">⚙️ MANAGE ACHIEVEMENTS</h1>
+        
+        {message && (
+          <div className={`admin-message ${message.type}`}>
+            {message.text}
+          </div>
+        )}
+
+        <button 
+          className="button-small create-button"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+        >
+          {showCreateForm ? '❌ Cancel' : '➕ Create New Achievement'}
+        </button>
+
+        {showCreateForm && (
+          <form className="achievement-form" onSubmit={handleCreate}>
+            <h3>Create New Achievement</h3>
+            <div className="form-row">
+              <label>Title:</label>
+              <input
+                type="text"
+                value={newAchievement.tittle}
+                onChange={(e) => handleCreateChange('tittle', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Description:</label>
+              <textarea
+                value={newAchievement.description}
+                onChange={(e) => handleCreateChange('description', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Badge Image URL:</label>
+              <input
+                type="text"
+                value={newAchievement.badgeImage}
+                onChange={(e) => handleCreateChange('badgeImage', e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label>Threshold:</label>
+              <input
+                type="number"
+                value={newAchievement.threshold}
+                onChange={(e) => handleCreateChange('threshold', parseInt(e.target.value))}
+                min="0"
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Metric:</label>
+              <select
+                value={newAchievement.metric}
+                onChange={(e) => handleCreateChange('metric', e.target.value)}
+              >
+                {metrics.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <button type="submit" className="button-small">Create Achievement</button>
+          </form>
+        )}
+
+        <div className="achievements-list-admin">
+          {achievements.map((ach) => (
+            <div key={ach.id} className="achievement-card-admin">
+              {editingId === ach.id ? (
+                <div className="achievement-edit-form">
+                  <div className="form-row">
+                    <label>Title:</label>
+                    <input
+                      type="text"
+                      value={ach.tittle}
+                      onChange={(e) => handleChange(ach.id, 'tittle', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Description:</label>
+                    <textarea
+                      value={ach.description}
+                      onChange={(e) => handleChange(ach.id, 'description', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Badge Image URL:</label>
+                    <input
+                      type="text"
+                      value={ach.badgeImage || ''}
+                      onChange={(e) => handleChange(ach.id, 'badgeImage', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Threshold:</label>
+                    <input
+                      type="number"
+                      value={ach.threshold}
+                      onChange={(e) => handleChange(ach.id, 'threshold', parseInt(e.target.value))}
+                      min="0"
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Metric:</label>
+                    <select
+                      value={ach.metric}
+                      onChange={(e) => handleChange(ach.id, 'metric', e.target.value)}
+                    >
+                      {metrics.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div className="button-group">
+                    <button className="button-small save-btn" onClick={() => handleUpdate(ach)}>
+                      💾 Save
+                    </button>
+                    <button className="button-small cancel-btn" onClick={() => handleEdit(null)}>
+                      ❌ Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="achievement-view">
+                  <div className="achievement-info-admin">
+                    <img 
+                      src={ach.badgeImage || '/default-badge.png'} 
+                      alt={ach.tittle}
+                      className="achievement-badge-small"
+                    />
+                    <div>
+                      <h4>{ach.tittle}</h4>
+                      <p>{ach.description}</p>
+                      <p><strong>Metric:</strong> {ach.metric} | <strong>Threshold:</strong> {ach.threshold}</p>
+                    </div>
+                  </div>
+                  <div className="button-group">
+                    <button className="button-small edit-btn" onClick={() => handleEdit(ach.id)}>
+                      ✏️ Edit
+                    </button>
+                    <button className="button-small delete-btn" onClick={() => handleDelete(ach.id)}>
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

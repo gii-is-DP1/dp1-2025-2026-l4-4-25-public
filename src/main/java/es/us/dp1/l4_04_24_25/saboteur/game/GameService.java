@@ -1,5 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
+import java.util.List;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -36,6 +38,11 @@ public class GameService {
         return gameRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Iterable<Game> findAllByActivePlayerId(Integer activePlayerId) {
+        return gameRepository.findAllByActivePlayerId(activePlayerId);
+    }
+
     @Transactional
     public Game updateGame(@Valid Game game, Integer idToUpdate){
         Game toUpdate = findGame(idToUpdate);
@@ -57,9 +64,13 @@ public class GameService {
     }
 
     @Transactional(readOnly = true)
-    public Game findByCreator(String creatorUsername) {
-        return gameRepository.findByCreatorUsername(creatorUsername).orElseThrow(()-> new ResourceNotFoundException("Game","creator username",creatorUsername));
-    }
+    public List<Game> findByCreator(String creatorUsername) {
+        List<Game> games = gameRepository.findByCreatorUsername(creatorUsername);
+        if (games.isEmpty()) {
+            throw new ResourceNotFoundException("Game", "creator username", creatorUsername);
+        }
+        return games;
+}
 
     /* 
     @Transactional(readOnly = true)
@@ -80,5 +91,7 @@ public class GameService {
     public boolean existsByLink(String link) {
         return gameRepository.existsByLink(link);
     }
+
+    
     
 }

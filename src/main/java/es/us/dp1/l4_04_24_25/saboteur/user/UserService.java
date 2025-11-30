@@ -15,6 +15,8 @@
  */
 package es.us.dp1.l4_04_24_25.saboteur.user;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,10 +29,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
+import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.message.Message;
+import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
+import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerRepository;
 import jakarta.validation.Valid;
 
@@ -47,22 +57,47 @@ public class UserService {
 	private final AuthoritiesService authoritiesService;
 	private final ActivePlayerService activePlayerService;
 	private ActivePlayerRepository activePlayerRepository;
+	private final DeckService deckService;
+	private final GameService gameService;
+	private final MessageService messageService;
 
 
 
 	@Autowired
-	public UserService(UserRepository userRepository, ActivePlayerRepository activePlayerRepository, PasswordEncoder passwordEncoder, PlayerRepository playerRepository, AuthoritiesService authoritiesService, ActivePlayerService activePlayerService) {
+	public UserService(UserRepository userRepository, ActivePlayerRepository activePlayerRepository, 
+	                   PasswordEncoder passwordEncoder, PlayerRepository playerRepository, 
+	                   AuthoritiesService authoritiesService, ActivePlayerService activePlayerService,
+	                   DeckService deckService, GameService gameService, MessageService messageService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder; 
 		this.playerRepository = playerRepository;
 		this.authoritiesService = authoritiesService; 
 		this.activePlayerService = activePlayerService;
-		this.activePlayerRepository = activePlayerRepository; 
-
+		this.activePlayerRepository = activePlayerRepository;
+		this.deckService = deckService;
+		this.gameService = gameService;
+		this.messageService = messageService;
 	}
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
+
+		// Validar que birthDate sea anterior a la fecha actual
+		if (user.getBirthDate() != null) {
+			try {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				LocalDate birthDate = LocalDate.parse(user.getBirthDate(), formatter);
+				if (birthDate.isAfter(LocalDate.now()) || birthDate.isEqual(LocalDate.now())) {
+					throw new IllegalArgumentException("Birth date must be before current date");
+				}
+			} catch (Exception e) {
+				if (e instanceof IllegalArgumentException) {
+					throw e;
+				}
+				throw new IllegalArgumentException("Invalid birth date format. Expected yyyy-MM-dd");
+			}
+		}
+
 		ActivePlayer activePlayer = new ActivePlayer();
 		activePlayer.setUsername(user.getUsername());
 		activePlayer.setPassword(user.getPassword());
@@ -73,6 +108,8 @@ public class UserService {
 		String strRoles = user.getAuthority().authority;
 		Authorities role;
 
+		
+
 		switch (strRoles.toLowerCase()) {
 		case "admin":
 			role = authoritiesService.findByAuthority("ADMIN");
@@ -82,16 +119,7 @@ public class UserService {
 		default:
 			role = authoritiesService.findByAuthority("PLAYER");
 			activePlayer.setAuthority(role);
-			//activePlayerService.saveActivePlayer(activePlayer);
-			/*Player player = new Player();
-			player.setFirstName(request.getFirstName());
-			player.setLastName(request.getLastName());
-			player.setAddress(request.getAddress());
-			player.setCity(request.getCity());
-			player.setTelephone(request.getTelephone());
-			player.setUser(user);
-			playerService.savePlayer(player);
-			*/
+			
 		}
 		return activePlayerRepository.save(activePlayer); 
 	}
@@ -173,26 +201,125 @@ public class UserService {
 	@Transactional
 	public User updateUser(@Valid User user, Integer idToUpdate) {
     User toUpdate = findUser(idToUpdate);
+    
+	// Validar que birthDate sea anterior a la fecha actual si se está actualizando
+	if (user.getBirthDate() != null && !user.getBirthDate().trim().isEmpty()) {
+		try {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			LocalDate birthDate = LocalDate.parse(user.getBirthDate(), formatter);
+			if (birthDate.isAfter(LocalDate.now()) || birthDate.isEqual(LocalDate.now())) {
+				throw new IllegalArgumentException("Birth date must be before current date");
+			}
+		} catch (Exception e) {
+			if (e instanceof IllegalArgumentException) {
+				throw e;
+			}
+			throw new IllegalArgumentException("Invalid birth date format. Expected yyyy-MM-dd");
+		}
+	}
+    
     BeanUtils.copyProperties(user, toUpdate, "id", "authority", "password");
     String newPassword = user.getPassword();
 	Authorities authority = user.getAuthority();
 
-	// Solo actualiza si el campo de la contraseña NO es nulo y NO está vacío
-	// Si está vacío se queda con el copyProperties del backend para password
+	
 	if (newPassword != null && !newPassword.trim().isEmpty()){
-		//Hashear y establecer nueva contraseña
+		
 		toUpdate.setPassword(passwordEncoder.encode(newPassword));
 	}
 	if (authority != null && authoritiesService.findByAuthority(authority.getAuthority()) != null){
 		toUpdate.setAuthority(authority);
 	}
-	// Si el newPassword está vacío este if se ignora, y se mantiene la contraseña que había en la base de datos
+
 	userRepository.save(toUpdate);
     return toUpdate;
 }
 	@Transactional
 	public void deleteUser(Integer id) {
 		User toDelete = findUser(id);
+		
+		boolean isPlayer = toDelete instanceof Player;
+		boolean isActivePlayer = toDelete instanceof ActivePlayer;
+
+		if (isPlayer) {
+			Player player = (Player) toDelete;
+			detachPlayerRelationships(player);
+		}
+		
+		if (isActivePlayer) {
+			ActivePlayer activePlayer = (ActivePlayer) toDelete;
+			detachActivePlayerRelationships(activePlayer);
+		}
+	
+		detachUserRelationships(toDelete);
+		
 		this.userRepository.delete(toDelete);
+	}
+	
+	private void detachUserRelationships(User user) {
+	
+		for (Achievement achievement : new ArrayList<>(user.getCreatedAchievements())) {
+			achievement.setCreator(null);
+			
+		}
+		user.getCreatedAchievements().clear();
+	}
+	
+	private void detachPlayerRelationships(Player player) {
+		
+		for (Player friend : new ArrayList<>(player.getFriends())) {
+			friend.getFriends().remove(player);
+		}
+		player.getFriends().clear();
+		
+		for (Achievement achievement : new ArrayList<>(player.getAccquiredAchievements())) {
+			achievement.getPlayers().remove(player);
+		}
+		player.getAccquiredAchievements().clear();
+		
+		
+		Game game = player.getGame();
+		if (game != null) {
+			game.getWatchers().remove(player);
+			player.setGame(null);
+		}
+	}
+	
+	private void detachActivePlayerRelationships(ActivePlayer activePlayer) {
+		
+		Deck deck = activePlayer.getDeck();
+		if (deck != null) {
+			deck.setActivePlayer(null);
+			activePlayer.setDeck(null);
+			deckService.saveDeck(deck);
+		}
+		
+	
+		for (Game created : new ArrayList<>(activePlayer.getCreatedGames())) {
+			created.setCreator(null);
+			gameService.saveGame(created);
+		}
+		activePlayer.getCreatedGames().clear();
+	
+		for (Game won : new ArrayList<>(activePlayer.getWonGame())) {
+			won.setWinner(null);
+			gameService.saveGame(won);
+		}
+		activePlayer.getWonGame().clear();
+		
+		
+		Iterable<Game> gamesWithActivePlayer = gameService.findAllByActivePlayerId(activePlayer.getId());
+		for (Game game : gamesWithActivePlayer) {
+			if (game.getActivePlayers().remove(activePlayer)) {
+				gameService.saveGame(game);
+			}
+		}
+		
+
+		for (Message message : new ArrayList<>(activePlayer.getMessages())) {
+			message.setActivePlayer(null);
+			messageService.saveMessage(message);
+		}
+		activePlayer.getMessages().clear();
 	}
 }

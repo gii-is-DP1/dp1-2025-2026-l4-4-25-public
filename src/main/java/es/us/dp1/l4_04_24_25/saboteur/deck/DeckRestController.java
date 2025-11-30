@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,13 +43,15 @@ public class DeckRestController {
     private final ObjectMapper objectMapper;
     private final ActivePlayerService activePlayerService;
     private final CardService cardService;
+    private final SimpMessagingTemplate messagingTemplate; 
 
     @Autowired
-    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService) {
+    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService, SimpMessagingTemplate messagingTemplate) {
         this.deckService = deckService;
         this.objectMapper = objectMapper;
         this.activePlayerService = activePlayerService;
         this.cardService = cardService;
+        this.messagingTemplate = messagingTemplate; 
     }
 
     @GetMapping
@@ -86,7 +89,9 @@ public class DeckRestController {
     return new ResponseEntity<>(savedDeck, HttpStatus.CREATED);
     }
 
+    //Revisar el PATCH
 
+    
     @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Deck> update(@PathVariable("id") Integer id, @RequestBody Deck deck) {
@@ -117,18 +122,18 @@ public class DeckRestController {
 @PatchMapping(value = "{id}")
 @ResponseStatus(HttpStatus.OK)
 public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException {
-    // 1️⃣ Obtenemos el Deck
+    
     Deck deck = deckService.findDeck(id);
     RestPreconditions.checkNotNull(deck, "Deck", "ID", id);
 
-    // 2️⃣ Actualizar ActivePlayer si viene en el JSON
+
     if (updates.containsKey("activePlayer")) {
         Object activePlayerObj = updates.get("activePlayer");
 
         if (activePlayerObj != null) {
             if (activePlayerObj instanceof Integer){
                 Integer activePlayerId = (Integer) activePlayerObj;
-                // Llamada al PATCH de ActivePlayer para actualizar su deck
+                
                 ActivePlayer ap = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
                 deck.setActivePlayer(ap);
             } else {
@@ -139,7 +144,7 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
                 deck.setActivePlayer(apPatched);
             }
         } else {
-            // Quitar el ActivePlayer anterior
+            
             if (deck.getActivePlayer() != null) {
                 deck.getActivePlayer().setDeck(null);
             }
@@ -147,7 +152,7 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
         }
     }
 
-    // 3️⃣ Actualizar Cards si vienen en el JSON
+   
     if (updates.containsKey("cards")) {
         Object cardsObj = updates.get("cards");
         List<Card> updatedCards = new ArrayList<>();
@@ -155,28 +160,38 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
         if (cardsObj != null) {
             List<Integer> cardIds = (List<Integer>) cardsObj;
 
-            // Desvinculamos cartas antiguas que no están en la nueva lista
+           
             List<Card> oldCards = new ArrayList<>(deck.getCards());
             for (Card oldCard : oldCards) {
                 if (!cardIds.contains(oldCard.getId())) {
-                    oldCard.setDeck(null); // desvincula del Deck
+                    oldCard.setDeck(null); 
                     cardService.saveCard(oldCard);
                     deck.getCards().remove(oldCard);
                 }
             }
 
-            // Vinculamos las nuevas cartas
+            
             for (Integer cardId : cardIds) {
                 Card card = cardService.patchCard(cardId, Map.of("deck", deck.getId()));
                 updatedCards.add(card);
             }
         }
-
+        
         deck.setCards(updatedCards);
     }
+        Deck updatedDeck = deckService.saveDeck(deck); 
 
-    // 4️⃣ Guardamos el Deck para sincronizar las colecciones en memoria
-    Deck updatedDeck = deckService.saveDeck(deck);
+        if(deck.getActivePlayer() != null){
+            String username = deck.getActivePlayer().getUsername();
+            Integer leftCards = updatedDeck.getCards() != null ? updatedDeck.getCards().size() : 0;
+
+            // Enviar mensaje a todos los suscriptores de /topic/deck-count
+            messagingTemplate.convertAndSend("/topic/deck/" + deck.getId(), Map.of(
+                "action", "DECK_COUNT", 
+                "username", username,
+                "leftCards", leftCards
+            ));
+        }
 
     return new ResponseEntity<>(updatedDeck, HttpStatus.OK);
 }

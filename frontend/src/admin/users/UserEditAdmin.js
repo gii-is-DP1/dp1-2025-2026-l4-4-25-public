@@ -14,6 +14,7 @@ import defaultProfileAvatar from "../../static/images/icons/default_profile_avat
 import { useParams } from "react-router-dom";
 
 const jwt = tokenService.getLocalAccessToken();
+const loggedInUser = tokenService.getUser(); 
 
 export default function UserEditAdmin() {
   const emptyItem = {
@@ -30,7 +31,9 @@ export default function UserEditAdmin() {
   //const id = getIdFromUrl(2);
   const { id: useIdFromUrl } = useParams();
   const id = useIdFromUrl && useIdFromUrl !== "new" ? parseInt(useIdFromUrl, 10) : null; // El 10 es para base 10*/
-  console.log("1. ID obtenido de useParams:", id, "(Tipo:", typeof id, ")"); // LOG 1
+  // Comprobamos si el usuario logueado en ese mismo instante (el admin) se edita a sí mismo
+  const isEditingSelf = loggedInUser && loggedInUser.id === id; 
+  // console.log("1. ID obtenido de useParams:", id, "(Tipo:", typeof id, ")"); // LOG 1
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
   const [user, setUser] = useFetchState(
@@ -46,8 +49,18 @@ export default function UserEditAdmin() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-  const auths = useFetchData(`/api/v1/users/authorities`, jwt);
+  const auths = useFetchData(`/api/v1/users/authorities`, jwt); // Devuelve lista de objetos authorities: {"id":1, "authority":"ADMIN"}
 
+  useEffect(() => {
+    // Corregir 'authority': la API lo devuelve como String y se lo queremos pasar en formato objeto
+    if (typeof user.authority === 'string' && auths.length > 0) {
+      const matchingAuth = auths.find(a => a.authority === user.authority);
+      if (matchingAuth) {
+        // Reemplaza el string (p.ej. "PLAYER") por el objeto (p.ej. {id: 2, authority: "PLAYER"})
+        setUser(prevUser => ({ ...prevUser, authority: matchingAuth }));
+      }
+    }
+  }, [user.authority, auths, setUser]);
 
   useEffect(() => {
     if (user?.image) setProfileImage(user.image);
@@ -66,19 +79,18 @@ export default function UserEditAdmin() {
         }
   }
 
-  /*function handleChange(event) {
+  function handleChange(event) {
     const {name,value } = event.target;
     if (name === "authority") {
       const selectedAuth = auths.find((a) => a.id === Number(value)) || null;
       setUser({ ...user, authority: selectedAuth });
     } else {
       setUser({ ...user, [name]: value });}}
-  */
 
-  function handleChange(event) {
+  /*function handleChange(event) {
     const {name,value } = event.target;
     setUser({ ...user, [name]: value });
-  }
+  } */
  
   function handleSubmit(event) {
     event.preventDefault();
@@ -96,9 +108,9 @@ export default function UserEditAdmin() {
       delete request.password;}
     
     // Eliminamos de la request el campo authority ya que este nunca se va a editar y va a mantener el que tenía de siempre (PLAYER)
-    if (user.id) { // Solo borramos este campo si estamos con un usuario existente, si creamos un usuario de 0 este campo no se borrará y se pondrá por defecto el del emptyItem
+    /*if (user.id) { // Solo borramos este campo si estamos con un usuario existente, si creamos un usuario de 0 este campo no se borrará y se pondrá por defecto el del emptyItem
     delete request.authority;
-    }
+    }*/
 
     fetch("/api/v1/users" + (user.id ? "/" + user.id : ""), {
       method: user.id ? "PUT" : "POST",
@@ -124,7 +136,7 @@ export default function UserEditAdmin() {
   const modal = getErrorModal(setVisible, visible, message);
   const authOptions = auths.map((auth) => (
     <option key={auth.id} value={auth.id}>
-      {auth.authority}
+      {auth.authority} 
     </option>
   ));
 
@@ -221,20 +233,24 @@ export default function UserEditAdmin() {
             />
           </div>
 
-          {/*<div className="custom-form-input">
+          <div className="custom-form-input">
             <Label className="custom-form-input-label">Authority</Label>
             <Input
               type="select"
               name="authority"
-              value={user.authority?.id || ""}
+              value={String(user.authority?.id || 2)} //Player (2) por defecto (Es una buena práctica pasarlo a String para un value)
               onChange={handleChange}
+              disabled={isEditingSelf}
               className="custom-input"
             >
-              <option value="">None</option>
               {authOptions}
             </Input>
+            {isEditingSelf && (
+              <small style={{ color: "blue" }}>
+                ❕ You can´t change your own role.
+              </small>
+            )}
           </div>
-          */}
 
           <div className="custom-button-row">
             <button type="submit" className="auth-button">

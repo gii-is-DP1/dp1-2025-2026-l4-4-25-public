@@ -13,6 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.message.Message;
+import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.validation.Valid;
 
 @Service
@@ -20,12 +26,19 @@ public class ActivePlayerService {
     
     private ActivePlayerRepository activePlayerRepository;
     private DeckService deckService;
+    private GameService gameService;
+    private MessageService messageService;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     
     @Autowired
-    public ActivePlayerService(ActivePlayerRepository activePlayerRepository, DeckService deckService) {
+    public ActivePlayerService(ActivePlayerRepository activePlayerRepository, DeckService deckService, GameService gameService, MessageService messageService) {
         this.activePlayerRepository = activePlayerRepository;
         this.deckService = deckService;
+        this.gameService = gameService;
+        this.messageService = messageService;
     }
 
     @Transactional(readOnly = true)
@@ -96,8 +109,57 @@ public class ActivePlayerService {
 
     @Transactional
     public void deleteActivePlayer(Integer id) {
-        ActivePlayer toDelete = findActivePlayer(id);
-        activePlayerRepository.delete(toDelete);
+        ActivePlayer ap = findActivePlayer(id);
+        Integer activePlayerId = ap.getId();
+
+        // 1. Desvincular deck
+        Deck deck = ap.getDeck();
+        if (deck != null) {
+            deck.setActivePlayer(null);
+            ap.setDeck(null);
+            deckService.saveDeck(deck);
+        }
+
+        // 2. Desvincular partidas creadas
+        for (Game g : new ArrayList<>(ap.getCreatedGames())) {
+            g.setCreator(null);
+            gameService.saveGame(g);
+        }
+        ap.getCreatedGames().clear();
+
+        // 3. Desvincular partidas ganadas
+        for (Game g : new ArrayList<>(ap.getWonGame())) {
+            g.setWinner(null);
+            gameService.saveGame(g);
+        }
+        ap.getWonGame().clear();
+
+        // 4. Desvincular de la tabla many-to-many game_activePlayers
+        Iterable<Game> gamesWithActivePlayer = gameService.findAllByActivePlayerId(activePlayerId);
+        for (Game game : gamesWithActivePlayer) {
+            if (game.getActivePlayers().remove(ap)) {
+                gameService.saveGame(game);
+            }
+        }
+
+        // 5. Desvincular mensajes
+        for (Message m : new ArrayList<>(ap.getMessages())) {
+            m.setActivePlayer(null);
+            messageService.saveMessage(m);
+        }
+        ap.getMessages().clear();
+
+        // 6. Forzar sincronización y limpiar el contexto de persistencia
+        entityManager.flush();
+        entityManager.clear();
+
+        // 7. Usar SQL nativo para eliminar SOLO de la tabla active_player
+        // manteniendo intactas las tablas player y appusers (User) con el mismo ID
+        entityManager.createNativeQuery("DELETE FROM active_player WHERE id = :id")
+            .setParameter("id", activePlayerId)
+            .executeUpdate();
+
+        // El Player y User permanecen intactos con el MISMO ID
     }
 
     /*

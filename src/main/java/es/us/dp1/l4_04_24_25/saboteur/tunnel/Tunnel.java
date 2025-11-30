@@ -35,6 +35,10 @@ public class Tunnel extends Card {
 	@NotNull
 	protected boolean izquierda = false;
 
+	@Column(name = "centro", nullable = false)
+	@NotNull
+	protected boolean centro; //true si el centro está cerrado, false en el caso contrario
+
    
 
 
