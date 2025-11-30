@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -98,7 +99,7 @@ class ActivePlayerRestControllerTests {
         activePlayer.setCreatedGames(new ArrayList<>());
         activePlayer.setWonGame(new ArrayList<>());
         activePlayer.setMessages(new ArrayList<>());
-        activePlayer.setFriends(new ArrayList<>());
+        activePlayer.setFriends(new HashSet<>());
         activePlayer.setAccquiredAchievements(new ArrayList<>());
        
         activePlayer.setRol(true); 
