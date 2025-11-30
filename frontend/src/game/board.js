@@ -344,7 +344,9 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
         addLog,
         addPrivateLog,
         nextTurn,
-        setDeckCount
+        setDeckCount,
+        activePlayers: game?.activePlayers,
+        patchActivePlayer
       });
     } finally {
       processingAction.current = false;

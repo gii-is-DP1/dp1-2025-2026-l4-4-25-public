@@ -63,7 +63,7 @@ const GameInvitationListener = () => {
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer'}}>
-            ❌Decline
+            🚫Decline
           </button>
         </div>
       </div>,
