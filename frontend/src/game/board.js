@@ -13,6 +13,7 @@ import PlayersList from './components/PlayersList';
 import GameLog from './components/GameLog';
 import ChatBox from './components/ChatBox';
 import RoundEndModal from './components/RoundEnd';
+import GameEnd from './components/GameEnd';
 import LoadingScreen from './components/LoadingScreen';
 
 // Utilidades
@@ -110,6 +111,11 @@ export default function Board() {
   // Estado para el modal de fin de ronda
   const [roundEndData, setRoundEndData] = useState(null);
   const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  
+  // Estado para el modal de fin de partida
+  const [gameEndData, setGameEndData] = useState(null);
+  const [gameEndCountdown, setGameEndCountdown] = useState(10);
+  
   const navigate = useNavigate();
 
   const [boardCells, setBoardCells] = useState(() => {
@@ -716,8 +722,26 @@ const activateCollapseMode = (card, cardIndex) => {
   };
 
   // Funcion para manejar el final de la última ronda
-  const handleLastRoundEnd = (result) => {
-
+  const handleLastRoundEnd = async (result) => {
+    console.log('🏁 Final de la última ronda - Preparando fin de partida...');
+    
+    // Esperar un momento para que se actualicen las pepitas
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Recargar activePlayers para obtener las pepitas finales
+    await loadActivePlayers();
+    
+    // Obtener el ranking final basado en goldNugget
+    const playerRankings = activePlayers.map(p => ({
+      username: p.username,
+      totalNuggets: p.goldNugget || 0
+    }));
+    
+    console.log('📊 Player rankings:', playerRankings);
+    
+    // Mostrar modal de fin de partida
+    setGameEndData({ playerRankings });
+    setGameEndCountdown(10);
   };
 
   // Función para manejar el final de ronda
@@ -854,6 +878,31 @@ const activateCollapseMode = (card, cardIndex) => {
     
     createNewRound();
   }, [roundEndCountdown]);
+
+  // Efecto para manejar el countdown de fin de partida
+  useEffect(() => {
+    if (!gameEndData) return;
+    
+    const interval = setInterval(() => {
+      setGameEndCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [gameEndData]);
+
+  // Efecto para navegar al lobby cuando termina el countdown de fin de partida
+  useEffect(() => {
+    if (!gameEndData || gameEndCountdown > 0) return;
+    
+    console.log('🏁 Game finished, returning to lobby...');
+    navigate('/lobby');
+  }, [gameEndCountdown, gameEndData, navigate]);
 
   // Función para descartar carta
   const handleDiscard = () => {
@@ -1433,7 +1482,7 @@ const activateCollapseMode = (card, cardIndex) => {
         </div>)}
 
       {/* Modal de fin de ronda */}
-      {roundEndData && (
+      {roundEndData && !gameEndData && (
         <RoundEndModal
           winnerTeam={roundEndData.winnerTeam}
           reason={roundEndData.reason}
@@ -1441,6 +1490,14 @@ const activateCollapseMode = (card, cardIndex) => {
           playerRoles={roundEndData.playerRoles}
           countdown={roundEndCountdown}
           roundNumber={round.roundNumber}
+        />
+      )}
+
+      {/* Modal de fin de partida */}
+      {gameEndData && (
+        <GameEnd
+          playerRankings={gameEndData.playerRankings}
+          countdown={gameEndCountdown}
         />
       )}
 
