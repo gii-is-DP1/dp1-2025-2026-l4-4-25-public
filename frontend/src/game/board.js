@@ -15,7 +15,7 @@ import ChatBox from './components/ChatBox';
 import RoundEndModal from './components/RoundEnd';
 
 // Utilidades
-import { assignRolesGame, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards, partitionCardsByRotation } from './utils/gameUtils';
+import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
 import { checkRoundEnd, distributeGold } from './utils/roundEndLogic';
 import saboteurRol from './cards-images/roles/saboteurRol.png';
@@ -223,7 +223,7 @@ export default function Board() {
    
     
     //Modularizar estas funciones
-    const handleWsCardPlaced = ({row, col, card, player})=>{
+    const handleWsCardPlaced = ({row, col, card, player, squareId})=>{
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
       const sameAsLast =
@@ -242,7 +242,8 @@ export default function Board() {
           type: "tunnel",
           owner: player,
           placedAt: Date.now(),
-          occupied: true
+          occupied: true,
+          squareId: squareId
         };
         return next;
       });
@@ -373,15 +374,11 @@ export default function Board() {
           toast.error('Could not find square at this position');
           return;
         }
-        if (window.removeCardAndDraw) {
-    window.removeCardAndDraw(cardIndex);
-}
       }
 
       patchSquare(actualSquareId, {
         occupation: true,
         card: card?.id || card,
-        board: boardId,
       });
 
       setBoardCells(prev => {
@@ -393,6 +390,7 @@ export default function Board() {
           owner: loggedInUser?.username || 'unknown',
           placedAt: Date.now(),
           occupied: true,
+          squareId: actualSquareId,
         };
         return next;
       });
@@ -412,57 +410,28 @@ export default function Board() {
     }
   };
 
-  useEffect(() => {
-    const currentPlayerCardCount = playerCardsCount[currentPlayer] || 0;
-    const gameElapsedTime = Date.now() - gameStartTime; 
-    const minimumGameTime = 60000; 
-    
-    if (!isSpectator && currentPlayer === loggedInUser?.username && currentPlayerCardCount === 0 && gameElapsedTime >= minimumGameTime && playerOrder.length > 0) {
-      console.log('Player out of cards:', currentPlayer);
-      
-      // Eliminar al jugador actual de playerOrder
-      setPlayerOrder(prev => {
-        const filtered = prev.filter(p => p.username !== currentPlayer);
-        
-        // Si quedan jugadores, continuar el juego
-        if (filtered.length > 0) {
-          addLog(`<b>${currentPlayer}</b> has run out of cards and is now spectating`, "warning");
-          return filtered;
-        } else {
-          addLog('⚠️ All players are out of cards! Game over.', 'warning');
-          return prev; // Mantener el orden si todos se quedaron sin cartas
-        }
-      });
-      
-      // Pasar al siguiente turno después de un breve delay
-      setTimeout(() => {
-        nextTurn({ force: true });
-      }, 500);
-    }
-  }, [playerCardsCount, currentPlayer, loggedInUser?.username, isSpectator, playerOrder.length, gameStartTime]);
-
 const handleActionCard = (card, targetPlayer, cardIndex) => {
-    if (processingAction.current) return;
-    processingAction.current = true;
-    try {
-      setCont(timeturn);
-      handleActionCardUtil(card, targetPlayer, cardIndex, {
-        isSpectator,
-        loggedInUser,
-        currentPlayer,
-        playerTools,
-        setPlayerTools,
-        addLog,
-        addPrivateLog,
-        nextTurn,
-        setDeckCount,
-        activePlayers: game?.activePlayers,
-        patchActivePlayer
-      });
-    } finally {
-      processingAction.current = false;
-    }
-  };
+  if (processingAction.current) return;
+  processingAction.current = true;
+  try {
+    setCont(timeturn);
+    handleActionCardUtil(card, targetPlayer, cardIndex, {
+      isSpectator,
+      loggedInUser,
+      currentPlayer,
+      playerTools,
+      setPlayerTools,
+      addLog,
+      addPrivateLog,
+      nextTurn,
+      setDeckCount,
+      activePlayers,
+      patchActivePlayer,
+    });
+  } finally {
+    processingAction.current = false;
+  }
+};
 
   const handleMapCard = (card, objectivePosition, cardIndex) => {
     if (processingAction.current) return;
@@ -1131,7 +1100,7 @@ const activateCollapseMode = (card, cardIndex) => {
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
       setDeckCount(initialDeck);
-      setPlayerCardsCount(playerCardsCount);
+      setCardPorPlayer(cardsPerPlayer);
     }
   }, [activePlayers]);
 
@@ -1224,9 +1193,7 @@ const activateCollapseMode = (card, cardIndex) => {
       );
 
       setBoardCells(baseBoard);
-      if (busyIds.length > 0) {
-        pactchBoard(boardId, { busy: busyIds });
-      }
+      // No hacer patch del board.busy aquí - los squares ya están asociados al board desde el backend
     };
 
     loadBoard();
@@ -1328,8 +1295,7 @@ const activateCollapseMode = (card, cardIndex) => {
         patchDeck={patchDeck}
         fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
-        playerCardsCount={playerCardsCount}
-        setPlayerCardsCount={setPlayerCardsCount}
+        CardPorPlayer={CardPorPlayer} 
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}
@@ -1376,7 +1342,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
       <PlayersList 
         activePlayers={playerOrder} 
-        playerCardsCount={playerCardsCount}
+        CardPorPlayer={CardPorPlayer}
         onActionCardDrop={handleActionCard}
         isMyTurn={loggedInUser?.username === currentPlayer}
         currentUsername={loggedInUser?.username}
