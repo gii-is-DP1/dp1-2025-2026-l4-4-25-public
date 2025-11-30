@@ -26,7 +26,7 @@ function getCardConnections(card) {
     return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
   }
   
-  const rotation = card.rotation || false;
+  const rotacion = card.rotacion || false;
   let connections = {
     arriba: card.arriba || false,
     abajo: card.abajo || false,
@@ -36,7 +36,7 @@ function getCardConnections(card) {
   };
   
   // Aplicar rotación de 180 grados si existe
-  if (rotation === true) {
+  if (rotacion === true) {
     connections = {
       arriba: card.abajo || false,
       abajo: card.arriba || false,

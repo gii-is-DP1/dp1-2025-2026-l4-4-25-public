@@ -57,8 +57,6 @@ export default function Board() {
     round: location.state?.round || null,
     isSpectator: location.state?.isSpectator || false
   };
-  
-  console.log('initialState:', initialState);
 
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
@@ -69,7 +67,6 @@ export default function Board() {
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
-  console.log('Render Board. currentPlayer:', currentPlayer);
   const [cont, setCont] = useState(timeturn);
   const [gameLog, setGameLog] = useState([]);
   const [logData, setLogData] = useState(null);
@@ -130,6 +127,7 @@ export default function Board() {
   });
 
   const hasPatchedBoardBusy = useRef(false);
+  const hasPatchedInitialLeftCards = useRef(false);
   const lastLoggedTurn = useRef(null);
   const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
   const lastObjectiveHideLog = useRef(0);
@@ -180,7 +178,9 @@ export default function Board() {
 
   
     const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    //console.log("Rotated Cards:", rotatedOnly);
     const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    //console.log("Non-Rotated Cards:", nonRotatedOnly);
     
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
@@ -189,8 +189,6 @@ export default function Board() {
     useEffect(() => {
       if(!boardMessage) return;
 
-      console.log("WS recibido:", boardMessage);
-      console.log("Keys del mensaje WS:", Object.keys(boardMessage));
       const {action} = boardMessage;
 
       switch(action){
@@ -209,7 +207,6 @@ export default function Board() {
 
     useEffect(()=>{
       if(!gameMessage) return; 
-      console.log("WS Partida:", gameMessage); 
       const {action} = gameMessage; 
       switch (action) {
       case "TURN_CHANGED":
@@ -228,12 +225,8 @@ export default function Board() {
     }
     },[gameMessage])
     // Depuración usuarios duplicados
+    
     useEffect(() => {
-        console.log("activePlayers en Board:", activePlayers);
-    }, [activePlayers]);
-
-    useEffect(() => {
-      console.log("playerOrder:", playerOrder);
     }, [playerOrder]);
    
     
@@ -287,12 +280,9 @@ export default function Board() {
     const handleWsTurnChanged = async (message) =>{
       const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
       const { newTurnIndex, roundId, leftCards } = payload;
-      console.log("🔄 WS Turn Change:", newTurnIndex);
-
       const turnKey = `${roundId}:${newTurnIndex}`;
       const now = Date.now();
       if (lastReceivedTurnKey.current.key === turnKey && (now - lastReceivedTurnKey.current.ts) < 2000) {
-          console.log("Ignored duplicate TURN_CHANGED:", turnKey);
           return;
       }
       lastReceivedTurnKey.current = { key: turnKey, ts: now };
@@ -327,8 +317,6 @@ export default function Board() {
             if (last.username !== nextUsername || (now2 - last.ts) > 3000) {
               toast.info("🎲 It's your turn! 🎲");
               lastTurnToast.current = { username: nextUsername, ts: now2 };
-            } else {
-              console.log("Skipped duplicate YOUR TURN toast for", nextUsername);
             }
           }
           await checkForRoundEnd(); 
@@ -338,7 +326,6 @@ export default function Board() {
 
     const handleWsToolsChanged = (message) =>{
       const {username, tools} = message; 
-      console.log(`🔧 Herramientas actualizadas para ${username}:`, tools);
       setPlayerTools(prev => ({
         ...prev,
         [username]:{
@@ -458,7 +445,6 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       setCont(timeturn);
 
       const objectiveCardType = objectiveCards[objectivePosition];
-      console.log(`🔍 Revealing objective at ${objectivePosition}: ${objectiveCardType}`);
       setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); // Solo para el jugador que usa la carta
       toast.info(`🔍 Revealing objective... Look at the board!`);
       setTimeout(() => {
@@ -590,7 +576,6 @@ const activateCollapseMode = (card, cardIndex) => {
 
     const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
 
-    console.log(`Paso de turno (Backend): ${currentTurnIndex} -> ${nextIndex}`);
     try{
       if(round && round.id){
         const patchBody = {turn: nextIndex};
@@ -712,9 +697,7 @@ const activateCollapseMode = (card, cardIndex) => {
     
     const createAndNavigateToNewRound = async () => {
       try {
-        console.log('Creando nueva ronda...');
         const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
-        console.log('Nueva ronda creada:', newRound);
         
         if (newRound && newRound.id) {
           // Guardar datos en sessionStorage para recuperarlos después del reload
@@ -786,8 +769,6 @@ const activateCollapseMode = (card, cardIndex) => {
       if ((now - lastTimeoutToastTs.current) > 3000) {
         toast.error("⌛ Time's up! Passing turn...");
         lastTimeoutToastTs.current = now;
-      } else {
-        console.log("Skipped duplicate Time's up toast");
       }
     nextTurn({ force: true });
   };
@@ -795,7 +776,6 @@ const activateCollapseMode = (card, cardIndex) => {
   // Función para enviar mensajes
   const postMessage = async (content, activePlayerUsername, chatId) => {
     try {
-      console.log('Enviando mensaje:', { activePlayerUsername, content, chatId });
       const response = await fetch(`/api/v1/messages`, {
         method: "POST",
         headers: {
@@ -809,9 +789,7 @@ const activateCollapseMode = (card, cardIndex) => {
         }),
       });
 
-      if (response.ok) {
-        console.log('Mensaje enviado correctamente');
-      } else {
+      if (!response.ok) {
         const errorText = await response.text();
         console.error('Error to send a message:', errorText);
         toast.error('Error to send a message');
@@ -871,7 +849,6 @@ const activateCollapseMode = (card, cardIndex) => {
     setGameLog(prev => [...prev, { msg, type }]);
 
     const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
-    console.log('Log ID para persistencia:', logId);
     const roundId = typeof round?.id === 'number' ? round.id : round?.round?.id;
 
     const nextMessages = [...(logData?.messages || []), msg];
@@ -950,7 +927,6 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [round]);
 
   useEffect(() => {
-    console.log('useEffect [activePlayers] triggered. activePlayers:', activePlayers);
     if (activePlayers.length > 1) {
       const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
       setPlayerOrder(res);
@@ -965,8 +941,6 @@ const activateCollapseMode = (card, cardIndex) => {
         }
         return initialPlayerUsername;
       });
-      
-      console.log('ORDEN ACTUALIZADO', res);
     }
   }, [activePlayers, round]);
 
@@ -995,7 +969,6 @@ const activateCollapseMode = (card, cardIndex) => {
         if (response.ok) {
           const completeGame = await response.json();
           setGame(completeGame);
-          console.log('Game completo cargado:', completeGame);
         }
       } catch (error) {
         console.error('Error al cargar el game completo:', error);
@@ -1017,8 +990,6 @@ const activateCollapseMode = (card, cardIndex) => {
       };
     });
     setPlayerTools(initialTools);
-    console.log('Herramientas inicializadas desde backend:', initialTools);
-
     let cancelled = false;
 
     const buildRolesFromBackend = () =>
@@ -1127,13 +1098,18 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [currentPlayer, loggedInUser.username, playerOrder]);
 
   useEffect(() => {
-    if (activePlayers.length > 0) {
+    if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
       setDeckCount(initialDeck);
       setCardPorPlayer(cardsPerPlayer);
+      
+      // Hacer patch al round con el leftCards calculado para sincronizar con backend
+      hasPatchedInitialLeftCards.current = true;
+      patchRound(round.id, { leftCards: initialDeck });
+      console.log(`📦 Initial leftCards patched to round: ${initialDeck} (70 - ${activePlayers.length} players * ${cardsPerPlayer} cards)`);
     }
-  }, [activePlayers]);
+  }, [activePlayers, round?.id]);
 
   // useEffect utilizado para depurar y ver que los Squares se están cargando bien
   // /api/v1/squares
@@ -1217,7 +1193,7 @@ const activateCollapseMode = (card, cardIndex) => {
               card: fullCard,
               type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
               image: fullCard?.image,
-              rotation: fullCard?.rotation,
+              rotacion: fullCard?.rotacion,
             };
           }
         })
@@ -1243,7 +1219,6 @@ const activateCollapseMode = (card, cardIndex) => {
 
     try {
       const messages = await getmessagebychatId(chatId);
-      console.log('Mensajes obtenidos:', messages);
       
       if (Array.isArray(messages)) {
         const formattedMessages = messages.map(msg => {
@@ -1266,7 +1241,6 @@ const activateCollapseMode = (card, cardIndex) => {
           };
         });
         
-        console.log('Mensajes formateados:', formattedMessages);
         setMessage(formattedMessages);
       }
     } catch (error) {

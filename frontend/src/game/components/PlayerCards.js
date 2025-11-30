@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer } from '../utils/gameUtils';
+import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer, findRotatedPair } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
 export default function PlayerCards({
@@ -41,7 +41,17 @@ export default function PlayerCards({
   // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
     try {
-      const ids = nextHand.map(card => card.id);
+      // Asegurarse de que solo cartas con rotacion=false van al servidor
+      const nonRotatedHand = nextHand.map(card => {
+        if (card.rotacion === true) {
+          // Si la carta está rotada, buscar su versión no rotada
+          const nonRotatedVersion = findRotatedPair(card, ListCards);
+          return nonRotatedVersion || card;
+        }
+        return card;
+      });
+      
+      const ids = nonRotatedHand.map(card => card.id);
       await patchDeck(currentUsername, ids);
     } catch (e) {
       console.error('Error sincronizando deck en servidor:', e);
@@ -185,11 +195,54 @@ export default function PlayerCards({
   };
 
   const toggleCardRotation = (index) => {
-    setCardRotations(prev => ({
-      ...prev,
-      [index]: prev[index] === 180 ? 0 : 180
-    }));
-    console.log(`🔄 Card ${index} rotated to ${cardRotations[index] === 180 ? 0 : 180}°`);
+    const currentCard = hand[index];
+    if (!currentCard) return;
+    
+    console.log('🔄 Carta original a rotar:', currentCard);
+    console.log('📦 Total de cartas disponibles (ListCards):', ListCards.length);
+    console.log('🔎 Buscando carta con rotacion opuesta:', !currentCard.rotacion);
+    
+    // Buscar la pareja rotada en todas las cartas disponibles
+    const rotatedPair = findRotatedPair(currentCard, ListCards);
+    
+    console.log('🔍 Pareja rotada encontrada en backend:', rotatedPair);
+    
+    if (rotatedPair) {
+      // Reemplazar la carta en la mano con su pareja rotada
+      setHand(prevHand => {
+        const newHand = [...prevHand];
+        newHand[index] = rotatedPair;
+        return newHand;
+      });
+      
+      // Sincronizar con el servidor
+      setTimeout(() => {
+        const updatedHand = [...hand];
+        updatedHand[index] = rotatedPair;
+        syncServerDeck(updatedHand);
+      }, 0);
+    } else {
+      console.warn('⚠️ No rotated pair found for card:', currentCard.id);
+    }
+  };
+
+  // Manejar el reemplazo de carta cuando se usa la pareja rotada
+  const handleCardReplaced = (index, newCard) => {
+    setHand(prevHand => {
+      const newHand = [...prevHand];
+      newHand[index] = newCard;
+      return newHand;
+    });
+    // Resetear la rotación visual ya que ahora usamos la carta rotada del backend
+    setCardRotations(prev => {
+      const newRotations = { ...prev };
+      delete newRotations[index];
+      return newRotations;
+    });
+    // Sincronizar con el servidor DESPUÉS de actualizar el estado local
+    setTimeout(() => {
+      syncServerDeck(hand.map((c, i) => i === index ? newCard : c));
+    }, 0);
   };
 
   useEffect(() => {
@@ -223,6 +276,8 @@ export default function PlayerCards({
             onToggleSelect={toggleSelectCard}
             rotation={cardRotations[i] || 0}
             onToggleRotation={toggleCardRotation}
+            allCards={ListCards || []}
+            onCardReplaced={handleCardReplaced}
           />
         ))}
       </div>
