@@ -82,8 +82,8 @@ INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_s
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 'link2', 2000, 4);
 
 
-INSERT INTO board (id, base, height) VALUES (1, 11, 9);
-INSERT INTO board (id, base, height) VALUES (2, 11, 9);
+INSERT INTO board (id, base, height, objective_cards_order) VALUES (1, 11, 9, 'gold,coal_1,coal_2');
+INSERT INTO board (id, base, height, objective_cards_order) VALUES (2, 11, 9, 'coal_2,gold,coal_1');
 
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) values (1 , 13, false, 1, 
 null,1);
@@ -94,6 +94,26 @@ VALUES (101, 1, 4, TRUE, 0, 1, NULL);
 
 INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
 VALUES (102, 2, 5, FALSE, 1, 1, NULL);
+
+-- SQUARES OBJETIVO (sin cartas asignadas - se asignarán dinámicamente en frontend)
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (103, 9, 2, TRUE, 1, 1, NULL);
+
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (104, 9, 4, TRUE, 1, 1, NULL);
+
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (105, 9, 6, TRUE, 1, 1, NULL);
+
+-- SQUARES OBJETIVO PARA EL BOARD 2
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (106, 9, 2, TRUE, 1, 2, NULL);
+
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (107, 9, 4, TRUE, 1, 2, NULL);
+
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
+VALUES (108, 9, 6, TRUE, 1, 2, NULL);
 
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
@@ -818,3 +838,23 @@ INSERT INTO card (id, deck_id, status, image)
 VALUES (124, null, FALSE, '/images/card-images/tunnel-cards/arriba_abajo_rotated.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (124, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
+
+-- *OBJETIVO CARDS (ORO Y CARBÓN)*
+    -- CARTAS DE CARBÓN (2 cartas - túneles curvos grises/negros)
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (125, null, FALSE, '/images/card-images/objective-cards/coal_1.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (125, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE);
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (126, null, FALSE, '/images/card-images/objective-cards/coal_2.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
+
+    -- CARTA DE ORO (1 carta - túnel vertical con pepita dorada)
+
+INSERT INTO card (id, deck_id, status, image)
+VALUES (127, null, FALSE, '/images/card-images/objective-cards/gold.png');
+INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
+VALUES (127, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE);

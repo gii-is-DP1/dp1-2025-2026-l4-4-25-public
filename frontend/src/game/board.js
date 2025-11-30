@@ -33,7 +33,7 @@ import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
-const timeturn = 10;
+const timeturn = 3;
 
 // Obtener datos iniciales fuera del componente para evitar problemas con re-renders
 const getSavedRoundData = () => {
@@ -83,13 +83,9 @@ export default function Board() {
   const BOARD_ROWS = 9;
   const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
   
-  const [objectiveCards, setObjectiveCards] = useState(() => {
-    const cards = ['gold', 'carbon_1', 'carbon_2'];
-    const shuffled = cards.sort(() => Math.random() - 0.5);
-    return {
-      '[2][9]': shuffled[0],  
-      '[4][9]': shuffled[1],  
-      '[6][9]': shuffled[2]};});
+  // El orden de las cartas objetivo se lee del servidor (board.objectiveCardsOrder)
+  // para que todos los jugadores vean las mismas cartas en las mismas posiciones
+  const [objectiveCards, setObjectiveCards] = useState({});
   
   const [revealedObjective, setRevealedObjective] = useState(null);
   const [showRoleNotification, setShowRoleNotification] = useState(false);
@@ -1246,11 +1242,30 @@ const activateCollapseMode = (card, cardIndex) => {
       if (!boardId) return;
 
       let busyIds = [];
+      let boardData = null;
+      
       if (Array.isArray(round.board.busy) && round.board.busy.length > 0) {
         busyIds = round.board.busy;
+        // Necesitamos obtener el board completo para leer objectiveCardsOrder
+        boardData = await getBoard(boardId);
       } else {
-        const boardData = await getBoard(boardId);
+        boardData = await getBoard(boardId);
         busyIds = (boardData?.busy || []).map(sq => sq.id ?? sq);
+      }
+
+      // Leer el orden de las cartas objetivo del servidor
+      if (boardData?.objectiveCardsOrder) {
+        const order = boardData.objectiveCardsOrder.split(',');
+        console.log('🎲 BOARD DEBUG - objectiveCardsOrder from server:', order);
+        
+        const mapping = {
+          '[2][9]': order[0],
+          '[4][9]': order[1],
+          '[6][9]': order[2]
+        };
+        
+        setObjectiveCards(mapping);
+        console.log('🃏 OBJECTIVE CARDS - Final mapping:', mapping);
       }
 
       const baseBoard = Array.from({ length: BOARD_ROWS }, () =>

@@ -21,7 +21,9 @@ export default function GameBoard({
   const getObjectiveCardImage = (cardType) => {
     switch(cardType) {
       case 'gold': return '/images/card-images/finals/gold.png';
+      case 'coal_1':
       case 'carbon_1': return '/images/card-images/finals/carbon_1.png';
+      case 'coal_2':
       case 'carbon_2': return '/images/card-images/finals/carbon_2.png';
       default: return objetivecardreverse;
     }};
