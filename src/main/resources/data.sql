@@ -66,7 +66,7 @@ INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, ac
 
 --Requests por defecto
 
-INSERT INTO request(id, status, sender_id, receiver_id) VALUES (1, 'PENDING', 4, 5);
+--INSERT INTO request(id, status, sender_id, receiver_id) VALUES (1, 'PENDING', 4, 5);
 
 INSERT INTO deck (id) VALUES (1);
 INSERT INTO deck (id) VALUES (2);

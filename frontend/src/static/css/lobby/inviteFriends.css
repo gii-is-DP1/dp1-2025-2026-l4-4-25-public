@@ -1,0 +1,96 @@
+.invite-friends-container {
+  margin: 20px 0;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #4b78a2 100%);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);}
+
+.invite-friends-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-align: center;}
+
+.invite-friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;}
+
+.friend-invite-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  transition: all 0.3s ease;}
+
+.friend-invite-item:hover {
+  background: white;
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);}
+
+.friend-invite-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;}
+
+.friend-invite-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #667eea;}
+
+.friend-invite-username {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;}
+
+.btn-invite-friend {
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;}
+
+.btn-invite-friend:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);}
+
+.btn-invite-friend:active {
+  transform: scale(0.98);}
+
+.invite-friends-empty {
+  text-align: center;
+  color: white;
+  padding: 20px;
+  font-style: italic;}
+
+.invite-friends-loading {
+  text-align: center;
+  color: white;
+  padding: 20px;}
+
+
+.invite-friends-list::-webkit-scrollbar {
+  width: 6px;}
+
+.invite-friends-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;}
+
+.invite-friends-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px;}
+
+.invite-friends-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7);}

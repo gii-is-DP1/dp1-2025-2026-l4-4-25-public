@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getNonRotatedCards, shuffleInPlace, calculateCardsPerPlayer } from '../utils/gameUtils';
 import InteractiveCard from './InteractiveCard';
 
@@ -9,6 +9,7 @@ export default function PlayerCards({
   postDeck,
   getDeck,
   patchDeck,
+  fetchOtherPlayerDeck,
   findActivePlayerUsername,
   onTunnelCardDrop,
   onActionCardUse,
@@ -54,76 +55,65 @@ export default function PlayerCards({
     return pool.slice(0, Math.min(count, pool.length));
   };
 
-  useEffect(() => {
+  // Comprobar si el jugador tiene un mazo en el servidor, si no lo tiene, crearlo
+  const deckInitializedRef = useRef(false);
+    useEffect(() => {
   window.getCurrentHandSize = () => hand.length;
   return () => { delete window.getCurrentHandSize };
 }, [hand]);
 
 
 
-  // Comprobar si el jugador tiene un mazo en el servidor si lo tiene hace un getDeck para cargarlo
   useEffect(() => {
     if (isSpectator) return;
-    const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
+    if (!Array.isArray(ListCards) || ListCards.length === 0) return;
+    if (!activePlayers || activePlayers.length === 0) return;
+    if (hand.length > 0) return;
+    if (deckInitializedRef.current) return;
+    
+    const username = currentUsername || findActivePlayerUsername(activePlayers);
     if (!username) return;
 
-    let cancelled = false;
-    (async () => {
+    deckInitializedRef.current = true;
+    
+    const initDeck = async () => {
       try {
         const existing = await getDeck(username);
-        if (cancelled) return;
-        if (existing && Array.isArray(existing.cards) && existing.cards.length > 0) {
-          setHasServerDeck(true);
+        const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+        
+        if (existing && Array.isArray(existing.cards) && existing.cards.length === cardsPerPlayer) {
+          const mappedHand = existing.cards
+            .map((id) => ListCards.find((c) => c.id === id))
+            .filter(Boolean);
+          
+          if (mappedHand.length === cardsPerPlayer) {
+            setHand(mappedHand);
+            setAvailableCards(ListCards);
+          } else {
+            await createNewDeck(username, cardsPerPlayer);
+          }
         } else {
-          setHasServerDeck(false);
+          await createNewDeck(username, cardsPerPlayer);
         }
-        setDeckChecked(true);
       } catch (e) {
-        console.error('Error al obtener mazo existente:', e);
-        setDeckChecked(true);
+        console.error('Error en initDeck:', e);
+        deckInitializedRef.current = false;
       }
-    })();
-
-    return () => { cancelled = true; };
-  }, [currentUsername, activePlayers, isSpectator]);
-
-  
-  // Del deck seteado anteriormente se mapean las cartas para obtener la mano del jugador y se actualizan las availableCards
-  useEffect(() => {
-    if (!deck || !Array.isArray(deck.cards)) return;
-    if (!Array.isArray(ListCards) || ListCards.length === 0) return;
-
-    const mappedHand = deck.cards
-      .map((id) => ListCards.find((c) => c.id === id))
-      .filter(Boolean);
-    if (mappedHand.length > 0) {
-      setHand(mappedHand);
-      setAvailableCards(ListCards);
-    }
-  }, [deck, ListCards]);
-
-
-  //Cuando se entra por primera vez en la partida y no tiene mazo en el servidor se le genera uno nuevo
-  useEffect(() => {
-    console.log('ListCards:', ListCards);
+    };
     
-    if (deckChecked && Array.isArray(ListCards) && ListCards.length > 0 && !hasServerDeck) {
-      const username = currentUsername || (Array.isArray(activePlayers) ? findActivePlayerUsername(activePlayers) : null);
-      console.log('Active Player Username:', username);
-      if (!username) return;
-
-      const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
-      console.log('Número de jugadores:', activePlayers.length, 'Cartas por jugador:', cardsPerPlayer);
-      
+    const createNewDeck = async (username, cardsPerPlayer) => {
       const newHand = pickRandomNonRotated(ListCards, cardsPerPlayer);
-      console.log('Generando mano:', newHand);
-
-      const idcartas = newHand.map(card => card.id);
-      postDeck(username, idcartas);
-      setHand(newHand);
-      setAvailableCards(ListCards);
-    }
-  }, [ListCards, activePlayers, hasServerDeck, deckChecked, currentUsername]);
+      
+      if (newHand.length > 0) {
+        const idcartas = newHand.map(card => card.id);
+        await postDeck(username, idcartas);
+        setHand(newHand);
+        setAvailableCards(ListCards);
+      }
+    };
+    
+    initDeck();
+  }, [currentUsername, activePlayers, isSpectator, ListCards]);
 
   // Función para coger una carta del mazo
   const drawCard = () => {

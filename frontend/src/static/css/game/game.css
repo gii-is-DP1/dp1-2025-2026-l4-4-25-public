@@ -895,3 +895,166 @@
   transform: translateY(-5px);
   box-shadow: 0 4px 8px rgba(204, 136, 136, 0.4);
   border-color: #ffaaaa;}
+
+/* Round End Modal Styles */
+.round-end-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.5s ease;
+}
+
+.round-end-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid #ffd700;
+  border-radius: 20px;
+  padding: 30px 50px;
+  text-align: center;
+  box-shadow: 0 10px 50px rgba(255, 215, 0, 0.5);
+  animation: scaleIn 0.5s ease;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.round-end-title {
+  font-size: 36px;
+  font-weight: bold;
+  color: #ffd700;
+  margin: 0 0 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+.round-end-reason {
+  font-size: 18px;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+.round-end-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.round-end-section-title {
+  font-size: 22px;
+  color: #ffd700;
+  margin-bottom: 15px;
+}
+
+.roles-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.role-reveal-card {
+  padding: 10px 20px;
+  border-radius: 10px;
+  min-width: 120px;
+}
+
+.role-reveal-card.miner-role {
+  background: linear-gradient(135deg, #2d5016 0%, #1a3009 100%);
+  border: 2px solid #4CAF50;
+}
+
+.role-reveal-card.saboteur-role {
+  background: linear-gradient(135deg, #501616 0%, #300909 100%);
+  border: 2px solid #f44336;
+}
+
+.role-reveal-username {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.role-reveal-role {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.nuggets-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.nugget-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 8px 20px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  min-width: 280px;
+  justify-content: space-between;
+}
+
+.nugget-username {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  flex: 1;
+  text-align: left;
+}
+
+.nugget-role {
+  font-size: 18px;
+}
+
+.nugget-amount {
+  font-size: 16px;
+  min-width: 100px;
+  text-align: right;
+}
+
+.nuggets-earned {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.no-nuggets {
+  color: #888;
+}
+
+.round-end-countdown {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.countdown-text {
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.countdown-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.countdown-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  border-radius: 4px;
+  transition: width 1s linear;
+}

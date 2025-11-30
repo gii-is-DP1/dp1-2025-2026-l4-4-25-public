@@ -170,6 +170,33 @@ export const useGameData = (game) => {
     }
   };
 
+  // Obtiene el deck de otro jugador sin modificar el estado local
+  const fetchOtherPlayerDeck = async (username) => {
+    try {
+      const activePlayer = await fetchActivePlayerByUsername(username);
+      if (!activePlayer?.id) {
+        return null;
+      }
+
+      const response = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayer.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error al obtener deck de otro jugador:', error);
+      return null;
+    }
+  };
+
   // Actualiza (PATCH) el deck de un ActivePlayer por username con la lista de IDs de cartas
   const patchDeck = async (username, cardIds) => {
     try {
@@ -490,21 +517,22 @@ export const useGameData = (game) => {
     }
   };
 
-  const postRound = async (roundId, updates) => {
+  const postRound = async ({ gameId, roundNumber }) => {
     try {
-      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+      const response = await fetch(`/api/v1/rounds?gameId=${gameId}&&roundNumber=${roundNumber}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${jwt}` 
-        },
-        body: JSON.stringify(updates),
+        }
       });
       if (response.ok) {
         const newRound = await response.json();
         console.log('Round creado:', newRound);
         return newRound;
       } else {
+        const errorText = await response.text();
+        console.error('Error al crear round:', errorText);
         return null;
       }
     } catch (error) {
@@ -548,6 +576,7 @@ export const useGameData = (game) => {
     postDeck,
     getDeck,
     patchDeck,
+    fetchOtherPlayerDeck,
     findActivePlayerUsername,
     fetchActivePlayerByUsername,
     squaresById,

@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +31,8 @@ import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedActivePlayerException
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedPlayerException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedUserException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerDTO;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
@@ -46,16 +50,20 @@ class ActivePlayerRestController {
     private final ActivePlayerService activePlayerService;
     private final PlayerService playerService;
     private final UserService userService;
+    private final GameService gameService; 
     private final PasswordEncoder encoder;
     private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public ActivePlayerRestController(ActivePlayerService activePlayerService, PlayerService playerService, UserService userService, PasswordEncoder encoder, ObjectMapper objectMapper) {
+    public ActivePlayerRestController(ActivePlayerService activePlayerService, PlayerService playerService, UserService userService,GameService gameService ,PasswordEncoder encoder, ObjectMapper objectMapper, SimpMessagingTemplate messagingTemplate) {
         this.activePlayerService = activePlayerService;
         this.encoder = encoder;
         this.userService = userService;
         this.playerService = playerService;
+        this.gameService = gameService; 
         this.objectMapper = objectMapper;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -201,7 +209,37 @@ class ActivePlayerRestController {
         RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
         ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
         ActivePlayer achievementPatched = objectMapper.updateValue(activePlayer, updates);
-        return new ResponseEntity<>(activePlayerService.updateActivePlayer(achievementPatched, id), HttpStatus.OK);
+        ActivePlayer savedPlayer = activePlayerService.updateActivePlayer(achievementPatched, id);
+
+        boolean toolsChanged = updates.containsKey("pickaxeState") || 
+                               updates.containsKey("candleState") || 
+                               updates.containsKey("cartState");
+
+        if (toolsChanged) {
+                List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(id);
+                if(!games.isEmpty()){
+                    Integer gameId = games.get(0).getId();
+                    String username = savedPlayer.getUsername();
+
+                    // Preparamos el mensaje
+                    Map<String, Object> payload = new HashMap<>();
+                    payload.put("action", "TOOLS_CHANGED");
+                    payload.put("username", username);
+                    
+                    // Enviamos el estado limpio para que el frontend lo procese fácil
+                    Map<String, Boolean> toolsPayload = new HashMap<>();
+                    toolsPayload.put("pickaxe", savedPlayer.isPickaxeState());
+                    toolsPayload.put("candle", savedPlayer.isCandleState());
+                    toolsPayload.put("wagon", savedPlayer.isCartState());
+                    
+                    payload.put("tools", toolsPayload);
+
+                    System.out.println(">>> WS Tools Update para: " + username + " en partida " + gameId);
+                    messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
+            }
+        }
+
+        return new ResponseEntity<>(savedPlayer, HttpStatus.OK);
     }
 
     @DeleteMapping(value = "{id}")

@@ -1,8 +1,3 @@
-/**
- * Filtra juegos por estado (solo CREATED o ONGOING)
- * @param {Array} games - Lista de juegos
- * @returns {Array} - Juegos filtrados
- */
 export const filterActiveGames = (games) => {
   if (!games) return [];
   return games.filter(
@@ -10,14 +5,6 @@ export const filterActiveGames = (games) => {
   );
 };
 
-/**
- * Aplica filtros de búsqueda a la lista de juegos
- * @param {Array} games - Lista de juegos
- * @param {Object} filters - Objeto con filtros aplicados
- * @param {boolean} onlyFriend - Mostrar solo juegos de amigos
- * @param {Array} friendsList - Lista de amigos
- * @returns {Array} - Juegos filtrados
- */
 export const applyFilters = (games, filters, onlyFriend, friendsList) => {
   let filtered = filterActiveGames(games);
 
@@ -41,34 +28,27 @@ export const applyFilters = (games, filters, onlyFriend, friendsList) => {
     );
   }
 
-  // Filtro por búsqueda (ID o creator)
+  // Filtro por búsqueda (ID)
   if (filters.search) {
     const term = filters.search.toLowerCase();
     filtered = filtered.filter(
       (g) =>
         g.creator?.username?.toLowerCase().includes(term) ||
-        g.id?.toString().includes(term)
-    );
-  }
-
-  // Filtro por amigos
+        g.id?.toString().includes(term));}
   if (onlyFriend && friendsList.length > 0) {
-    const friendUsernames = friendsList.map((f) => f.username?.toLowerCase());
-    filtered = filtered.filter((g) =>
-      friendUsernames.includes(g.creator?.username?.toLowerCase())
-    );
+    const friendUsernames = friendsList.map((f) => 
+      typeof f === 'string' ? f.toLowerCase() : f.username?.toLowerCase()
+    ).filter(Boolean);
+    
+    filtered = filtered.filter((g) => {
+      const creatorUsername = g.creator?.username?.toLowerCase() || g.creator?.toLowerCase();
+      return creatorUsername && friendUsernames.includes(creatorUsername);
+    });
   }
 
   return filtered;
 };
 
-/**
- * Crea el objeto de solicitud para unirse a un juego
- * @param {string} username - Username del usuario
- * @param {number} gameId - ID del juego
- * @param {number} chatId - ID del chat
- * @returns {Object} - Request body
- */
 export const createJoinRequest = (username, gameId, chatId) => {
   return {
     content: `REQUEST_JOIN:${username}:${gameId}`,
@@ -77,13 +57,6 @@ export const createJoinRequest = (username, gameId, chatId) => {
   };
 };
 
-/**
- * Verifica si un mensaje es de aceptación de solicitud
- * @param {Object} message - Mensaje del chat
- * @param {string} username - Username a verificar
- * @param {number} gameId - ID del juego
- * @returns {boolean}
- */
 export const isRequestAccepted = (message, username, gameId) => {
   if (!message.content || typeof message.content !== 'string') return false;
   if (!message.content.startsWith('REQUEST_ACCEPTED:')) return false;
@@ -98,13 +71,6 @@ export const isRequestAccepted = (message, username, gameId) => {
   );
 };
 
-/**
- * Verifica si un mensaje es de rechazo de solicitud
- * @param {Object} message - Mensaje del chat
- * @param {string} username - Username a verificar
- * @param {number} gameId - ID del juego
- * @returns {boolean}
- */
 export const isRequestDenied = (message, username, gameId) => {
   if (!message.content || typeof message.content !== 'string') return false;
   if (!message.content.startsWith('REQUEST_DENIED:')) return false;

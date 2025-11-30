@@ -746,8 +746,31 @@ Justificación de la solución adoptada:
 
 Nos decidimos por la opción 1.b, ya que, como otras decisiones escogidas, esta también iba a mejorar bastante la experiencia de usuario del juego, pues la opción 1.a era demasiado simple.
 
+### Decisión 11: Cambio Pantalla y acceso a Estadisticas Globales
+#### Descripción del problema:
 
-    
+Como grupo, se decidió de colocar las estadísticas globales en la pantalla de Lobby y colocar las estadisticas de cada usuario dentro del perfil del mismo.
+
+Alternativas de solución evaluadas:
+
+Alternativa 1.a: La primera y única alternativa es traspasar la información de las estadísticas globales a las estadisticas del usuario dentro del perfil de cada uno, establecimiento así primero las del jugador y después las globales, centrando este modulo en una sola pantalla de manera más intuitiva. 
+
+Justificación de la solución adoptada:
+
+Se ha optado por la única alternativa escogida ya que se observa que es más eficiente y de mejor visualización que la presentada incialmente.
+
+### Decisión 12: Invitación a amigos a una partida (SOLO CREADOR)
+#### Descripción del problema:
+
+Como grupo, se decidió que dentro de *CreateGame* cualquier usuario dentro de esta pantalla podia invitar a cualquier amigo.
+
+Alternativas de solución evaluadas:
+
+Alternativa 1.a: Solo el creador de la partida podrá invitar a sus amigos disponibles, evitando posibles invitaciones no deseadas por el creador de la misma.
+
+Justificación de la solución adoptada:
+
+Se ha optado por la única alternativa escogida ya que se observa que se ajusta a la jugabilidad que se quiere llegar en nuestro juego, siendo el creador la persona con esta potestad y evitar posibles intrusos en nuestras partidas.
 
     
 
