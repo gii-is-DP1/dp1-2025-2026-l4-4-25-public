@@ -30,6 +30,9 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.game.gameStatus;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -44,14 +47,15 @@ public class DeckRestController {
     private final ActivePlayerService activePlayerService;
     private final CardService cardService;
     private final SimpMessagingTemplate messagingTemplate; 
-
+    private final GameService gameService; 
     @Autowired
-    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService, SimpMessagingTemplate messagingTemplate) {
+    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService, SimpMessagingTemplate messagingTemplate, GameService gameService) {
         this.deckService = deckService;
         this.objectMapper = objectMapper;
         this.activePlayerService = activePlayerService;
         this.cardService = cardService;
-        this.messagingTemplate = messagingTemplate; 
+        this.messagingTemplate = messagingTemplate;
+        this.gameService = gameService;
     }
 
     @GetMapping
@@ -181,16 +185,30 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
     }
         Deck updatedDeck = deckService.saveDeck(deck); 
 
-        if(deck.getActivePlayer() != null){
-            String username = deck.getActivePlayer().getUsername();
+        ActivePlayer currentPlayer = deck.getActivePlayer();
+        if(currentPlayer != null){
+            String username = currentPlayer.getUsername();
             Integer leftCards = updatedDeck.getCards() != null ? updatedDeck.getCards().size() : 0;
+            // Obtener todas las partidas del jugador
+            List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(currentPlayer.getId());
+            //Seleccionamos solo la partida que está en ONGOING
+            Game activeGame = games.stream()
+            .filter(g -> g.getGameStatus() == gameStatus.ONGOING)
+            .findFirst()
+            .orElse(null);
 
-            // Enviar mensaje a todos los suscriptores de /topic/deck-count
-            messagingTemplate.convertAndSend("/topic/deck/" + deck.getId(), Map.of(
-                "action", "DECK_COUNT", 
-                "username", username,
-                "leftCards", leftCards
-            ));
+            if(activeGame != null){
+                Integer gameId = activeGame.getId();
+                // Enviar mensaje a todos los suscriptores de /topic/deck-count
+                messagingTemplate.convertAndSend("/topic/game/" + gameId + "/deck", Map.of(
+                    "action", "DECK_COUNT", 
+                    "username", username,
+                    "leftCards", leftCards
+                ));
+                System.out.println("WS >> Deck update enviado a game " + gameId +
+            " | user=" + username + " | leftCards=" + leftCards);
+            }
+
         }
 
     return new ResponseEntity<>(updatedDeck, HttpStatus.OK);

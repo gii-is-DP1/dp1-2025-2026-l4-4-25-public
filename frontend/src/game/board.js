@@ -205,7 +205,7 @@ export default function Board() {
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
-    const deckMessage = useWebSocket(`/topic/deck/${deck?.id}`); 
+    const deckMessage = useWebSocket(`/topic/game/${game?.id}/deck`); 
 
     useEffect(() => {
       if(!boardMessage) return;
