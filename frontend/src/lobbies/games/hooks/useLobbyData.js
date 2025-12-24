@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import tokenService from '../../../services/token.service';
-import { extractJoinRequests, getUniqueActivePlayers } from '../utils/lobbyUtils';
+import { extractJoinRequests, extractSpectatorRequests, getUniqueActivePlayers } from '../utils/lobbyUtils';
 
 /**
  * Custom hook para manejar toda la lógica de datos del lobby
  */
 const useLobbyData = (gameId, jwt, isCreator) => {
   const [joinRequests, setJoinRequests] = useState([]);
+  const [spectatorRequests, setSpectatorRequests] = useState([]);
   const [game, setGame] = useState(null);
   const [round, setRound] = useState(null);
 
@@ -54,9 +55,11 @@ const useLobbyData = (gameId, jwt, isCreator) => {
         
         const msgs = await res.json();
         const requests = extractJoinRequests(msgs);
+        const spectatorReqs = extractSpectatorRequests(msgs);
         
         if (!cancelled) {
           setJoinRequests(requests);
+          setSpectatorRequests(spectatorReqs);
         }
       } catch (error) {
         console.error('Error fetching the requests', error);
@@ -219,6 +222,8 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     setGame,
     joinRequests,
     setJoinRequests,
+    spectatorRequests,
+    setSpectatorRequests,
     postFirstMessage,
     updateGame,
     deleteGame,

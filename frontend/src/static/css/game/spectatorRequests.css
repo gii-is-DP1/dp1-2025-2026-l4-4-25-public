@@ -1,0 +1,170 @@
+.spectator-requests-ingame {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+  border: 2px solid rgba(255, 215, 79, 0.6);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  max-width: 320px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 215, 79, 0.3);
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.spectator-requests-header {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 215, 79, 0.3);
+}
+
+.spectator-requests-header h4 {
+  margin: 0;
+  color: #ffd54f;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.spectator-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.spectator-requests-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.spectator-requests-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.spectator-requests-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 79, 0.5);
+  border-radius: 3px;
+}
+
+.spectator-requests-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 79, 0.7);
+}
+
+.spectator-request-item-ingame {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.spectator-request-item-ingame:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  border-color: rgba(255, 215, 79, 0.4);
+  transform: translateX(-2px);
+}
+
+.spectator-username {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spectator-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-accept-spectator,
+.btn-deny-spectator {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-accept-spectator {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+}
+
+.btn-accept-spectator:hover {
+  background: linear-gradient(135deg, #66bb6a, #43a047);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.btn-accept-spectator:active {
+  transform: translateY(0);
+}
+
+.btn-deny-spectator {
+  background: linear-gradient(135deg, #f44336, #c62828);
+}
+
+.btn-deny-spectator:hover {
+  background: linear-gradient(135deg, #e57373, #d32f2f);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+}
+
+.btn-deny-spectator:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .spectator-requests-ingame {
+    top: 60px;
+    right: 10px;
+    min-width: 240px;
+    max-width: 280px;
+    padding: 12px;
+  }
+
+  .spectator-requests-header h4 {
+    font-size: 14px;
+  }
+
+  .spectator-username {
+    font-size: 13px;
+  }
+
+  .btn-accept-spectator,
+  .btn-deny-spectator {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}

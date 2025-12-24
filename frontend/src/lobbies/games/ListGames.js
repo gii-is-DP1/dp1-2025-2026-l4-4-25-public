@@ -12,11 +12,13 @@ import "../../static/css/lobbies/games/ListGames.css";
 export default function ListGames() {
   const {
     filteredGames,
+    friendsList,
     filters,
     onlyFriend,
     loading,
     refreshGames,
     handleSpectator,
+    handleRequestSpectator,
     handleRequestJoin,
     handleFilterChange,
     clearFilters,
@@ -43,7 +45,9 @@ export default function ListGames() {
       <div className="listgames-content">
         <GamesGrid
           games={filteredGames}
+          userFriends={friendsList}
           onRequestJoin={handleRequestJoin}
+          onRequestSpectator={handleRequestSpectator}
           onSpectate={handleSpectator}
         />
 

@@ -12,12 +12,15 @@ const TopRightButtons = ({
     <div className="top-right-lobby-buttons">
       {!isAdmin && (
         <div className="friends-dropdown-container">
+        <Link to="/profile">
+          <button className="button-logOut">📄Readme</button>
+        </Link>
           <button 
             className="button-logOut" 
             onClick={onToggleFriends}
-          >
-            🫂Friends
-          </button>
+        >
+              🫂Friends
+            </button>
           {showFriends && (
             <FriendsDropdown 
               friends={friends}
