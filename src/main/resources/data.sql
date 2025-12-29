@@ -843,18 +843,18 @@ VALUES (124, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
     -- CARTAS DE CARBÓN (2 cartas - túneles curvos grises/negros)
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (125, null, FALSE, '/images/card-images/objective-cards/coal_1.png');
+VALUES (125, null, FALSE, '/images/card-images/finals/carbon_1.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (125, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE);
+VALUES (125, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE);
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (126, null, FALSE, '/images/card-images/objective-cards/coal_2.png');
+VALUES (126, null, FALSE, '/images/card-images/finals/carbon_2.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
 
     -- CARTA DE ORO (1 carta - túnel vertical con pepita dorada)
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (127, null, FALSE, '/images/card-images/objective-cards/gold.png');
+VALUES (127, null, FALSE, '/images/card-images/finals/gold.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (127, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE);
+VALUES (127, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE);
