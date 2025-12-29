@@ -26,6 +26,7 @@ import EditAchievements from "./admin/achievements/EditAchievements";
 import Stats from "./lobbies/profiles/Stats";
 import GameInvitationListener from "./components/GameInvitationListener";
 import Ranking from "./lobbies/ranking/Ranking";
+import ReadMe from "./lobbies/ReadMe";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -77,6 +78,7 @@ function App() {
           <Route path="/GamesPlayed" element={<GamesPlayed />} />
           <Route path="/Achievement" element={<Achievements />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="/ReadMe" element={<ReadMe />} />
 
         </>)
     }    

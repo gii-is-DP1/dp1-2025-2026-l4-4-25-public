@@ -4,9 +4,12 @@ import { toast } from 'react-toastify';
 import tokenService from '../../../services/token.service';
 import { 
   applyFilters, 
-  createJoinRequest, 
+  createJoinRequest,
+  createSpectatorRequest,
   isRequestAccepted, 
-  isRequestDenied 
+  isRequestDenied,
+  isSpectatorRequestAccepted,
+  isSpectatorRequestDenied
 } from '../utils/listGamesHelpers';
 
 /**
@@ -128,7 +131,7 @@ const useListGames = () => {
     }
   };
 
-  // Manejar entrada como espectador
+  // Manejar entrada como espectador (directo, para amigos)
   const handleSpectator = async (game) => {
     try {
       navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
@@ -137,6 +140,74 @@ const useListGames = () => {
       console.error('Error entering as spectator:', error);
       toast.error('Could not connect as spectator.');
     }
+  };
+
+  // Manejar solicitud para entrar como espectador
+  const handleRequestSpectator = async (game) => {
+    try {
+      const currentUser = tokenService.getUser();
+      if (!currentUser || !currentUser.username) {
+        toast.error("Error to identify user.");
+        return;
+      }
+
+      const request = createSpectatorRequest(
+        currentUser.username, 
+        game.id, 
+        game.chat
+      );
+
+      const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (response.ok) {
+        toast.success("Spectator request sent to the game creator.");
+        startPollingForSpectatorResponse(game, currentUser.username);
+      } else {
+        toast.error("Error to send the spectator request. Try Again.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error to connect with the server. Try Again.");
+    }
+  };
+
+  // Polling para verificar respuesta del creador (espectador)
+  const startPollingForSpectatorResponse = (game, username) => {
+    const headers = { Authorization: `Bearer ${jwt}` };
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `/api/v1/messages/byChatId?chatId=${game.chat}`, 
+          { headers }
+        );
+        if (!res.ok) return;
+
+        const msgs = await res.json();
+        for (const m of msgs) {
+          if (isSpectatorRequestAccepted(m, username, game.id)) {
+            clearInterval(interval);
+            toast.success('Spectator request accepted. Entering the game...');
+            navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
+            return;
+          }
+
+          if (isSpectatorRequestDenied(m, username, game.id)) {
+            clearInterval(interval);
+            toast.warn('Spectator request denied by the Creator.');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('error del polling', error);
+      }
+    }, 2000);
   };
 
   // Manejar solicitud para unirse a juego privado
@@ -234,11 +305,13 @@ const useListGames = () => {
 
   return {
     filteredGames,
+    friendsList,
     filters,
     onlyFriend,
     loading,
     refreshGames,
     handleSpectator,
+    handleRequestSpectator,
     handleRequestJoin,
     handleFilterChange,
     clearFilters,

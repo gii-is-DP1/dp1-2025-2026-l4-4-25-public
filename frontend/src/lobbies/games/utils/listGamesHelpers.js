@@ -57,6 +57,14 @@ export const createJoinRequest = (username, gameId, chatId) => {
   };
 };
 
+export const createSpectatorRequest = (username, gameId, chatId) => {
+  return {
+    content: `REQUEST_SPECTATOR:${username}:${gameId}`,
+    activePlayer: username,
+    chat: chatId
+  };
+};
+
 export const isRequestAccepted = (message, username, gameId) => {
   if (!message.content || typeof message.content !== 'string') return false;
   if (!message.content.startsWith('REQUEST_ACCEPTED:')) return false;
@@ -74,6 +82,34 @@ export const isRequestAccepted = (message, username, gameId) => {
 export const isRequestDenied = (message, username, gameId) => {
   if (!message.content || typeof message.content !== 'string') return false;
   if (!message.content.startsWith('REQUEST_DENIED:')) return false;
+
+  const parts = message.content.split(':');
+  const targetUser = parts[1];
+  const targetGameId = parts[2];
+
+  return (
+    targetUser === username && 
+    String(targetGameId) === String(gameId)
+  );
+};
+
+export const isSpectatorRequestAccepted = (message, username, gameId) => {
+  if (!message.content || typeof message.content !== 'string') return false;
+  if (!message.content.startsWith('SPECTATOR_ACCEPTED:')) return false;
+
+  const parts = message.content.split(':');
+  const targetUser = parts[1];
+  const targetGameId = parts[2];
+
+  return (
+    targetUser === username && 
+    String(targetGameId) === String(gameId)
+  );
+};
+
+export const isSpectatorRequestDenied = (message, username, gameId) => {
+  if (!message.content || typeof message.content !== 'string') return false;
+  if (!message.content.startsWith('SPECTATOR_DENIED:')) return false;
 
   const parts = message.content.split(':');
   const targetUser = parts[1];
