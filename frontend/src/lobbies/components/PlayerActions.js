@@ -5,7 +5,7 @@ const PlayerActions = ({ onCreateGame }) => {
   return (
     <div className="hero-div-lobby">
       <button className="button-crear" onClick={onCreateGame}>
-        📑CREATE GAME
+        CREATE GAME
       </button>
       <Link to="/ListGames">
         <button className="button-unirse">📥JOIN A GAME</button>   
