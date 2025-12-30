@@ -89,31 +89,30 @@ INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) 
 null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (101, 1, 4, TRUE, 0, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (101, 1, 4, TRUE, 0, 1, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (102, 2, 5, FALSE, 1, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (102, 2, 5, FALSE, 1, 1, NULL, NULL);
 
 -- SQUARES OBJETIVO (sin cartas asignadas - se asignarán dinámicamente en frontend)
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (103, 9, 2, TRUE, 1, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (103, 9, 2, TRUE, 1, 1, NULL, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (104, 9, 4, TRUE, 1, 1, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (104, 9, 4, TRUE, 1, 1, NULL);
-
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (105, 9, 6, TRUE, 1, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (105, 9, 6, TRUE, 1, 1, NULL, NULL);
 
 -- SQUARES OBJETIVO PARA EL BOARD 2
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (106, 9, 2, TRUE, 1, 2, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (106, 9, 2, TRUE, 1, 2, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (107, 9, 4, TRUE, 1, 2, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (107, 9, 4, TRUE, 1, 2, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (108, 9, 6, TRUE, 1, 2, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (108, 9, 6, TRUE, 1, 2, NULL, NULL);
 
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)

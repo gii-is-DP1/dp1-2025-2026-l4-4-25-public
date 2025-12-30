@@ -6,6 +6,8 @@ import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -23,7 +25,7 @@ import es.us.dp1.l4_04_24_25.saboteur.card.CardDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardSerializer;
 import com.fasterxml.jackson.annotation.JsonIgnore; 
 
-@Table(name="Squares")
+@Table(name="squares")
 @Entity
 @Getter
 @Setter
@@ -47,6 +49,10 @@ public class Square extends BaseEntity{
     @Column(name = "type", nullable = false)
     @NotNull 
     protected type type; 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "goal_type")
+    private GoalType goalType; 
 
     @JsonDeserialize(using = BoardDeserializer.class)
     @JsonSerialize(using = BoardSerializer.class)

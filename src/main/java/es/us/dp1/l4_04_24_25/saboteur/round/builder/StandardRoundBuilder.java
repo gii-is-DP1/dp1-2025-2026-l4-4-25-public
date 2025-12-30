@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,9 +15,11 @@ import es.us.dp1.l4_04_24_25.saboteur.board.BoardRepository;
 import es.us.dp1.l4_04_24_25.saboteur.log.Log;
 import es.us.dp1.l4_04_24_25.saboteur.log.LogService;
 import es.us.dp1.l4_04_24_25.saboteur.round.Round;
+import es.us.dp1.l4_04_24_25.saboteur.square.GoalType;
 import es.us.dp1.l4_04_24_25.saboteur.square.Square;
 import es.us.dp1.l4_04_24_25.saboteur.square.SquareRepository;
 import es.us.dp1.l4_04_24_25.saboteur.square.type;
+import java.util.stream.Collectors;
 
 @Component
 public class StandardRoundBuilder extends AbstractRoundBuilder {
@@ -61,12 +64,19 @@ public class StandardRoundBuilder extends AbstractRoundBuilder {
         board.setHeight(9);
 
         // Generar orden aleatorio de cartas objetivo
-        List<String> objectiveCards = Arrays.asList("gold", "coal_1", "coal_2");
-        Collections.shuffle(objectiveCards);
+        List<GoalType> goalTypes = new ArrayList<>(
+            List.of(
+                GoalType.GOLD,
+                GoalType.CARBON_1,
+                GoalType.CARBON_2
+            )
+        );
+        Collections.shuffle(goalTypes);
+        List<String> objectiveCards = goalTypes.stream().map(gt -> gt.getValue()).collect(Collectors.toList());
         board.setObjectiveCardsOrder(String.join(",", objectiveCards));
-
         List<Square> squares = new ArrayList<>();
-        
+        int goalIndex =  0; 
+
         for (int y = 0; y < board.getHeight(); y++) {
             for (int x = 0; x < board.getBase(); x++) {
                 Square square = new Square();
@@ -79,6 +89,8 @@ public class StandardRoundBuilder extends AbstractRoundBuilder {
                     square.setType(type.START);
                 } else if ((y == 4 && x == 9) || (y == 6 && x == 9) || (y == 2 && x == 9)) {
                     square.setType(type.GOAL);
+                    square.setGoalType(goalTypes.get(goalIndex)); 
+                    goalIndex++; 
                 } else {
                     square.setType(type.PATH);
                 }

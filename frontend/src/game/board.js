@@ -221,6 +221,10 @@ export default function Board() {
           handleWsCardDestroyed(boardMessage);
           break;
         
+        case "GOAL_REVEALED": 
+          handleWsGoalRevealed(boardMessage);
+          break;
+        
         default:
           console.warn("WS action unrecognized:", action);
       }
@@ -327,6 +331,33 @@ export default function Board() {
       }, 800); 
     };
 
+    // --- FUNCIÓN NUEVA ---
+  const handleWsGoalRevealed = ({ row, col, goalType }) => {
+    console.log(`🎯 Recibido GOAL_REVEALED en (${row}, ${col}) tipo: ${goalType}`);
+    const normalized = goalType; 
+    setBoardCells(prev => {
+      // Hacemos una copia profunda del tablero para no mutar el estado directamente
+      const next = prev.map(r => r.slice());
+      
+      // Verificamos que la celda exista
+      if (next[row] && next[row][col]) {
+        next[row][col] = {
+          ...next[row][col], // Mantenemos propiedades existentes (type, owner, etc.)
+          revealed: true,    // MARCA CLAVE: Revelado permanente
+          cardType: goalType.toLowerCase() // Guardamos qué carta es (gold, carbon_1, etc.)
+        };
+      }
+      return next;
+    });
+
+    setObjectiveCards(prev => ({
+      ...prev, 
+      [`[${row}][${col}]`]: normalized
+    }));
+    
+    addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
+  };
+  
     const handleWsTurnChanged = async (message) =>{
       const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
       const { newTurnIndex, roundId, leftCards } = payload;

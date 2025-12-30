@@ -131,6 +131,7 @@ public class SquareRestController {
                 square.setCard(null);
                 square.setOccupation(false);
             }
+            updates.remove("card"); 
         }
         Square squarePatched = objectMapper.updateValue(square, updates);
 
@@ -149,7 +150,23 @@ public class SquareRestController {
         payload.put("card", squarePatched.getCard()); 
         payload.put("squareId", squarePatched.getId());
 
+        /*if (squarePatched.getCard() != null) {
+            Map<String, Object> simpleCard = new HashMap<>(); 
+            simpleCard.put("id", squarePatched.getCard().getId());
+            simpleCard.put("image", squarePatched.getCard().getImage());
+            if (squarePatched.getType() != null) {
+                simpleCard.put("type", squarePatched.getType().toString());
+            }
+            payload.put("card", simpleCard); 
+        } else{
+            payload.put("card", null); 
+        }*/
+
         messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
+
+        if(squarePatched.getCard() != null){
+            squareService.checkAndRevealGoal(squarePatched);
+        }
 
         return new ResponseEntity<>(squarePatched,HttpStatus.OK);
     }

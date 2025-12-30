@@ -2,6 +2,7 @@ import React from 'react';
 import DroppableCell from './DroppableCell';
 import startCardImage from '../../static/images/start.png';
 import objetivecardreverse from '../../static/images/objetive_card_reverse.png';
+import { useState } from 'react';
 
 export default function GameBoard({ 
   boardCells, 
@@ -17,13 +18,15 @@ export default function GameBoard({
   objectiveCards,
   destroyingCell
 }) {
+
   
   const getObjectiveCardImage = (cardType) => {
+    console.log('MAP REVEAL TYPE:', revealedObjective?.cardType);
     switch(cardType) {
       case 'gold': return '/images/card-images/finals/gold.png';
-      case 'coal_1':
+      //case 'coal_1':
       case 'carbon_1': return '/images/card-images/finals/carbon_1.png';
-      case 'coal_2':
+      //case 'coal_2':
       case 'carbon_2': return '/images/card-images/finals/carbon_2.png';
       default: return objetivecardreverse;
     }};
@@ -39,16 +42,34 @@ export default function GameBoard({
 
     if (cell.type === 'objective') {
       const positionKey = `[${row}][${col}]`;
-      if (revealedObjective && revealedObjective.position === positionKey) {
-        const cardImage = getObjectiveCardImage(revealedObjective.cardType);
+      // 1. ¿Está revelada temporalmente por carta de Mapa? (Tiene borde dorado)
+      const isMapRevealed = revealedObjective && revealedObjective.position === positionKey;
+      
+      // 2. ¿Está revelada permanentemente por conexión? (Propiedad 'revealed' del WebSocket)
+      const isPermanentlyRevealed = cell.revealed;
+
+      // Si cualquiera de las dos es cierta, mostramos la carta real
+      if (isMapRevealed || isPermanentlyRevealed) {
+        
+        // Priorizamos el tipo del mapa si está activo, si no, usamos el guardado en la celda
+        const typeToShow = isMapRevealed ? revealedObjective.cardType : cell.cardType;
+        const cardImage = getObjectiveCardImage(typeToShow);
+        
         return (
           <img 
             src={cardImage} 
-            alt={`Objective: ${revealedObjective.cardType}`} 
+            alt={`Objective: ${typeToShow}`} 
             className="static-card-image revealed-objective" 
-            style={{border:'3px solid gold',boxShadow:'0 0 20px gold'}}
+            style={{
+              // Solo ponemos borde dorado si es una revelación temporal de mapa
+              border: isMapRevealed ? '3px solid gold' : 'none',
+              boxShadow: isMapRevealed ? '0 0 20px gold' : 'none'
+            }}
           />
-        );}
+        );
+      }
+      
+      // Si no está revelada de ninguna forma, mostramos el reverso
       return <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />;
     }
 
