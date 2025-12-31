@@ -209,29 +209,31 @@ export default function EditAchievements() {
   };
 
   return (
-    <div className="home-page-container">
-      <ProfileLogo />
-      <div className="top-right-lobby-buttons">
-        <Link to="/logout"><button className="button-logOut">🔴 Log Out</button></Link>
-        <button className="button-logOut" onClick={handleBack}>⬅️ Back</button>
+    <div className="admin-achievements-page">
+      <div className="admin-header-unified">
+        <div className="header-content">
+          <h1>🏆 Achievement Management Dashboard</h1>
+          <p className="header-subtitle">Create and manage Achievements for Saboteurs players</p>
+        </div>
+        <div className="header-actions">
+          <button 
+            className="btn-create-achievement"
+            onClick={() => setShowCreateForm(!showCreateForm)}>
+            {showCreateForm ? '❌ Cancel' : 'Create Achievement'}
+          </button>
+          <button className="btn-back-unified" onClick={handleBack}>
+            ➡️ 
+          </button>
+        </div>
       </div>
 
-      <div className="achievement-overlay">
-        <h1 className="achievements-title">⚙️ MANAGE ACHIEVEMENTS</h1>
-        
-        {message && (
-          <div className={`admin-message ${message.type}`}>
-            {message.text}
-          </div>
-        )}
+      {message && (
+        <div className={`admin-message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
 
-        <button 
-          className="button-small create-button"
-          onClick={() => setShowCreateForm(!showCreateForm)}
-        >
-          {showCreateForm ? '❌ Cancel' : '➕ Create New Achievement'}
-        </button>
-
+      <div className="achievement-content-wrapper">
         {showCreateForm && (
           <form className="achievement-form" onSubmit={handleCreate}>
             <h3>Create New Achievement</h3>
@@ -279,7 +281,7 @@ export default function EditAchievements() {
                 {metrics.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-            <button type="submit" className="button-small">Create Achievement</button>
+            <button type="submit" className="button-small save-btn">💾 Create Achievement</button>
           </form>
         )}
 

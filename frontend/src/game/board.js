@@ -7,6 +7,7 @@ import tokenService from '../services/token.service.js';
 import PlayerCards from './components/PlayerCards';
 import PlayerRole from './components/PlayerRole';
 import SpectatorIndicator from './components/SpectatorIndicator';
+import SpectatorRequestsInGame from './components/SpectatorRequestsInGame';
 import GameControls from './components/GameControls';
 import GameBoard from './components/GameBoard';
 import PlayersList from './components/PlayersList';
@@ -20,6 +21,7 @@ import LoadingScreen from './components/LoadingScreen';
 import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
 import { checkRoundEnd, distributeGold, resetToolsForNewRound } from './utils/roundEndLogic';
+import { extractSpectatorRequests } from '../lobbies/games/utils/lobbyUtils';
 import saboteurRol from './cards-images/roles/saboteurRol.png';
 import minerRol from './cards-images/roles/minerRol.png';
 
@@ -115,6 +117,10 @@ export default function Board() {
   // Estado para el modal de fin de partida
   const [gameEndData, setGameEndData] = useState(null);
   const [gameEndCountdown, setGameEndCountdown] = useState(10);
+  
+  // Estado para solicitudes de espectador (solo para creador)
+  const [spectatorRequests, setSpectatorRequests] = useState([]);
+  const isCreator = game?.creator === loggedInUser?.username;
   
   const navigate = useNavigate();
 
@@ -232,6 +238,12 @@ export default function Board() {
 
     useEffect(()=>{
       if(!gameMessage) return; 
+      
+      if (gameMessage.adminAction) {
+        handleAdminAction(gameMessage);
+        return;
+      }
+
       const {action} = gameMessage; 
       switch (action) {
       case "TURN_CHANGED":
@@ -284,6 +296,37 @@ export default function Board() {
     useEffect(() => {
     }, [playerOrder]);
    
+    // Polling para solicitudes de espectador (solo para creador)
+    useEffect(() => {
+      if (!isCreator || !game?.chat) return;
+      
+      let cancelled = false;
+      
+      const fetchSpectatorRequests = async () => {
+        try {
+          const res = await fetch(`/api/v1/messages/byChatId?chatId=${game.chat}`, {
+            headers: { Authorization: `Bearer ${jwt}` },
+          });
+          if (!res.ok) return;
+          
+          const msgs = await res.json();
+          const spectatorReqs = extractSpectatorRequests(msgs);
+          
+          if (!cancelled) {
+            setSpectatorRequests(spectatorReqs);
+          }
+        } catch (error) {
+          console.error('Error fetching spectator requests', error);
+        }
+      };
+
+      fetchSpectatorRequests();
+      const interval = setInterval(fetchSpectatorRequests, 5000);
+      return () => { 
+        cancelled = true; 
+        clearInterval(interval); 
+      };
+    }, [isCreator, game?.chat, jwt]);
     
     //Modularizar estas funciones
     const handleWsCardPlaced = ({row, col, card, player, squareId})=>{
@@ -362,6 +405,114 @@ export default function Board() {
     await checkForRoundEnd();
   };
   
+    // Handlers para solicitudes de espectador
+    const handleAcceptSpectatorRequest = async (username) => {
+      try {
+        toast.success(`${username} accepted as spectator`);
+        
+        // Enviar mensaje de aceptación
+        const acceptMessage = {
+          content: `SPECTATOR_ACCEPTED:${username}:${game.id}`,
+          activePlayer: loggedInUser.username,
+          chat: game.chat
+        };
+        
+        await fetch(`/api/v1/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify(acceptMessage),
+        });
+
+        // Eliminar mensajes de solicitud
+        const msgsToDelete = spectatorRequests
+          .filter(s => s.username === username)
+          .map(s => s.messageId);
+        
+        if (msgsToDelete.length > 0) {
+          await fetch('/api/v1/messages/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${jwt}`,
+            },
+            body: JSON.stringify(msgsToDelete),
+          });
+        }
+        
+        setSpectatorRequests(prev => prev.filter(p => p.username !== username));
+        
+      } catch (err) {
+        console.error(err);
+        toast.error('Error to accept spectator request.');
+      }
+    };
+
+    const handleDenySpectatorRequest = async (username) => {
+      try {
+        // Enviar mensaje de rechazo
+        const denyMessage = {
+          content: `SPECTATOR_DENIED:${username}:${game.id}`,
+          activePlayer: loggedInUser.username,
+          chat: game.chat
+        };
+        
+        await fetch(`/api/v1/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify(denyMessage),
+        });
+
+        // Eliminar mensajes de solicitud
+        const msgsToDelete = spectatorRequests
+          .filter(s => s.username === username)
+          .map(s => s.messageId);
+        
+        if (msgsToDelete.length > 0) {
+          await fetch('/api/v1/messages/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${jwt}`,
+            },
+            body: JSON.stringify(msgsToDelete),
+          });
+        }
+        
+        toast.info(`${username} spectator request denied`);
+        setSpectatorRequests(prev => prev.filter(p => p.username !== username));
+        
+      } catch (err) {
+        console.error(err);
+        toast.error('Error to deny spectator request.');
+      }
+    };
+
+    const handleAdminAction = (message) => {
+      const {adminAction} = message;
+      const currentUser = tokenService.getUser()?.username;
+
+      if (adminAction.action === "FORCE_FINISH") {
+        toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
+        setTimeout(() => {
+          navigate('/lobby')}, 3000);
+
+      } else if (adminAction.action === "PLAYER_EXPELLED") {
+        if (adminAction.affectedPlayer === currentUser) {
+          toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
+          setTimeout(() => {
+            navigate('/lobby')}, 3000);
+        } else {
+          toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
+          if (message.game) {
+            setGame(message.game)}}}
+    };
+
     const handleWsTurnChanged = async (message) =>{
       const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
       const { newTurnIndex, roundId, leftCards } = payload;
@@ -1535,6 +1686,15 @@ const activateCollapseMode = (card, cardIndex) => {
             <p className="role-notification-name">{myRole.roleName}</p>
           </div>
         </div>)}
+
+      {/* Panel de solicitudes de espectador (solo para creador) */}
+      {isCreator && spectatorRequests.length > 0 && (
+        <SpectatorRequestsInGame
+          spectatorRequests={spectatorRequests}
+          onAccept={handleAcceptSpectatorRequest}
+          onDeny={handleDenySpectatorRequest}
+        />
+      )}
 
       {/* Modal de fin de ronda */}
       {roundEndData && !gameEndData && (

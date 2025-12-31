@@ -9,6 +9,7 @@ import { canStartGame, isPlayerInLobby, removePlayerFromLobby } from "./utils/lo
 // Importar componentes modulares
 import LobbyInfo from "./components/LobbyInfo";
 import JoinRequestsPanel from "./components/JoinRequestsPanel";
+import SpectatorRequestsPanel from "./components/SpectatorRequestsPanel";
 import GameSettings from "./components/GameSettings";
 import PlayersListLobby from "./components/PlayersListLobby";
 import InviteFriends from "./components/InviteFriends";
@@ -48,6 +49,8 @@ const CreateGame = () => {
     setGame: setGameFromHook,
     joinRequests,
     setJoinRequests,
+    spectatorRequests,
+    setSpectatorRequests,
     postFirstMessage,
     updateGame,
     deleteGame,
@@ -91,6 +94,10 @@ const CreateGame = () => {
       }
     }
 
+    if (payload.adminAction) {
+      handleAdminActionInLobby(payload);
+      return}
+
     const { game: updatedGame, round: updatedRound } = payload;
     console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
     console.log(" BOARD EN EL ROUND:", updatedRound?.board);
@@ -106,14 +113,12 @@ const CreateGame = () => {
     }
   }, [socketMessage]);
 
-  // Lógica para unirse al juego (solo no-creadores)
   useEffect(() => {
     if (!game?.id) return;
 
     const currentUsername = loggedInUser?.username;
     const currentActivePlayers = game?.activePlayers ?? [];
 
-    // 🔒 NO CREATOR, NO DUPLICADOS
     if (isCreator) return;
     if (!currentUsername) return;
     if (currentActivePlayers.includes(currentUsername)) return;
@@ -208,7 +213,27 @@ const CreateGame = () => {
     SetLobbyIn(currentIn);
   }, [game?.activePlayers]);
 
-  // Handlers para solicitudes de unión
+  const handleAdminActionInLobby = (payload) => {
+    const { adminAction } = payload;
+    if (!adminAction) return;
+    const currentUser = tokenService.getUser()?.username;
+    if (adminAction.action === "FORCE_FINISH") {
+      toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
+      setTimeout(() => {
+        navigate('/lobby')}, 3000);
+    } else if (adminAction.action === "PLAYER_EXPELLED") {
+      if (adminAction.affectedPlayer === currentUser) {
+        toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
+        setTimeout(() => {
+          navigate('/lobby');
+        }, 3000);
+      } else {
+        toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
+        if (payload.game) {
+          setGame(payload.game);
+        }}}
+  };
+
   const handleAcceptRequest = async (username) => {
     try {
       const currentActivePlayers = Array.from(new Set(game.activePlayers ?? []));
@@ -259,6 +284,53 @@ const CreateGame = () => {
       
       toast.info(`${username} has been denied`);
       setJoinRequests(prev => prev.filter(p => p.username !== username));
+      
+    } catch (err) {
+      console.error(err);
+      toast.error('Error to connect with the server. Try Again.');
+    }
+  };
+
+  // Handlers para solicitudes de espectador
+  const handleAcceptSpectatorRequest = async (username) => {
+    try {
+      toast.success(`${username} accepted as spectator`);
+      
+      await sendMessage(
+        `SPECTATOR_ACCEPTED:${username}:${game.id}`,
+        game.creator,
+        game.chat
+      );
+
+      const msgsToDelete = spectatorRequests
+        .filter(s => s.username === username)
+        .map(s => s.messageId);
+      
+      await deleteMessages(msgsToDelete);
+      setSpectatorRequests(prev => prev.filter(p => p.username !== username));
+      
+    } catch (err) {
+      console.error(err);
+      toast.error('Error to accept spectator request. Try Again.');
+    }
+  };
+
+  const handleDenySpectatorRequest = async (username) => {
+    try {
+      await sendMessage(
+        `SPECTATOR_DENIED:${username}:${game.id}`,
+        game.creator,
+        game.chat
+      );
+
+      const msgsToDelete = spectatorRequests
+        .filter(s => s.username === username)
+        .map(s => s.messageId);
+      
+      await deleteMessages(msgsToDelete);
+      
+      toast.info(`${username} spectator request denied`);
+      setSpectatorRequests(prev => prev.filter(p => p.username !== username));
       
     } catch (err) {
       console.error(err);
@@ -364,6 +436,12 @@ const CreateGame = () => {
             joinRequests={isCreator ? joinRequests : []}
             onAccept={handleAcceptRequest}
             onDeny={handleDenyRequest}
+          />
+          
+          <SpectatorRequestsPanel
+            spectatorRequests={isCreator ? spectatorRequests : []}
+            onAccept={handleAcceptSpectatorRequest}
+            onDeny={handleDenySpectatorRequest}
           />
 
           <GameSettings

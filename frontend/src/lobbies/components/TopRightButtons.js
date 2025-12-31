@@ -11,21 +11,26 @@ const TopRightButtons = ({
   return (
     <div className="top-right-lobby-buttons">
       {!isAdmin && (
-        <div className="friends-dropdown-container">
-          <button 
-            className="button-logOut" 
-            onClick={onToggleFriends}
-          >
-            🫂Friends
-          </button>
-          {showFriends && (
+        <>
+          <Link to="/ReadMe" className="readme-button-container">
+            <button className="button-logOut">📄Readme</button>
+          </Link>
+          <div className="friends-dropdown-container">
+            <button 
+              className="button-logOut" 
+              onClick={onToggleFriends}
+            >
+              🫂Friends
+            </button>
+            {showFriends && (
             <FriendsDropdown 
               friends={friends}
               onRequestClick={() => console.log('Friend request clicked')}
               onFindPlayerClick={() => console.log('Find player clicked')}
             />
           )}
-        </div>
+          </div>
+        </>
       )}
       <Link to="/profile">
         <button className="button-logOut">👤Profile</button>

@@ -1,7 +1,7 @@
 import React from 'react';
 import GameCard from './GameCard';
 
-const GamesGrid = ({ games, onRequestJoin, onSpectate }) => {
+const GamesGrid = ({ games, userFriends = [], onRequestJoin, onRequestSpectator, onSpectate }) => {
   if (!games || games.length === 0) {
     return (
       <div className="listgames-card">
@@ -16,7 +16,9 @@ const GamesGrid = ({ games, onRequestJoin, onSpectate }) => {
         <GameCard
           key={game.id}
           game={game}
+          userFriends={userFriends}
           onRequestJoin={onRequestJoin}
+          onRequestSpectator={onRequestSpectator}
           onSpectate={onSpectate}
         />
       ))}

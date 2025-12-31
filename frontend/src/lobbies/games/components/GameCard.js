@@ -3,20 +3,38 @@ import { Link } from 'react-router-dom';
 
 const GameCard = ({ 
   game, 
-  onRequestJoin, 
-  onSpectate 
+  onRequestJoin,
+  onRequestSpectator, 
+  onSpectate,
+  userFriends = [] 
 }) => {
   const isFull = game.activePlayers.length >= game.maxPlayers;
   const isCreated = game.gameStatus === "CREATED";
+  
+  const isFriendPlaying = game.activePlayers.some(player => {
+    const playerUsername = player.username || player;
+    return userFriends.some(friend => 
+      (friend.username || friend) === playerUsername)});
 
   const renderActionButton = () => {
-    if (!isCreated) {
+    if (!isCreated && isFriendPlaying) {
       return (
         <button 
           className="button-join-game" 
           onClick={() => onSpectate(game)}
         >
           👁️‍🗨️SPECTATE
+        </button>
+      );
+    }
+
+    if (!isCreated && !isFriendPlaying) {
+      return (
+        <button 
+          className="button-join-game"
+          onClick={() => onRequestSpectator(game)}
+        >
+          📩REQUEST SPECTATOR
         </button>
       );
     }
