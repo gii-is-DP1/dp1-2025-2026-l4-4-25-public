@@ -21,9 +21,31 @@ export function isMapCard(c) {
 function getCardConnections(card) {
   if (!card) return { arriba: false, abajo: false, izquierda: false, derecha: false, centro: false };
   
-  // Si la carta es start u objective, tienen conexión en todas las direcciones y centro abierto
-  if (card.type === 'start' || card.type === 'objective') {
+  // Si la carta es start, tiene conexión en todas las direcciones
+  if (card.type === 'start') {
     return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
+  }
+  
+  // Si la carta es objective
+  if (card.type === 'objective') {
+    // Si no está revelada, tiene conexiones en todas las direcciones (como antes)
+    if (!card.revealed) {
+      return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
+    }
+    // Si está revelada, las conexiones dependen del tipo de carta objetivo
+    switch (card.cardType) {
+      case 'gold':
+        // El oro tiene todas las direcciones abiertas
+        return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
+      case 'carbon_1':
+        // Carbon 1: esquina izquierda-arriba
+        return { arriba: true, abajo: false, izquierda: true, derecha: false, centro: false };
+      case 'carbon_2':
+        // Carbon 2: esquina izquierda-abajo
+        return { arriba: false, abajo: true, izquierda: true, derecha: false, centro: false };
+      default:
+        return { arriba: true, abajo: true, izquierda: true, derecha: true, centro: false };
+    }
   }
   
   const rotacion = card.rotacion || false;

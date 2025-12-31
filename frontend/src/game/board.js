@@ -278,6 +278,7 @@ export default function Board() {
           break;
         }
         }, [deckMessage]); 
+    
     // Depuración usuarios duplicados
     
     useEffect(() => {
@@ -332,7 +333,7 @@ export default function Board() {
     };
 
     // --- FUNCIÓN NUEVA ---
-  const handleWsGoalRevealed = ({ row, col, goalType }) => {
+  const handleWsGoalRevealed = async ({ row, col, goalType }) => {
     console.log(`🎯 Recibido GOAL_REVEALED en (${row}, ${col}) tipo: ${goalType}`);
     const normalized = goalType; 
     setBoardCells(prev => {
@@ -356,6 +357,9 @@ export default function Board() {
     }));
     
     addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
+    
+    // Verificar si la ronda terminó al revelar el objetivo
+    await checkForRoundEnd();
   };
   
     const handleWsTurnChanged = async (message) =>{
@@ -517,6 +521,7 @@ export default function Board() {
         card: card?.id || card,
       });
 
+      /*
       setBoardCells(prev => {
         const next = prev.map(r => r.slice());
         next[row][col] = {
@@ -530,7 +535,7 @@ export default function Board() {
         };
         return next;
       });
-
+    */
       if (window.removeCardAndDraw) {
         window.removeCardAndDraw(cardIndex);
       }
@@ -822,6 +827,9 @@ const activateCollapseMode = (card, cardIndex) => {
       
       // Resetear el flag de navegación para esta nueva ronda
       isNavigatingToNewRound.current = false;
+      
+      // Esperar 2 segundos para que los jugadores vean el oro revelado
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Actualizar el estado del round en el backend
       await patchRound(round.id, { winnerRol: winnerRol });
