@@ -15,6 +15,7 @@ import Logout from "./auth/logout";
 import tokenService from "./services/token.service";
 import UserListAdmin from "./admin/users/UserListAdmin";
 import UserEditAdmin from "./admin/users/UserEditAdmin";
+import AdminGames from "./admin/games/AdminGames";
 import Lobby from "./lobbies/lobby"; 
 import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
@@ -61,6 +62,7 @@ function App() {
         <>
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
           <Route path="/users/:id" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
+          <Route path="/admin/games" element={<PrivateRoute><AdminGames /></PrivateRoute>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  

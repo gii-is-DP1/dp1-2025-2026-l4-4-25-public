@@ -234,6 +234,12 @@ export default function Board() {
 
     useEffect(()=>{
       if(!gameMessage) return; 
+      
+      if (gameMessage.adminAction) {
+        handleAdminAction(gameMessage);
+        return;
+      }
+
       const {action} = gameMessage; 
       switch (action) {
       case "TURN_CHANGED":
@@ -450,6 +456,26 @@ export default function Board() {
         console.error(err);
         toast.error('Error to deny spectator request.');
       }
+    };
+
+    const handleAdminAction = (message) => {
+      const {adminAction} = message;
+      const currentUser = tokenService.getUser()?.username;
+
+      if (adminAction.action === "FORCE_FINISH") {
+        toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
+        setTimeout(() => {
+          navigate('/lobby')}, 3000);
+
+      } else if (adminAction.action === "PLAYER_EXPELLED") {
+        if (adminAction.affectedPlayer === currentUser) {
+          toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
+          setTimeout(() => {
+            navigate('/lobby')}, 3000);
+        } else {
+          toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
+          if (message.game) {
+            setGame(message.game)}}}
     };
 
     const handleWsTurnChanged = async (message) =>{
