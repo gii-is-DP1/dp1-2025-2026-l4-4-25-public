@@ -104,7 +104,38 @@ public class SquareService {
         return squareRepository.findByCoordinateXAndCoordinateYAndBoard(coordinateX, coordinateY, board);
     }
 
-    public void checkAndRevealGoal (Square placedSquare){
+    @Transactional
+    public void handleSquarePatched(Square squarePatched) {
+
+        Board board = squarePatched.getBoard();
+        Integer boardId = board.getId();
+
+        // 1️⃣ CARD_PLACED / CARD_DESTROYED
+        String action = (squarePatched.getCard() != null)
+                ? "CARD_PLACED"
+                : "CARD_DESTROYED";
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("action", action);
+        payload.put("row", squarePatched.getCoordinateY());
+        payload.put("col", squarePatched.getCoordinateX());
+        payload.put("card", squarePatched.getCard());
+        payload.put("squareId", squarePatched.getId());
+
+
+        // 2️⃣ CHECK GOAL 
+        Map<String, Object> goalReveal = getGoalReveal(squarePatched); 
+        if (goalReveal != null) {
+            payload.put("goalReveal", goalReveal);
+        }
+
+        messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
+
+    }
+
+
+    @Transactional
+    public Map<String, Object> getGoalReveal (Square placedSquare){
         int x = placedSquare.getCoordinateX();
         int y = placedSquare.getCoordinateY(); 
         Board board = placedSquare.getBoard(); 
@@ -122,28 +153,18 @@ public class SquareService {
                 GoalType goalType = neighbor.getGoalType(); 
                 if (goalType == null) continue; 
 
-                // Extraemos el tipo de carta (gold, carbon_1, carbon_2) de la imagen
-                /*String cardType = "unknown"; 
-                if (neighbor.getCard() != null && neighbor.getCard().getImage() != null){
-                    String img = neighbor.getCard().getImage();
-                    if (img.contains("gold")) cardType = "gold"; 
-                    else if (img.contains("carbon_1") || img.contains("coal_1")) cardType = "carbon_1"; 
-                    else if (img.contains("carbon_2") || img.contains("coal_2")) cardType = "carbon_2"; 
-                }*/
                 
                 // Preparamos el mensaje para el Frontend
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("action", "GOAL_REVEALED");
-                payload.put("row", targetY);
-                payload.put("col", targetX); 
-                payload.put("goalType", goalType.getValue()); // "gold", "carbon_1", "carbon_2"  
+                Map<String, Object> goal = new HashMap<>();
+                goal.put("row", targetY);
+                goal.put("col", targetX); 
+                goal.put("goalType", goalType.getValue()); // "gold", "carbon_1", "carbon_2"  
                 
-                // Enviamos el mensaje por WebSocket
-                messagingTemplate.convertAndSend("/topic/game/" + board.getId(), payload);
-                System.out.println("GOAL REVEALED: " + goalType + " at " + targetX + "," + targetY);
+                return goal; 
             }
 
         }
+        return null; 
     }
         
 }

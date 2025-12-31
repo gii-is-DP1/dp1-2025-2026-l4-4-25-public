@@ -61,9 +61,9 @@ export default function GameBoard({
             alt={`Objective: ${typeToShow}`} 
             className="static-card-image revealed-objective" 
             style={{
-              // Solo ponemos borde dorado si es una revelación temporal de mapa
-              border: isMapRevealed ? '3px solid gold' : 'none',
-              boxShadow: isMapRevealed ? '0 0 20px gold' : 'none'
+              // Borde dorado para revelaciones de mapa o cuando se alcanza el oro
+              border: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '3px solid gold' : 'none',
+              boxShadow: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '0 0 20px gold' : 'none'
             }}
           />
         );

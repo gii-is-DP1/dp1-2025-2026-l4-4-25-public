@@ -221,14 +221,15 @@ export default function Board() {
       switch(action){
         case "CARD_PLACED":
           handleWsCardPlaced(boardMessage);
+
+          if (boardMessage.goalReveal){
+            handleWsGoalRevealed(boardMessage.goalReveal);
+          }
+
           break;
 
         case "CARD_DESTROYED":
           handleWsCardDestroyed(boardMessage);
-          break;
-        
-        case "GOAL_REVEALED": 
-          handleWsGoalRevealed(boardMessage);
           break;
         
         default:
@@ -329,7 +330,7 @@ export default function Board() {
     }, [isCreator, game?.chat, jwt]);
     
     //Modularizar estas funciones
-    const handleWsCardPlaced = ({row, col, card, player, squareId})=>{
+    const handleWsCardPlaced =  async ({row, col, card, player, squareId})=>{
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
       const sameAsLast =
@@ -375,7 +376,6 @@ export default function Board() {
       }, 800); 
     };
 
-    // --- FUNCIÓN NUEVA ---
   const handleWsGoalRevealed = async ({ row, col, goalType }) => {
     console.log(`🎯 Recibido GOAL_REVEALED en (${row}, ${col}) tipo: ${goalType}`);
     const normalized = goalType; 
@@ -402,7 +402,10 @@ export default function Board() {
     addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
     
     // Verificar si la ronda terminó al revelar el objetivo
-    await checkForRoundEnd();
+    //await checkForRoundEnd();
+    setTimeout(() => {
+    checkForRoundEnd();
+    }, 100);
   };
   
     // Handlers para solicitudes de espectador
@@ -555,7 +558,9 @@ export default function Board() {
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             }
           }
-          await checkForRoundEnd(); 
+          if (!roundEndedRef.current) {
+            await checkForRoundEnd(); 
+          }
         }
       }
     }; 
@@ -1137,6 +1142,10 @@ const activateCollapseMode = (card, cardIndex) => {
 
   // Función auxiliar para cuando se acaba el tiempo
   const handleTurnTimeOut = () => {
+    if (roundEndedRef.current) {
+      console.log("Timeout ignored: round has ended.");
+      return; 
+    }
     // Evitamos llamar varias veces si ya se está procesando
     if (processingAction.current) return;
     // Evitamos toasts repetidos por timeout que puedan dispararse varias veces
@@ -1460,7 +1469,7 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [activePlayers]);
 
   useEffect(() => {
-    if(!currentPlayer || playerOrder.length === 0) return;
+    if(!currentPlayer || playerOrder.length === 0 || roundEndedRef.current) return;
 
     if(loggedInUser.username !== currentPlayer){
       setCont(timeturn);

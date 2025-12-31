@@ -136,38 +136,9 @@ public class SquareRestController {
         Square squarePatched = objectMapper.updateValue(square, updates);
 
         squareService.saveSquare(squarePatched);
-
-        // ENVIAR DATOS AL CANAL WEBSOCKET
-        Board board = squarePatched.getBoard();
-        Integer boardId = board.getId();
-
-        String action = (squarePatched.getCard() != null) ? "CARD_PLACED" : "CARD_DESTROYED";
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("action", action);
-        payload.put("row", squarePatched.getCoordinateY());
-        payload.put("col", squarePatched.getCoordinateX());
-        payload.put("card", squarePatched.getCard()); 
-        payload.put("squareId", squarePatched.getId());
-
-        /*if (squarePatched.getCard() != null) {
-            Map<String, Object> simpleCard = new HashMap<>(); 
-            simpleCard.put("id", squarePatched.getCard().getId());
-            simpleCard.put("image", squarePatched.getCard().getImage());
-            if (squarePatched.getType() != null) {
-                simpleCard.put("type", squarePatched.getType().toString());
-            }
-            payload.put("card", simpleCard); 
-        } else{
-            payload.put("card", null); 
-        }*/
-
-        messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
-
-        if(squarePatched.getCard() != null){
-            squareService.checkAndRevealGoal(squarePatched);
-        }
-
+        squareService.handleSquarePatched(squarePatched);
+        
+    
         return new ResponseEntity<>(squarePatched,HttpStatus.OK);
     }
 
