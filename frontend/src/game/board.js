@@ -403,9 +403,26 @@ export default function Board() {
     
     // Verificar si la ronda terminó al revelar el objetivo
     //await checkForRoundEnd();
-    setTimeout(() => {
-    checkForRoundEnd();
-    }, 100);
+    // 2. Lógica de Fin de Ronda inmediata si es ORO
+    if (goalType.toLowerCase() === 'gold') {
+       setTimeout(() => {
+           console.log("🏆 ORO DETECTADO. Iniciando cuenta atrás...");
+           
+           if (loggedInUser.username === currentPlayer) {
+                setTimeout(async () => {
+                    console.log("⚡ EJECUTANDO FIN DE RONDA...");
+                    const mockResult = {
+                        ended: true,
+                        reason: 'GOLD_REACHED',
+                        winnerTeam: 'MINERS',
+                        goldPosition: `[${row}][${col}]`
+                    };
+                    await handleRoundEnd(mockResult);
+                }, 2000); 
+           }
+       }, 50); // Pequeño delay de 50ms para asegurar que el DOM se ha actualizado con la carta de oro
+    }
+    // Si no es oro, seguimos jugando normal
   };
   
     // Handlers para solicitudes de espectador
@@ -915,6 +932,26 @@ const activateCollapseMode = (card, cardIndex) => {
     
     if (roundEndResult.ended) {
       roundEndedRef.current = true; // Marcar que la ronda terminó
+      // 🔑 FORZAR revelación visual del oro si aún no está revelado
+      if (roundEndResult.reason === 'GOLD_REACHED' && roundEndResult.goldPosition) {
+        const [r, c] = roundEndResult.goldPosition
+          .replace('[', '')
+          .replace(']', '')
+          .split(',')
+          .map(Number);
+
+        setBoardCells(prev => {
+          const next = prev.map(row => row.slice());
+          if (next[r]?.[c]) {
+            next[r][c] = {
+              ...next[r][c],
+              revealed: true,
+              cardType: 'gold'
+            };
+          }
+          return next;
+        });
+      }
       handleRoundEnd(roundEndResult);
     }
   };
