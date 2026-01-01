@@ -2,7 +2,7 @@ import "./css/formGenerator.css";
 import "filepond/dist/filepond.min.css";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 
-import {
+import React, {
   useState,
   useImperativeHandle,
   forwardRef,
@@ -153,12 +153,11 @@ const FormGenerator = forwardRef((props, ref) => {
         {Object.keys(formValues).length > 0 &&
           props.inputs.map((input, index) => {
             return (
-              <>
+              <React.Fragment key={index}>
                 {props.childrenPosition !== -1 &&
                   index === props.childrenPosition &&
                   props.children}
                 <FormInput
-                  key={index}
                   tag={input.tag}
                   name={input.name}
                   type={input.type}
@@ -175,7 +174,7 @@ const FormGenerator = forwardRef((props, ref) => {
                   disabled={input.disabled}
                   ref={(input) => (formInputs.current[index] = input)}
                 />
-              </>
+              </React.Fragment>
             );
           })}
         {props.childrenPosition === -1 && props.children}

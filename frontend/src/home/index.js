@@ -7,19 +7,16 @@ import { Link } from 'react-router-dom';
 import tokenService from "../services/token.service";
 
 export default function Home() {
-    //const jwt = tokenService.getLocalAccessToken();
-
+    const jwt = tokenService.getLocalAccessToken();
     const navigate = useNavigate();
-    /*useEffect(() => {
+    
+    useEffect(() => {
         if (jwt) {
             navigate('/lobby');
         } else {
             navigate('/login');
         }
-    }, [jwt, navigate]);*/
-    useEffect(() => {
-        navigate('/login'); // siempre va a login al iniciar
-    }, [navigate]);
+    }, [jwt, navigate]);
 
-
+    return null;
 }

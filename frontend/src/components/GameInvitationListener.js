@@ -7,17 +7,25 @@ const GameInvitationListener = () => {
   const [polling, setPolling] = useState(null);
   const navigate = useNavigate();
 
-  const jwt = tokenService.getLocalAccessToken();
-
   useEffect(() => {
+    const jwt = tokenService.getLocalAccessToken();
     const currentUser = tokenService.getUser();
-    if (!currentUser?.username) return;
+    
+    if (!jwt || !currentUser?.username) return;
 
     const intervalId = setInterval(async () => { // Polling cada 3s
       try {
         const response = await fetch(`/api/v1/messages`, {
           headers: {'Authorization':`Bearer ${jwt}`,'Content-Type':'application/json'}});
 
+        if (!response.ok) {
+          if (response.status === 401) {
+            clearInterval(intervalId);
+            return;
+          }
+          return;
+        }
+        
         if (response.ok) {
           const messages = await response.json();
           messages.forEach((message) => {
