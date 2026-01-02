@@ -16,7 +16,7 @@ const GameHistoryCard = ({ game }) => {
 
         <p>
           👥 Players:{" "}
-          <b>{game.maxPlayers || 0}</b>
+          <b>{game.activePlayers?.length || 0}</b>
         </p>
 
         <p>
