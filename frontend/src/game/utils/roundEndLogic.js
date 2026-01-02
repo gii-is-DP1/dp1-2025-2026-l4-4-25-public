@@ -55,7 +55,7 @@ const patchActivePlayer = async (activePlayerId, data) => {
 };
 
 // La ronda termina si se ha encontrado la pepita o todos los jugadores se han quedado sin cartas
-export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCards) => {
+export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCards, playerCardsCount) => {
   // Validar que players existe y tiene elementos
   if (!players || !Array.isArray(players) || players.length === 0) {
     return { ended: false };
@@ -71,6 +71,19 @@ export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCar
       goldPosition: goldReached.position
     };
   }
+
+  // Verificar si todos los jugadores se han quedado sin cartas
+  const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
+  console.log('🔍 checkRoundEnd - totalCards:', totalCards, 'playerCardsCount:', playerCardsCount);
+  if (totalCards === 0) {
+    console.log('🔍 checkRoundEnd - ALL_PLAYERS_OUT_OF_CARDS');
+    return {
+      ended: true,
+      reason: 'ALL_PLAYERS_OUT_OF_CARDS',
+      winnerTeam: 'SABOTEURS'
+    };
+  }
+
   if (deckCount <= 0) {
     try {
       // Obtener los decks de todos los jugadores en paralelo
