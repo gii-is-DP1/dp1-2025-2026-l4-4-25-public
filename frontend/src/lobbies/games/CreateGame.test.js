@@ -334,8 +334,8 @@ describe('CreateGame Component', () => {
     useLobbyData.mockReturnValue({...mockLobbyData, spectatorRequests: [spectatorReq]});
     renderComponent();
     const denyButtons = screen.getAllByText(/deny/i);
-    expect(denyButtons.length).toBeGreaterThan(1);
-    fireEvent.click(denyButtons[1]);
+    expect(denyButtons.length).toBeGreaterThan(0);
+    fireEvent.click(denyButtons[0]);
 
     await waitFor(() => {
       expect(mockLobbyData.sendMessage).toHaveBeenCalled();

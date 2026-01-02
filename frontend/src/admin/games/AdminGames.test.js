@@ -235,8 +235,10 @@ describe('AdminGames', () => {
 
     const forceFinishButton = screen.getAllByText('Force Finish')[0];
     await user.click(forceFinishButton);
-    expect(screen.getByTestId('force-finish-modal')).toBeInTheDocument();
-    expect(screen.getByText('Force Finish Game #1')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('force-finish-modal')).toBeInTheDocument();
+      expect(screen.getByText('Force Finish Game #1')).toBeInTheDocument();
+    });
   });
 
   test('8. FINALIZACIÓN: cierra la pestaña de finalización forzada de una partida', async () => {
@@ -348,9 +350,10 @@ describe('AdminGames', () => {
 
     const expelButton = screen.getAllByText('Expel Player')[0];
     await user.click(expelButton);
-
-    expect(screen.getByTestId('expel-player-modal')).toBeInTheDocument();
-    expect(screen.getByText('Expel Player from Game #1')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('expel-player-modal')).toBeInTheDocument();
+      expect(screen.getByText('Expel Player from Game #1')).toBeInTheDocument();
+    });
   });
 
   test('12. EXPULSIÓN: cierra la pestaña para expulsar a un jugador', async () => {
@@ -529,5 +532,9 @@ describe('AdminGames', () => {
     const forceFinishButton = screen.getAllByText('Force Finish')[0];
     await user.click(forceFinishButton);
 
-    expect(screen.getByText('Game Code: GAME001')).toBeInTheDocument()});
+    await waitFor(() => {
+      expect(screen.getByText('Game Code: GAME001')).toBeInTheDocument();
+    });
+  });
+
 });
