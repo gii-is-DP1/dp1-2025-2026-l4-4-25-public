@@ -652,9 +652,9 @@ export default function Board() {
       setRoundEndData(roundResult);
       setRoundEndCountdown(10);
 
-      if (round?.roundNumber === 3) {
+      /*if (round?.roundNumber === 3) {
         handleLastRoundEnd(roundResult);
-      }
+      }*/
     };
     
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
@@ -1102,6 +1102,13 @@ const activateCollapseMode = (card, cardIndex) => {
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
     
+    const isLastRound = round?.roundNumber === 3;
+
+    if (isLastRound) {
+      handleLastRoundEnd(roundEndData);
+    return;
+    }
+
     const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
     
     // Solo el primer jugador crea la nueva ronda
@@ -1144,7 +1151,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
     
     createNewRound();
-  }, [roundEndCountdown]);
+  }, [roundEndCountdown, roundEndData]);
 
   // Efecto para manejar el countdown de fin de partida
   useEffect(() => {
