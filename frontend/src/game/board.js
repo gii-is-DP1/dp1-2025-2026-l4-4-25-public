@@ -1101,13 +1101,6 @@ const activateCollapseMode = (card, cardIndex) => {
   // Efecto separado para navegar cuando el countdown llega a 0
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
-    
-    const isLastRound = round?.roundNumber === 3;
-
-    if (isLastRound) {
-      handleLastRoundEnd(roundEndData);
-    return;
-    }
 
     const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
     
