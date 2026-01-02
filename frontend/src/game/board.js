@@ -81,7 +81,7 @@ export default function Board() {
   const [playerTools, setPlayerTools] = useState({});
   //round del navigate
   const [round, setRound] = useState(initialState.round);
-  
+  const [roundEnded, setRoundEnded] = useState(false); 
   // Estados del tablero
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
@@ -404,7 +404,7 @@ export default function Board() {
     // Verificar si la ronda terminó al revelar el objetivo
     //await checkForRoundEnd();
     // 2. Lógica de Fin de Ronda inmediata si es ORO
-    if (goalType.toLowerCase() === 'gold') {
+    /*if (goalType.toLowerCase() === 'gold') {
        setTimeout(() => {
            console.log("🏆 ORO DETECTADO. Iniciando cuenta atrás...");
            
@@ -421,7 +421,7 @@ export default function Board() {
                 }, 2000); 
            }
        }, 50); // Pequeño delay de 50ms para asegurar que el DOM se ha actualizado con la carta de oro
-    }
+    }*/
     // Si no es oro, seguimos jugando normal
   };
   
@@ -534,6 +534,10 @@ export default function Board() {
     };
 
     const handleWsTurnChanged = async (message) =>{
+      if (roundEndedRef.current) {
+        console.log('⛔ TURN_CHANGED ignorado: ronda terminada');
+        return;
+      }
       const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
       const { newTurnIndex, roundId, leftCards } = payload;
       const turnKey = `${roundId}:${newTurnIndex}`;
@@ -632,6 +636,7 @@ export default function Board() {
       
       // Marcar la ronda como terminada
       roundEndedRef.current = true;
+      setRoundEnded(true);
       
       // Resetear el flag de navegación
       isNavigatingToNewRound.current = false;
@@ -651,6 +656,11 @@ export default function Board() {
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (processingAction.current) return;
     processingAction.current = true;
+
+    if (roundEndedRef.current) {
+      toast.info("The round has already ended");
+      return;
+    }
 
     try {
       if (isSpectator) {
@@ -715,7 +725,13 @@ export default function Board() {
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
-      nextTurn({newDeckCount: newDeckCount});
+      
+      //await checkForRoundEnd();
+
+      if (!roundEndedRef.current) {
+        nextTurn({newDeckCount: newDeckCount});
+      }
+      // nextTurn({newDeckCount: newDeckCount});
       
       // Evaluar fin de ronda después de colocar carta (puede que se haya encontrado el oro)
       //checkForRoundEnd(); //Evaluar el checkForRoundEnd() solo en webSocket
@@ -726,6 +742,7 @@ export default function Board() {
 
 const handleActionCard = (card, targetPlayer, cardIndex) => {
   if (processingAction.current) return;
+  if (roundEndedRef.current) return;
   processingAction.current = true;
   try {
     setCont(timeturn);
@@ -795,6 +812,7 @@ const activateCollapseMode = (card, cardIndex) => {
   const handleCellClick = async (row, col) => {
   if (!collapseMode.active) return;
   if (processingAction.current) return;
+  if (roundEndedRef.current) return;
   processingAction.current = true;
 
   const cell = boardCells[row][col];
@@ -878,6 +896,10 @@ const activateCollapseMode = (card, cardIndex) => {
   
 
   const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
+    if (roundEndedRef.current) {
+    console.log('⛔ nextTurn bloqueado: ronda terminada');
+    return false;
+    }
     if (isTurnChanging.current && !force) return false;
     if (playerOrder.length === 0) return false;
 
@@ -932,6 +954,7 @@ const activateCollapseMode = (card, cardIndex) => {
     
     if (roundEndResult.ended) {
       roundEndedRef.current = true; // Marcar que la ronda terminó
+      setRoundEnded(true);
       // 🔑 FORZAR revelación visual del oro si aún no está revelado
       if (roundEndResult.reason === 'GOLD_REACHED' && roundEndResult.goldPosition) {
         const [r, c] = roundEndResult.goldPosition
@@ -1145,6 +1168,7 @@ const activateCollapseMode = (card, cardIndex) => {
   // Función para descartar carta
   const handleDiscard = () => {
     if (processingAction.current) return;
+    if (roundEndedRef.current) return;
     processingAction.current = true;
     try {
       if (isSpectator) {
@@ -1506,7 +1530,7 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [activePlayers]);
 
   useEffect(() => {
-    if(!currentPlayer || playerOrder.length === 0 || roundEndedRef.current) return;
+    if(!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
     if(loggedInUser.username !== currentPlayer){
       setCont(timeturn);
@@ -1526,7 +1550,13 @@ const activateCollapseMode = (card, cardIndex) => {
     }, 1000);
 
     return () => clearInterval(time);
-  }, [currentPlayer, loggedInUser.username, playerOrder]);
+  }, [currentPlayer, loggedInUser.username, playerOrder, roundEnded]);
+
+  useEffect(() => {
+    if (roundEnded) {
+      setCont(0);
+    }
+  }, [roundEnded]);
 
   useEffect(() => {
     if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {

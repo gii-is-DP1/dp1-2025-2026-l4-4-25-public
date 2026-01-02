@@ -430,7 +430,10 @@
   overflow-y: auto;}
 
 .log-entry.info {
-  color: #dcdcdc;}
+  color: #dcdcdc;
+  background: none;
+  border-left: none;
+}
 
 .log-entry.turn {
   color: #ffffff;
@@ -441,6 +444,10 @@
 
 .log-entry.warning {
   color: #f71000;}
+
+.log-entry {
+  text-decoration: none;
+}
 
 .no-log {
   color: #888;
