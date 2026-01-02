@@ -295,6 +295,7 @@ export default function Board() {
             ...playerCardsCount,
             [username]: leftCards
           })
+          
           break;
 
         default:
@@ -996,10 +997,10 @@ const activateCollapseMode = (card, cardIndex) => {
     await loadActivePlayers();
     
     // Obtener el ranking final basado en goldNugget
-    const playerRankings = activePlayers.map(p => ({
+    const playerRankings = roundEndData?.goldDistribution?.map(p => ({
       username: p.username,
-      totalNuggets: p.goldNugget || 0
-    }));
+      totalNuggets: p.totalNuggets || 0
+    })) || [];
     
     console.log('📊 Player rankings:', playerRankings);
     
