@@ -94,6 +94,10 @@ const CreateGame = () => {
       }
     }
 
+    if (payload.adminAction) {
+      handleAdminActionInLobby(payload);
+      return}
+
     const { game: updatedGame, round: updatedRound } = payload;
     console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
     console.log(" BOARD EN EL ROUND:", updatedRound?.board);
@@ -209,7 +213,27 @@ const CreateGame = () => {
     SetLobbyIn(currentIn);
   }, [game?.activePlayers]);
 
-  // Handlers para solicitudes de unión
+  const handleAdminActionInLobby = (payload) => {
+    const { adminAction } = payload;
+    if (!adminAction) return;
+    const currentUser = tokenService.getUser()?.username;
+    if (adminAction.action === "FORCE_FINISH") {
+      toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
+      setTimeout(() => {
+        navigate('/lobby')}, 3000);
+    } else if (adminAction.action === "PLAYER_EXPELLED") {
+      if (adminAction.affectedPlayer === currentUser) {
+        toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
+        setTimeout(() => {
+          navigate('/lobby');
+        }, 3000);
+      } else {
+        toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
+        if (payload.game) {
+          setGame(payload.game);
+        }}}
+  };
+
   const handleAcceptRequest = async (username) => {
     try {
       const currentActivePlayers = Array.from(new Set(game.activePlayers ?? []));

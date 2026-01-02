@@ -81,10 +81,12 @@ public class AuthController {
 	@PostMapping("/signup")	
 	public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		if (activePlayerService.existsActivePlayer(signUpRequest.getUsername()).equals(true)) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+			return ResponseEntity.badRequest()
+				.body(new MessageResponse("Error: Username is already taken!"));
 		}
 		authService.createUser(signUpRequest);
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		return ResponseEntity.ok()
+			.body(new MessageResponse("User registered successfully!"));
 	}
 
 }

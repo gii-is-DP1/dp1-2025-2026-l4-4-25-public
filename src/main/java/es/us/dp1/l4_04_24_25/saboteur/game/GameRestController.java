@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +107,7 @@ class GameRestController {
         Chat chat = new Chat();
         chat.setGame(newGame);
         newGame.setChat(chat);
+        newGame.setCreatedAt(LocalDateTime.now());
         Game savedGame = gameService.saveGame(newGame);
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
     }
@@ -184,6 +186,9 @@ class GameRestController {
     if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
 
         System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+
+        savedGame.setStartTime(LocalDateTime.now());
+        gameService.saveGame(savedGame);
 
         // 1. Obtener la ronda actual
         List<Round> rounds = roundService.findByGameId(id);

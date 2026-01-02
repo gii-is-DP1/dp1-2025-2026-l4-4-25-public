@@ -131,26 +131,14 @@ public class SquareRestController {
                 square.setCard(null);
                 square.setOccupation(false);
             }
+            updates.remove("card"); 
         }
         Square squarePatched = objectMapper.updateValue(square, updates);
 
         squareService.saveSquare(squarePatched);
-
-        // ENVIAR DATOS AL CANAL WEBSOCKET
-        Board board = squarePatched.getBoard();
-        Integer boardId = board.getId();
-
-        String action = (squarePatched.getCard() != null) ? "CARD_PLACED" : "CARD_DESTROYED";
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("action", action);
-        payload.put("row", squarePatched.getCoordinateY());
-        payload.put("col", squarePatched.getCoordinateX());
-        payload.put("card", squarePatched.getCard()); 
-        payload.put("squareId", squarePatched.getId());
-
-        messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
-
+        squareService.handleSquarePatched(squarePatched);
+        
+    
         return new ResponseEntity<>(squarePatched,HttpStatus.OK);
     }
 

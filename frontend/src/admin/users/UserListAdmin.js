@@ -14,7 +14,6 @@ const loggedInUser = tokenService.getUser();
 export default function UserListAdmin() {
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
-  // const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
   const [users, setUsers] = useFetchState(
     [],
     `/api/v1/users`,
@@ -50,10 +49,10 @@ export default function UserListAdmin() {
         <div className="user-table-cell">
           <span
             className={`user-role ${
-              user.authority === "ADMIN" ? "role-admin" : "role-user"
+              user.authority?.authority === "ADMIN" ? "role-admin" : "role-user"
             }`}
           >
-            {user.authority || 'Rol desconocido'}
+            {user.authority?.authority || 'Rol desconocido'}
           </span>
         </div>
       </td>
@@ -84,7 +83,7 @@ export default function UserListAdmin() {
                   setVisible
                 )
               }
-              disabled = {loggedInUser.id === user.id}
+              disabled = {loggedInUser?.id === user.id}
               className="action-btn action-delete"
             >
               🗑️ Delete
@@ -99,31 +98,39 @@ export default function UserListAdmin() {
 
   return (
     <div className="admin-page-container">
-      <h1 className="admin-page-title">User Management Panel</h1>
+      <div className="admin-header-unified">
+        <div className="header-content">
+          <h1>👥 User Management Dashboard</h1>
+          <p className="header-subtitle">Manage Saboteur Users and Permissions</p>
+        </div>
+        <div className="header-actions">
+          <Button color="success" tag={Link} to="/users/new" className="add-user-btn">
+            Add User
+          </Button>
+          <Link to="/lobby">
+            <button className="btn-back-unified">➡️</button>
+          </Link>
+        </div>
+      </div>
+
       {alerts.map((a) => a.alert)}
       {modal}
-      <Button color="success" tag={Link} to="/users/new" className="add-user-btn">
-        👤Add User
-      </Button>
 
-      <div className="user-table-container">
-        <Table responsive bordered hover className="user-table mt-4">
-          <thead>
-            <tr>
-              <th>Avatar</th>
-              <th>Username</th>
-              <th>Rol</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>{userList}</tbody>
-        </Table>
+      <div className="user-content-wrapper">
+        <div className="user-table-container">
+          <Table responsive bordered hover className="user-table">
+            <thead>
+              <tr>
+                <th>Avatar</th>
+                <th>Username</th>
+                <th>Rol</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>{userList}</tbody>
+          </Table>
+        </div>
       </div>
-    <div className="top-right-lobby-buttons">
-        <Link to="/lobby">
-          <button className="button-logOut"> ➡️</button>
-        </Link>
-    </div>
     </div>
   );
 }

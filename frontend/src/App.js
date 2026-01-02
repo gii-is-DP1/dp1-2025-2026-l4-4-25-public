@@ -15,6 +15,7 @@ import Logout from "./auth/logout";
 import tokenService from "./services/token.service";
 import UserListAdmin from "./admin/users/UserListAdmin";
 import UserEditAdmin from "./admin/users/UserEditAdmin";
+import AdminGames from "./admin/games/AdminGames";
 import Lobby from "./lobbies/lobby"; 
 import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
@@ -53,7 +54,6 @@ function App() {
   let ownerRoutes = <></>;
   let userRoutes = <></>;
   let vetRoutes = <></>;
-  let publicRoutes = <></>;
 
   roles.forEach((role) => {
     if (role === "ADMIN") {
@@ -61,6 +61,7 @@ function App() {
         <>
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
           <Route path="/users/:id" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
+          <Route path="/admin/games" element={<PrivateRoute><AdminGames /></PrivateRoute>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
@@ -71,7 +72,6 @@ function App() {
     if (role === "PLAYER") {
       ownerRoutes = (
         <>
-          {/*<Route path="/register" element={<Register />} />*/}
           <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
@@ -83,17 +83,9 @@ function App() {
         </>)
     }    
   })
-  if (!jwt) {
-    publicRoutes = (
-      <>        
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </>
-    )
-  } else {
+  if (jwt) {
     userRoutes = (
       <>
-        {/* <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} /> */}  
         <Route path="/lobby" element={<PrivateRoute><Lobby /></PrivateRoute>} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
@@ -114,7 +106,8 @@ function App() {
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Routes>
           <Route path="/" exact={true} element={<Home />} />
-          {publicRoutes}
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
           {userRoutes}
           {adminRoutes}
           {ownerRoutes}

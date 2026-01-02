@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,17 +14,22 @@ import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
+import java.util.HashMap;
+import es.us.dp1.l4_04_24_25.saboteur.square.GoalType;
+
 
 @Service
 public class SquareService {
 
     private final SquareRepository squareRepository;
     private final BoardService boardService;
+    private final SimpMessagingTemplate messagingTemplate; 
 
     @Autowired
-    public SquareService(SquareRepository squareRepository, BoardService boardService) {
+    public SquareService(SquareRepository squareRepository, BoardService boardService, SimpMessagingTemplate messagingTemplate) {
         this.squareRepository = squareRepository;
         this.boardService = boardService;
+        this.messagingTemplate = messagingTemplate; 
     }
 
     @Transactional
@@ -98,5 +104,67 @@ public class SquareService {
         return squareRepository.findByCoordinateXAndCoordinateYAndBoard(coordinateX, coordinateY, board);
     }
 
+    @Transactional
+    public void handleSquarePatched(Square squarePatched) {
+
+        Board board = squarePatched.getBoard();
+        Integer boardId = board.getId();
+
+        // 1️⃣ CARD_PLACED / CARD_DESTROYED
+        String action = (squarePatched.getCard() != null)
+                ? "CARD_PLACED"
+                : "CARD_DESTROYED";
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("action", action);
+        payload.put("row", squarePatched.getCoordinateY());
+        payload.put("col", squarePatched.getCoordinateX());
+        payload.put("card", squarePatched.getCard());
+        payload.put("squareId", squarePatched.getId());
+
+
+        // 2️⃣ CHECK GOAL 
+        Map<String, Object> goalReveal = getGoalReveal(squarePatched); 
+        if (goalReveal != null) {
+            payload.put("goalReveal", goalReveal);
+        }
+
+        messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
+
+    }
+
+
+    @Transactional
+    public Map<String, Object> getGoalReveal (Square placedSquare){
+        int x = placedSquare.getCoordinateX();
+        int y = placedSquare.getCoordinateY(); 
+        Board board = placedSquare.getBoard(); 
+
+        // Direcciones: Derecha, Izquierda, Arriba, Abajo
+        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+        for (int[] dir : directions) {
+            int targetX = x + dir[0];
+            int targetY = y + dir[1];
+
+            //Buscamos si hay un cuadrado vecino en esa coordenada
+            Square neighbor = squareRepository.findByCoordinateXAndCoordinateYAndBoard(targetX, targetY, board);
+            if (neighbor != null && neighbor.getType() == type.GOAL){
+                GoalType goalType = neighbor.getGoalType(); 
+                if (goalType == null) continue; 
+
+                
+                // Preparamos el mensaje para el Frontend
+                Map<String, Object> goal = new HashMap<>();
+                goal.put("row", targetY);
+                goal.put("col", targetX); 
+                goal.put("goalType", goalType.getValue()); // "gold", "carbon_1", "carbon_2"  
+                
+                return goal; 
+            }
+
+        }
+        return null; 
+    }
         
 }

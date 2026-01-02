@@ -89,47 +89,61 @@ INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) 
 null,1);
 INSERT INTO round (id, left_cards, winner_rol, game_id, board_id, round_number) VALUES (2, 13, false, 1, 2, 2);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (101, 1, 4, TRUE, 0, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (101, 1, 4, TRUE, 0, 1, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (102, 2, 5, FALSE, 1, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (102, 2, 5, FALSE, 1, 1, NULL, NULL);
 
 -- SQUARES OBJETIVO (sin cartas asignadas - se asignarán dinámicamente en frontend)
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (103, 9, 2, TRUE, 1, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (103, 9, 2, TRUE, 1, 1, NULL, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (104, 9, 4, TRUE, 1, 1, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (104, 9, 4, TRUE, 1, 1, NULL);
-
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (105, 9, 6, TRUE, 1, 1, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (105, 9, 6, TRUE, 1, 1, NULL, NULL);
 
 -- SQUARES OBJETIVO PARA EL BOARD 2
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (106, 9, 2, TRUE, 1, 2, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (106, 9, 2, TRUE, 1, 2, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (107, 9, 4, TRUE, 1, 2, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (107, 9, 4, TRUE, 1, 2, NULL, NULL);
 
-INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id) 
-VALUES (108, 9, 6, TRUE, 1, 2, NULL);
+INSERT INTO squares (id, coordinatex, coordinatey, occupation, type, board_id, card_id, goal_type) 
+VALUES (108, 9, 6, TRUE, 1, 2, NULL, NULL);
 
-
-INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (200, 1, 10, 'PRUEBA', 'VICTORIES', 'Gana 10 partidas.', 'Constructor Maestro');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (201, 1, 30, 'TEST2', 'GAMES_PLAYED', 'TEST2?', 'TEST2?');
+VALUES (200, 1, 10, 'VICTORY_BADGE', 'VICTORIES', 'Gana 10 partidas para demostrar tu dominio del juego.', 'Constructor Maestro');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (202, 1, 40, 'TEST3', 'GAMES_PLAYED', 'TEST3?', 'TEST3?');
+VALUES (201, 1, 30, 'VETERAN_BADGE', 'GAMES_PLAYED', 'Juega 30 partidas para convertirte en un minero veterano.', 'Minero Veterano');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (203, 1, 60, 'TEST4', 'GAMES_PLAYED', 'TEST4?', 'TEST4?');
+VALUES (202, 1, 40, 'BUILDER_BADGE', 'BUILDED_PATHS', 'Construye 40 túneles para demostrar tu habilidad arquitectónica.', 'Arquitecto de Túneles');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (204, 1, 20,  'TEST5', 'GAMES_PLAYED', 'TEST5?', 'TEST5?');
+VALUES (203, 1, 60, 'GOLD_HUNTER_BADGE', 'GOLD_NUGGETS', 'Recolecta 60 pepitas de oro para ser el mejor cazador de tesoros.', 'Cazador de Oro');
+
+INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
+VALUES (204, 1, 20, 'SABOTEUR_BADGE', 'DESTROYED_PATHS', 'Destruye 20 túneles para perfeccionar tu arte del sabotaje.', 'Saboteador Experto');
+
+INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
+VALUES (205, 1, 5, 'MECHANIC_BADGE', 'TOOLS_REPAIRED', 'Repara 5 herramientas para ayudar a tus compañeros mineros.', 'Mecánico de la Mina');
+
+INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
+VALUES (206, 1, 50, 'PROFESSIONAL_BADGE', 'VICTORIES', 'Gana 50 partidas para alcanzar el nivel de minero profesional.', 'Profesional de la Mina');
+
+INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
+VALUES (207, 1, 100, 'LEGEND_BADGE', 'GAMES_PLAYED', 'Juega 100 partidas para convertirte en una leyenda viviente.', 'Leyenda de las Cavernas');
+
+INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
+VALUES (208, 1, 10, 'TROUBLEMAKER_BADGE', 'TOOLS_DAMAGED', 'Daña 10 herramientas para sembrar el caos en la mina.', 'Maestro del Caos');
+
+INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
+VALUES (209, 1, 100, 'MASTER_BUILDER_BADGE', 'BUILDED_PATHS', 'Construye 100 túneles para convertirte en el maestro constructor definitivo.', 'Gran Arquitecto');
 
 
 -- Logros para jugador
@@ -843,18 +857,18 @@ VALUES (124, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
     -- CARTAS DE CARBÓN (2 cartas - túneles curvos grises/negros)
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (125, null, FALSE, '/images/card-images/objective-cards/coal_1.png');
+VALUES (125, null, FALSE, '/images/card-images/finals/carbon_1.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (125, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE);
+VALUES (125, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE);
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (126, null, FALSE, '/images/card-images/objective-cards/coal_2.png');
+VALUES (126, null, FALSE, '/images/card-images/finals/carbon_2.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
 
     -- CARTA DE ORO (1 carta - túnel vertical con pepita dorada)
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (127, null, FALSE, '/images/card-images/objective-cards/gold.png');
+VALUES (127, null, FALSE, '/images/card-images/finals/gold.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (127, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE);
+VALUES (127, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE);
