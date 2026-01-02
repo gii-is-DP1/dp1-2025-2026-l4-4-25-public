@@ -37,39 +37,34 @@ export default function GameBoard({
     if (!cell) {
       return <div className="cell-coords">{row},{col}</div>;}
 
+    // Primero verificar si es una carta objetivo revelada (incluso si ahora es túnel)
+    const positionKey = `[${row}][${col}]`;
+    const isMapRevealed = revealedObjective && revealedObjective.position === positionKey;
+    const isPermanentlyRevealed = cell.revealed;
+
+    if (isMapRevealed || isPermanentlyRevealed) {
+      const typeToShow = isMapRevealed ? revealedObjective.cardType : cell.cardType;
+      const cardImage = getObjectiveCardImage(typeToShow);
+      
+      return (
+        <img 
+          src={cardImage} 
+          alt={`Objective: ${typeToShow}`} 
+          className="static-card-image revealed-objective" 
+          style={{
+            // Borde dorado para revelaciones de mapa o cuando se alcanza el oro
+            border: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '3px solid gold' : 'none',
+            boxShadow: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '0 0 20px gold' : 'none'
+          }}
+        />
+      );
+    }
+
     if (cell.type === 'start') {
       return <img src={startCardImage} alt="Start Card" className="static-card-image" />;}
 
     if (cell.type === 'objective') {
-      const positionKey = `[${row}][${col}]`;
-      // 1. ¿Está revelada temporalmente por carta de Mapa? (Tiene borde dorado)
-      const isMapRevealed = revealedObjective && revealedObjective.position === positionKey;
-      
-      // 2. ¿Está revelada permanentemente por conexión? (Propiedad 'revealed' del WebSocket)
-      const isPermanentlyRevealed = cell.revealed;
-
-      // Si cualquiera de las dos es cierta, mostramos la carta real
-      if (isMapRevealed || isPermanentlyRevealed) {
-        
-        // Priorizamos el tipo del mapa si está activo, si no, usamos el guardado en la celda
-        const typeToShow = isMapRevealed ? revealedObjective.cardType : cell.cardType;
-        const cardImage = getObjectiveCardImage(typeToShow);
-        
-        return (
-          <img 
-            src={cardImage} 
-            alt={`Objective: ${typeToShow}`} 
-            className="static-card-image revealed-objective" 
-            style={{
-              // Borde dorado para revelaciones de mapa o cuando se alcanza el oro
-              border: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '3px solid gold' : 'none',
-              boxShadow: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '0 0 20px gold' : 'none'
-            }}
-          />
-        );
-      }
-      
-      // Si no está revelada de ninguna forma, mostramos el reverso
+      // Si no está revelada, mostramos el reverso
       return <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />;
     }
 

@@ -149,7 +149,12 @@ export default function Board() {
   const processingAction = useRef(false);
   const isTurnChanging = useRef(false);
   const isNavigatingToNewRound = useRef(false);
-  const roundEndedRef = useRef(false);
+  const ROUND_STATE = {
+    ACTIVE: 'ACTIVE',
+    ENDING: 'ENDING',
+    ENDED: 'ENDED'
+  };
+  const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
   const lastRoundId = useRef(null);
   const forceRolesReassignment = useRef(false);
 
@@ -157,7 +162,7 @@ export default function Board() {
   useEffect(() => {
     if (round?.id && round.id !== lastRoundId.current) {
       console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
-      roundEndedRef.current = false;
+      roundEndedRef.current = ROUND_STATE.ACTIVE;
       lastRoundId.current = round.id;
       // Forzar reasignación de roles en la nueva ronda
       if (lastRoundId.current !== null) {
@@ -224,6 +229,12 @@ export default function Board() {
 
           if (boardMessage.goalReveal){
             handleWsGoalRevealed(boardMessage.goalReveal);
+
+            if (boardMessage.goalReveal.goalType === 'gold'){
+              console.log('🏆 Oro revelado → bloqueando turno inmediatamente');
+              roundEndedRef.current = ROUND_STATE.ENDING;
+              setRoundEnded(true);
+            }
           }
 
           break;
@@ -400,30 +411,20 @@ export default function Board() {
     }));
     
     addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
-    
-    // Verificar si la ronda terminó al revelar el objetivo
-    //await checkForRoundEnd();
-    // 2. Lógica de Fin de Ronda inmediata si es ORO
-    /*if (goalType.toLowerCase() === 'gold') {
-       setTimeout(() => {
-           console.log("🏆 ORO DETECTADO. Iniciando cuenta atrás...");
-           
-           if (loggedInUser.username === currentPlayer) {
-                setTimeout(async () => {
-                    console.log("⚡ EJECUTANDO FIN DE RONDA...");
-                    const mockResult = {
-                        ended: true,
-                        reason: 'GOLD_REACHED',
-                        winnerTeam: 'MINERS',
-                        goldPosition: `[${row}][${col}]`
-                    };
-                    await handleRoundEnd(mockResult);
-                }, 2000); 
-           }
-       }, 50); // Pequeño delay de 50ms para asegurar que el DOM se ha actualizado con la carta de oro
-    }*/
-    // Si no es oro, seguimos jugando normal
+    // Antes aquí había un checkForRoundEnd()
+    // Si es oro, terminar la ronda inmediatamente
+    if (goalType.toLowerCase() === 'gold') {
+      console.log("🏆 ORO DETECTADO. Terminando ronda inmediatamente...");
+      const mockResult = {
+        ended: true,
+        reason: 'GOLD_REACHED',
+        winnerTeam: 'MINERS',
+        goldPosition: `[${row}][${col}]`
+      };
+      await handleRoundEnd(mockResult);
+    }
   };
+  
   
     // Handlers para solicitudes de espectador
     const handleAcceptSpectatorRequest = async (username) => {
@@ -534,7 +535,7 @@ export default function Board() {
     };
 
     const handleWsTurnChanged = async (message) =>{
-      if (roundEndedRef.current) {
+      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
         console.log('⛔ TURN_CHANGED ignorado: ronda terminada');
         return;
       }
@@ -579,9 +580,9 @@ export default function Board() {
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             }
           }
-          if (!roundEndedRef.current) {
+          /*if (roundEndedRef.current === ROUND_STATE.ENDING) {
             await checkForRoundEnd(); 
-          }
+          }*/
         }
       }
     }; 
@@ -635,20 +636,25 @@ export default function Board() {
       }
       
       // Marcar la ronda como terminada
-      roundEndedRef.current = true;
+      roundEndedRef.current = ROUND_STATE.ENDED;
       setRoundEnded(true);
       
       // Resetear el flag de navegación
       isNavigatingToNewRound.current = false;
-      
-      // Mostrar el modal con los datos recibidos del primer jugador
-      setRoundEndData({
+      const roundResult = {
         winnerTeam,
         reason,
         goldDistribution,
         playerRoles
-      });
+      };
+      
+      // Mostrar el modal con los datos recibidos del primer jugador
+      setRoundEndData(roundResult);
       setRoundEndCountdown(10);
+
+      if (round?.roundNumber === 3) {
+        handleLastRoundEnd(roundResult);
+      }
     };
     
     // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
@@ -657,7 +663,7 @@ export default function Board() {
     if (processingAction.current) return;
     processingAction.current = true;
 
-    if (roundEndedRef.current) {
+    if (roundEndedRef.current === ROUND_STATE.ENDED) {
       toast.info("The round has already ended");
       return;
     }
@@ -728,7 +734,7 @@ export default function Board() {
       
       //await checkForRoundEnd();
 
-      if (!roundEndedRef.current) {
+      if (roundEndedRef.current === ROUND_STATE.ACTIVE) {
         nextTurn({newDeckCount: newDeckCount});
       }
       // nextTurn({newDeckCount: newDeckCount});
@@ -742,7 +748,7 @@ export default function Board() {
 
 const handleActionCard = (card, targetPlayer, cardIndex) => {
   if (processingAction.current) return;
-  if (roundEndedRef.current) return;
+  if (roundEndedRef.current === ROUND_STATE.ENDED) return;
   processingAction.current = true;
   try {
     setCont(timeturn);
@@ -812,7 +818,7 @@ const activateCollapseMode = (card, cardIndex) => {
   const handleCellClick = async (row, col) => {
   if (!collapseMode.active) return;
   if (processingAction.current) return;
-  if (roundEndedRef.current) return;
+  if (roundEndedRef.current === ROUND_STATE.ENDED) return;
   processingAction.current = true;
 
   const cell = boardCells[row][col];
@@ -896,7 +902,7 @@ const activateCollapseMode = (card, cardIndex) => {
   
 
   const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
-    if (roundEndedRef.current) {
+    if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
     console.log('⛔ nextTurn bloqueado: ronda terminada');
     return false;
     }
@@ -933,12 +939,12 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Función para evaluar si la ronda ha terminado
+  // Función para evaluar si la ronda ha terminado (Actualmente no la estamos usando)
   const checkForRoundEnd = async () => {
     console.log('🔍 checkForRoundEnd called. roundEndedRef:', roundEndedRef.current, 'deck:', deck?.id, 'deckCount:', deckCount);
     
     // No verificar si ya terminó la ronda (usar ref para evitar problemas de closure)
-    if (roundEndedRef.current) {
+    if (roundEndedRef.current === ROUND_STATE.ENDED) {
       console.log('🔍 checkForRoundEnd: ronda ya terminada, saliendo');
       return;
     }
@@ -953,7 +959,7 @@ const activateCollapseMode = (card, cardIndex) => {
     console.log('🔍 checkForRoundEnd result:', roundEndResult);
     
     if (roundEndResult.ended) {
-      roundEndedRef.current = true; // Marcar que la ronda terminó
+      roundEndedRef.current = ROUND_STATE.ENDED; // Marcar que la ronda terminó
       setRoundEnded(true);
       // 🔑 FORZAR revelación visual del oro si aún no está revelado
       if (roundEndResult.reason === 'GOLD_REACHED' && roundEndResult.goldPosition) {
@@ -1069,10 +1075,10 @@ const activateCollapseMode = (card, cardIndex) => {
     }
     
     // Si es la ronda 3, manejar el final del juego
-    if (round.roundNumber === 3) {
+    /*if (round.roundNumber === 3) {
       handleLastRoundEnd(result);
       return;
-    }
+    }*/
   };
 
   // Efect para manejar el countdown y la navegación a la nueva ronda
@@ -1168,7 +1174,7 @@ const activateCollapseMode = (card, cardIndex) => {
   // Función para descartar carta
   const handleDiscard = () => {
     if (processingAction.current) return;
-    if (roundEndedRef.current) return;
+    if (roundEndedRef.current === ROUND_STATE.ENDED) return;
     processingAction.current = true;
     try {
       if (isSpectator) {
@@ -1203,7 +1209,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
   // Función auxiliar para cuando se acaba el tiempo
   const handleTurnTimeOut = () => {
-    if (roundEndedRef.current) {
+    if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
       console.log("Timeout ignored: round has ended.");
       return; 
     }
