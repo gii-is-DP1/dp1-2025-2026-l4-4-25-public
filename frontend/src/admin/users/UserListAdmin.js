@@ -49,10 +49,10 @@ export default function UserListAdmin() {
         <div className="user-table-cell">
           <span
             className={`user-role ${
-              user.authority === "ADMIN" ? "role-admin" : "role-user"
+              user.authority?.authority === "ADMIN" ? "role-admin" : "role-user"
             }`}
           >
-            {user.authority || 'Rol desconocido'}
+            {user.authority?.authority || 'Rol desconocido'}
           </span>
         </div>
       </td>
@@ -83,7 +83,7 @@ export default function UserListAdmin() {
                   setVisible
                 )
               }
-              disabled = {loggedInUser.id === user.id}
+              disabled = {loggedInUser?.id === user.id}
               className="action-btn action-delete"
             >
               🗑️ Delete
