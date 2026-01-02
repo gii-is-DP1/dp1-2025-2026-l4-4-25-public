@@ -1111,6 +1111,12 @@ const activateCollapseMode = (card, cardIndex) => {
 
     const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
     
+    const isLastRound = round?.roundNumber === 3;
+
+    if (isLastRound) {
+      handleLastRoundEnd(roundEndData);
+      return;
+    }
     // Solo el primer jugador crea la nueva ronda
     // Los demás esperarán el mensaje WebSocket NEW_ROUND
     if (!isFirstPlayer) {
