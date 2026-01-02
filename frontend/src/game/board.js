@@ -56,7 +56,7 @@ export default function Board() {
 
   // Usar datos guardados o los de location.state
   const initialState = savedRoundData || {
-    game: JSON.parse(sessionStorage.getItem('game')) || location.state?.game,
+    game: location.state?.game,
     round: location.state?.round || null,
     isSpectator: location.state?.isSpectator || false
   };
@@ -68,13 +68,14 @@ export default function Board() {
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
   console.log('🎮 Game loaded:', game);
-
+/*
   // Guardar game en sessionStorage para persistir al recargar
   useEffect(() => {
     if (game) {
       sessionStorage.setItem('game', JSON.stringify(game));
     }
   }, [game]);
+  */
   const [message, setMessage] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
@@ -165,6 +166,8 @@ export default function Board() {
   const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
   const lastRoundId = useRef(null);
   const forceRolesReassignment = useRef(false);
+  const playersOutOfCardsLogged = useRef(new Set());
+
 
   // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
@@ -177,6 +180,8 @@ export default function Board() {
         forceRolesReassignment.current = true;
         console.log('🎭 Marcado para reasignar roles en nueva ronda');
       }
+
+      playersOutOfCardsLogged.current.clear();
     }
   }, [round?.id]);
 
@@ -308,7 +313,8 @@ export default function Board() {
           }));
           
           // Log cuando un jugador se queda sin cartas
-          if (leftCards === 0) {
+          if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
+            playersOutOfCardsLogged.current.add(username);
             addLog(`🃏 ${username} has run out of cards!`, 'warning');
           }
           
