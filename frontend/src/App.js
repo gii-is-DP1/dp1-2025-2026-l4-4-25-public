@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
-import Profile from "./lobbies/profiles/Profile";
+import Profile from "./lobbies/profiles/profile";
 import EditProfile from "./lobbies/profiles/EditProfile"; 
 import Login from "./auth/login";
 import Logout from "./auth/logout";
