@@ -48,25 +48,19 @@ function getCardConnections(card) {
     }
   }
   
-  const rotacion = card.rotacion || false;
-  let connections = {
-    arriba: card.arriba || false,
-    abajo: card.abajo || false,
-    izquierda: card.izquierda || false,
-    derecha: card.derecha || false,
-    centro: card.centro || false  // true = centro cerrado, false = centro abierto
-  };
+  // Buscar las propiedades en la carta directamente o en card.card (objeto anidado)
+  const cardData = card.card || card;
   
-  // Aplicar rotación de 180 grados si existe
-  if (rotacion === true) {
-    connections = {
-      arriba: card.abajo || false,
-      abajo: card.arriba || false,
-      izquierda: card.derecha || false,
-      derecha: card.izquierda || false,
-      centro: card.centro || false
-    };
-  }
+  // Las propiedades de conexión ya vienen correctas desde el backend/ListCards
+  // (incluyendo las cartas rotadas que ya tienen las propiedades invertidas)
+  // NO aplicamos rotación aquí porque ya está reflejada en las propiedades
+  const connections = {
+    arriba: card.arriba ?? cardData.arriba ?? false,
+    abajo: card.abajo ?? cardData.abajo ?? false,
+    izquierda: card.izquierda ?? cardData.izquierda ?? false,
+    derecha: card.derecha ?? cardData.derecha ?? false,
+    centro: card.centro ?? cardData.centro ?? false
+  };
   
   return connections;
 }
@@ -204,6 +198,13 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
   let hasAtLeastOneAdjacent = false;
   const cardConnections = getCardConnections(cardToPlace);
   
+  console.log('========== VALIDACIÓN DE CONEXIONES ==========');
+  console.log('Carta a colocar en [' + row + '][' + col + ']:', {
+    id: cardToPlace.id,
+    image: cardToPlace.image,
+    conexiones: cardConnections
+  });
+  
   for (const dir of directions) {
     const newRow = row + dir.dr;
     const newCol = col + dir.dc;
@@ -219,6 +220,17 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
       hasAtLeastOneAdjacent = true;
       const adjacentConnections = getCardConnections(adjacentCard);
       
+      console.log('Carta adyacente en [' + newRow + '][' + newCol + '] dirección ' + dir.name + ':', {
+        id: adjacentCard.id,
+        image: adjacentCard.image,
+        type: adjacentCard.type,
+        arriba: adjacentCard.arriba,
+        abajo: adjacentCard.abajo,
+        izquierda: adjacentCard.izquierda,
+        derecha: adjacentCard.derecha,
+        conexionesCalculadas: adjacentConnections
+      });
+      
       // Solo validar continuidad si alguna de las dos cartas tiene conexión en esa dirección
       const cardHasConnection = cardConnections[dir.name];
       const oppositeDirection = {
@@ -229,9 +241,16 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
       };
       const adjacentHasConnection = adjacentConnections[oppositeDirection[dir.name]];
       
+      console.log('Verificando dirección ' + dir.name + ':', {
+        cartaNuevaTiene: cardHasConnection,
+        cartaAdyacenteTiene: adjacentHasConnection,
+        direccionOpuesta: oppositeDirection[dir.name]
+      });
+      
       // Si alguna tiene conexión pero no hay continuidad válida, es inválido
       if (cardHasConnection || adjacentHasConnection) {
         if (!checkPathContinuity(cardConnections, adjacentConnections, dir.name)) {
+          console.log('❌ FALLO: No hay continuidad en dirección ' + dir.name);
           return false; // Una de las cartas tiene conexión pero no hay continuidad
         }
       }
@@ -245,15 +264,21 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
 // VALIDACIONES DE LAS CARTAS (HISTORIA DE USUARIO SOBRE LOS AVISOS SOBRE LAS RESTRICCIONES AL COLOCARLAS)
 // Lo exportamos como función para poder usarlo en el dropableCell
 export function validateCardPlacement(board, row, col, c) {
+  console.log('🎯 validateCardPlacement llamado para [' + row + '][' + col + ']');
   const directions = [{ name: 'arriba', dr: -1, dc: 0 },{ name: 'abajo', dr: 1, dc: 0 },{ name: 'izquierda', dr: 0, dc: -1 },{ name: 'derecha', dr: 0, dc: 1 }];
   if (!c) {
+    console.log('❌ No hay carta seleccionada');
     return { valid:false,message:'⚠️ There are not card selected!' };}
   
+  console.log('📋 Carta a colocar:', { id: c.id, image: c.image, arriba: c.arriba, abajo: c.abajo, izquierda: c.izquierda, derecha: c.derecha });
+  
   if (!isTunnelCard(c)) {
+    console.log('❌ No es carta de túnel');
     return { valid:false,message:'⚠️ Only tunnel cards can be placed on the board!' };}
   
   const cellOccupied = board[row] && board[row][col] !== null;
   if (cellOccupied) {
+    console.log('❌ Celda ocupada');
     return { valid:false,message:'⚠️ This cell is already occupied!' };}
   
   let hasAdjacent = false;
@@ -266,10 +291,13 @@ export function validateCardPlacement(board, row, col, c) {
         break;}}}
   
   if (!hasAdjacent) {
+    console.log('❌ No hay carta adyacente');
     return { valid:false,message:'⚠️ Card must be placed adjacent to an existing path' };}
   
+  console.log('✅ Pasó validaciones básicas, verificando conexiones...');
   const hasValidConnection = checkAdjacentCardsWithContinuity(board, row, col, c);
   if (!hasValidConnection) {
+    console.log('❌ No hay conexión válida');
     return { valid:false,message:'⚠️ The paths must connect properly!' };}
 
   const hasPathToStart = hasPathFromStart(board, row, col, c);

@@ -388,6 +388,45 @@ export default function Board() {
     
     //Modularizar estas funciones
     const handleWsCardPlaced =  async ({row, col, card, player, squareId})=>{
+      console.log('📥 WebSocket CARD_PLACED recibido:', { row, col, card, player, squareId });
+      
+      // El backend puede enviar solo el ID o un objeto parcial de la carta
+      // Necesitamos buscar la carta completa en ListCards para obtener todas las propiedades
+      let fullCard = card;
+      const cardId = typeof card === 'number' ? card : card?.id;
+      
+      if (cardId && Array.isArray(ListCards)) {
+        const foundCard = ListCards.find(c => c.id === cardId);
+        if (foundCard) {
+          // Combinar las propiedades de la carta encontrada con las del WebSocket
+          fullCard = {
+            ...foundCard,
+            ...card, // Por si el WS trae datos adicionales como rotacion
+            // Asegurar que las propiedades de conexión vienen de la carta completa
+            arriba: foundCard.arriba,
+            abajo: foundCard.abajo,
+            izquierda: foundCard.izquierda,
+            derecha: foundCard.derecha,
+            centro: foundCard.centro,
+            image: foundCard.image
+          };
+          console.log('✅ Carta encontrada en ListCards:', fullCard);
+        } else {
+          console.warn('⚠️ Carta no encontrada en ListCards, usando datos del WS');
+        }
+      }
+      
+      console.log('📥 Propiedades finales de la carta:', {
+        id: fullCard?.id,
+        image: fullCard?.image,
+        arriba: fullCard?.arriba,
+        abajo: fullCard?.abajo,
+        izquierda: fullCard?.izquierda,
+        derecha: fullCard?.derecha,
+        centro: fullCard?.centro,
+        rotacion: fullCard?.rotacion
+      });
+      
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
       const sameAsLast =
@@ -402,12 +441,18 @@ export default function Board() {
       setBoardCells(prev => {
         const next = prev.map(r => r.slice());
         next[row][col] = {
-          ...card,
+          ...fullCard,
           type: "tunnel",
           owner: player,
           placedAt: Date.now(),
           occupied: true,
-          squareId: squareId
+          squareId: squareId,
+          // Asegurar explícitamente las propiedades de conexión
+          arriba: fullCard?.arriba,
+          abajo: fullCard?.abajo,
+          izquierda: fullCard?.izquierda,
+          derecha: fullCard?.derecha,
+          centro: fullCard?.centro
         };
         return next;
       });
@@ -1724,10 +1769,26 @@ const activateCollapseMode = (card, cardIndex) => {
             if (!cardFromBackend) {
               return; // Se deja la celda como null si no hay carta,
             }
-            const fullCard =
-              cardFromBackend?.image
-                ? cardFromBackend
-                : (ListCards || []).find(c => c.id === cardFromBackend?.id) || cardFromBackend;
+            
+            // Buscar la carta completa en ListCards para obtener todas las propiedades
+            const cardId = typeof cardFromBackend === 'number' ? cardFromBackend : cardFromBackend?.id;
+            let fullCard = cardFromBackend;
+            
+            if (cardId && Array.isArray(ListCards)) {
+              const foundCard = ListCards.find(c => c.id === cardId);
+              if (foundCard) {
+                fullCard = {
+                  ...foundCard,
+                  ...cardFromBackend, // Mantener datos adicionales del backend (rotacion, etc)
+                  arriba: foundCard.arriba,
+                  abajo: foundCard.abajo,
+                  izquierda: foundCard.izquierda,
+                  derecha: foundCard.derecha,
+                  centro: foundCard.centro,
+                  image: foundCard.image
+                };
+              }
+            }
 
             baseBoard[row][col] = {
               squareId: sq.id,
@@ -1736,7 +1797,13 @@ const activateCollapseMode = (card, cardIndex) => {
               card: fullCard,
               type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
               image: fullCard?.image,
-              rotacion: fullCard?.rotacion,
+              rotacion: fullCard?.rotacion ?? sq.rotacion,
+              // Copiar explícitamente las propiedades de conexión
+              arriba: fullCard?.arriba,
+              abajo: fullCard?.abajo,
+              izquierda: fullCard?.izquierda,
+              derecha: fullCard?.derecha,
+              centro: fullCard?.centro
             };
           }
         })
