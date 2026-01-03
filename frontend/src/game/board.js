@@ -54,11 +54,20 @@ export default function Board() {
   const location = useLocation();
   const loggedInUser = tokenService.getUser();
 
-  // Usar datos guardados o los de location.state
-  const initialState = savedRoundData || {
-    game: location.state?.game,
-    round: location.state?.round || null,
-    isSpectator: location.state?.isSpectator || false
+  // Limpiar sessionStorage si hay location.state (nueva partida)
+  if (location.state) {
+    sessionStorage.removeItem('newRoundData');
+  }
+
+  // Dar prioridad a location.state sobre savedRoundData
+  const initialState = location.state ? {
+    game: location.state.game,
+    round: location.state.round || null,
+    isSpectator: location.state.isSpectator || false
+  } : savedRoundData || {
+    game: null,
+    round: null,
+    isSpectator: false
   };
 
   // Estados principales
@@ -1174,6 +1183,8 @@ const activateCollapseMode = (card, cardIndex) => {
     if (!gameEndData || gameEndCountdown > 0) return;
     
     console.log('🏁 Game finished, returning to lobby...');
+    // Limpiar datos residuales de sessionStorage
+    sessionStorage.removeItem('newRoundData');
     navigate('/lobby');
   }, [gameEndCountdown, gameEndData, navigate]);
 
@@ -1228,6 +1239,63 @@ const activateCollapseMode = (card, cardIndex) => {
         lastTimeoutToastTs.current = now;
       }
     nextTurn({ force: true });
+  };
+//Para debuggear el fin de ronda
+  // Handler para forzar revelar el oro y terminar la ronda (solo creator)
+  const handleForceEndRound = async () => {
+    if (!isCreator) {
+      toast.error('Only the game creator can force end the round');
+      return;
+    }
+
+    if (processingAction.current) return;
+    processingAction.current = true;
+
+    try {
+      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+        toast.info('Round already ending or ended');
+        return;
+      }
+
+      // Buscar posición del oro en objectiveCards; si no exista, escoger la primera
+      const objectivePositions = [ '[2][9]', '[4][9]', '[6][9]' ];
+      let goldPosKey = objectivePositions.find(k => objectiveCards[k] === 'gold');
+      if (!goldPosKey) {
+        goldPosKey = objectivePositions[0];
+      }
+
+      // Parsear coordenadas
+      const match = goldPosKey.match(/\[(\d+)\]\[(\d+)\]/);
+      const r = match ? Number(match[1]) : 4;
+      const c = match ? Number(match[2]) : 9;
+
+      // Revelar visualmente la carta objetivo
+      setBoardCells(prev => {
+        const next = prev.map(row => row.slice());
+        if (next[r] && next[r][c]) {
+          next[r][c] = {
+            ...next[r][c],
+            revealed: true,
+            cardType: 'gold'
+          };
+        }
+        return next;
+      });
+
+      roundEndedRef.current = ROUND_STATE.ENDING;
+      setRoundEnded(true);
+
+      const mockResult = {
+        ended: true,
+        reason: 'GOLD_REACHED',
+        winnerTeam: 'MINERS',
+        goldPosition: `[${r}][${c}]`
+      };
+
+      await handleRoundEnd(mockResult);
+    } finally {
+      processingAction.current = false;
+    }
   };
 
   // Función para enviar mensajes
@@ -1844,6 +1912,8 @@ const activateCollapseMode = (card, cardIndex) => {
         numRound={numRound}
         handleDiscard={handleDiscard}
         isSpectator={isSpectator}
+        isCreator={isCreator}
+        handleForceEndRound={handleForceEndRound}
       />
 
       <GameBoard
