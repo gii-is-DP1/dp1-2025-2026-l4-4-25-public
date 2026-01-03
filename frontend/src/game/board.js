@@ -242,7 +242,20 @@ export default function Board() {
         case "CARD_PLACED":
           handleWsCardPlaced(boardMessage);
 
-          if (boardMessage.goalReveal){
+          // Manejar múltiples objetivos revelados (goalReveals es una lista)
+          if (boardMessage.goalReveals && Array.isArray(boardMessage.goalReveals)) {
+            boardMessage.goalReveals.forEach(goal => {
+              handleWsGoalRevealed(goal);
+              
+              if (goal.goalType === 'gold') {
+                console.log('🏆 Oro revelado → bloqueando turno inmediatamente');
+                roundEndedRef.current = ROUND_STATE.ENDING;
+                setRoundEnded(true);
+              }
+            });
+          } 
+          // Fallback para compatibilidad con el campo singular
+          else if (boardMessage.goalReveal) {
             handleWsGoalRevealed(boardMessage.goalReveal);
 
             if (boardMessage.goalReveal.goalType === 'gold'){

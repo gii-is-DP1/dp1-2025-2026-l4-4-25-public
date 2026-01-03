@@ -1,5 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.square;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -123,10 +124,12 @@ public class SquareService {
         payload.put("squareId", squarePatched.getId());
 
 
-        // 2️⃣ CHECK GOAL 
-        Map<String, Object> goalReveal = getGoalReveal(squarePatched); 
-        if (goalReveal != null) {
-            payload.put("goalReveal", goalReveal);
+        // 2️⃣ CHECK GOAL - Enviar todos los objetivos adyacentes
+        List<Map<String, Object>> goalReveals = getGoalReveals(squarePatched); 
+        if (goalReveals != null && !goalReveals.isEmpty()) {
+            payload.put("goalReveals", goalReveals);
+            // Mantener compatibilidad con el campo singular (primer objetivo)
+            payload.put("goalReveal", goalReveals.get(0));
         }
 
         messagingTemplate.convertAndSend("/topic/game/" + boardId, payload);
@@ -135,13 +138,15 @@ public class SquareService {
 
 
     @Transactional
-    public Map<String, Object> getGoalReveal (Square placedSquare){
+    public List<Map<String, Object>> getGoalReveals (Square placedSquare){
         int x = placedSquare.getCoordinateX();
         int y = placedSquare.getCoordinateY(); 
         Board board = placedSquare.getBoard(); 
 
         // Direcciones: Derecha, Izquierda, Arriba, Abajo
         int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+        List<Map<String, Object>> goals = new ArrayList<>();
 
         for (int[] dir : directions) {
             int targetX = x + dir[0];
@@ -160,11 +165,12 @@ public class SquareService {
                 goal.put("col", targetX); 
                 goal.put("goalType", goalType.getValue()); // "gold", "carbon_1", "carbon_2"  
                 
-                return goal; 
+                goals.add(goal);
             }
 
         }
-        return null; 
+        
+        return goals.isEmpty() ? null : goals;
     }
         
 }
