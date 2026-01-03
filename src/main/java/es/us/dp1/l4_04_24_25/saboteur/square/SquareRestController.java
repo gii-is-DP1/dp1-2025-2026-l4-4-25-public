@@ -152,7 +152,20 @@ public class SquareRestController {
                     }
                 }
             } else {
-                // Carta eliminada
+                // Carta eliminada - verificar si era un Tunnel para incrementar destroyedPaths
+                Card previousCard = square.getCard();
+                if(previousCard != null && previousCard instanceof Tunnel) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if(auth != null) {
+                        String username = auth.getName();
+                        if(activePlayerService.existsActivePlayer(username)) {
+                            ActivePlayer activePlayer = activePlayerService.findByUsername(username);
+                            Player player = playerService.findPlayer(activePlayer.getId());
+                            player.setDestroyedPaths(player.getDestroyedPaths() + 1);
+                            playerService.savePlayer(player);
+                        }
+                    }
+                }
                 square.setCard(null);
                 square.setOccupation(false);
             }
