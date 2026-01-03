@@ -859,12 +859,12 @@ VALUES (124, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
 INSERT INTO card (id, deck_id, status, image)
 VALUES (125, null, FALSE, '/images/card-images/finals/carbon_1.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (125, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE);
+VALUES (125, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (126, null, FALSE, '/images/card-images/finals/carbon_2.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
+VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
     -- CARTA DE ORO (1 carta - túnel vertical con pepita dorada)
 
