@@ -211,7 +211,7 @@ class ActivePlayerRestController {
         RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
         ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
         
-        // Guardar estados anteriores de las herramientas para detectar si se destruyen
+        // Guardar estados anteriores de las herramientas para detectar si se destruyen o reparan
         boolean previousPickaxeState = activePlayer.isPickaxeState();
         boolean previousCandleState = activePlayer.isCandleState();
         boolean previousCartState = activePlayer.isCartState();
@@ -229,6 +229,11 @@ class ActivePlayerRestController {
                 boolean candleDestroyed = previousCandleState && !savedPlayer.isCandleState();
                 boolean cartDestroyed = previousCartState && !savedPlayer.isCartState();
                 
+                // Verificar si alguna herramienta fue reparada (cambió de false a true)
+                boolean pickaxeRepaired = !previousPickaxeState && savedPlayer.isPickaxeState();
+                boolean candleRepaired = !previousCandleState && savedPlayer.isCandleState();
+                boolean cartRepaired = !previousCartState && savedPlayer.isCartState();
+                
                 // Si alguna herramienta fue destruida, incrementar peopleDamaged del jugador que realizó la acción
                 if(pickaxeDestroyed || candleDestroyed || cartDestroyed) {
                     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -240,6 +245,23 @@ class ActivePlayerRestController {
                                 ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
                                 Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
                                 currentPlayer.setPeopleDamaged(currentPlayer.getPeopleDamaged() + 1);
+                                playerService.savePlayer(currentPlayer);
+                            }
+                        }
+                    }
+                }
+                
+                // Si alguna herramienta fue reparada, incrementar peopleRepaired del jugador que realizó la acción
+                if(pickaxeRepaired || candleRepaired || cartRepaired) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if(auth != null) {
+                        String currentUsername = auth.getName();
+                        // Solo incrementar si el jugador que repara es diferente al afectado
+                        if(!currentUsername.equals(savedPlayer.getUsername())) {
+                            if(activePlayerService.existsActivePlayer(currentUsername)) {
+                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                                Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
+                                currentPlayer.setPeopleRepaired(currentPlayer.getPeopleRepaired() + 1);
                                 playerService.savePlayer(currentPlayer);
                             }
                         }
