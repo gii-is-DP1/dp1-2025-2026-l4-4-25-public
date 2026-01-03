@@ -10,6 +10,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -208,6 +210,12 @@ class ActivePlayerRestController {
     public ResponseEntity<ActivePlayer> partialUpdate(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
         RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
         ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
+        
+        // Guardar estados anteriores de las herramientas para detectar si se destruyen
+        boolean previousPickaxeState = activePlayer.isPickaxeState();
+        boolean previousCandleState = activePlayer.isCandleState();
+        boolean previousCartState = activePlayer.isCartState();
+        
         ActivePlayer achievementPatched = objectMapper.updateValue(activePlayer, updates);
         ActivePlayer savedPlayer = activePlayerService.updateActivePlayer(achievementPatched, id);
 
@@ -216,6 +224,28 @@ class ActivePlayerRestController {
                                updates.containsKey("cartState");
 
         if (toolsChanged) {
+                // Verificar si alguna herramienta fue destruida (cambió de true a false)
+                boolean pickaxeDestroyed = previousPickaxeState && !savedPlayer.isPickaxeState();
+                boolean candleDestroyed = previousCandleState && !savedPlayer.isCandleState();
+                boolean cartDestroyed = previousCartState && !savedPlayer.isCartState();
+                
+                // Si alguna herramienta fue destruida, incrementar peopleDamaged del jugador que realizó la acción
+                if(pickaxeDestroyed || candleDestroyed || cartDestroyed) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if(auth != null) {
+                        String currentUsername = auth.getName();
+                        // Solo incrementar si el jugador que destruye es diferente al afectado
+                        if(!currentUsername.equals(savedPlayer.getUsername())) {
+                            if(activePlayerService.existsActivePlayer(currentUsername)) {
+                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                                Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
+                                currentPlayer.setPeopleDamaged(currentPlayer.getPeopleDamaged() + 1);
+                                playerService.savePlayer(currentPlayer);
+                            }
+                        }
+                    }
+                }
+                
                 List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(id);
                 if(!games.isEmpty()){
                     Integer gameId = games.get(0).getId();
