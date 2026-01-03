@@ -76,6 +76,15 @@ export default function Board() {
   const [playerCardsCount, setPlayerCardsCount] = useState({});
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
+  console.log('🎮 Game loaded:', game);
+/*
+  // Guardar game en sessionStorage para persistir al recargar
+  useEffect(() => {
+    if (game) {
+      sessionStorage.setItem('game', JSON.stringify(game));
+    }
+  }, [game]);
+  */
   const [message, setMessage] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
@@ -166,6 +175,8 @@ export default function Board() {
   const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
   const lastRoundId = useRef(null);
   const forceRolesReassignment = useRef(false);
+  const playersOutOfCardsLogged = useRef(new Set());
+
 
   // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
@@ -178,6 +189,8 @@ export default function Board() {
         forceRolesReassignment.current = true;
         console.log('🎭 Marcado para reasignar roles en nueva ronda');
       }
+
+      playersOutOfCardsLogged.current.clear();
     }
   }, [round?.id]);
 
@@ -225,7 +238,9 @@ export default function Board() {
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
-    const deckMessage = useWebSocket(`/topic/game/${game?.id}/deck`); 
+    const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
+    console.log('deckTopic:', deckTopic);
+    const deckMessage = useWebSocket(deckTopic); 
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -236,7 +251,20 @@ export default function Board() {
         case "CARD_PLACED":
           handleWsCardPlaced(boardMessage);
 
-          if (boardMessage.goalReveal){
+          // Manejar múltiples objetivos revelados (goalReveals es una lista)
+          if (boardMessage.goalReveals && Array.isArray(boardMessage.goalReveals)) {
+            boardMessage.goalReveals.forEach(goal => {
+              handleWsGoalRevealed(goal);
+              
+              if (goal.goalType === 'gold') {
+                console.log('🏆 Oro revelado → bloqueando turno inmediatamente');
+                roundEndedRef.current = ROUND_STATE.ENDING;
+                setRoundEnded(true);
+              }
+            });
+          } 
+          // Fallback para compatibilidad con el campo singular
+          else if (boardMessage.goalReveal) {
             handleWsGoalRevealed(boardMessage.goalReveal);
 
             if (boardMessage.goalReveal.goalType === 'gold'){
@@ -299,11 +327,19 @@ export default function Board() {
       switch (action) {
         case "DECK_COUNT":
           const { username, leftCards } = deckMessage;
+          console.log('📊 DECK_COUNT recibido:', username, leftCards);
           // Actualiza el deck completo
-          setPlayerCardsCount({
-            ...playerCardsCount,
+          setPlayerCardsCount(prev => ({
+            ...prev,
             [username]: leftCards
-          })
+          }));
+          
+          // Log cuando un jugador se queda sin cartas
+          if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
+            playersOutOfCardsLogged.current.add(username);
+            addLog(`🃏 ${username} has run out of cards!`, 'warning');
+          }
+          
           break;
 
         default:
@@ -311,6 +347,16 @@ export default function Board() {
           break;
         }
         }, [deckMessage]); 
+    
+    // Verificar fin de ronda cuando cambian los conteos de cartas de jugadores
+    useEffect(() => {
+      const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
+      console.log('🔍 playerCardsCount cambió:', playerCardsCount, 'totalCards:', totalCards);
+      if (totalCards === 0 && roundEndedRef.current === ROUND_STATE.ACTIVE) {
+        console.log('🔍 Llamando checkForRoundEnd porque totalCards === 0');
+        checkForRoundEnd();
+      }
+    }, [playerCardsCount]);
     
     // Depuración usuarios duplicados
     
@@ -964,7 +1010,7 @@ const activateCollapseMode = (card, cardIndex) => {
       return;
     }
     
-    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
+    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards, playerCardsCount);
     console.log('🔍 checkForRoundEnd result:', roundEndResult);
     
     if (roundEndResult.ended) {
@@ -1005,10 +1051,10 @@ const activateCollapseMode = (card, cardIndex) => {
     await loadActivePlayers();
     
     // Obtener el ranking final basado en goldNugget
-    const playerRankings = activePlayers.map(p => ({
+    const playerRankings = roundEndData?.goldDistribution?.map(p => ({
       username: p.username,
-      totalNuggets: p.goldNugget || 0
-    }));
+      totalNuggets: p.totalNuggets || 0
+    })) || [];
     
     console.log('📊 Player rankings:', playerRankings);
     
@@ -1031,7 +1077,7 @@ const activateCollapseMode = (card, cardIndex) => {
       if (revealedObjective?.position !== goldPosition) {
         setRevealedObjective({ position: goldPosition, cardType: 'gold' });
       }
-    } else if (reason === 'NO_CARDS') {
+    } else if (reason === 'NO_CARDS' || reason === 'ALL_PLAYERS_OUT_OF_CARDS') {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
     }
 
@@ -1110,7 +1156,7 @@ const activateCollapseMode = (card, cardIndex) => {
   // Efecto separado para navegar cuando el countdown llega a 0
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
-    
+
     const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
     
     const isLastRound = round?.roundNumber === 3;
