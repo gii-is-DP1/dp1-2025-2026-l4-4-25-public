@@ -216,8 +216,22 @@ class ActivePlayerRestController {
         boolean previousCandleState = activePlayer.isCandleState();
         boolean previousCartState = activePlayer.isCartState();
         
+        // Guardar goldNugget anterior para detectar incrementos
+        Integer previousGoldNugget = activePlayer.getGoldNugget() != null ? activePlayer.getGoldNugget() : 0;
+        
         ActivePlayer achievementPatched = objectMapper.updateValue(activePlayer, updates);
         ActivePlayer savedPlayer = activePlayerService.updateActivePlayer(achievementPatched, id);
+        
+        // Actualizar acquiredGoldNuggets del Player si goldNugget incrementó
+        if (updates.containsKey("goldNugget")) {
+            Integer newGoldNugget = savedPlayer.getGoldNugget() != null ? savedPlayer.getGoldNugget() : 0;
+            int increment = newGoldNugget - previousGoldNugget;
+            if (increment > 0) {
+                Player player = playerService.findPlayer(id);
+                player.setAcquiredGoldNuggets(player.getAcquiredGoldNuggets() + increment);
+                playerService.savePlayer(player);
+            }
+        }
 
         boolean toolsChanged = updates.containsKey("pickaxeState") || 
                                updates.containsKey("candleState") || 
