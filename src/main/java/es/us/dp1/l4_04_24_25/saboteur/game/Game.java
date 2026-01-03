@@ -53,9 +53,6 @@ public class Game extends BaseEntity{
     @Column(name = "game_status", nullable = false)
     private gameStatus gameStatus = Enum.valueOf(gameStatus.class, "CREATED");
 
-    @Column(unique = true, nullable = false)
-    private String link;
-
     @Column(nullable = false)
     private boolean isPrivate = true;
 

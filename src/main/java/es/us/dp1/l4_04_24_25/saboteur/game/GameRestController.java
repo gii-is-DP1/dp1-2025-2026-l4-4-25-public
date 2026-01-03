@@ -33,7 +33,6 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedLinkException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
@@ -73,14 +72,6 @@ class GameRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-
-    @GetMapping("byLink")
-    public ResponseEntity<Game> findByLink(@RequestParam String link){
-        Game res;
-        res = gameService.findByLink(link);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-
     @GetMapping("byCreator")
     public ResponseEntity<List<Game>> findByCreator(@RequestParam String creatorUsername){
         List<Game> res;
@@ -95,14 +86,11 @@ class GameRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Game> create(@RequestBody @Valid Game game) throws DuplicatedLinkException, EmptyActivePlayerListException {
+    public ResponseEntity<Game> create(@RequestBody @Valid Game game) throws EmptyActivePlayerListException {
         Game newGame = new Game();
         BeanUtils.copyProperties(game, newGame, "id", "time", "gameStatus", "chat", "watchers", "rounds" );
         if (newGame.getActivePlayers() == null || newGame.getActivePlayers().isEmpty()) {
             throw new IllegalArgumentException("A game must have at least one active player (the creator).");
-        }
-        if (gameService.existsByLink(newGame.getLink())) {
-            throw new EmptyActivePlayerListException("A game with the same link already exists.");
         }
         Chat chat = new Chat();
         chat.setGame(newGame);
