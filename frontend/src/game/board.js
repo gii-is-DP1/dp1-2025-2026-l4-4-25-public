@@ -98,6 +98,19 @@ export default function Board() {
   }, [game]);
   */
   const [message, setMessage] = useState([]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (game?.gameStatus === 'ONGOING') {
+        e.preventDefault();
+        e.returnValue = ''; 
+        return ''}};
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)};
+  }, [game?.gameStatus]);
+
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
