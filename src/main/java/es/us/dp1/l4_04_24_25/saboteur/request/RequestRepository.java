@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.request;
 
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.repository.CrudRepository;
@@ -20,9 +21,9 @@ public interface RequestRepository extends CrudRepository<Request, Integer> {
 
     Optional<Request> findByReceiverUsername (String receiverUsername);
 
-    Optional<Request> findByStatusAndSenderUsername (RequestStatus status, String senderUsername);
+    List<Request> findByStatusAndSenderUsername (RequestStatus status, String senderUsername);
 
-    Optional<Request> findByStatusAndReceiverUsername (RequestStatus status, String receiverUsername);
+    List<Request> findByStatusAndReceiverUsername (RequestStatus status, String receiverUsername);
 
     boolean existsBySenderAndReceiver(Player sender, Player receiver);
     

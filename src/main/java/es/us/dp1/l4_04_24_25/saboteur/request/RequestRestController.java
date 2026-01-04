@@ -83,15 +83,15 @@ public class RequestRestController {
     }
 
     @GetMapping("byStatusAndSenderUsername")
-    public ResponseEntity<Request> findByStatusAndSenderUsername(RequestStatus status, String senderUsername){
-        Request res;
+    public ResponseEntity<List<Request>> findByStatusAndSenderUsername(RequestStatus status, String senderUsername){
+        List<Request> res;
         res = requestService.findByStatusAndSenderUsername(status, senderUsername);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     @GetMapping("byStatusAndReceiverUsername")
-    public ResponseEntity<Request> findByStatusAndReceiverUsername(RequestStatus status, String receiverUsername){
-        Request res;
+    public ResponseEntity<List<Request>> findByStatusAndReceiverUsername(RequestStatus status, String receiverUsername){
+        List<Request> res;
         res = requestService.findByStatusAndReceiverUsername(status, receiverUsername);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
