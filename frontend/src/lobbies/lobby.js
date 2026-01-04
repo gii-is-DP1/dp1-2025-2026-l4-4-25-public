@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import generateRandomLink from '../util/generateRandomLink';
 import { createGameRequest } from './utils/lobbyHelpers';
 import useLobbyUser from './hooks/useLobbyUser';
 
@@ -27,12 +26,8 @@ export default function Lobby() {
     console.log("este es el player submit", player);
     
     try {
-      // Generar enlace aleatorio para el juego
-      const randomPart = generateRandomLink(16);
-      const fullLink = `https://saboteur.com/game/${randomPart}`;
-
       // Crear solicitud de juego usando helper
-      const gameRequest = createGameRequest(player, fullLink);
+      const gameRequest = createGameRequest(player);
       console.log('Enviando solicitud de partida:', gameRequest);
 
       // POST para crear el juego
