@@ -43,6 +43,20 @@ public class GameService {
         return gameRepository.findAllByActivePlayerId(activePlayerId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Game> findGamesByPlayerUsername(String username) {
+        List<Game> allGames = (List<Game>) gameRepository.findAll();
+        return allGames.stream()
+            .filter(game -> {
+                boolean isCreator = game.getCreator() != null && game.getCreator().getUsername().equals(username);
+                boolean isActivePlayer = game.getActivePlayers() != null && 
+                    game.getActivePlayers().stream()
+                        .anyMatch(ap -> ap.getUsername().equals(username));
+                return isCreator || isActivePlayer;
+            })
+            .toList();
+    }
+
     @Transactional
     public Game updateGame(@Valid Game game, Integer idToUpdate){
         Game toUpdate = findGame(idToUpdate);

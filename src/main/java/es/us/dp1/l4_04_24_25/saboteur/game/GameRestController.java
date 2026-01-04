@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -78,6 +80,14 @@ class GameRestController {
     public ResponseEntity<List<Game>> findByCreator(@RequestParam String creatorUsername){
         List<Game> res;
         res = gameService.findByCreator(creatorUsername);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("myGames")
+    public ResponseEntity<List<Game>> findMyGames(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        List<Game> res = gameService.findGamesByPlayerUsername(username);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
