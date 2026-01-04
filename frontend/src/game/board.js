@@ -52,7 +52,19 @@ const savedRoundData = getSavedRoundData();
 
 export default function Board() {
   const location = useLocation();
+  const navigate = useNavigate();
   const loggedInUser = tokenService.getUser();
+
+  // Limpiar todos los toasts al montar y desmontar el componente
+  useEffect(() => {
+    // Limpiar toasts existentes al entrar al tablero
+    toast.dismiss();
+    
+    // Cleanup: limpiar todos los toasts al salir del componente
+    return () => {
+      toast.dismiss();
+    };
+  }, []);
 
   // Usar datos guardados o los de location.state
   const initialState = savedRoundData || {
@@ -130,8 +142,6 @@ export default function Board() {
   // Estado para solicitudes de espectador (solo para creador)
   const [spectatorRequests, setSpectatorRequests] = useState([]);
   const isCreator = game?.creator === loggedInUser?.username;
-  
-  const navigate = useNavigate();
 
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
