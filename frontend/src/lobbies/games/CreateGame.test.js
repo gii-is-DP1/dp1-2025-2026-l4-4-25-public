@@ -373,4 +373,22 @@ describe('CreateGame Component', () => {
     });
     expect(mockNavigate).toHaveBeenCalledWith('/lobby');
   });
+
+  test('19. CANCELACIÓN DE PARTIDA: Los jugadores son reedirigos al /lobby cuando el creador cancela la partida', async () => {
+    const nonCreatorUser = { username: 'PilarPacheco', id: 2 };
+    tokenService.getUser.mockReturnValue(nonCreatorUser);
+    const gameWithPlayers = {...mockGame, activePlayers: ['JaviOsuna', 'PilarPacheco']};
+    
+    mockLocation.state = { game: gameWithPlayers };
+    useLobbyData.mockReturnValue({...mockLobbyData, game: gameWithPlayers});
+    const cancelledMsg = { gameCancelled: true, gameId: 1, message: 'The game has been cancelled by the creator' };
+    useWebSocket.mockReturnValue(cancelledMsg);
+    renderComponent();
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('The game has been cancelled by the creator')});
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/lobby')}, { timeout: 3000 });
+  });
 });

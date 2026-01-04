@@ -267,11 +267,24 @@ class GameRestController {
     @DeleteMapping(value = "{gameId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("gameId") int id) {
-        RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
-        if (gameService.findGame(id).getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED")))
+        Game game = gameService.findGame(id);
+        RestPreconditions.checkNotNull(game, "Game", "ID", id);
+        
+        if (game.getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED"))) {
+            Map<String, Object> payload = Map.of(
+                "gameCancelled", true,
+                "gameId", id,
+                "message", "The game has been cancelled by the creator"
+            );
+            
+            System.out.println(">>> GAME CANCELLED. Notifying all players via WebSocket for game ID: " + id);
+            messagingTemplate.convertAndSend("/topic/game/" + id, payload);
+            
             gameService.deleteGame(id);
-        else
+        } else {
             throw new IllegalStateException("You can't delete an ongoing or finished game!");
+        }
+        
         return new ResponseEntity<>(new MessageResponse("Game deleted!"), HttpStatus.OK);
     }
     

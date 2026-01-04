@@ -183,14 +183,28 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
         
         deck.setCards(updatedCards);
     }
+        
+        if (deck.getActivePlayer() == null) {
+            System.out.println(">>> WARNING: Deck " + id + " has no activePlayer assigned!");
+        }
+        
         Deck updatedDeck = deckService.saveDeck(deck); 
 
-        ActivePlayer currentPlayer = deck.getActivePlayer();
+        ActivePlayer currentPlayer = updatedDeck.getActivePlayer();
+        System.out.println(">>> PATCH DECK: deck.id = " + id);
+        System.out.println(">>> PATCH DECK: updatedDeck.activePlayer = " + (currentPlayer != null ? currentPlayer.getUsername() : "NULL"));
+        System.out.println(">>> PATCH DECK: currentPlayer = " + (currentPlayer != null ? currentPlayer.getUsername() : "null"));
+        
         if(currentPlayer != null){
             String username = currentPlayer.getUsername();
             Integer leftCards = updatedDeck.getCards() != null ? updatedDeck.getCards().size() : 0;
+            
+            System.out.println(">>> PATCH DECK: username = " + username + ", leftCards = " + leftCards);
+            
             // Obtener todas las partidas del jugador
             List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(currentPlayer.getId());
+            System.out.println(">>> PATCH DECK: games found = " + games.size());
+            
             //Seleccionamos solo la partida que está en ONGOING
             Game activeGame = games.stream()
             .filter(g -> g.getGameStatus() == gameStatus.ONGOING)
@@ -199,16 +213,27 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
 
             if(activeGame != null){
                 Integer gameId = activeGame.getId();
-                // Enviar mensaje a todos los suscriptores de /topic/deck-count
-                messagingTemplate.convertAndSend("/topic/game/" + gameId + "/deck", Map.of(
+                String topic = "/topic/game/" + gameId + "/deck";
+                
+                Map<String, Object> payload = Map.of(
                     "action", "DECK_COUNT", 
                     "username", username,
                     "leftCards", leftCards
-                ));
-                System.out.println("WS >> Deck update enviado a game " + gameId +
+                );
+                
+                System.out.println(">>> SENDING WS to topic: " + topic);
+                System.out.println(">>> WS Payload: " + payload);
+
+                messagingTemplate.convertAndSend(topic, payload);
+                
+                System.out.println(">>> WS >> Deck update enviado a game " + gameId +
             " | user=" + username + " | leftCards=" + leftCards);
+            } else {
+                System.out.println(">>> PATCH DECK: No active game found for player " + username);
             }
 
+        } else {
+            System.out.println(">>> PATCH DECK ERROR: currentPlayer is NULL - cannot send WebSocket!");
         }
 
     return new ResponseEntity<>(updatedDeck, HttpStatus.OK);

@@ -35,12 +35,14 @@ export default function PlayerCards({
       setPlayerCardsCount(prev => ({
         ...prev,
         [currentUsername]: hand.length}));
-      console.log('Updated card count:',currentUsername,':', hand.length);}
+      console.log('💳 Updated local card count:', currentUsername, ':', hand.length)}
   }, [hand.length, setPlayerCardsCount, isSpectator, currentUsername]);
 
   // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
     try {
+      console.log('🔄 syncServerDeck called with hand size:', nextHand.length);
+      
       // Asegurarse de que solo cartas con rotacion=false van al servidor
       const nonRotatedHand = nextHand.map(card => {
         if (card.rotacion === true) {
@@ -52,9 +54,11 @@ export default function PlayerCards({
       });
       
       const ids = nonRotatedHand.map(card => card.id);
-      await patchDeck(currentUsername, ids);
+      console.log('🔄 Calling patchDeck with username:', currentUsername, 'cardIds:', ids);
+      const result = await patchDeck(currentUsername, ids);
+      console.log('✅ patchDeck result:', result);
     } catch (e) {
-      console.error('Error sincronizando deck en servidor:', e);
+      console.error('❌ Error sincronizando deck en servidor:', e);
     }
   };
 

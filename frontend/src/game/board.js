@@ -262,8 +262,14 @@ export default function Board() {
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
     const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
-    console.log('deckTopic:', deckTopic);
-    const deckMessage = useWebSocket(deckTopic); 
+    console.log('- deckTopic:', deckTopic);
+    const deckMessage = useWebSocket(deckTopic);
+    
+    console.log('-WebSocket states:', {
+      boardMessage: boardMessage ? 'connected' : 'null',
+      gameMessage: gameMessage ? 'connected' : 'null', 
+      deckMessage: deckMessage ? 'connected' : 'null'
+    });
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -344,18 +350,33 @@ export default function Board() {
     },[gameMessage])
     
     useEffect(() => {
-      if(!deckMessage) return; 
-       const { action } = deckMessage;
+      console.log('deckMessage:', deckMessage);
+      if(!deckMessage) {
+        console.log('⚠️ deckMessage is null/undefined, skipping');
+        return}
+      console.log('deckMessage received:', deckMessage);
+      const { action } = deckMessage;
 
       switch (action) {
         case "DECK_COUNT":
           const { username, leftCards } = deckMessage;
+          
+          if (!username) {
+            console.warn('⚠️ DECK_COUNT received but username is undefined');
+            return}
+          
           console.log('📊 DECK_COUNT recibido:', username, leftCards);
+          console.log('📊 playerCardsCount:', playerCardsCount);
+          
           // Actualiza el deck completo
-          setPlayerCardsCount(prev => ({
-            ...prev,
-            [username]: leftCards
-          }));
+          setPlayerCardsCount(prev => {
+            const updated = {
+              ...prev,
+              [username]: leftCards
+            };
+            console.log('📊 playerCardsCount DESPUÉS:', updated);
+            return updated;
+          });
           
           // Log cuando un jugador se queda sin cartas
           if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
@@ -1760,8 +1781,11 @@ const activateCollapseMode = (card, cardIndex) => {
       setCardPorPlayer(cardsPerPlayer);
       const initialCounts = {};
       activePlayers.forEach(p => {
+        if (!p) return; 
         const name = p.username || p;
-        initialCounts[name] = cardsPerPlayer;
+        if (name) {
+          initialCounts[name] = cardsPerPlayer;
+        }
       });
       setPlayerCardsCount(initialCounts);
       // Hacer patch al round con el leftCards calculado para sincronizar con backend
@@ -2023,7 +2047,8 @@ const activateCollapseMode = (card, cardIndex) => {
         patchDeck={patchDeck}
         fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
-        playerCardsCount={playerCardsCount} 
+        playerCardsCount={playerCardsCount}
+        setPlayerCardsCount={setPlayerCardsCount}
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}

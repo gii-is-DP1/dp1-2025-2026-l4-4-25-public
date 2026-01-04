@@ -50,7 +50,7 @@ export const calculateCardsPerPlayer = (numPlayers) => {
 };
 
 export const calculateInitialDeck = (numPlayers, cardsPerPlayer) => {
-  return 70 - (numPlayers * cardsPerPlayer);
+  return 20 - (numPlayers * cardsPerPlayer);
 };
 
 const cleanImageName = (s) => String(s ?? '').trim().replace(/\r?\n/g, '');
