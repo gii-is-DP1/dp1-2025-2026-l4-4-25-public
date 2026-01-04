@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
+import es.us.dp1.l4_04_24_25.saboteur.card.Card;
+import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import java.util.HashMap;
@@ -142,8 +144,23 @@ public class SquareService {
         int x = placedSquare.getCoordinateX();
         int y = placedSquare.getCoordinateY(); 
         Board board = placedSquare.getBoard(); 
+        Card card = placedSquare.getCard();
+
+        // Verificar si la carta colocada es un túnel
+        if (!(card instanceof Tunnel)) {
+            return null; // No es un túnel, no puede revelar objetivos
+        }
+        
+        Tunnel tunnel = (Tunnel) card;
+        
+        // Si el túnel tiene el centro bloqueado, no puede atravesarse y por tanto no puede revelar objetivos
+        if (tunnel.isCentro()) {
+            return null;
+        }
 
         // Direcciones: Derecha, Izquierda, Arriba, Abajo
+        // dir[0] = desplazamiento en X, dir[1] = desplazamiento en Y
+        // También necesitamos saber qué propiedad de conexión verificar para cada dirección
         int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
         List<Map<String, Object>> goals = new ArrayList<>();
@@ -151,6 +168,23 @@ public class SquareService {
         for (int[] dir : directions) {
             int targetX = x + dir[0];
             int targetY = y + dir[1];
+
+            // Verificar si el túnel tiene conexión en la dirección del objetivo
+            boolean hasConnectionInDirection = false;
+            if (dir[0] == 1 && dir[1] == 0) { // Derecha
+                hasConnectionInDirection = tunnel.isDerecha();
+            } else if (dir[0] == -1 && dir[1] == 0) { // Izquierda
+                hasConnectionInDirection = tunnel.isIzquierda();
+            } else if (dir[0] == 0 && dir[1] == 1) { // Abajo (Y aumenta hacia abajo)
+                hasConnectionInDirection = tunnel.isAbajo();
+            } else if (dir[0] == 0 && dir[1] == -1) { // Arriba (Y disminuye hacia arriba)
+                hasConnectionInDirection = tunnel.isArriba();
+            }
+            
+            // Si el túnel no tiene conexión en esta dirección, no puede revelar el objetivo en esta dirección
+            if (!hasConnectionInDirection) {
+                continue;
+            }
 
             //Buscamos si hay un cuadrado vecino en esa coordenada
             Square neighbor = squareRepository.findByCoordinateXAndCoordinateYAndBoard(targetX, targetY, board);

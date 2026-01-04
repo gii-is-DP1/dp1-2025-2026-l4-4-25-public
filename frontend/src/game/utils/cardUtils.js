@@ -83,6 +83,36 @@ function checkPathContinuity(card1Connections, card2Connections, direction) {
 }
 
 /**
+ * Verifica si una carta puede "salir" hacia una dirección específica.
+ * Una carta con centro=true tiene los caminos bloqueados internamente,
+ * por lo que aunque tenga conexión en una dirección, no puede atravesarse.
+ * Esta función es útil para verificar si una carta adyacente a un objetivo
+ * puede realmente conectar con el objetivo.
+ * 
+ * @param {Object} card - La carta a verificar
+ * @param {string} exitDirection - La dirección de salida ('arriba', 'abajo', 'izquierda', 'derecha')
+ * @returns {boolean} - true si la carta puede salir hacia esa dirección sin bloqueo interno
+ */
+export function canExitToDirection(card, exitDirection) {
+  if (!card) return false;
+  
+  const connections = getCardConnections(card);
+  
+  // Si la carta no tiene conexión en la dirección de salida, no puede salir
+  if (!connections[exitDirection]) {
+    return false;
+  }
+  
+  // Si la carta tiene centro bloqueado, los caminos no se conectan internamente
+  // Por lo tanto, aunque tenga salida en esa dirección, no se puede atravesar
+  if (connections.centro) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * Verifica si hay un camino válido desde la carta de inicio hasta la posición objetivo
  * usando BFS (Breadth-First Search)
  */
