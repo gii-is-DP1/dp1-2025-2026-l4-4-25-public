@@ -16,10 +16,9 @@ export const getMockFriends = () => {
   ];
 };
 
-export const createGameRequest = (player, link, isPrivate = false, maxPlayers = 3) => {
+export const createGameRequest = (player, isPrivate = false, maxPlayers = 3) => {
   return {
     gameStatus: "CREATED",
-    link: link,
     maxPlayers: maxPlayers,
     creator: player.username,
     private: isPrivate,

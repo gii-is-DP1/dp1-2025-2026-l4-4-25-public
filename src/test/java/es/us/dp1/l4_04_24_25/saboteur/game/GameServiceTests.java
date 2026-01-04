@@ -33,9 +33,7 @@ class GameServiceTests {
     private GameService gameService;
 
     private static final int TEST_GAME_ID = 1; 
-    private static final String TEST_LINK_EXISTS = "link"; 
     private static final String TEST_CREATOR_USERNAME = "Carlosbox2k";
-    private static final String TEST_LINK_NEW = "new-link-test";
 
     
     @Test
@@ -51,7 +49,6 @@ class GameServiceTests {
     void shouldFindGameById() {
         Game game = this.gameService.findGame(TEST_GAME_ID);
         assertEquals(TEST_GAME_ID, game.getId());
-        assertEquals("link", game.getLink());
         assertEquals(3, game.getMaxPlayers());
     }
 
@@ -66,7 +63,6 @@ class GameServiceTests {
         int initialCount = ((Collection<Game>) this.gameService.findAll()).size();
 
         Game newGame = new Game();
-        newGame.setLink(TEST_LINK_NEW);
         newGame.setPrivate(false);
         newGame.setMaxPlayers(5);
         newGame.setGameStatus(gameStatus.CREATED);
@@ -74,7 +70,6 @@ class GameServiceTests {
         Game savedGame = this.gameService.saveGame(newGame);
 
         assertNotNull(savedGame.getId());
-        assertEquals(TEST_LINK_NEW, savedGame.getLink());
         assertFalse(savedGame.isPrivate());
         assertEquals(gameStatus.CREATED, savedGame.getGameStatus());
 
@@ -106,18 +101,6 @@ class GameServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> this.gameService.findGame(TEST_GAME_ID));
     }
 
-    @Test
-    void shouldFindGameByLink() {
-        Game game = this.gameService.findByLink(TEST_LINK_EXISTS);
-        assertEquals(TEST_LINK_EXISTS, game.getLink());
-        assertEquals(TEST_CREATOR_USERNAME, game.getCreator().getUsername());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenFindByLink() {
-        assertThrows(ResourceNotFoundException.class, () -> this.gameService.findByLink("link-inexistente"));
-    }
-
     
     @Test
     void shouldFindGameByCreator() {
@@ -129,17 +112,6 @@ class GameServiceTests {
     @Test
     void shouldThrowExceptionWhenFindByCreator() {
         assertThrows(ResourceNotFoundException.class, () -> this.gameService.findByCreator("noexiste"));
-    }
-
-    
-    @Test
-    void shouldExistGameByLink() {
-        assertTrue(this.gameService.existsByLink(TEST_LINK_EXISTS));
-    }
-
-    @Test
-    void shouldNotExistGameByLink() {
-        assertFalse(this.gameService.existsByLink("unreal-link"));
     }
 
    
@@ -222,7 +194,6 @@ class GameServiceTests {
     void shouldHandleDurationConverter() {
         
         Game newGame = new Game();
-        newGame.setLink("duration-test-link");
         newGame.setPrivate(false);
         newGame.setMaxPlayers(4);
         newGame.setGameStatus(gameStatus.CREATED);
@@ -256,7 +227,7 @@ class GameServiceTests {
     @Test
     void shouldFailToUpdateNonExistentGame() {
         Game game = new Game();
-        game.setLink("irrelevant");
+        game.setMaxPlayers(5);
         assertThrows(ResourceNotFoundException.class, () -> gameService.updateGame(game, 99999));
     }
 
@@ -274,13 +245,11 @@ class GameServiceTests {
         
         Game updateInfo = new Game();
         updateInfo.setId(9999); 
-        updateInfo.setLink("updated-link-preserved");
         updateInfo.setMaxPlayers(10);
 
         Game updated = gameService.updateGame(updateInfo, TEST_GAME_ID);
 
         assertEquals(TEST_GAME_ID, updated.getId());
-        assertEquals("updated-link-preserved", updated.getLink());
         assertEquals(10, updated.getMaxPlayers());
     }
 

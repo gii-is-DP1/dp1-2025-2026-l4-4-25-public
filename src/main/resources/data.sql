@@ -78,8 +78,8 @@ INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, 
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 2, 2, 'Welcome to the game!', 4);
 
-INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 'link', 0, 4);
-INSERT INTO game(chat_id, game_status, id, is_private, max_players, link, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 'link2', 2000, 4);
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 0, 4);
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, time_seconds, creator_id) values (null, 'FINISHED', 2, false, 4, 2000, 4);
 
 
 INSERT INTO board (id, base, height, objective_cards_order) VALUES (1, 11, 9, 'gold,coal_1,coal_2');
@@ -859,12 +859,12 @@ VALUES (124, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
 INSERT INTO card (id, deck_id, status, image)
 VALUES (125, null, FALSE, '/images/card-images/finals/carbon_1.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (125, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE);
+VALUES (125, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE);
 
 INSERT INTO card (id, deck_id, status, image)
 VALUES (126, null, FALSE, '/images/card-images/finals/carbon_2.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
-VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
+VALUES (126, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE);
 
     -- CARTA DE ORO (1 carta - túnel vertical con pepita dorada)
 

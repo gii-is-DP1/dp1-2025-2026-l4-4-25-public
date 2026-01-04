@@ -59,11 +59,6 @@ public class GameService {
     }
 
     @Transactional(readOnly = true)
-    public Game findByLink(String link) {
-        return gameRepository.findByLink(link).orElseThrow(()-> new ResourceNotFoundException("Game","link",link));
-    }
-
-    @Transactional(readOnly = true)
     public List<Game> findByCreator(String creatorUsername) {
         List<Game> games = gameRepository.findByCreatorUsername(creatorUsername);
         if (games.isEmpty()) {
@@ -87,11 +82,5 @@ public class GameService {
     public Iterable<Game> findAllPrivateGames() {
         return gameRepository.findAllPrivateGames();
     }
-
-    public boolean existsByLink(String link) {
-        return gameRepository.existsByLink(link);
-    }
-
-    
     
 }
