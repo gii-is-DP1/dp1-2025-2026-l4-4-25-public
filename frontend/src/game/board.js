@@ -66,11 +66,20 @@ export default function Board() {
     };
   }, []);
 
-  // Usar datos guardados o los de location.state
-  const initialState = savedRoundData || {
-    game: location.state?.game,
-    round: location.state?.round || null,
-    isSpectator: location.state?.isSpectator || false
+// Limpiar sessionStorage si hay location.state (nueva partida)
+  if (location.state) {
+    sessionStorage.removeItem('newRoundData');
+  }
+
+  // Dar prioridad a location.state sobre savedRoundData
+  const initialState = location.state ? {
+    game: location.state.game,
+    round: location.state.round || null,
+    isSpectator: location.state.isSpectator || false
+  } : savedRoundData || {
+    game: null,
+    round: null,
+    isSpectator: false
   };
 
   // Estados principales
