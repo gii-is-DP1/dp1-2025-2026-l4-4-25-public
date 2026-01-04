@@ -21,7 +21,7 @@ export default function GameBoard({
 
   
   const getObjectiveCardImage = (cardType) => {
-    console.log('MAP REVEAL TYPE:', revealedObjective?.cardType);
+    // console.log('MAP REVEAL TYPE:', revealedObjective?.cardType);
     switch(cardType) {
       case 'gold': return '/images/card-images/finals/gold.png';
       //case 'coal_1':

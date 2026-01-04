@@ -53,15 +53,17 @@ class GameRestController {
     private final ObjectMapper objectMapper;
     private final RoundService roundService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ActivePlayerService activePlayerService;
 
 
     @Autowired
-    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService,SimpMessagingTemplate messagingTemplate) {
+    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService, SimpMessagingTemplate messagingTemplate, ActivePlayerService activePlayerService) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.objectMapper = objectMapper;
         this.roundService = roundService;
         this.messagingTemplate = messagingTemplate;
+        this.activePlayerService = activePlayerService;
     }
 
 
@@ -179,10 +181,45 @@ class GameRestController {
         game.setRounds(updatedRounds);
     }
 
+    if (updates.containsKey("winner")) {
+        Object winnerObj = updates.get("winner");
+        if (winnerObj != null) {
+            Integer winnerId = null;
+            if (winnerObj instanceof Map) {
+                Map<String, Object> winnerMap = (Map<String, Object>) winnerObj;
+                if (winnerMap.containsKey("id")) {
+                    winnerId = ((Number) winnerMap.get("id")).intValue();
+                }
+            } else if (winnerObj instanceof Number) {
+                winnerId = ((Number) winnerObj).intValue();
+            }
+            
+            if (winnerId != null) {
+                ActivePlayer winner = activePlayerService.findActivePlayer(winnerId);
+                if (winner != null) {
+                    game.setWinner(winner);
+                    System.out.println(">>> WINNER SET: ID=" + winnerId + ", Username=" + winner.getUsername());
+}
+            }
+        }
+        updates.remove("winner");
+    }
+
     Game gamePatched = objectMapper.updateValue(game, updates);
     Game savedGame = gameService.updateGame(gamePatched, id);
 
     System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
+
+    if (updates.containsKey("gameStatus") && "FINISHED".equals(updates.get("gameStatus"))) {
+        if (savedGame.getStartTime() != null && updates.containsKey("endTime")) {
+            LocalDateTime endTime = LocalDateTime.parse(updates.get("endTime").toString().replace("Z", ""));
+            java.time.Duration duration = java.time.Duration.between(savedGame.getStartTime(), endTime);
+            savedGame.setTime(duration);
+            gameService.saveGame(savedGame);
+            System.out.println(">>> GAME FINISHED. Duration calculated: " + duration);
+        }
+    }
+    
     if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
 
         System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");

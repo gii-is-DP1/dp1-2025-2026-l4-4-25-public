@@ -1801,6 +1801,8 @@ const activateCollapseMode = (card, cardIndex) => {
         <GameEnd
           playerRankings={gameEndData.playerRankings}
           countdown={gameEndCountdown}
+          gameId={game?.id}
+          activePlayers={activePlayers}
         />
       )}
 

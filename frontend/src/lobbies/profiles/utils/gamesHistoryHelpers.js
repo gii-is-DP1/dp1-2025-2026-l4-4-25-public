@@ -27,9 +27,9 @@ export const filterFinishedGames = (games, username) => {
   return games.filter((game) => {
     const isFinished = game.gameStatus === "FINISHED";
     const isCreator = game.creator === username;
-    const isPlayer = game.players?.some((p) => p.username === username);
+    const isActivePlayer = game.activePlayers?.some((p) => p.username === username);
     
-    return isFinished && (isCreator || isPlayer);
+    return isFinished && (isCreator || isActivePlayer);
   });
 };
 

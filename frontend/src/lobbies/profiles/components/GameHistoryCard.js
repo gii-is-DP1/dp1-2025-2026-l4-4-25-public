@@ -3,6 +3,16 @@ import PlayersListDetail from './PlayersListDetail';
 import { formatGameTime } from '../utils/gamesHistoryHelpers';
 
 const GameHistoryCard = ({ game }) => {
+
+  const getWinnerUsername = () => {
+    if (!game.winner) return "N/A";
+    if (typeof game.winner === 'string') return game.winner;
+    if (game.winner.username) return game.winner.username;
+    const winnerId = typeof game.winner === 'object' ? game.winner.id : game.winner;
+    const winnerPlayer = game.activePlayers?.find(p => p.id === winnerId);
+    
+    return winnerPlayer?.username || "N/A"};
+
   return (
     <div className="game-history-card">
       <div className="game-info">
@@ -21,7 +31,7 @@ const GameHistoryCard = ({ game }) => {
 
         <p>
           ⭐ Winner:{" "}
-          <b>{game.winner?.username || "N/A"}</b>
+          <b>{getWinnerUsername()}</b>
         </p>
 
         <p>
