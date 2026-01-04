@@ -10,6 +10,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -208,14 +210,78 @@ class ActivePlayerRestController {
     public ResponseEntity<ActivePlayer> partialUpdate(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
         RestPreconditions.checkNotNull(activePlayerService.findActivePlayer(id), "ActivePlayer", "ID", id);
         ActivePlayer activePlayer = activePlayerService.findActivePlayer(id);
+        
+        // Guardar estados anteriores de las herramientas para detectar si se destruyen o reparan
+        boolean previousPickaxeState = activePlayer.isPickaxeState();
+        boolean previousCandleState = activePlayer.isCandleState();
+        boolean previousCartState = activePlayer.isCartState();
+        
+        // Guardar goldNugget anterior para detectar incrementos
+        Integer previousGoldNugget = activePlayer.getGoldNugget() != null ? activePlayer.getGoldNugget() : 0;
+        
         ActivePlayer achievementPatched = objectMapper.updateValue(activePlayer, updates);
         ActivePlayer savedPlayer = activePlayerService.updateActivePlayer(achievementPatched, id);
+        
+        // Actualizar acquiredGoldNuggets del Player si goldNugget incrementó
+        if (updates.containsKey("goldNugget")) {
+            Integer newGoldNugget = savedPlayer.getGoldNugget() != null ? savedPlayer.getGoldNugget() : 0;
+            int increment = newGoldNugget - previousGoldNugget;
+            if (increment > 0) {
+                Player player = playerService.findPlayer(id);
+                player.setAcquiredGoldNuggets(player.getAcquiredGoldNuggets() + increment);
+                playerService.savePlayer(player);
+            }
+        }
 
         boolean toolsChanged = updates.containsKey("pickaxeState") || 
                                updates.containsKey("candleState") || 
                                updates.containsKey("cartState");
 
         if (toolsChanged) {
+                // Verificar si alguna herramienta fue destruida (cambió de true a false)
+                boolean pickaxeDestroyed = previousPickaxeState && !savedPlayer.isPickaxeState();
+                boolean candleDestroyed = previousCandleState && !savedPlayer.isCandleState();
+                boolean cartDestroyed = previousCartState && !savedPlayer.isCartState();
+                
+                // Verificar si alguna herramienta fue reparada (cambió de false a true)
+                boolean pickaxeRepaired = !previousPickaxeState && savedPlayer.isPickaxeState();
+                boolean candleRepaired = !previousCandleState && savedPlayer.isCandleState();
+                boolean cartRepaired = !previousCartState && savedPlayer.isCartState();
+                
+                // Si alguna herramienta fue destruida, incrementar peopleDamaged del jugador que realizó la acción
+                if(pickaxeDestroyed || candleDestroyed || cartDestroyed) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if(auth != null) {
+                        String currentUsername = auth.getName();
+                        // Solo incrementar si el jugador que destruye es diferente al afectado
+                        if(!currentUsername.equals(savedPlayer.getUsername())) {
+                            if(activePlayerService.existsActivePlayer(currentUsername)) {
+                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                                Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
+                                currentPlayer.setPeopleDamaged(currentPlayer.getPeopleDamaged() + 1);
+                                playerService.savePlayer(currentPlayer);
+                            }
+                        }
+                    }
+                }
+                
+                // Si alguna herramienta fue reparada, incrementar peopleRepaired del jugador que realizó la acción
+                if(pickaxeRepaired || candleRepaired || cartRepaired) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if(auth != null) {
+                        String currentUsername = auth.getName();
+                        // Solo incrementar si el jugador que repara es diferente al afectado
+                        if(!currentUsername.equals(savedPlayer.getUsername())) {
+                            if(activePlayerService.existsActivePlayer(currentUsername)) {
+                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                                Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
+                                currentPlayer.setPeopleRepaired(currentPlayer.getPeopleRepaired() + 1);
+                                playerService.savePlayer(currentPlayer);
+                            }
+                        }
+                    }
+                }
+                
                 List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(id);
                 if(!games.isEmpty()){
                     Integer gameId = games.get(0).getId();
