@@ -103,7 +103,18 @@ function App() {
       <ErrorBoundary FallbackComponent={ErrorFallback} >
         <AppNavbar />
         {jwt && <GameInvitationListener />}
-        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+        <ToastContainer 
+          position="top-right" 
+          autoClose={2500} 
+          hideProgressBar={false} 
+          newestOnTop={true} 
+          closeOnClick 
+          rtl={false} 
+          pauseOnFocusLoss={false} 
+          draggable 
+          pauseOnHover={false}
+          limit={3}
+        />
         <Routes>
           <Route path="/" exact={true} element={<Home />} />
           <Route path="/register" element={<Register />} />
