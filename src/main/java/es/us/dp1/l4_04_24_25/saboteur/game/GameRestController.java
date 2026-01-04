@@ -200,11 +200,23 @@ class GameRestController {
 
     if (updates.containsKey("gameStatus") && "FINISHED".equals(updates.get("gameStatus"))) {
         if (savedGame.getStartTime() != null && updates.containsKey("endTime")) {
-            LocalDateTime endTime = LocalDateTime.parse(updates.get("endTime").toString().replace("Z", ""));
+            String endTimeStr = updates.get("endTime").toString();
+            LocalDateTime endTime;
+            try {
+                java.time.Instant instant = java.time.Instant.parse(endTimeStr);
+                endTime = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+            } catch (Exception e) {
+                endTime = LocalDateTime.parse(endTimeStr.replace("Z", ""));
+            }
+            
             java.time.Duration duration = java.time.Duration.between(savedGame.getStartTime(), endTime);
+            if (duration.isNegative()) {
+                duration = duration.abs();
+                System.out.println(">>> WARNING: Duration was negative, using absolute value");
+            }
             savedGame.setTime(duration);
             gameService.saveGame(savedGame);
-            System.out.println(">>> GAME FINISHED. Duration calculated: " + duration);
+            System.out.println(">>> GAME FINISHED. Start: " + savedGame.getStartTime() + ", End: " + endTime + ", Duration: " + duration);
         }
     }
     
