@@ -1103,6 +1103,25 @@ const activateCollapseMode = (card, cardIndex) => {
     })) || [];
     
     console.log('📊 Player rankings:', playerRankings);
+
+    // Procesar logros para todos los jugadores de la partida
+    try {
+      console.log('🏆 Processing achievements for game:', game.id);
+      const achievementResponse = await fetch(`/api/v1/achievements/process/${game.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`
+        }
+      });
+      if (achievementResponse.ok) {
+        console.log('✅ Achievements processed successfully');
+      } else {
+        console.error('❌ Error processing achievements:', achievementResponse.status);
+      }
+    } catch (error) {
+      console.error('❌ Error processing achievements:', error);
+    }
     
     // Mostrar modal de fin de partida
     setGameEndData({ playerRankings });

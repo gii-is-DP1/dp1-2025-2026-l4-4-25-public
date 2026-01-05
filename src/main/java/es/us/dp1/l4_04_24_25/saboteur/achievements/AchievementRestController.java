@@ -174,4 +174,11 @@ public class AchievementRestController {
         public ResponseEntity<Achievement> findByTittle(@RequestParam String tittle){
             return new ResponseEntity<>(achievementService.findByTittle(tittle), HttpStatus.OK);
         }
+
+    @PostMapping("/process/{gameId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<MessageResponse> processAchievementsForGame(@PathVariable("gameId") Integer gameId) {
+        achievementService.processAchievementsForGame(gameId);
+        return new ResponseEntity<>(new MessageResponse("Achievements processed successfully for game " + gameId), HttpStatus.OK);
+    }
     }
