@@ -1104,23 +1104,32 @@ const activateCollapseMode = (card, cardIndex) => {
     
     console.log('📊 Player rankings:', playerRankings);
 
-    // Procesar logros para todos los jugadores de la partida
-    try {
-      console.log('🏆 Processing achievements for game:', game.id);
-      const achievementResponse = await fetch(`/api/v1/achievements/process/${game.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`
+    // Determinar el ganador (jugador con más pepitas)
+    const sortedRankings = [...playerRankings].sort((a, b) => b.totalNuggets - a.totalNuggets);
+    const winnerUsername = sortedRankings.length > 0 ? sortedRankings[0].username : null;
+    console.log('👑 Winner:', winnerUsername);
+
+    // Solo el primer jugador procesa las estadísticas y logros (para evitar duplicados)
+    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    
+    if (isFirstPlayer && winnerUsername) {
+      try {
+        console.log('🏆 Processing game statistics and achievements for game:', game.id);
+        const achievementResponse = await fetch(`/api/v1/achievements/process/${game.id}?winnerUsername=${encodeURIComponent(winnerUsername)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`
+          }
+        });
+        if (achievementResponse.ok) {
+          console.log('✅ Game statistics and achievements processed successfully');
+        } else {
+          console.error('❌ Error processing game statistics and achievements:', achievementResponse.status);
         }
-      });
-      if (achievementResponse.ok) {
-        console.log('✅ Achievements processed successfully');
-      } else {
-        console.error('❌ Error processing achievements:', achievementResponse.status);
+      } catch (error) {
+        console.error('❌ Error processing game statistics and achievements:', error);
       }
-    } catch (error) {
-      console.error('❌ Error processing achievements:', error);
     }
     
     // Mostrar modal de fin de partida
