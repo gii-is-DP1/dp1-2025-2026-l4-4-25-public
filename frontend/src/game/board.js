@@ -190,10 +190,10 @@ export default function Board() {
 
   // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
+    console.log('🔄 useEffect round.id check - round?.id:', round?.id, 'lastRoundId.current:', lastRoundId.current);
     if (round?.id && round.id !== lastRoundId.current) {
       console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
       roundEndedRef.current = ROUND_STATE.ACTIVE;
-      lastRoundId.current = round.id;
       // Forzar reasignación de roles en la nueva ronda
       if (lastRoundId.current !== null) {
         forceRolesReassignment.current = true;
@@ -201,6 +201,12 @@ export default function Board() {
       }
 
       playersOutOfCardsLogged.current.clear();
+      // Reiniciar hasPatchedInitialLeftCards para que se recalcule el playerCardsCount en la nueva ronda
+      hasPatchedInitialLeftCards.current = false;
+      console.log('🔄 hasPatchedInitialLeftCards reiniciado a false');
+      
+      // Actualizar lastRoundId DESPUÉS de hacer los resets
+      lastRoundId.current = round.id;
     }
   }, [round?.id]);
 
@@ -249,8 +255,7 @@ export default function Board() {
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
     const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
-    console.log('deckTopic:', deckTopic);
-    const deckMessage = useWebSocket(deckTopic); 
+    const deckMessage = useWebSocket(deckTopic);
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -330,15 +335,17 @@ export default function Board() {
     }
     },[gameMessage])
     
-    useEffect(() => {
-      if(!deckMessage) return; 
-       const { action } = deckMessage;
-
-      switch (action) {
-        case "DECK_COUNT":
-          const { username, leftCards } = deckMessage;
-          console.log('📊 DECK_COUNT recibido:', username, leftCards);
-          // Actualiza el deck completo
+    // Usar ref para trackear el último mensaje procesado
+    const lastProcessedDeckTs = useRef(null);
+    
+    // Procesar deckMessage cuando cambie
+    if (deckMessage && deckMessage._ts !== lastProcessedDeckTs.current) {
+      lastProcessedDeckTs.current = deckMessage._ts;
+      
+      if (deckMessage.action === "DECK_COUNT") {
+        const { username, leftCards } = deckMessage;
+        // Usar setTimeout para evitar actualizar estado durante render
+        setTimeout(() => {
           setPlayerCardsCount(prev => ({
             ...prev,
             [username]: leftCards
@@ -349,14 +356,9 @@ export default function Board() {
             playersOutOfCardsLogged.current.add(username);
             addLog(`🃏 ${username} has run out of cards!`, 'warning');
           }
-          
-          break;
-
-        default:
-          console.warn("Unrecognized deckMessage action:", action);
-          break;
-        }
-        }, [deckMessage]); 
+        }, 0);
+      }
+    }
     
     // Verificar fin de ronda cuando cambian los conteos de cartas de jugadores
     useEffect(() => {
@@ -1740,6 +1742,7 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [roundEnded]);
 
   useEffect(() => {
+    console.log('🔍 useEffect playerCardsCount init - activePlayers:', activePlayers.length, 'round?.id:', round?.id, 'hasPatchedInitialLeftCards:', hasPatchedInitialLeftCards.current);
     if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
@@ -1750,6 +1753,7 @@ const activateCollapseMode = (card, cardIndex) => {
         const name = p.username || p;
         initialCounts[name] = cardsPerPlayer;
       });
+      console.log('📦 Inicializando playerCardsCount:', initialCounts);
       setPlayerCardsCount(initialCounts);
       // Hacer patch al round con el leftCards calculado para sincronizar con backend
       hasPatchedInitialLeftCards.current = true;
