@@ -538,7 +538,7 @@ VALUES (67, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE);
     -- SIN SALIDA IZQUIERDA
 
 INSERT INTO card (id, deck_id, status, image)
-VALUES (68, null, FALSE, '/images/card-images/tunnel-cards/izquierda_centro.jpeg');
+VALUES (68, null, FALSE, '/images/card-images/tunnel-cards/izquierda_centro.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (68, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE);
 
@@ -628,7 +628,7 @@ VALUES (81, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE);
 
     -- ROTATED: izquierda_centro (180° → derecha_centro)
 INSERT INTO card (id, deck_id, status, image)
-VALUES (82, null, FALSE, '/images/card-images/tunnel-cards/izquierda_centro_rotated.jpeg');
+VALUES (82, null, FALSE, '/images/card-images/tunnel-cards/izquierda_centro_rotated.png');
 INSERT INTO tunnel (id, rotacion, arriba, abajo, izquierda, derecha, centro) 
 VALUES (82, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE);
 
