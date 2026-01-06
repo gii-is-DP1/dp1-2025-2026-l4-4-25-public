@@ -1,6 +1,35 @@
 import React, { useState } from 'react';
 import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../utils/cardUtils';
 
+// Función para verificar si es una carta de reparación doble
+const isDoubleRepairCard = (card) => {
+  const doubleRepairEffects = ['REPAIR_PICKAXE_LAMP', 'REPAIR_PICKAXE_CART', 'REPAIR_CART_LAMP'];
+  return card?.effectValue && doubleRepairEffects.includes(card.effectValue);
+};
+
+// Obtener las opciones de herramientas para una carta de reparación doble
+const getToolOptionsForCard = (effectValue) => {
+  switch (effectValue) {
+    case 'REPAIR_PICKAXE_LAMP':
+      return [
+        { key: 'pickaxe', label: 'Pickaxe', emoji: '⛏️' },
+        { key: 'candle', label: 'Candle', emoji: '🔦' }
+      ];
+    case 'REPAIR_PICKAXE_CART':
+      return [
+        { key: 'pickaxe', label: 'Pickaxe', emoji: '⛏️' },
+        { key: 'wagon', label: 'Wagon', emoji: '🪨' }
+      ];
+    case 'REPAIR_CART_LAMP':
+      return [
+        { key: 'wagon', label: 'Wagon', emoji: '🪨' },
+        { key: 'candle', label: 'Candle', emoji: '🔦' }
+      ];
+    default:
+      return [];
+  }
+};
+
 export default function InteractiveCard({ 
   card, 
   index,
@@ -20,6 +49,8 @@ export default function InteractiveCard({
 }) {
   const [showPlayerMenu, setShowPlayerMenu] = useState(false);
   const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
+  const [showToolMenu, setShowToolMenu] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   // LAS CARTAS DE TUNELES SON LAS UNICAS Q SE ARRATRAN
   const handleDragStart = (e) => {
@@ -56,9 +87,25 @@ export default function InteractiveCard({
   };
 
   const handleSelectPlayer = (player) => {
+    // Si es una carta de reparación doble, mostrar menú de selección de herramienta
+    if (isDoubleRepairCard(card)) {
+      setSelectedPlayer(player);
+      setShowPlayerMenu(false);
+      setShowToolMenu(true);
+      return;
+    }
     if (onActionCardUse) {
       onActionCardUse(card, player, index);}
     setShowPlayerMenu(false);};
+
+  const handleSelectTool = (toolKey) => {
+    if (onActionCardUse && selectedPlayer) {
+      // Pasar la herramienta seleccionada como cuarto parámetro
+      onActionCardUse(card, selectedPlayer, index, toolKey);
+    }
+    setShowToolMenu(false);
+    setSelectedPlayer(null);
+  };
 
   const handleSelectObjective = (position) => {
     if (onMapCardUse) {
@@ -212,6 +259,37 @@ export default function InteractiveCard({
               <span className="player-avatar">🎯</span>
               <span className="player-name">LOW Objective</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {showToolMenu && selectedPlayer && (
+        <div className="player-menu">
+          <div className="player-menu-header">
+            Select tool to repair for {selectedPlayer.username}
+            <button 
+              className="close-menu" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowToolMenu(false);
+                setSelectedPlayer(null);
+              }}>
+              ❌
+            </button>
+          </div>
+          <div className="player-menu-list">
+            {getToolOptionsForCard(card.effectValue).map((tool) => (
+              <button
+                key={tool.key}
+                className="player-menu-item tool-option"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectTool(tool.key);
+                }}>
+                <span className="player-avatar">{tool.emoji}</span>
+                <span className="player-name">{tool.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}

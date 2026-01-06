@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
  * @param {Function} context.addPrivateLog - Función para agregar mensajes privados
  * @param {Function} context.nextTurn - Función para pasar al siguiente turno
  * @param {Function} context.setDeckCount - Función para actualizar contador del mazo
+ * @param {string} context.selectedTool - Herramienta seleccionada para cartas de reparación doble
  */
 export const handleActionCard = async (card, targetPlayer, cardIndex, context) => {
   const {
@@ -29,6 +30,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     setDeckCount,
     activePlayers,
     patchActivePlayer,
+    selectedTool,
   } = context;
 
   if (isSpectator) {
@@ -179,78 +181,135 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       break;
 
     case 'REPAIR_PICKAXE_LAMP':
-      if (currentTools.pickaxe && currentTools.candle) {
-        toast.warning("Cannot repair tools that are already working!");
+      // Ahora solo repara una herramienta según la selección del jugador
+      if (selectedTool === 'pickaxe') {
+        if (currentTools.pickaxe) {
+          toast.warning("Cannot repair a pickaxe that is already working!");
+          return;
+        }
+        setPlayerTools(prev => ({
+          ...prev,
+          [targetUsername]: { ...prev[targetUsername], pickaxe: true }
+        }));
+
+        const targetActivePlayerRepairPickaxe2 = findActivePlayer(targetUsername);
+        if (targetActivePlayerRepairPickaxe2 && patchActivePlayer) {
+          await patchActivePlayer(targetActivePlayerRepairPickaxe2.id, {
+            pickaxeState: true
+          });
+        }
+
+        addLog(`⛏️ ${targetUsername}'s pickaxe has been repaired!`);
+      } else if (selectedTool === 'candle') {
+        if (currentTools.candle) {
+          toast.warning("Cannot repair a candle that is already working!");
+          return;
+        }
+        setPlayerTools(prev => ({
+          ...prev,
+          [targetUsername]: { ...prev[targetUsername], candle: true }
+        }));
+
+        const targetActivePlayerRepairLamp2 = findActivePlayer(targetUsername);
+        if (targetActivePlayerRepairLamp2 && patchActivePlayer) {
+          await patchActivePlayer(targetActivePlayerRepairLamp2.id, {
+            candleState: true
+          });
+        }
+
+        addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
+      } else {
+        toast.warning("Please select a tool to repair!");
         return;
       }
-      if (currentTools.pickaxe || currentTools.candle) {
-        toast.warning("Both pickaxe and candle must be broken to use this card!");
-        return;
-      }
-      setPlayerTools(prev => ({
-        ...prev,
-        [targetUsername]: { ...prev[targetUsername], pickaxe: true, candle: true }
-      }));
-
-      const targetActivePlayerRepairPickaxeLamp = findActivePlayer(targetUsername);
-      if (targetActivePlayerRepairPickaxeLamp && patchActivePlayer) {
-        await patchActivePlayer(targetActivePlayerRepairPickaxeLamp.id, {
-          pickaxeState: true,
-          candleState: true
-        });
-      }
-
-      addLog(`⛏️🔦 ${targetUsername}'s pickaxe and candle have been repaired!`);
       break;
 
     case 'REPAIR_PICKAXE_CART':
-      if (currentTools.pickaxe && currentTools.wagon) {
-        toast.warning("Cannot repair tools that are already working!");
+      // Ahora solo repara una herramienta según la selección del jugador
+      if (selectedTool === 'pickaxe') {
+        if (currentTools.pickaxe) {
+          toast.warning("Cannot repair a pickaxe that is already working!");
+          return;
+        }
+        setPlayerTools(prev => ({
+          ...prev,
+          [targetUsername]: { ...prev[targetUsername], pickaxe: true }
+        }));
+
+        const targetActivePlayerRepairPickaxe3 = findActivePlayer(targetUsername);
+        if (targetActivePlayerRepairPickaxe3 && patchActivePlayer) {
+          await patchActivePlayer(targetActivePlayerRepairPickaxe3.id, {
+            pickaxeState: true
+          });
+        }
+
+        addLog(`⛏️ ${targetUsername}'s pickaxe has been repaired!`);
+      } else if (selectedTool === 'wagon') {
+        if (currentTools.wagon) {
+          toast.warning("Cannot repair a wagon that is already working!");
+          return;
+        }
+        setPlayerTools(prev => ({
+          ...prev,
+          [targetUsername]: { ...prev[targetUsername], wagon: true }
+        }));
+
+        const targetActivePlayerRepairCart2 = findActivePlayer(targetUsername);
+        if (targetActivePlayerRepairCart2 && patchActivePlayer) {
+          await patchActivePlayer(targetActivePlayerRepairCart2.id, {
+            cartState: true
+          });
+        }
+
+        addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
+      } else {
+        toast.warning("Please select a tool to repair!");
         return;
       }
-      if (currentTools.pickaxe || currentTools.wagon) {
-        toast.warning("Both pickaxe and wagon must be broken to use this card!");
-        return;
-      }
-      setPlayerTools(prev => ({
-        ...prev,
-        [targetUsername]: { ...prev[targetUsername], pickaxe: true, wagon: true }
-      }));
-
-      const targetActivePlayerRepairPickaxeCart = findActivePlayer(targetUsername);
-      if (targetActivePlayerRepairPickaxeCart && patchActivePlayer) {
-        await patchActivePlayer(targetActivePlayerRepairPickaxeCart.id, {
-          pickaxeState: true,
-          cartState: true
-        });
-      }
-
-      addLog(`⛏️🪨 ${targetUsername}'s pickaxe and wagon have been repaired!`);
       break;
 
     case 'REPAIR_CART_LAMP':
-      if (currentTools.wagon && currentTools.candle) {
-        toast.warning("Cannot repair tools that are already working!");
+      // Ahora solo repara una herramienta según la selección del jugador
+      if (selectedTool === 'wagon') {
+        if (currentTools.wagon) {
+          toast.warning("Cannot repair a wagon that is already working!");
+          return;
+        }
+        setPlayerTools(prev => ({
+          ...prev,
+          [targetUsername]: { ...prev[targetUsername], wagon: true }
+        }));
+
+        const targetActivePlayerRepairCart3 = findActivePlayer(targetUsername);
+        if (targetActivePlayerRepairCart3 && patchActivePlayer) {
+          await patchActivePlayer(targetActivePlayerRepairCart3.id, {
+            cartState: true
+          });
+        }
+
+        addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
+      } else if (selectedTool === 'candle') {
+        if (currentTools.candle) {
+          toast.warning("Cannot repair a candle that is already working!");
+          return;
+        }
+        setPlayerTools(prev => ({
+          ...prev,
+          [targetUsername]: { ...prev[targetUsername], candle: true }
+        }));
+
+        const targetActivePlayerRepairLamp3 = findActivePlayer(targetUsername);
+        if (targetActivePlayerRepairLamp3 && patchActivePlayer) {
+          await patchActivePlayer(targetActivePlayerRepairLamp3.id, {
+            candleState: true
+          });
+        }
+
+        addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
+      } else {
+        toast.warning("Please select a tool to repair!");
         return;
       }
-      if (currentTools.wagon || currentTools.candle) {
-        toast.warning("Both wagon and candle must be broken to use this card!");
-        return;
-      }
-      setPlayerTools(prev => ({
-        ...prev,
-        [targetUsername]: { ...prev[targetUsername], wagon: true, candle: true }
-      }));
-
-      const targetActivePlayerRepairCartLamp = findActivePlayer(targetUsername);
-      if (targetActivePlayerRepairCartLamp && patchActivePlayer) {
-        await patchActivePlayer(targetActivePlayerRepairCartLamp.id, {
-          cartState: true,
-          candleState: true
-        });
-      }
-
-      addLog(`🪨🔦 ${targetUsername}'s wagon and candle have been repaired!`);
       break;
 
     default:
