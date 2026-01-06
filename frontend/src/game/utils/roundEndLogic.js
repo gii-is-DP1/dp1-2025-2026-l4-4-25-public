@@ -2,7 +2,7 @@
 // Lógica de finalización de rondas y de la partida general según :
 import tokenService from '../../services/token.service';
 
-import { hasPathFromStart } from './cardUtils';
+import { hasPathFromStart, canExitToDirection } from './cardUtils';
 
 const jwt = tokenService.getLocalAccessToken();
 
@@ -55,7 +55,7 @@ const patchActivePlayer = async (activePlayerId, data) => {
 };
 
 // La ronda termina si se ha encontrado la pepita o todos los jugadores se han quedado sin cartas
-export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCards) => {
+export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCards, playerCardsCount) => {
   // Validar que players existe y tiene elementos
   if (!players || !Array.isArray(players) || players.length === 0) {
     return { ended: false };
@@ -71,6 +71,19 @@ export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCar
       goldPosition: goldReached.position
     };
   }
+
+  // Verificar si todos los jugadores se han quedado sin cartas
+  const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
+  console.log('🔍 checkRoundEnd - totalCards:', totalCards, 'playerCardsCount:', playerCardsCount);
+  if (totalCards === 0) {
+    console.log('🔍 checkRoundEnd - ALL_PLAYERS_OUT_OF_CARDS');
+    return {
+      ended: true,
+      reason: 'ALL_PLAYERS_OUT_OF_CARDS',
+      winnerTeam: 'SABOTEURS'
+    };
+  }
+
   if (deckCount <= 0) {
     try {
       // Obtener los decks de todos los jugadores en paralelo
@@ -109,10 +122,10 @@ const checkPathToGold = (boardCells, objectiveCards) => {
     if (objectiveCards[pos.key] === 'gold') {
       // Verificar si hay alguna carta de camino adyacente a la posición del objetivo
       const adjacentPositions = [
-        { row: pos.row - 1, col: pos.col }, 
-        { row: pos.row + 1, col: pos.col }, 
-        { row: pos.row, col: pos.col - 1 }, 
-        { row: pos.row, col: pos.col + 1 }  
+        { row: pos.row - 1, col: pos.col, directionToObjective: 'abajo' },   // carta arriba del objetivo -> necesita salir hacia abajo
+        { row: pos.row + 1, col: pos.col, directionToObjective: 'arriba' },  // carta abajo del objetivo -> necesita salir hacia arriba
+        { row: pos.row, col: pos.col - 1, directionToObjective: 'derecha' }, // carta a la izquierda del objetivo -> necesita salir hacia derecha
+        { row: pos.row, col: pos.col + 1, directionToObjective: 'izquierda' } // carta a la derecha del objetivo -> necesita salir hacia izquierda
       ];
 
       for (const adjPos of adjacentPositions) {
@@ -120,13 +133,18 @@ const checkPathToGold = (boardCells, objectiveCards) => {
         
         // Verificar que hay una carta de túnel adyacente
         if (adjCell && adjCell.occupied && adjCell.type === 'tunnel') {
+          // Primero verificar que hay un camino desde el inicio hasta esta carta
           if (hasPathFromStart(boardCells, adjPos.row, adjPos.col, adjCell)) {
-            return { 
-              reached: true, 
-              position: pos.key, 
-              row: pos.row, 
-              col: pos.col 
-            };
+            // NUEVA VALIDACIÓN: Verificar que la carta puede "salir" hacia el objetivo
+            // Si la carta tiene centro=true, no puede atravesarse aunque tenga conexión en esa dirección
+            if (canExitToDirection(adjCell, adjPos.directionToObjective)) {
+              return { 
+                reached: true, 
+                position: pos.key, 
+                row: pos.row, 
+                col: pos.col 
+              };
+            }
           }
         }
       }

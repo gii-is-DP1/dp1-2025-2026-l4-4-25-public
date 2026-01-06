@@ -43,6 +43,20 @@ public class GameService {
         return gameRepository.findAllByActivePlayerId(activePlayerId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Game> findGamesByPlayerUsername(String username) {
+        List<Game> allGames = (List<Game>) gameRepository.findAll();
+        return allGames.stream()
+            .filter(game -> {
+                boolean isCreator = game.getCreator() != null && game.getCreator().getUsername().equals(username);
+                boolean isActivePlayer = game.getActivePlayers() != null && 
+                    game.getActivePlayers().stream()
+                        .anyMatch(ap -> ap.getUsername().equals(username));
+                return isCreator || isActivePlayer;
+            })
+            .toList();
+    }
+
     @Transactional
     public Game updateGame(@Valid Game game, Integer idToUpdate){
         Game toUpdate = findGame(idToUpdate);
@@ -56,11 +70,6 @@ public class GameService {
     public void deleteGame(Integer id) {
         Game toDelete = findGame(id);
         gameRepository.delete(toDelete);
-    }
-
-    @Transactional(readOnly = true)
-    public Game findByLink(String link) {
-        return gameRepository.findByLink(link).orElseThrow(()-> new ResourceNotFoundException("Game","link",link));
     }
 
     @Transactional(readOnly = true)
@@ -87,11 +96,5 @@ public class GameService {
     public Iterable<Game> findAllPrivateGames() {
         return gameRepository.findAllPrivateGames();
     }
-
-    public boolean existsByLink(String link) {
-        return gameRepository.existsByLink(link);
-    }
-
-    
     
 }

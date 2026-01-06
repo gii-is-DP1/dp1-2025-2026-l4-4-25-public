@@ -12,11 +12,7 @@ public interface GameRepository extends CrudRepository<Game, Integer> {
     @Override
     Optional<Game> findById(Integer id);
 
-    Optional<Game> findByLink(String link);
-
     List<Game> findByCreatorUsername(String creatorUsername);
-
-    Boolean existsByLink(String link);
 /* 
    // Buscar todas las partidas gestionadas por un administrador específico
     @Query("SELECT g FROM Game g JOIN g.admins a WHERE a.username = :adminUsername")

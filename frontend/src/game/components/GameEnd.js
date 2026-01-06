@@ -1,15 +1,137 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
+import tokenService from '../../services/token.service';
+
+const jwt = tokenService.getLocalAccessToken();
 
 export default function GameEndModal({ 
   playerRankings,
-  countdown
+  countdown,
+  gameId,
+  activePlayers
 }) {
+  const finishExecutedRef = useRef(false);
   
   // Ordenar por total de pepitas (de mayor a menor)
   const sortedRankings = [...(playerRankings || [])].sort((a, b) => b.totalNuggets - a.totalNuggets);
   
   // El ganador es el primero del ranking
   const winner = sortedRankings[0];
+
+  const handleFinish = async () => {
+    if (finishExecutedRef.current) return;
+    finishExecutedRef.current = true;
+
+    const tools = {pickaxeState: true, cartState: true, candleState: true, goldNugget: 0, rol: false};
+    
+    try {
+      console.log("Finishing game:", gameId);
+      
+      if (!activePlayers || !Array.isArray(activePlayers)) {
+        console.warn("activePlayers is not valid:", activePlayers);
+        await updateGame(gameId, {gameStatus: "FINISHED"});
+        toast.success("Game finished successfully!");
+        return}
+      
+      // Obtener el ID del ganador (el que tiene más goldNuggets)
+      let winnerId = null;
+      if (winner && winner.username) {
+        const winnerData = await fetchActivePlayerByUsername(winner.username);
+        if (winnerData) {
+          winnerId = winnerData.id;
+          console.log("🏆 Winner ID:", winnerId, "Username:", winner.username);
+        }
+      }
+      
+      const request = {
+        gameStatus: "FINISHED",
+        endTime: new Date().toISOString()
+      };
+      if (winnerId) {
+        request.winner = { id: winnerId }}
+      
+      // Filtrar elementos undefined/null antes del forEach
+      const validPlayers = activePlayers.filter(p => p && p.username);
+      
+      for (const player of validPlayers) {
+        const playerData = await fetchActivePlayerByUsername(player.username);
+        if (playerData) {
+          await patchActivePlayer(playerData.id, tools)}
+      }
+      
+      await updateGame(gameId, request);
+      toast.success("Game finished successfully!");
+    } catch (error) {
+      console.error(error); 
+      toast.error('Error finishing the game.');
+    }
+  };
+
+  const fetchActivePlayerByUsername = async (username) => {
+    try {
+      const response = await fetch(`/api/v1/activePlayers/byUsername?username=${username}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching active player:', error);
+      return null;
+    }
+  };
+
+  const patchActivePlayer = async (playerId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/activePlayers/${playerId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error patching active player:', error);
+      return null;
+    }
+  };
+
+  const updateGame = async (gameId, updates) => {
+    try {
+      const response = await fetch(`/api/v1/games/${gameId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(updates),
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      throw new Error('Failed to update game');
+    } catch (error) {
+      console.error('Error updating game:', error);
+      throw error;
+    }
+  };
+
+  // Efecto para llamar a handleFinish cuando el countdown llega a 0
+  useEffect(() => {
+    if (countdown === 0 && !finishExecutedRef.current) {
+      handleFinish();
+    }
+  }, [countdown]);
   
   // Función para obtener el emoji del podio
   const getPodiumEmoji = (position) => {

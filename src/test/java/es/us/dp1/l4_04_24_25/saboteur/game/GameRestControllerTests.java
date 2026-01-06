@@ -103,7 +103,6 @@ class GameRestControllerTests {
 
         game = new Game();
         game.setId(TEST_GAME_ID);
-        game.setLink("test-link");
         game.setCreator(creator);
         game.setGameStatus(gameStatus.CREATED);
         game.setMaxPlayers(5);
@@ -126,8 +125,7 @@ class GameRestControllerTests {
 
         mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].link", is("test-link")));
+                .andExpect(jsonPath("$", hasSize(1)));
     }
 
     @Test
@@ -138,17 +136,6 @@ class GameRestControllerTests {
         mockMvc.perform(get(BASE_URL + "/{id}", TEST_GAME_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(TEST_GAME_ID)));
-    }
-
-    @Test
-    @WithMockUser("admin")
-    void shouldFindByLink() throws Exception {
-        String link = "test-link";
-        when(gameService.findByLink(link)).thenReturn(game);
-
-        mockMvc.perform(get(BASE_URL + "/byLink").param("link", link))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.link", is(link)));
     }
 
     @Test
@@ -171,48 +158,11 @@ class GameRestControllerTests {
                 .andExpect(status().isNotFound());
     }
 
-
-    /* 
-    @Test
-    @WithMockUser("admin")
-    void shouldCreateGame() throws Exception {
-        when(gameService.existsByLink(any())).thenReturn(false);
-        when(gameService.saveGame(any(Game.class))).thenReturn(game);
-
-        Map<String, Object> gameData = new HashMap<>();
-        gameData.put("link", "new-game-link");
-        gameData.put("maxPlayers", 4);
-        gameData.put("isPrivate", false);
-        gameData.put("activePlayers", List.of(1)); 
-
-        mockMvc.perform(post(BASE_URL)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(gameData)))
-                .andExpect(status().isCreated());
-    }
-    
-    @Test
-    @WithMockUser("admin")
-    void shouldFailCreateGameIfLinkDuplicate() throws Exception {
-        when(gameService.existsByLink(any())).thenReturn(true);
-        
-        Map<String, Object> gameData = new HashMap<>();
-        gameData.put("link", "duplicate-link");
-        gameData.put("activePlayers", List.of(1));
-
-        mockMvc.perform(post(BASE_URL)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(gameData)))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException));
-    }
-    */
     @Test
     @WithMockUser("admin")
     void shouldFailCreateGameIfNoActivePlayers() throws Exception {
         Map<String, Object> gameData = new HashMap<>();
-        gameData.put("link", "link");
+        gameData.put("maxPlayers", 3);
 
         mockMvc.perform(post(BASE_URL)
                 .with(csrf())
@@ -229,7 +179,7 @@ class GameRestControllerTests {
         when(gameService.updateGame(any(Game.class), eq(TEST_GAME_ID))).thenReturn(game);
 
         Map<String, Object> gameData = new HashMap<>();
-        gameData.put("link", "updated-link");
+        gameData.put("maxPlayers", 6);
 
         mockMvc.perform(put(BASE_URL + "/{id}", TEST_GAME_ID)
                 .with(csrf())
@@ -244,7 +194,7 @@ class GameRestControllerTests {
         when(gameService.findGame(TEST_GAME_ID)).thenThrow(new ResourceNotFoundException("Game", "id", TEST_GAME_ID));
 
         Map<String, Object> gameData = new HashMap<>();
-        gameData.put("link", "updated-link");
+        gameData.put("maxPlayers", 6);
 
         mockMvc.perform(put(BASE_URL + "/{id}", TEST_GAME_ID)
                 .with(csrf())

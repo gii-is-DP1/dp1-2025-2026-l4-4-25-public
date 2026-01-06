@@ -1,37 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import tokenService from '../services/token.service';
 
 const useWebSocket = (topic) => {
     const [data, setData] = useState(null);
-    const jwt = tokenService.getLocalAccessToken();
+    const jwtRef = useRef(tokenService.getLocalAccessToken());
+    const stompClientRef = useRef(null);
 
     useEffect(() => {
         if (!topic) return;
 
+        // Limpiar data cuando cambia el topic
+        setData(null);
+
         const socket = new SockJS("http://localhost:8080/ws");
         const stompClient = Stomp.over(socket);
+        stompClientRef.current = stompClient;
 
         stompClient.connect(
-            { Authorization: `Bearer ${jwt}` },
+            { Authorization: `Bearer ${jwtRef.current}` },
             () => {
                 stompClient.subscribe(topic, (message) => {
                     try {
                         const body = JSON.parse(message.body);
-                        setData(body);
+                        // Añadir timestamp para forzar que React detecte el cambio
+                        setData({ ...body, _ts: Date.now() });
                     } catch (error) {
-                        console.error("Error parsing WS:", error);
+                        console.error("Error parsing WS message:", error);
                     }
                 });
             },
-            (error) => console.error("WebSocket error:", error)
+            (error) => {
+                console.error("WS Connection error for topic", topic, ":", error);
+            }
         );
 
         return () => {
-            if (stompClient.connected) stompClient.disconnect();
+            if (stompClient.connected) {
+                stompClient.disconnect();
+            }
+            stompClientRef.current = null;
         };
-    }, [topic, jwt]);
+    }, [topic]);
 
     return data;
 };

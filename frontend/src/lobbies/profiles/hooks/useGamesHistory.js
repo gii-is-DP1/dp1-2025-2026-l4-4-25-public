@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import tokenService from '../../../services/token.service';
-import { filterFinishedGames, addMockGameData, sortGamesByDate } from '../utils/gamesHistoryHelpers';
+import { sortGamesByDate } from '../utils/gamesHistoryHelpers';
 
 /**
  * Custom hook para manejar el historial de juegos
@@ -12,13 +12,12 @@ const useGamesHistory = () => {
   const [error, setError] = useState(null);
   
   const jwt = tokenService.getLocalAccessToken();
-  const currentUser = tokenService.getUser()?.username;
 
   useEffect(() => {
     const fetchGames = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/v1/games", {
+        const response = await fetch("/api/v1/games/myGames", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -29,18 +28,15 @@ const useGamesHistory = () => {
         if (response.ok) {
           let data = await response.json();
           
-          // Añadir datos de prueba (temporal)
-          data = addMockGameData(data);
-          
-          // Filtrar juegos terminados del usuario
-          const finishedGames = filterFinishedGames(data, currentUser);
+          // Filtrar juegos terminados
+          const finishedGames = data.filter(game => game.gameStatus === "FINISHED");
           
           // Ordenar por fecha (más reciente primero)
           const sortedGames = sortGamesByDate(finishedGames);
           
           setFilteredGames(sortedGames);
           setError(null);
-          console.log("Games loaded:", data);
+          console.log("Games loaded:", sortedGames);
         } else {
           toast.error("Error al obtener el historial");
           setError("Failed to fetch games");
@@ -54,10 +50,10 @@ const useGamesHistory = () => {
       }
     };
 
-    if (jwt && currentUser) {
+    if (jwt) {
       fetchGames();
     }
-  }, [jwt, currentUser]);
+  }, [jwt]);
 
   return {
     games: filteredGames,

@@ -94,6 +94,12 @@ const CreateGame = () => {
       }
     }
 
+    if (payload.gameCancelled) {
+      toast.error("The game has been cancelled by the creator");
+      setTimeout(() => {
+        navigate('/lobby')}, 2000);
+      return}
+
     if (payload.adminAction) {
       handleAdminActionInLobby(payload);
       return}

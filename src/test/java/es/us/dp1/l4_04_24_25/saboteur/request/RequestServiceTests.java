@@ -166,33 +166,35 @@ class RequestServiceTests {
     @Test
     void shouldFindByStatusAndSenderUsername() {
         when(requestRepository.findByStatusAndSenderUsername(RequestStatus.PENDING, TEST_SENDER_USERNAME))
-                .thenReturn(Optional.of(request));
+                .thenReturn(List.of(request));
         
-        Request found = requestService.findByStatusAndSenderUsername(RequestStatus.PENDING, TEST_SENDER_USERNAME);
-        assertEquals(RequestStatus.PENDING, found.getStatus());
+        List<Request> found = requestService.findByStatusAndSenderUsername(RequestStatus.PENDING, TEST_SENDER_USERNAME);
+        assertFalse(found.isEmpty());
+        assertEquals(RequestStatus.PENDING, found.get(0).getStatus());
     }
     
     @Test
-    void shouldThrowExceptionWhenStatusAndSenderNotFound() {
-        when(requestRepository.findByStatusAndSenderUsername(any(), any())).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, 
-            () -> requestService.findByStatusAndSenderUsername(RequestStatus.APPROVED, "unknown"));
+    void shouldReturnEmptyListWhenStatusAndSenderNotFound() {
+        when(requestRepository.findByStatusAndSenderUsername(any(), any())).thenReturn(List.of());
+        List<Request> result = requestService.findByStatusAndSenderUsername(RequestStatus.APPROVED, "unknown");
+        assertTrue(result.isEmpty());
     }
 
     @Test
     void shouldFindByStatusAndReceiverUsername() {
         when(requestRepository.findByStatusAndReceiverUsername(RequestStatus.PENDING, TEST_RECEIVER_USERNAME))
-                .thenReturn(Optional.of(request));
+                .thenReturn(List.of(request));
         
-        Request found = requestService.findByStatusAndReceiverUsername(RequestStatus.PENDING, TEST_RECEIVER_USERNAME);
-        assertEquals(RequestStatus.PENDING, found.getStatus());
+        List<Request> found = requestService.findByStatusAndReceiverUsername(RequestStatus.PENDING, TEST_RECEIVER_USERNAME);
+        assertFalse(found.isEmpty());
+        assertEquals(RequestStatus.PENDING, found.get(0).getStatus());
     }
 
     @Test
-    void shouldThrowExceptionWhenStatusAndReceiverNotFound() {
-        when(requestRepository.findByStatusAndReceiverUsername(any(), any())).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, 
-            () -> requestService.findByStatusAndReceiverUsername(RequestStatus.APPROVED, "unknown"));
+    void shouldReturnEmptyListWhenStatusAndReceiverNotFound() {
+        when(requestRepository.findByStatusAndReceiverUsername(any(), any())).thenReturn(List.of());
+        List<Request> result = requestService.findByStatusAndReceiverUsername(RequestStatus.APPROVED, "unknown");
+        assertTrue(result.isEmpty());
     }
 
 

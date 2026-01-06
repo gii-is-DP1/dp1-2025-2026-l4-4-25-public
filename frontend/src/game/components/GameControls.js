@@ -6,7 +6,9 @@ export default function GameControls({
   cont, 
   numRound, 
   handleDiscard, 
-  isSpectator 
+  isSpectator,
+  isCreator,
+  handleForceEndRound
 }) {
   return (
     <>
@@ -19,6 +21,16 @@ export default function GameControls({
         style={isSpectator ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
       >
         📥 Discard
+      </button>
+
+      <button
+        className="n-reveal"
+        onClick={handleForceEndRound}
+        disabled={isSpectator || !isCreator}
+        style={isSpectator || !isCreator ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        title={isCreator ? 'Reveal gold and force end of round' : 'Only the game creator can force end round'}
+      >
+        🔎 Reveal & End Round
       </button>
       
       <div className="time-card">⏰ {formatTime(cont)}</div>

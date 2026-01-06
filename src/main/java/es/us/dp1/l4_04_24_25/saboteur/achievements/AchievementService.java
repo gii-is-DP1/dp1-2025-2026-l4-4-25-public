@@ -16,6 +16,7 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameFinishedEvent;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
@@ -27,12 +28,14 @@ public class AchievementService {
     private final AchievementRepository achievementRepository;
     private final UserService userService;
     private final ActivePlayerRepository activePlayerRepository;
+    private final GameService gameService;
 
     @Autowired
-    public AchievementService(AchievementRepository achievementRepository, UserService userService, ActivePlayerRepository activePlayerRepository) {
+    public AchievementService(AchievementRepository achievementRepository, UserService userService, ActivePlayerRepository activePlayerRepository, GameService gameService) {
         this.achievementRepository = achievementRepository;
         this.userService = userService;
         this.activePlayerRepository = activePlayerRepository;
+        this.gameService = gameService;
     }
 
       
@@ -151,6 +154,38 @@ public class AchievementService {
                 return player.getPeopleRepaired() >= threshold;
             default:
                 return false;
+        }
+    }
+
+    @Transactional
+    public void processAchievementsForGame(Integer gameId, String winnerUsername) {
+        Game game = gameService.findGame(gameId);
+        ActivePlayer winner = null;
+        
+        // Primero: incrementar playedGames para todos y encontrar al ganador
+        for (ActivePlayer activePlayer : game.getActivePlayers()) {
+            // Incrementar partidas jugadas para todos
+            activePlayer.setPlayedGames(activePlayer.getPlayedGames() + 1);
+            
+            // Verificar si este jugador es el ganador
+            if (activePlayer.getUsername().equals(winnerUsername)) {
+                winner = activePlayer;
+                // Incrementar partidas ganadas
+                activePlayer.setWonGames(activePlayer.getWonGames() + 1);
+            }
+            
+            activePlayerRepository.save(activePlayer);
+        }
+        
+        // Segundo: asignar el ganador a la partida
+        if (winner != null) {
+            game.setWinner(winner);
+            gameService.saveGame(game);
+        }
+        
+        // Tercero: verificar y desbloquear logros para todos los jugadores
+        for (ActivePlayer activePlayer : game.getActivePlayers()) {
+            checkAndUnlockAchievements(activePlayer);
         }
     }
         

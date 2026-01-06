@@ -30,14 +30,6 @@ export default function PlayerCards({
   const [deckChecked, setDeckChecked] = useState(false);
   const [cardRotations, setCardRotations] = useState({}); 
 
-  useEffect(() => {
-    if (setPlayerCardsCount && !isSpectator && currentUsername) {
-      setPlayerCardsCount(prev => ({
-        ...prev,
-        [currentUsername]: hand.length}));
-      console.log('Updated card count:',currentUsername,':', hand.length);}
-  }, [hand.length, setPlayerCardsCount, isSpectator, currentUsername]);
-
   // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
     try {

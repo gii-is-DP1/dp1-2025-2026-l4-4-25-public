@@ -52,13 +52,34 @@ const savedRoundData = getSavedRoundData();
 
 export default function Board() {
   const location = useLocation();
+  const navigate = useNavigate();
   const loggedInUser = tokenService.getUser();
 
-  // Usar datos guardados o los de location.state
-  const initialState = savedRoundData || {
-    game: location.state?.game,
-    round: location.state?.round || null,
-    isSpectator: location.state?.isSpectator || false
+  // Limpiar todos los toasts al montar y desmontar el componente
+  useEffect(() => {
+    // Limpiar toasts existentes al entrar al tablero
+    toast.dismiss();
+    
+    // Cleanup: limpiar todos los toasts al salir del componente
+    return () => {
+      toast.dismiss();
+    };
+  }, []);
+
+// Limpiar sessionStorage si hay location.state (nueva partida)
+  if (location.state) {
+    sessionStorage.removeItem('newRoundData');
+  }
+
+  // Dar prioridad a location.state sobre savedRoundData
+  const initialState = location.state ? {
+    game: location.state.game,
+    round: location.state.round || null,
+    isSpectator: location.state.isSpectator || false
+  } : savedRoundData || {
+    game: null,
+    round: null,
+    isSpectator: false
   };
 
   // Estados principales
@@ -67,7 +88,18 @@ export default function Board() {
   const [playerCardsCount, setPlayerCardsCount] = useState({});
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
+  console.log('🎮 Game loaded:', game);
+/*
+  // Guardar game en sessionStorage para persistir al recargar
+  useEffect(() => {
+    if (game) {
+      sessionStorage.setItem('game', JSON.stringify(game));
+    }
+  }, [game]);
+  */
   const [message, setMessage] = useState([]);
+
+
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
@@ -121,8 +153,6 @@ export default function Board() {
   // Estado para solicitudes de espectador (solo para creador)
   const [spectatorRequests, setSpectatorRequests] = useState([]);
   const isCreator = game?.creator === loggedInUser?.username;
-  
-  const navigate = useNavigate();
 
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
@@ -157,18 +187,28 @@ export default function Board() {
   const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
   const lastRoundId = useRef(null);
   const forceRolesReassignment = useRef(false);
+  const playersOutOfCardsLogged = useRef(new Set());
+
 
   // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
+    console.log('🔄 useEffect round.id check - round?.id:', round?.id, 'lastRoundId.current:', lastRoundId.current);
     if (round?.id && round.id !== lastRoundId.current) {
       console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
       roundEndedRef.current = ROUND_STATE.ACTIVE;
-      lastRoundId.current = round.id;
       // Forzar reasignación de roles en la nueva ronda
       if (lastRoundId.current !== null) {
         forceRolesReassignment.current = true;
         console.log('🎭 Marcado para reasignar roles en nueva ronda');
       }
+
+      playersOutOfCardsLogged.current.clear();
+      // Reiniciar hasPatchedInitialLeftCards para que se recalcule el playerCardsCount en la nueva ronda
+      hasPatchedInitialLeftCards.current = false;
+      console.log('🔄 hasPatchedInitialLeftCards reiniciado a false');
+      
+      // Actualizar lastRoundId DESPUÉS de hacer los resets
+      lastRoundId.current = round.id;
     }
   }, [round?.id]);
 
@@ -216,7 +256,15 @@ export default function Board() {
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
-    const deckMessage = useWebSocket(`/topic/game/${game?.id}/deck`); 
+    const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
+    console.log('- deckTopic:', deckTopic);
+    const deckMessage = useWebSocket(deckTopic);
+    
+    console.log('-WebSocket states:', {
+      boardMessage: boardMessage ? 'connected' : 'null',
+      gameMessage: gameMessage ? 'connected' : 'null', 
+      deckMessage: deckMessage ? 'connected' : 'null'
+    });
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -227,7 +275,20 @@ export default function Board() {
         case "CARD_PLACED":
           handleWsCardPlaced(boardMessage);
 
-          if (boardMessage.goalReveal){
+          // Manejar múltiples objetivos revelados (goalReveals es una lista)
+          if (boardMessage.goalReveals && Array.isArray(boardMessage.goalReveals)) {
+            boardMessage.goalReveals.forEach(goal => {
+              handleWsGoalRevealed(goal);
+              
+              if (goal.goalType === 'gold') {
+                console.log('🏆 Oro revelado → bloqueando turno inmediatamente');
+                roundEndedRef.current = ROUND_STATE.ENDING;
+                setRoundEnded(true);
+              }
+            });
+          } 
+          // Fallback para compatibilidad con el campo singular
+          else if (boardMessage.goalReveal) {
             handleWsGoalRevealed(boardMessage.goalReveal);
 
             if (boardMessage.goalReveal.goalType === 'gold'){
@@ -283,25 +344,40 @@ export default function Board() {
     }
     },[gameMessage])
     
-    useEffect(() => {
-      if(!deckMessage) return; 
-       const { action } = deckMessage;
-
-      switch (action) {
-        case "DECK_COUNT":
-          const { username, leftCards } = deckMessage;
-          // Actualiza el deck completo
-          setPlayerCardsCount({
-            ...playerCardsCount,
+    // Usar ref para trackear el último mensaje procesado
+    const lastProcessedDeckTs = useRef(null);
+    
+    // Procesar deckMessage cuando cambie
+    if (deckMessage && deckMessage._ts !== lastProcessedDeckTs.current) {
+      lastProcessedDeckTs.current = deckMessage._ts;
+      
+      if (deckMessage.action === "DECK_COUNT") {
+        const { username, leftCards } = deckMessage;
+        // Usar setTimeout para evitar actualizar estado durante render
+        setTimeout(() => {
+          setPlayerCardsCount(prev => ({
+            ...prev,
             [username]: leftCards
-          })
-          break;
-
-        default:
-          console.warn("Unrecognized deckMessage action:", action);
-          break;
-        }
-        }, [deckMessage]); 
+          }));
+          
+          // Log cuando un jugador se queda sin cartas
+          if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
+            playersOutOfCardsLogged.current.add(username);
+            addLog(`🃏 ${username} has run out of cards!`, 'warning');
+          }
+        }, 0);
+      }
+    }
+    
+    // Verificar fin de ronda cuando cambian los conteos de cartas de jugadores
+    useEffect(() => {
+      const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
+      console.log('🔍 playerCardsCount cambió:', playerCardsCount, 'totalCards:', totalCards);
+      if (totalCards === 0 && roundEndedRef.current === ROUND_STATE.ACTIVE) {
+        console.log('🔍 Llamando checkForRoundEnd porque totalCards === 0');
+        checkForRoundEnd();
+      }
+    }, [playerCardsCount]);
     
     // Depuración usuarios duplicados
     
@@ -342,6 +418,45 @@ export default function Board() {
     
     //Modularizar estas funciones
     const handleWsCardPlaced =  async ({row, col, card, player, squareId})=>{
+      console.log('📥 WebSocket CARD_PLACED recibido:', { row, col, card, player, squareId });
+      
+      // El backend puede enviar solo el ID o un objeto parcial de la carta
+      // Necesitamos buscar la carta completa en ListCards para obtener todas las propiedades
+      let fullCard = card;
+      const cardId = typeof card === 'number' ? card : card?.id;
+      
+      if (cardId && Array.isArray(ListCards)) {
+        const foundCard = ListCards.find(c => c.id === cardId);
+        if (foundCard) {
+          // Combinar las propiedades de la carta encontrada con las del WebSocket
+          fullCard = {
+            ...foundCard,
+            ...card, // Por si el WS trae datos adicionales como rotacion
+            // Asegurar que las propiedades de conexión vienen de la carta completa
+            arriba: foundCard.arriba,
+            abajo: foundCard.abajo,
+            izquierda: foundCard.izquierda,
+            derecha: foundCard.derecha,
+            centro: foundCard.centro,
+            image: foundCard.image
+          };
+          console.log('✅ Carta encontrada en ListCards:', fullCard);
+        } else {
+          console.warn('⚠️ Carta no encontrada en ListCards, usando datos del WS');
+        }
+      }
+      
+      console.log('📥 Propiedades finales de la carta:', {
+        id: fullCard?.id,
+        image: fullCard?.image,
+        arriba: fullCard?.arriba,
+        abajo: fullCard?.abajo,
+        izquierda: fullCard?.izquierda,
+        derecha: fullCard?.derecha,
+        centro: fullCard?.centro,
+        rotacion: fullCard?.rotacion
+      });
+      
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
       const sameAsLast =
@@ -356,12 +471,18 @@ export default function Board() {
       setBoardCells(prev => {
         const next = prev.map(r => r.slice());
         next[row][col] = {
-          ...card,
+          ...fullCard,
           type: "tunnel",
           owner: player,
           placedAt: Date.now(),
           occupied: true,
-          squareId: squareId
+          squareId: squareId,
+          // Asegurar explícitamente las propiedades de conexión
+          arriba: fullCard?.arriba,
+          abajo: fullCard?.abajo,
+          izquierda: fullCard?.izquierda,
+          derecha: fullCard?.derecha,
+          centro: fullCard?.centro
         };
         return next;
       });
@@ -730,6 +851,7 @@ export default function Board() {
       }
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
+      setCollapseMode({ active: false, card: null, cardIndex: null });
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
       
       //await checkForRoundEnd();
@@ -752,6 +874,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
   processingAction.current = true;
   try {
     setCont(timeturn);
+    setCollapseMode({ active: false, card: null, cardIndex: null });
     handleActionCardUtil(card, targetPlayer, cardIndex, {
       isSpectator,
       loggedInUser,
@@ -794,6 +917,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       if (window.removeCardAndDraw) {
         window.removeCardAndDraw(cardIndex);}
 
+      setCollapseMode({ active: false, card: null, cardIndex: null });
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
       const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
@@ -912,6 +1036,9 @@ const activateCollapseMode = (card, cardIndex) => {
     isTurnChanging.current = true;
     setTimeout(() => { isTurnChanging.current = false; }, 1000);
 
+    // Desactivar modo collapse al cambiar de turno
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+
     const currentTurnIndex = round?.turn || 0; 
 
     const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
@@ -955,7 +1082,7 @@ const activateCollapseMode = (card, cardIndex) => {
       return;
     }
     
-    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards);
+    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards, playerCardsCount);
     console.log('🔍 checkForRoundEnd result:', roundEndResult);
     
     if (roundEndResult.ended) {
@@ -996,12 +1123,40 @@ const activateCollapseMode = (card, cardIndex) => {
     await loadActivePlayers();
     
     // Obtener el ranking final basado en goldNugget
-    const playerRankings = activePlayers.map(p => ({
+    const playerRankings = roundEndData?.goldDistribution?.map(p => ({
       username: p.username,
-      totalNuggets: p.goldNugget || 0
-    }));
+      totalNuggets: p.totalNuggets || 0
+    })) || [];
     
     console.log('📊 Player rankings:', playerRankings);
+
+    // Determinar el ganador (jugador con más pepitas)
+    const sortedRankings = [...playerRankings].sort((a, b) => b.totalNuggets - a.totalNuggets);
+    const winnerUsername = sortedRankings.length > 0 ? sortedRankings[0].username : null;
+    console.log('👑 Winner:', winnerUsername);
+
+    // Solo el primer jugador procesa las estadísticas y logros (para evitar duplicados)
+    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    
+    if (isFirstPlayer && winnerUsername) {
+      try {
+        console.log('🏆 Processing game statistics and achievements for game:', game.id);
+        const achievementResponse = await fetch(`/api/v1/achievements/process/${game.id}?winnerUsername=${encodeURIComponent(winnerUsername)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`
+          }
+        });
+        if (achievementResponse.ok) {
+          console.log('✅ Game statistics and achievements processed successfully');
+        } else {
+          console.error('❌ Error processing game statistics and achievements:', achievementResponse.status);
+        }
+      } catch (error) {
+        console.error('❌ Error processing game statistics and achievements:', error);
+      }
+    }
     
     // Mostrar modal de fin de partida
     setGameEndData({ playerRankings });
@@ -1022,7 +1177,7 @@ const activateCollapseMode = (card, cardIndex) => {
       if (revealedObjective?.position !== goldPosition) {
         setRevealedObjective({ position: goldPosition, cardType: 'gold' });
       }
-    } else if (reason === 'NO_CARDS') {
+    } else if (reason === 'NO_CARDS' || reason === 'ALL_PLAYERS_OUT_OF_CARDS') {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
     }
 
@@ -1174,6 +1329,8 @@ const activateCollapseMode = (card, cardIndex) => {
     if (!gameEndData || gameEndCountdown > 0) return;
     
     console.log('🏁 Game finished, returning to lobby...');
+    // Limpiar datos residuales de sessionStorage
+    sessionStorage.removeItem('newRoundData');
     navigate('/lobby');
   }, [gameEndCountdown, gameEndData, navigate]);
 
@@ -1197,6 +1354,7 @@ const activateCollapseMode = (card, cardIndex) => {
       if (window.discardSelectedCard && window.discardSelectedCard()) {
         const newDeckCount = Math.max(0, deckCount - 1);
         setDeckCount(newDeckCount);
+        setCollapseMode({ active: false, card: null, cardIndex: null });
         nextTurn({newDeckCount: newDeckCount});
         addColoredLog(
           currentIndex,
@@ -1228,6 +1386,63 @@ const activateCollapseMode = (card, cardIndex) => {
         lastTimeoutToastTs.current = now;
       }
     nextTurn({ force: true });
+  };
+//Para debuggear el fin de ronda
+  // Handler para forzar revelar el oro y terminar la ronda (solo creator)
+  const handleForceEndRound = async () => {
+    if (!isCreator) {
+      toast.error('Only the game creator can force end the round');
+      return;
+    }
+
+    if (processingAction.current) return;
+    processingAction.current = true;
+
+    try {
+      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+        toast.info('Round already ending or ended');
+        return;
+      }
+
+      // Buscar posición del oro en objectiveCards; si no exista, escoger la primera
+      const objectivePositions = [ '[2][9]', '[4][9]', '[6][9]' ];
+      let goldPosKey = objectivePositions.find(k => objectiveCards[k] === 'gold');
+      if (!goldPosKey) {
+        goldPosKey = objectivePositions[0];
+      }
+
+      // Parsear coordenadas
+      const match = goldPosKey.match(/\[(\d+)\]\[(\d+)\]/);
+      const r = match ? Number(match[1]) : 4;
+      const c = match ? Number(match[2]) : 9;
+
+      // Revelar visualmente la carta objetivo
+      setBoardCells(prev => {
+        const next = prev.map(row => row.slice());
+        if (next[r] && next[r][c]) {
+          next[r][c] = {
+            ...next[r][c],
+            revealed: true,
+            cardType: 'gold'
+          };
+        }
+        return next;
+      });
+
+      roundEndedRef.current = ROUND_STATE.ENDING;
+      setRoundEnded(true);
+
+      const mockResult = {
+        ended: true,
+        reason: 'GOLD_REACHED',
+        winnerTeam: 'MINERS',
+        goldPosition: `[${r}][${c}]`
+      };
+
+      await handleRoundEnd(mockResult);
+    } finally {
+      processingAction.current = false;
+    }
   };
 
   // Función para enviar mensajes
@@ -1571,6 +1786,7 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [roundEnded]);
 
   useEffect(() => {
+    console.log('🔍 useEffect playerCardsCount init - activePlayers:', activePlayers.length, 'round?.id:', round?.id, 'hasPatchedInitialLeftCards:', hasPatchedInitialLeftCards.current);
     if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
@@ -1578,9 +1794,13 @@ const activateCollapseMode = (card, cardIndex) => {
       setCardPorPlayer(cardsPerPlayer);
       const initialCounts = {};
       activePlayers.forEach(p => {
+        if (!p) return; 
         const name = p.username || p;
-        initialCounts[name] = cardsPerPlayer;
+        if (name) {
+          initialCounts[name] = cardsPerPlayer;
+        }
       });
+      console.log('📦 Inicializando playerCardsCount:', initialCounts);
       setPlayerCardsCount(initialCounts);
       // Hacer patch al round con el leftCards calculado para sincronizar con backend
       hasPatchedInitialLeftCards.current = true;
@@ -1678,10 +1898,26 @@ const activateCollapseMode = (card, cardIndex) => {
             if (!cardFromBackend) {
               return; // Se deja la celda como null si no hay carta,
             }
-            const fullCard =
-              cardFromBackend?.image
-                ? cardFromBackend
-                : (ListCards || []).find(c => c.id === cardFromBackend?.id) || cardFromBackend;
+            
+            // Buscar la carta completa en ListCards para obtener todas las propiedades
+            const cardId = typeof cardFromBackend === 'number' ? cardFromBackend : cardFromBackend?.id;
+            let fullCard = cardFromBackend;
+            
+            if (cardId && Array.isArray(ListCards)) {
+              const foundCard = ListCards.find(c => c.id === cardId);
+              if (foundCard) {
+                fullCard = {
+                  ...foundCard,
+                  ...cardFromBackend, // Mantener datos adicionales del backend (rotacion, etc)
+                  arriba: foundCard.arriba,
+                  abajo: foundCard.abajo,
+                  izquierda: foundCard.izquierda,
+                  derecha: foundCard.derecha,
+                  centro: foundCard.centro,
+                  image: foundCard.image
+                };
+              }
+            }
 
             baseBoard[row][col] = {
               squareId: sq.id,
@@ -1690,7 +1926,13 @@ const activateCollapseMode = (card, cardIndex) => {
               card: fullCard,
               type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
               image: fullCard?.image,
-              rotacion: fullCard?.rotacion,
+              rotacion: fullCard?.rotacion ?? sq.rotacion,
+              // Copiar explícitamente las propiedades de conexión
+              arriba: fullCard?.arriba,
+              abajo: fullCard?.abajo,
+              izquierda: fullCard?.izquierda,
+              derecha: fullCard?.derecha,
+              centro: fullCard?.centro
             };
           }
         })
@@ -1801,6 +2043,8 @@ const activateCollapseMode = (card, cardIndex) => {
         <GameEnd
           playerRankings={gameEndData.playerRankings}
           countdown={gameEndCountdown}
+          gameId={game?.id}
+          activePlayers={activePlayers}
         />
       )}
 
@@ -1817,7 +2061,7 @@ const activateCollapseMode = (card, cardIndex) => {
         patchDeck={patchDeck}
         fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
-        playerCardsCount={playerCardsCount} 
+        playerCardsCount={playerCardsCount}
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}
@@ -1844,6 +2088,8 @@ const activateCollapseMode = (card, cardIndex) => {
         numRound={numRound}
         handleDiscard={handleDiscard}
         isSpectator={isSpectator}
+        isCreator={isCreator}
+        handleForceEndRound={handleForceEndRound}
       />
 
       <GameBoard
