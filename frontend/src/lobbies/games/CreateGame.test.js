@@ -119,7 +119,7 @@ describe('CreateGame Component', () => {
     deleteGame: jest.fn(),
     sendMessage: jest.fn(),
     deleteMessages: jest.fn(),
-    postround: jest.fn(),
+    postRound: jest.fn(),
     round: null
 };
 
@@ -213,7 +213,7 @@ describe('CreateGame Component', () => {
 
   test('7. INICIO DE LA PARTIDA: manejo del inicio del juego', async () => {
     const mockRound = { id: 1, board: 1 };
-    mockLobbyData.postround.mockResolvedValue(mockRound);
+    mockLobbyData.postRound.mockResolvedValue(mockRound);
     mockLobbyData.updateGame.mockResolvedValue({ ...mockGame, gameStatus: 'ONGOING' });
     mockGameData.fetchActivePlayerByUsername.mockResolvedValue({ id: 1 });
     mockGameData.patchActivePlayer.mockResolvedValue({});
@@ -224,7 +224,7 @@ describe('CreateGame Component', () => {
     fireEvent.click(startButton);
 
     await waitFor(() => {
-      expect(mockLobbyData.postround).toHaveBeenCalledWith(1, 1);
+      expect(mockLobbyData.postRound).toHaveBeenCalledWith(1, 1);
     });
     expect(mockLobbyData.updateGame).toHaveBeenCalledWith({gameStatus: 'ONGOING'});
     expect(toast.success).toHaveBeenCalledWith('Game started successfully!')});

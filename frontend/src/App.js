@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
-import Profile from "./lobbies/profiles/Profile";
+import Profile from "./lobbies/profiles/profile";
 import EditProfile from "./lobbies/profiles/EditProfile"; 
 import Login from "./auth/login";
 import Logout from "./auth/logout";
@@ -32,9 +32,9 @@ import ReadMe from "./lobbies/ReadMe";
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
     <div role="alert">
-      <p>Algo fue mal:</p>
+      <p>Something went wrong:</p>
       <pre>{error.message}</pre>
-      <button onClick={resetErrorBoundary}>Intentar de nuevo</button>
+      <button onClick={resetErrorBoundary}>Try Again</button>
     </div>
   );
 }

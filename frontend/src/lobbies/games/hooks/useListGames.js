@@ -12,9 +12,6 @@ import {
   isSpectatorRequestDenied
 } from '../utils/listGamesHelpers';
 
-/**
- * Custom hook para manejar la lógica de ListGames
- */
 const useListGames = () => {
   const [gamesList, setGamesList] = useState([]);
   const [filteredGames, setFilteredGames] = useState([]);
@@ -30,13 +27,10 @@ const useListGames = () => {
 
   const jwt = tokenService.getLocalAccessToken();
   const navigate = useNavigate();
-
-  // Fetch inicial de juegos
   useEffect(() => {
     fetchGames();
   }, [jwt]);
 
-  // Fetch de amigos
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -69,19 +63,17 @@ const useListGames = () => {
           }
         }
       } catch (error) {
-        console.error("Error al obtener amigos:", error);
+        console.error("Error to obtain friends:", error);
       }
     };
     fetchFriends();
   }, [jwt]);
 
-  // Aplicar filtros cuando cambian
   useEffect(() => {
     const filtered = applyFilters(gamesList, filters, onlyFriend, friendsList);
     setFilteredGames(filtered);
   }, [filters, gamesList, onlyFriend, friendsList]);
 
-  // Función para fetch de juegos
   const fetchGames = async () => {
     try {
       setLoading(true);
@@ -97,17 +89,16 @@ const useListGames = () => {
         setGamesList(data);
         setFilteredGames(data);
       } else {
-        toast.error("Error al obtener la lista de juegos.");
+        toast.error("Error to obtain the games listº.");
       }
     } catch (error) {
-      console.error("Error en fetch:", error);
-      toast.error("No se pudo conectar con el servidor.");
+      console.error("Error to fetch:", error);
+      toast.error("Could not connect to the server.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Refrescar lista de juegos
   const refreshGames = async () => {
     try {
       const response = await fetch("/api/v1/games", {
@@ -121,17 +112,16 @@ const useListGames = () => {
         const data = await response.json();
         setGamesList(data);
         setFilteredGames(data);
-        toast.info('Lista de partidas actualizada');
+        toast.info('Games list updated');
       } else {
-        toast.error('Error al actualizar la lista de partidas');
+        toast.error('Error updating the games list');
       }
     } catch (error) {
       console.error('Error refreshing games:', error);
-      toast.error('No se pudo conectar con el servidor.');
+      toast.error('Could not connect to the server.');
     }
   };
 
-  // Manejar entrada como espectador (directo, para amigos)
   const handleSpectator = async (game) => {
     try {
       navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
@@ -142,7 +132,6 @@ const useListGames = () => {
     }
   };
 
-  // Manejar solicitud para entrar como espectador
   const handleRequestSpectator = async (game) => {
     try {
       const currentUser = tokenService.getUser();
@@ -178,7 +167,6 @@ const useListGames = () => {
     }
   };
 
-  // Polling para verificar respuesta del creador (espectador)
   const startPollingForSpectatorResponse = (game, username) => {
     const headers = { Authorization: `Bearer ${jwt}` };
     const interval = setInterval(async () => {
@@ -205,12 +193,11 @@ const useListGames = () => {
           }
         }
       } catch (error) {
-        console.error('error del polling', error);
+        console.error('polling error', error);
       }
     }, 2000);
   };
 
-  // Manejar solicitud para unirse a juego privado
   const handleRequestJoin = async (game) => {
     try {
       const currentUser = tokenService.getUser();
@@ -246,7 +233,6 @@ const useListGames = () => {
     }
   };
 
-  // Polling para verificar respuesta del creador
   const startPollingForResponse = (game, username) => {
     const headers = { Authorization: `Bearer ${jwt}` };
     const interval = setInterval(async () => {
@@ -282,13 +268,11 @@ const useListGames = () => {
     }, 2000);
   };
 
-  // Manejar cambios en filtros
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Limpiar filtros
   const clearFilters = () => {
     setFilters({
       privacy: "",
@@ -298,7 +282,6 @@ const useListGames = () => {
     });
   };
 
-  // Toggle filtro de amigos
   const toggleFriendFilter = () => {
     setOnlyFriend((prev) => !prev);
   };

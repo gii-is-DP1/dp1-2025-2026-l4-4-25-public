@@ -8,14 +8,11 @@
 }
 
 @font-face {
-    font-family: 'american-typewriter'; /*a name to be used later*/
-    src: url('./static/fonts/American\ Typewriter\ Bold.ttf'); /*URL to font*/
+    font-family: 'american-typewriter'; 
+    src: url('./static/fonts/American\ Typewriter\ Bold.ttf'); 
 }
 
 * {
     font-family: 'american-typewriter';
 }
 
-/* div {
-    border: 1px dotted red;
-} */

@@ -6,9 +6,7 @@ import defaultProfileAvatar from '../../../static/images/icons/default_profile_a
 import { editProfileFormPlayer } from '../form/editProfileFormPlayer';
 import { prepareFormInputs, buildUpdateProfileRequest } from '../utils/profileHelpers';
 
-/**
- * Custom hook para manejar la lógica de edición de perfil
- */
+
 const useEditProfile = () => {
   const [profileData, setProfileData] = useState({});
   const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
@@ -16,7 +14,6 @@ const useEditProfile = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch del perfil del usuario
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -43,8 +40,6 @@ const useEditProfile = () => {
         const data = await response.json();
         setProfileData(data);
         setProfileImage(data.image || defaultProfileAvatar);
-
-        // Preparar inputs del formulario con valores iniciales
         const inputsWithInitialValues = prepareFormInputs(editProfileFormPlayer, data);
         setFormInputs(inputsWithInitialValues);
 
@@ -60,9 +55,7 @@ const useEditProfile = () => {
     fetchProfile();
   }, []);
 
-  // Función para actualizar el perfil
   const updateProfile = async (values, formRef) => {
-    // Validar formulario
     if (!formRef.current.validate()) {
       return false;
     }

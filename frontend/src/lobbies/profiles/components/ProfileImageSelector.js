@@ -57,7 +57,6 @@ const ProfileImageSelector = ({
           accept="image/*" 
           onChange={handleFileChange}
         />
-        {/* Previsualización */}
         <img 
           src={profileImage} 
           alt="Avatar" 
