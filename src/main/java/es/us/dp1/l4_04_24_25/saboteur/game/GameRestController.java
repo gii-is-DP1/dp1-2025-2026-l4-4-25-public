@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,15 +54,17 @@ class GameRestController {
     private final ObjectMapper objectMapper;
     private final RoundService roundService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ActivePlayerService activePlayerService;
 
 
     @Autowired
-    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService,SimpMessagingTemplate messagingTemplate) {
+    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService, SimpMessagingTemplate messagingTemplate, ActivePlayerService activePlayerService) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.objectMapper = objectMapper;
         this.roundService = roundService;
         this.messagingTemplate = messagingTemplate;
+        this.activePlayerService = activePlayerService;
     }
 
 
@@ -76,6 +80,14 @@ class GameRestController {
     public ResponseEntity<List<Game>> findByCreator(@RequestParam String creatorUsername){
         List<Game> res;
         res = gameService.findByCreator(creatorUsername);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("myGames")
+    public ResponseEntity<List<Game>> findMyGames(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        List<Game> res = gameService.findGamesByPlayerUsername(username);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -167,10 +179,57 @@ class GameRestController {
         game.setRounds(updatedRounds);
     }
 
+    if (updates.containsKey("winner")) {
+        Object winnerObj = updates.get("winner");
+        if (winnerObj != null) {
+            Integer winnerId = null;
+            if (winnerObj instanceof Map) {
+                Map<String, Object> winnerMap = (Map<String, Object>) winnerObj;
+                if (winnerMap.containsKey("id")) {
+                    winnerId = ((Number) winnerMap.get("id")).intValue();
+                }
+            } else if (winnerObj instanceof Number) {
+                winnerId = ((Number) winnerObj).intValue();
+            }
+            
+            if (winnerId != null) {
+                ActivePlayer winner = activePlayerService.findActivePlayer(winnerId);
+                if (winner != null) {
+                    game.setWinner(winner);
+                    System.out.println(">>> WINNER SET: ID=" + winnerId + ", Username=" + winner.getUsername());
+}
+            }
+        }
+        updates.remove("winner");
+    }
+
     Game gamePatched = objectMapper.updateValue(game, updates);
     Game savedGame = gameService.updateGame(gamePatched, id);
 
     System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
+
+    if (updates.containsKey("gameStatus") && "FINISHED".equals(updates.get("gameStatus"))) {
+        if (savedGame.getStartTime() != null && updates.containsKey("endTime")) {
+            String endTimeStr = updates.get("endTime").toString();
+            LocalDateTime endTime;
+            try {
+                java.time.Instant instant = java.time.Instant.parse(endTimeStr);
+                endTime = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+            } catch (Exception e) {
+                endTime = LocalDateTime.parse(endTimeStr.replace("Z", ""));
+            }
+            
+            java.time.Duration duration = java.time.Duration.between(savedGame.getStartTime(), endTime);
+            if (duration.isNegative()) {
+                duration = duration.abs();
+                System.out.println(">>> WARNING: Duration was negative, using absolute value");
+            }
+            savedGame.setTime(duration);
+            gameService.saveGame(savedGame);
+            System.out.println(">>> GAME FINISHED. Start: " + savedGame.getStartTime() + ", End: " + endTime + ", Duration: " + duration);
+        }
+    }
+    
     if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
 
         System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
@@ -208,11 +267,24 @@ class GameRestController {
     @DeleteMapping(value = "{gameId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("gameId") int id) {
-        RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
-        if (gameService.findGame(id).getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED")))
+        Game game = gameService.findGame(id);
+        RestPreconditions.checkNotNull(game, "Game", "ID", id);
+        
+        if (game.getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED"))) {
+            Map<String, Object> payload = Map.of(
+                "gameCancelled", true,
+                "gameId", id,
+                "message", "The game has been cancelled by the creator"
+            );
+            
+            System.out.println(">>> GAME CANCELLED. Notifying all players via WebSocket for game ID: " + id);
+            messagingTemplate.convertAndSend("/topic/game/" + id, payload);
+            
             gameService.deleteGame(id);
-        else
+        } else {
             throw new IllegalStateException("You can't delete an ongoing or finished game!");
+        }
+        
         return new ResponseEntity<>(new MessageResponse("Game deleted!"), HttpStatus.OK);
     }
     

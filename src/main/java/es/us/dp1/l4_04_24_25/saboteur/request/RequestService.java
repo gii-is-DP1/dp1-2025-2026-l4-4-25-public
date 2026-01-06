@@ -76,15 +76,13 @@ public class RequestService {
     }
 
     @Transactional(readOnly = true)
-    public Request findByStatusAndSenderUsername(RequestStatus status, String senderUsername) {
-        return requestRepository.findByStatusAndSenderUsername(status, senderUsername)
-                .orElseThrow(() -> new ResourceNotFoundException("Request", "status and senderUsername", status + " and " + senderUsername));
+    public List<Request> findByStatusAndSenderUsername(RequestStatus status, String senderUsername) {
+        return requestRepository.findByStatusAndSenderUsername(status, senderUsername);
     }
 
     @Transactional(readOnly = true)
-    public Request findByStatusAndReceiverUsername(RequestStatus status, String receiverUsername) {
-        return requestRepository.findByStatusAndReceiverUsername(status, receiverUsername)
-                .orElseThrow(() -> new ResourceNotFoundException("Request", "status and receiverUsername", status + " and " + receiverUsername));
+    public List<Request> findByStatusAndReceiverUsername(RequestStatus status, String receiverUsername) {
+        return requestRepository.findByStatusAndReceiverUsername(status, receiverUsername);
     }
 
     @Transactional(readOnly = true)

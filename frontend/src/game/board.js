@@ -98,6 +98,8 @@ export default function Board() {
   }, [game]);
   */
   const [message, setMessage] = useState([]);
+
+
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
@@ -255,7 +257,14 @@ export default function Board() {
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
     const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
+    console.log('- deckTopic:', deckTopic);
     const deckMessage = useWebSocket(deckTopic);
+    
+    console.log('-WebSocket states:', {
+      boardMessage: boardMessage ? 'connected' : 'null',
+      gameMessage: gameMessage ? 'connected' : 'null', 
+      deckMessage: deckMessage ? 'connected' : 'null'
+    });
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -842,6 +851,7 @@ export default function Board() {
       }
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
+      setCollapseMode({ active: false, card: null, cardIndex: null });
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
       
       //await checkForRoundEnd();
@@ -864,6 +874,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
   processingAction.current = true;
   try {
     setCont(timeturn);
+    setCollapseMode({ active: false, card: null, cardIndex: null });
     handleActionCardUtil(card, targetPlayer, cardIndex, {
       isSpectator,
       loggedInUser,
@@ -906,6 +917,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       if (window.removeCardAndDraw) {
         window.removeCardAndDraw(cardIndex);}
 
+      setCollapseMode({ active: false, card: null, cardIndex: null });
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
       const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
@@ -1023,6 +1035,9 @@ const activateCollapseMode = (card, cardIndex) => {
 
     isTurnChanging.current = true;
     setTimeout(() => { isTurnChanging.current = false; }, 1000);
+
+    // Desactivar modo collapse al cambiar de turno
+    setCollapseMode({ active: false, card: null, cardIndex: null });
 
     const currentTurnIndex = round?.turn || 0; 
 
@@ -1339,6 +1354,7 @@ const activateCollapseMode = (card, cardIndex) => {
       if (window.discardSelectedCard && window.discardSelectedCard()) {
         const newDeckCount = Math.max(0, deckCount - 1);
         setDeckCount(newDeckCount);
+        setCollapseMode({ active: false, card: null, cardIndex: null });
         nextTurn({newDeckCount: newDeckCount});
         addColoredLog(
           currentIndex,
@@ -1778,8 +1794,11 @@ const activateCollapseMode = (card, cardIndex) => {
       setCardPorPlayer(cardsPerPlayer);
       const initialCounts = {};
       activePlayers.forEach(p => {
+        if (!p) return; 
         const name = p.username || p;
-        initialCounts[name] = cardsPerPlayer;
+        if (name) {
+          initialCounts[name] = cardsPerPlayer;
+        }
       });
       console.log('📦 Inicializando playerCardsCount:', initialCounts);
       setPlayerCardsCount(initialCounts);
@@ -2024,6 +2043,8 @@ const activateCollapseMode = (card, cardIndex) => {
         <GameEnd
           playerRankings={gameEndData.playerRankings}
           countdown={gameEndCountdown}
+          gameId={game?.id}
+          activePlayers={activePlayers}
         />
       )}
 
@@ -2040,7 +2061,7 @@ const activateCollapseMode = (card, cardIndex) => {
         patchDeck={patchDeck}
         fetchOtherPlayerDeck={fetchOtherPlayerDeck}
         findActivePlayerUsername={findActivePlayerUsername} 
-        playerCardsCount={playerCardsCount} 
+        playerCardsCount={playerCardsCount}
         isSpectator={isSpectator}
         onTunnelCardDrop={handleCardDrop}
         onActionCardUse={handleActionCard}
