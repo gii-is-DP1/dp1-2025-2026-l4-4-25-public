@@ -142,7 +142,8 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
                 deck.setActivePlayer(ap);
             } else {
                 String activePlayerUsername = (String) activePlayerObj;
-                ActivePlayer ap = activePlayerService.findByUsername(activePlayerUsername);
+                // Usar findByUsernameInOngoingGame para obtener el ActivePlayer correcto de la partida actual
+                ActivePlayer ap = activePlayerService.findByUsernameInOngoingGame(activePlayerUsername);
                 Integer activePlayerId = ap.getId();
                 ActivePlayer apPatched = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
                 deck.setActivePlayer(apPatched);
@@ -191,9 +192,16 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
             Integer leftCards = updatedDeck.getCards() != null ? updatedDeck.getCards().size() : 0;
             // Obtener todas las partidas del jugador
             List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(currentPlayer.getId());
-            //Seleccionamos solo la partida que está en ONGOING
+            //Seleccionamos solo la partida que está en ONGOING y más reciente
             Game activeGame = games.stream()
             .filter(g -> g.getGameStatus() == gameStatus.ONGOING)
+            .sorted((g1, g2) -> {
+                // Ordenar por fecha de inicio descendente (más reciente primero)
+                if (g1.getStartTime() == null && g2.getStartTime() == null) return 0;
+                if (g1.getStartTime() == null) return 1;
+                if (g2.getStartTime() == null) return -1;
+                return g2.getStartTime().compareTo(g1.getStartTime());
+            })
             .findFirst()
             .orElse(null);
 

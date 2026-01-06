@@ -66,11 +66,20 @@ export default function Board() {
     };
   }, []);
 
-  // Usar datos guardados o los de location.state
-  const initialState = savedRoundData || {
-    game: location.state?.game,
-    round: location.state?.round || null,
-    isSpectator: location.state?.isSpectator || false
+// Limpiar sessionStorage si hay location.state (nueva partida)
+  if (location.state) {
+    sessionStorage.removeItem('newRoundData');
+  }
+
+  // Dar prioridad a location.state sobre savedRoundData
+  const initialState = location.state ? {
+    game: location.state.game,
+    round: location.state.round || null,
+    isSpectator: location.state.isSpectator || false
+  } : savedRoundData || {
+    game: null,
+    round: null,
+    isSpectator: false
   };
 
   // Estados principales
@@ -181,10 +190,10 @@ export default function Board() {
 
   // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
+    console.log('🔄 useEffect round.id check - round?.id:', round?.id, 'lastRoundId.current:', lastRoundId.current);
     if (round?.id && round.id !== lastRoundId.current) {
       console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
       roundEndedRef.current = ROUND_STATE.ACTIVE;
-      lastRoundId.current = round.id;
       // Forzar reasignación de roles en la nueva ronda
       if (lastRoundId.current !== null) {
         forceRolesReassignment.current = true;
@@ -192,6 +201,12 @@ export default function Board() {
       }
 
       playersOutOfCardsLogged.current.clear();
+      // Reiniciar hasPatchedInitialLeftCards para que se recalcule el playerCardsCount en la nueva ronda
+      hasPatchedInitialLeftCards.current = false;
+      console.log('🔄 hasPatchedInitialLeftCards reiniciado a false');
+      
+      // Actualizar lastRoundId DESPUÉS de hacer los resets
+      lastRoundId.current = round.id;
     }
   }, [round?.id]);
 
@@ -240,8 +255,7 @@ export default function Board() {
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
     const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
-    console.log('deckTopic:', deckTopic);
-    const deckMessage = useWebSocket(deckTopic); 
+    const deckMessage = useWebSocket(deckTopic);
 
     useEffect(() => {
       if(!boardMessage) return;
@@ -321,15 +335,17 @@ export default function Board() {
     }
     },[gameMessage])
     
-    useEffect(() => {
-      if(!deckMessage) return; 
-       const { action } = deckMessage;
-
-      switch (action) {
-        case "DECK_COUNT":
-          const { username, leftCards } = deckMessage;
-          console.log('📊 DECK_COUNT recibido:', username, leftCards);
-          // Actualiza el deck completo
+    // Usar ref para trackear el último mensaje procesado
+    const lastProcessedDeckTs = useRef(null);
+    
+    // Procesar deckMessage cuando cambie
+    if (deckMessage && deckMessage._ts !== lastProcessedDeckTs.current) {
+      lastProcessedDeckTs.current = deckMessage._ts;
+      
+      if (deckMessage.action === "DECK_COUNT") {
+        const { username, leftCards } = deckMessage;
+        // Usar setTimeout para evitar actualizar estado durante render
+        setTimeout(() => {
           setPlayerCardsCount(prev => ({
             ...prev,
             [username]: leftCards
@@ -340,14 +356,9 @@ export default function Board() {
             playersOutOfCardsLogged.current.add(username);
             addLog(`🃏 ${username} has run out of cards!`, 'warning');
           }
-          
-          break;
-
-        default:
-          console.warn("Unrecognized deckMessage action:", action);
-          break;
-        }
-        }, [deckMessage]); 
+        }, 0);
+      }
+    }
     
     // Verificar fin de ronda cuando cambian los conteos de cartas de jugadores
     useEffect(() => {
@@ -1303,6 +1314,8 @@ const activateCollapseMode = (card, cardIndex) => {
     if (!gameEndData || gameEndCountdown > 0) return;
     
     console.log('🏁 Game finished, returning to lobby...');
+    // Limpiar datos residuales de sessionStorage
+    sessionStorage.removeItem('newRoundData');
     navigate('/lobby');
   }, [gameEndCountdown, gameEndData, navigate]);
 
@@ -1357,6 +1370,63 @@ const activateCollapseMode = (card, cardIndex) => {
         lastTimeoutToastTs.current = now;
       }
     nextTurn({ force: true });
+  };
+//Para debuggear el fin de ronda
+  // Handler para forzar revelar el oro y terminar la ronda (solo creator)
+  const handleForceEndRound = async () => {
+    if (!isCreator) {
+      toast.error('Only the game creator can force end the round');
+      return;
+    }
+
+    if (processingAction.current) return;
+    processingAction.current = true;
+
+    try {
+      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+        toast.info('Round already ending or ended');
+        return;
+      }
+
+      // Buscar posición del oro en objectiveCards; si no exista, escoger la primera
+      const objectivePositions = [ '[2][9]', '[4][9]', '[6][9]' ];
+      let goldPosKey = objectivePositions.find(k => objectiveCards[k] === 'gold');
+      if (!goldPosKey) {
+        goldPosKey = objectivePositions[0];
+      }
+
+      // Parsear coordenadas
+      const match = goldPosKey.match(/\[(\d+)\]\[(\d+)\]/);
+      const r = match ? Number(match[1]) : 4;
+      const c = match ? Number(match[2]) : 9;
+
+      // Revelar visualmente la carta objetivo
+      setBoardCells(prev => {
+        const next = prev.map(row => row.slice());
+        if (next[r] && next[r][c]) {
+          next[r][c] = {
+            ...next[r][c],
+            revealed: true,
+            cardType: 'gold'
+          };
+        }
+        return next;
+      });
+
+      roundEndedRef.current = ROUND_STATE.ENDING;
+      setRoundEnded(true);
+
+      const mockResult = {
+        ended: true,
+        reason: 'GOLD_REACHED',
+        winnerTeam: 'MINERS',
+        goldPosition: `[${r}][${c}]`
+      };
+
+      await handleRoundEnd(mockResult);
+    } finally {
+      processingAction.current = false;
+    }
   };
 
   // Función para enviar mensajes
@@ -1700,6 +1770,7 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [roundEnded]);
 
   useEffect(() => {
+    console.log('🔍 useEffect playerCardsCount init - activePlayers:', activePlayers.length, 'round?.id:', round?.id, 'hasPatchedInitialLeftCards:', hasPatchedInitialLeftCards.current);
     if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
       const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
       const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
@@ -1710,6 +1781,7 @@ const activateCollapseMode = (card, cardIndex) => {
         const name = p.username || p;
         initialCounts[name] = cardsPerPlayer;
       });
+      console.log('📦 Inicializando playerCardsCount:', initialCounts);
       setPlayerCardsCount(initialCounts);
       // Hacer patch al round con el leftCards calculado para sincronizar con backend
       hasPatchedInitialLeftCards.current = true;
@@ -1995,6 +2067,8 @@ const activateCollapseMode = (card, cardIndex) => {
         numRound={numRound}
         handleDiscard={handleDiscard}
         isSpectator={isSpectator}
+        isCreator={isCreator}
+        handleForceEndRound={handleForceEndRound}
       />
 
       <GameBoard

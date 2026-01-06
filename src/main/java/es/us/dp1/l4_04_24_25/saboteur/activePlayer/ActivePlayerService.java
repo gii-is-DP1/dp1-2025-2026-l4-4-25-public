@@ -66,6 +66,28 @@ public class ActivePlayerService {
     }
 
     @Transactional(readOnly = true)
+    public ActivePlayer findByUsernameInOngoingGame(String username) {
+        List<ActivePlayer> players = activePlayerRepository.findAllByUsername(username);
+        
+        // Buscar el ActivePlayer que está en una partida ONGOING
+        for (ActivePlayer ap : players) {
+            List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(ap.getId());
+            for (Game g : games) {
+                if (g.getGameStatus() == Game.gameStatus.ONGOING) {
+                    return ap;
+                }
+            }
+        }
+        
+        // Si no hay ninguno en ONGOING, devolver el más reciente (último de la lista)
+        if (!players.isEmpty()) {
+            return players.get(players.size() - 1);
+        }
+        
+        throw new ResourceNotFoundException("ActivePlayer", "username", username);
+    }
+
+    @Transactional(readOnly = true)
     public Iterable<ActivePlayer> findByRol(Boolean rol) {
         return activePlayerRepository.findByRol(rol);
     }
