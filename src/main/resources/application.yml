@@ -1,0 +1,7 @@
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS
+  # Default profile is dev for epic startup (set to 'prod' to silence animation)
+  profiles:
+    active: dev

@@ -2,6 +2,23 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+# Initial Users
+
+## 1. Administrator:
+#### User: admin1
+#### Password: `4dm1n`
+
+## 2. Players:
+#### User 1: player1
+#### Password 1: `saboteur123`
+
+#### User 2: player2
+#### Password 2: `saboteur123`
+
+#### User 3: player3
+#### Password 3: `saboteur123`
+
+
 ## Available Scripts
 
 In the project directory, you can run:
