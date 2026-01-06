@@ -15,6 +15,7 @@ import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.game.gameStatus;
 import es.us.dp1.l4_04_24_25.saboteur.message.Message;
 import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
 import jakarta.persistence.EntityManager;
@@ -73,7 +74,7 @@ public class ActivePlayerService {
         for (ActivePlayer ap : players) {
             List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(ap.getId());
             for (Game g : games) {
-                if (g.getGameStatus() == Game.gameStatus.ONGOING) {
+                if (g.getGameStatus() == gameStatus.ONGOING) {
                     return ap;
                 }
             }
