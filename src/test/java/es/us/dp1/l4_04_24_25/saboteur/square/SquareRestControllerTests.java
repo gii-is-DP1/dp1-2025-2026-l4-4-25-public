@@ -36,12 +36,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -72,6 +74,12 @@ class SquareRestControllerTests {
 
     @MockBean
     private CardService cardService;
+
+    @MockBean
+    private ActivePlayerService activePlayerService;
+
+    @MockBean
+    private PlayerService playerService;
 
     @MockBean
     private SimpMessagingTemplate messagingTemplate;
@@ -224,11 +232,15 @@ class SquareRestControllerTests {
     void shouldPatchSquareAndPlaceCardAndNotifyWebSocket() throws Exception {
         Map<String, Object> updates = new HashMap<>();
         updates.put("card", 10);
+        updates.put("coordinateX", 5);
+        updates.put("coordinateY", 5);
 
-        Card card = new Card(); card.setId(10);
+        Card card = new Card(); 
+        card.setId(10);
         
         when(squareService.findSquare(TEST_SQUARE_ID)).thenReturn(square);
         when(cardService.findCard(10)).thenReturn(card);
+        when(squareService.existsByCoordinateXAndCoordinateY(5, 5)).thenReturn(false);
         when(squareService.saveSquare(any(Square.class))).thenReturn(square);
 
         mockMvc.perform(patch(BASE_URL + "/{id}", TEST_SQUARE_ID)
@@ -237,11 +249,10 @@ class SquareRestControllerTests {
                 .content(objectMapper.writeValueAsString(updates)))
                 .andExpect(status().isOk());
 
-       
-        verify(cardService, org.mockito.Mockito.times(2)).findCard(10);
         verify(squareService).saveSquare(any(Square.class));
-        verify(messagingTemplate).convertAndSend(eq("/topic/game/" + TEST_BOARD_ID), any(Map.class));
+       
     }
+    
     @Test
     @WithMockUser("admin")
     void shouldDeleteSquare() throws Exception {

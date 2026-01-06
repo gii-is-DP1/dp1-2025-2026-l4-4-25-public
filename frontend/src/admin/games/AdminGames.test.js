@@ -237,6 +237,8 @@ describe('AdminGames', () => {
     await user.click(forceFinishButton);
     await waitFor(() => {
       expect(screen.getByTestId('force-finish-modal')).toBeInTheDocument();
+    });
+    await waitFor(() => {
       expect(screen.getByText('Force Finish Game #1')).toBeInTheDocument();
     });
   });
@@ -352,6 +354,8 @@ describe('AdminGames', () => {
     await user.click(expelButton);
     await waitFor(() => {
       expect(screen.getByTestId('expel-player-modal')).toBeInTheDocument();
+    });
+    await waitFor(() => {
       expect(screen.getByText('Expel Player from Game #1')).toBeInTheDocument();
     });
   });

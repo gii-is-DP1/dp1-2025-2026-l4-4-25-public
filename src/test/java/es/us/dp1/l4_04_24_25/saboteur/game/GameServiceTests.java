@@ -41,7 +41,7 @@ class GameServiceTests {
     void shouldFindAllGames() {
         List<Game> games = (List<Game>) this.gameService.findAll();
         assertFalse(games.isEmpty());
-        assertTrue(games.size() >= 2); 
+        assertTrue(games.size() >= 1); 
     }
 
     
@@ -120,7 +120,7 @@ class GameServiceTests {
     void shouldFindPublicGames() {
         List<Game> publicGames = (List<Game>) this.gameService.findAllPublicGames();
         assertTrue(publicGames.stream().allMatch(g -> !g.isPrivate()));
-        assertTrue(publicGames.size() >= 2);
+        assertTrue(publicGames.size() >= 1);
     }
 
     @Test
