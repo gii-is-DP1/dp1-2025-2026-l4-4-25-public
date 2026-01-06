@@ -42,6 +42,7 @@
     "source-map-loader": "^4.0.1"
   },
   "scripts": {
+    "prestart": "node scripts/startup.js",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
