@@ -145,7 +145,13 @@ export default function InteractiveCard({
           </div>
           <div className="player-menu-list">
             {playerOrder
-              .filter(player => player.username!==currentUsername)
+              .filter(player => {
+                // Las cartas de reparación pueden usarse sobre uno mismo
+                const isRepairCard = card.effectValue && card.effectValue.includes('REPAIR');
+                if (isRepairCard) return true;
+                // Las cartas de destrucción no pueden usarse sobre uno mismo
+                return player.username !== currentUsername;
+              })
               .map((player) => {
                 const playerIndex = playerOrder.findIndex(p => p.username === player.username);
                 return (

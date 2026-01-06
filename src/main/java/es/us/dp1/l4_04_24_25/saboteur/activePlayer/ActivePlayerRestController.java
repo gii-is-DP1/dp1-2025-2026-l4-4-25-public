@@ -266,18 +266,16 @@ class ActivePlayerRestController {
                 }
                 
                 // Si alguna herramienta fue reparada, incrementar peopleRepaired del jugador que realizó la acción
+                // Ahora también cuenta cuando te reparas a ti mismo
                 if(pickaxeRepaired || candleRepaired || cartRepaired) {
                     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                     if(auth != null) {
                         String currentUsername = auth.getName();
-                        // Solo incrementar si el jugador que repara es diferente al afectado
-                        if(!currentUsername.equals(savedPlayer.getUsername())) {
-                            if(activePlayerService.existsActivePlayer(currentUsername)) {
-                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
-                                Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
-                                currentPlayer.setPeopleRepaired(currentPlayer.getPeopleRepaired() + 1);
-                                playerService.savePlayer(currentPlayer);
-                            }
+                        if(activePlayerService.existsActivePlayer(currentUsername)) {
+                            ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                            Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
+                            currentPlayer.setPeopleRepaired(currentPlayer.getPeopleRepaired() + 1);
+                            playerService.savePlayer(currentPlayer);
                         }
                     }
                 }
