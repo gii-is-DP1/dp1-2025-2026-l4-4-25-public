@@ -27,14 +27,12 @@ const CreateGame = () => {
 
   const welcomeMessageSentRef = useRef(false);
   const joiningGameRef = useRef(false);
-  
-  // Estado inicial del juego desde la navegación
   const [game, setGame] = useState(location.state?.game ?? null);
   const [player, setPlayer] = useState(null);
-  const [numPlayers, setnumPlayers] = useState(game?.maxPlayers ?? 3);
-  const [isPrivate, setisPrivate] = useState(game?.private ?? false);
-  const [patchgame, setpatchgame] = useState(game);
-  const [lobbyIn, SetLobbyIn] = useState(() => {
+  const [numPlayers, setNumPlayers] = useState(game?.maxPlayers ?? 3);
+  const [isPrivate, setIsPrivate] = useState(game?.private ?? false);
+  const [patchGame, setPatchGame] = useState(game);
+  const [inLobby, setInLobby] = useState(() => {
     try {
       return isPlayerInLobby(game?.activePlayers, loggedInUser?.username);
     } catch (e) {
@@ -44,7 +42,6 @@ const CreateGame = () => {
 
   const isCreator = game?.creator === loggedInUser?.username;
 
-  // Custom hook para manejo de datos del lobby
   const {
     game: gameFromHook,
     setGame: setGameFromHook,
@@ -57,7 +54,7 @@ const CreateGame = () => {
     deleteGame,
     sendMessage,
     deleteMessages,
-    postround,
+    postRound,
     round
   } = useLobbyData(game?.id, jwt, isCreator);
 
@@ -66,21 +63,18 @@ const CreateGame = () => {
     fetchActivePlayerByUsername,
   } = useGameData(game);
 
-  // Sincronizar el estado del juego con el hook
   useEffect(() => {
     if (gameFromHook) {
       setGame(gameFromHook);
     }
   }, [gameFromHook]);
 
-  // WebSocket para actualizaciones en tiempo real
   const socketMessage = useWebSocket(
     `/topic/game/${game?.id}`
   );
 
-  // Efecto para procesar el mensaje que viene del socket
   useEffect(() => {
-    console.log("Mensaje recibido del socket:", socketMessage);
+    console.log("Socket message received:", socketMessage);
 
     if (!socketMessage) return;
 
@@ -90,7 +84,7 @@ const CreateGame = () => {
       try {
         payload = JSON.parse(payload);
       } catch (e) {
-        console.error("Error parseando mensaje WS:", e);
+        console.error("Error parsing WS message:", e);
         return;
       }
     }
@@ -106,8 +100,8 @@ const CreateGame = () => {
       return}
 
     const { game: updatedGame, round: updatedRound } = payload;
-    console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
-    console.log(" BOARD EN EL ROUND:", updatedRound?.board);
+    console.log(" COMPLETE ROUND FROM SOCKET:", updatedRound);
+    console.log(" BOARD IN ROUND:", updatedRound?.board);
 
     if (!updatedGame) return;
 
@@ -148,13 +142,13 @@ const CreateGame = () => {
         if (patchResponse.ok) {
           const updatedGame = await patchResponse.json();
           setGame(updatedGame);
-          SetLobbyIn(true);
+          setInLobby(true);
         } else {
-          toast.error("Error al intentar unirse a la partida");
+          toast.error("Error trying to join the game");
           navigate("/ListGames");
         }
       } catch (error) {
-        console.error("Error en el proceso de unirse:", error);
+        console.error("Error in the join process:", error);
         toast.error(error.message);
         navigate("/ListGames");
       } finally {
@@ -166,11 +160,8 @@ const CreateGame = () => {
 
 }, [game?.id]);
 
-  // Postear mensaje de bienvenida y obtener info del jugador (solo creador)
   useEffect(() => {
     if (!game?.creator || !game?.chat) return;
-    
-    // Solo enviar el mensaje de bienvenida una vez y solo si el usuario es el creador
     if (!welcomeMessageSentRef.current && isCreator) {
       welcomeMessageSentRef.current = true;
       postFirstMessage(game.creator, game.chat);
@@ -196,19 +187,18 @@ const CreateGame = () => {
           const data = await response.json();
           setPlayer(data);
         } else {
-          console.error('Respuesta no OK:', response.status);
-          toast.error('Error al obtener la información del jugador.');
+          console.error('Response not OK:', response.status);
+          toast.error('Error fetching player information.');
         }
       } catch (error) {
-        console.error('Hubo un problema con la petición fetch:', error);
-        toast.error('Error de red. No se pudo conectar con el servidor.');
+        console.error('Fetch request problem:', error);
+        toast.error('Network error. Could not connect to the server.');
       }
     };
 
     fetchPlayer();
   }, [game?.creator, game?.chat]);
 
-  // Monitorear si el jugador es expulsado
   useEffect(() => {
     if (!game || !game.id) return;
     const currentUsername = loggedInUser?.username;
@@ -216,12 +206,12 @@ const CreateGame = () => {
 
     const currentIn = isPlayerInLobby(game.activePlayers, currentUsername);
     
-    if (lobbyIn && !currentIn) {
+    if (inLobby && !currentIn) {
       toast.error('You have been expelled from the game');
       navigate('/lobby');
     }
     
-    SetLobbyIn(currentIn);
+    setInLobby(currentIn);
   }, [game?.activePlayers]);
 
   const handleAdminActionInLobby = (payload) => {
@@ -302,7 +292,6 @@ const CreateGame = () => {
     }
   };
 
-  // Handlers para solicitudes de espectador
   const handleAcceptSpectatorRequest = async (username) => {
     try {
       toast.success(`${username} accepted as spectator`);
@@ -349,7 +338,6 @@ const CreateGame = () => {
     }
   };
 
-  // Handlers para controles del lobby
   const handleSubmit = async () => {
     const request = {
       gameStatus: "CREATED",
@@ -360,10 +348,10 @@ const CreateGame = () => {
     try {
       const updated = await updateGame(request);
       toast.success("¡Game updated successfully!");
-      setpatchgame(updated);
+      setPatchGame(updated);
     } catch (error) {
-      console.error('Hubo un problema con la petición fetch:', error);
-      toast.error('Error of network. Try Again.');
+      console.error('Fetch request problem:', error);
+      toast.error('Network error. Try Again.');
     }
   };
 
@@ -375,7 +363,7 @@ const CreateGame = () => {
       pickaxeState: true,
       cartState: true,
       candleState: true,
-      goldNugget: 0,  // Resetear pepitas a 0 al iniciar la partida
+      goldNugget: 0, 
       rol: false
     }
     try {
@@ -384,11 +372,10 @@ const CreateGame = () => {
         const playerData = await fetchActivePlayerByUsername(player);
         const resettools = await patchActivePlayer(playerData.id, tools);
       }
-      const newRound = await postround(game.id, 1);
+      const newRound = await postRound(game.id, 1);
       const updatedGame = await updateGame(request);
-      setpatchgame(updatedGame);  
+      setPatchGame(updatedGame);  
       toast.success("Game started successfully!");
-      // navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
     } catch (error) {
       console.error(error); 
       toast.error('Dont connect with the server.');
@@ -398,11 +385,11 @@ const CreateGame = () => {
   const handleCancel = async () => {
     try {
       await deleteGame();
-      toast.error("Partida eliminada");
+      toast.error("Game deleted");
       navigate("/lobby");
     } catch (error) {
       console.error(error);
-      toast.error('No se pudo conectar con el servidor');
+      toast.error('Could not connect to the server');
     }
   };
 
@@ -416,7 +403,7 @@ const CreateGame = () => {
       await updateGame({ activePlayers: newActivePlayers });
     } catch (error) {
       console.error("Error:", error);
-      toast.error("No se pudo conectar con el servidor");
+      toast.error("Could not connect to the server");
     }
   };
 
@@ -457,9 +444,9 @@ const CreateGame = () => {
 
           <GameSettings
             numPlayers={numPlayers}
-            onNumPlayersChange={setnumPlayers}
+            onNumPlayersChange={setNumPlayers}
             isPrivate={isPrivate}
-            onPrivacyChange={setisPrivate}
+            onPrivacyChange={setIsPrivate}
             isCreator={isCreator}
           />
 

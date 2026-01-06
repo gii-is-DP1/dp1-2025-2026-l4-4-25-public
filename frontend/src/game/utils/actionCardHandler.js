@@ -1,22 +1,5 @@
 import { toast } from 'react-toastify';
 
-/**
- * Maneja el uso de cartas de acción sobre un jugador objetivo
- * @param {Object} card - La carta de acción a usar
- * @param {Object} targetPlayer - El jugador objetivo
- * @param {number} cardIndex - Índice de la carta en la mano
- * @param {Object} context - Contexto del juego con funciones y estados
- * @param {boolean} context.isSpectator - Si el usuario es espectador
- * @param {Object} context.loggedInUser - Usuario logueado
- * @param {string} context.currentPlayer - Nombre del jugador actual
- * @param {Object} context.playerTools - Estado de herramientas de todos los jugadores
- * @param {Function} context.setPlayerTools - Función para actualizar herramientas
- * @param {Function} context.addLog - Función para agregar mensajes al log
- * @param {Function} context.addPrivateLog - Función para agregar mensajes privados
- * @param {Function} context.nextTurn - Función para pasar al siguiente turno
- * @param {Function} context.setDeckCount - Función para actualizar contador del mazo
- * @param {string} context.selectedTool - Herramienta seleccionada para cartas de reparación doble
- */
 export const handleActionCard = async (card, targetPlayer, cardIndex, context) => {
   const {
     isSpectator,
@@ -57,7 +40,6 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     return activePlayers.find(p => p.username === username);
   };
 
-  // Procesar efecto según effect_value
   switch (effectValue) {
     case 'DESTROY_PICKAXE':
       if (!currentTools.pickaxe) {
@@ -69,7 +51,6 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         [targetUsername]: { ...prev[targetUsername], pickaxe: false }
       }));
 
-      // Buscar el ActivePlayer y hacer patch
       const targetActivePlayer = findActivePlayer(targetUsername);
       if (targetActivePlayer && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayer.id, {

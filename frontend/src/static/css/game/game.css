@@ -48,7 +48,7 @@
 .card-slot {
   width: 60px;
   height: auto;
-  background: #57575700; /* Aqui iria cada carta....*/
+  background: #57575700; 
   border: 2px solid #00ee3b50;
   border-radius: 5px;
   display: flex;
@@ -454,8 +454,6 @@
   text-align: center;
   margin-top: 20px;}
 
-
-  /* Sobre listar partidas (filtros) */
 
 .listgames-content {
   display: flex;

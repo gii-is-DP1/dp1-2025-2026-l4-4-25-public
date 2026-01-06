@@ -8,27 +8,23 @@ export const filterActiveGames = (games) => {
 export const applyFilters = (games, filters, onlyFriend, friendsList) => {
   let filtered = filterActiveGames(games);
 
-  // Filtro por privacidad
   if (filters.privacy) {
     const isPrivate = filters.privacy === "private";
     filtered = filtered.filter((g) => g.private === isPrivate);
   }
 
-  // Filtro por estado
   if (filters.status) {
     filtered = filtered.filter(
       (g) => g.gameStatus.toLowerCase() === filters.status.toLowerCase()
     );
   }
 
-  // Filtro por número mínimo de jugadores
   if (filters.minPlayers) {
     filtered = filtered.filter(
       (g) => g.activePlayers?.length >= parseInt(filters.minPlayers)
     );
   }
 
-  // Filtro por búsqueda (ID)
   if (filters.search) {
     const term = filters.search.toLowerCase();
     filtered = filtered.filter(
