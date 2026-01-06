@@ -106,7 +106,7 @@ const useAdminGames = () => {
     fetchGames()};
 
   const handleSpectate = (game) => {
-    navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
+    navigate(`/board/${game.id}`, { state: { game, isSpectator: true, returnTo: '/admin/games' } });
     toast.info('Entering as spectator...');};
 
   return {

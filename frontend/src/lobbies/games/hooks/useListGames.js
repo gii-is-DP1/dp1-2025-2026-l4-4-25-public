@@ -134,7 +134,7 @@ const useListGames = () => {
   // Manejar entrada como espectador (directo, para amigos)
   const handleSpectator = async (game) => {
     try {
-      navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
+      navigate(`/board/${game.id}`, { state: { game, isSpectator: true, returnTo: '/ListGames' } });
       toast.info('Entering as spectator...');
     } catch (error) {
       console.error('Error entering as spectator:', error);
@@ -194,7 +194,7 @@ const useListGames = () => {
           if (isSpectatorRequestAccepted(m, username, game.id)) {
             clearInterval(interval);
             toast.success('Spectator request accepted. Entering the game...');
-            navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
+            navigate(`/board/${game.id}`, { state: { game, isSpectator: true, returnTo: '/ListGames' } });
             return;
           }
 

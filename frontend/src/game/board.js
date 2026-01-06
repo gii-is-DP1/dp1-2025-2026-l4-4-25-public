@@ -154,6 +154,16 @@ export default function Board() {
   const [spectatorRequests, setSpectatorRequests] = useState([]);
   const isCreator = game?.creator === loggedInUser?.username;
 
+  const handleExitSpectatorMode = () => {
+    if (!isSpectator) return;
+
+    toast.dismiss();
+    sessionStorage.removeItem('newRoundData');
+
+    const returnTo = location?.state?.returnTo;
+    navigate(returnTo || '/ListGames');
+  };
+
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
       Array.from({ length: BOARD_COLS }, () => null)
@@ -2073,7 +2083,7 @@ const activateCollapseMode = (card, cardIndex) => {
         deck={deck}
       />
       
-      <SpectatorIndicator isSpectator={isSpectator} />
+      <SpectatorIndicator isSpectator={isSpectator} onExit={handleExitSpectatorMode} />
 
       <PlayerRole 
         playerRol={playerRol} 
