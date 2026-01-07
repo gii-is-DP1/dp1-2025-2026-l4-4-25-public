@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import tokenService from '../services/token.service.js';
 
 // Componentes
@@ -44,12 +44,18 @@ const getSavedRoundData = () => {
     sessionStorage.removeItem('newRoundData');
     return JSON.parse(savedData);
   }
+  // Try to recover from general session storage (reload fix)
+  const recoveredData = sessionStorage.getItem('savedGameData');
+  if (recoveredData) {
+      return JSON.parse(recoveredData);
+  }
   return null;
 };
 
 const savedRoundData = getSavedRoundData();
 
 export default function Board() {
+  const { boardId: urlBoardId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const loggedInUser = tokenService.getUser();
@@ -65,11 +71,28 @@ export default function Board() {
     sessionStorage.removeItem('newRoundData');
   }
 
-  const initialState = location.state ? {
-    game: location.state.game,
-    round: location.state.round || null,
-    isSpectator: location.state.isSpectator || false
-  } : savedRoundData || {
+  // Dar prioridad a location.state sobre savedRoundData
+  // CHECK: If savedRoundData exists but belongs to a DIFFERENT board, ignore it to prevent "stuck in previous round"
+  let loadedState = null;
+  
+  if (location.state) {
+    loadedState = {
+      game: location.state.game,
+      round: location.state.round || null,
+      isSpectator: location.state.isSpectator || false
+    };
+  } else if (savedRoundData) {
+      // Validate Board ID if possible
+      const savedBoardId = savedRoundData.round?.board?.id || savedRoundData.round?.board;
+      if (urlBoardId && savedBoardId && String(savedBoardId) !== String(urlBoardId)) {
+          console.warn(`⚠️ State mismatch detected! URL Board: ${urlBoardId}, Saved Board: ${savedBoardId}. Discarding saved state.`);
+          loadedState = null; // Force fetch
+      } else {
+          loadedState = savedRoundData;
+      }
+  }
+
+  const initialState = loadedState || {
     game: null,
     round: null,
     isSpectator: false
@@ -77,11 +100,15 @@ export default function Board() {
 
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
-  const [CardPorPlayer, setCardPorPlayer] = useState(0);
+
   const [playerCardsCount, setPlayerCardsCount] = useState({});
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
+
+
+
+
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
@@ -94,6 +121,52 @@ export default function Board() {
   const [playerTools, setPlayerTools] = useState({});
   const [round, setRound] = useState(initialState.round);
   const [roundEnded, setRoundEnded] = useState(false); 
+
+  // EFFECT: Fetch Game/Round data if missing (e.g. reload on new round URL without state)
+  // Moved here to avoid ReferenceError: round is not defined
+  useEffect(() => {
+      const fetchMissingData = async () => {
+          if ((!game || !round || (round.board?.id && String(round.board.id) !== String(urlBoardId))) && urlBoardId) {
+                  console.log(`🔄 Fetching Round data for Board ID: ${urlBoardId}...`);
+                  try {
+                      setIsLoading(true);
+                      const res = await fetch(`/api/v1/rounds/byBoardId?boardId=${urlBoardId}`, {
+                          headers: { "Authorization": `Bearer ${jwt}` }
+                      });
+                      if (res.ok) {
+                          const fetchedRound = await res.json();
+                          console.log('✅ Fetched Round:', fetchedRound);
+                          setRound(fetchedRound);
+                          if (fetchedRound.game) {
+                              setGame(fetchedRound.game);
+                          }
+                      } else {
+                          console.error('❌ Failed to fetch round by board ID');
+                          toast.error('Failed to load game data');
+                      }
+                  } catch (err) {
+                      console.error('Network error fetching round:', err);
+                  } finally {
+                      setIsLoading(false);
+                  }
+          }
+      };
+
+      fetchMissingData();
+  }, [urlBoardId, game, round]); 
+
+  // Save game state to sessionStorage to persist on reload
+  useEffect(() => {
+    if (game && round) {
+      const stateToSave = {
+        game: game,
+        round: round,
+        isSpectator: isSpectator
+      };
+      sessionStorage.setItem('savedGameData', JSON.stringify(stateToSave));
+    }
+  }, [game, round, isSpectator]); 
+  // Estados del tablero
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
   const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
@@ -122,7 +195,8 @@ export default function Board() {
   const [gameEndData, setGameEndData] = useState(null);
   const [gameEndCountdown, setGameEndCountdown] = useState(10);
   const [spectatorRequests, setSpectatorRequests] = useState([]);
-  const isCreator = game?.creator === loggedInUser?.username;
+  const creatorUsername = game?.creator?.username || game?.creator;
+  const isCreator = creatorUsername === loggedInUser?.username;
 
   const handleExitSpectatorMode = () => {
     if (!isSpectator) return;
@@ -159,7 +233,12 @@ export default function Board() {
   const processingAction = useRef(false);
   const isTurnChanging = useRef(false);
   const isNavigatingToNewRound = useRef(false);
-  const ROUND_STATE = {ACTIVE: 'ACTIVE', ENDING: 'ENDING', ENDED: 'ENDED'};
+  const hasTriggeredGameEnd = useRef(false);
+  const ROUND_STATE = {
+    ACTIVE: 'ACTIVE',
+    ENDING: 'ENDING',
+    ENDED: 'ENDED'
+  };
   const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
   const lastRoundId = useRef(null);
   const forceRolesReassignment = useRef(false);
@@ -658,25 +737,26 @@ export default function Board() {
       }));
     };
     
-
-    const handleWsNewRound = (message) => {
-      const { newRound, boardId } = message;
-      console.log('🔄 WS NEW_ROUND received:', message);
-      
-      if (isNavigatingToNewRound.current) {
-        console.log('Already navigating to new round, ignoring duplicate message');
-        return}
-      isNavigatingToNewRound.current = true;
-      sessionStorage.setItem('newRoundData', JSON.stringify({
-        game: game,
-        round: newRound,
-        isSpectator: isSpectator
-      }));
-      
-      const targetBoardId = boardId || newRound?.board;
-      console.log('Navigating to board:', targetBoardId);
-      window.location.href = `/board/${targetBoardId}`;
-    };
+    // Handler para cuando se crea una nueva ronda - todos los jugadores navegan al nuevo board
+const handleWsNewRound = (message) => {
+  const { newRound, boardId } = message;
+  console.log('🔄 WS NEW_ROUND recibido:', message);
+  
+  // Limpiar sessionStorage anterior para evitar conflictos
+  sessionStorage.removeItem('savedGameData');
+  
+  // Guardar datos en sessionStorage para recuperarlos después del reload
+  sessionStorage.setItem('newRoundData', JSON.stringify({
+    game: game,
+    round: newRound,
+    isSpectator: isSpectator
+  }));
+  
+  // Navegar y forzar reload para reiniciar todo el estado
+  const targetBoardId = boardId || newRound?.board;
+  console.log('Navegando a board:', targetBoardId);
+  window.location.href = `/board/${targetBoardId}`;
+};
     
     const handleWsRoundEnd = (message) => {
       const { winnerTeam, reason, goldDistribution, playerRoles, roundId } = message;
@@ -1043,8 +1123,21 @@ const activateCollapseMode = (card, cardIndex) => {
 
   const handleRoundEnd = async (result) => {
     const { reason, winnerTeam, goldPosition } = result;
-  
-    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    
+    // Verificar si soy el primer jugador (responsable de calcular y enviar datos)
+    let firstPlayerUsername = null;
+    if (playerOrder.length > 0) {
+        firstPlayerUsername = playerOrder[0]?.username;
+    } else if (activePlayers.length > 0) {
+        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
+        firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
+    }
+
+    const isFirstPlayer = firstPlayerUsername && loggedInUser?.username && firstPlayerUsername === loggedInUser?.username;
+    const shouldExecuteLogic = isFirstPlayer || result.forcedByCreator;
+
+    console.log(`🤖 handleRoundEnd Check: isFirstPlayer=${isFirstPlayer}, forced=${result.forcedByCreator} -> Executing=${shouldExecuteLogic}`);
     
     if (reason === 'GOLD_REACHED') {
       addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
@@ -1056,8 +1149,9 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
     }
 
-    if (isFirstPlayer) {
-      console.log('Soy el primer jugador, calculando distribución de oro...');
+    // Solo el primer jugador (o el creador si forzó el fin) calcula y envía los datos
+    if (shouldExecuteLogic) {
+      console.log('Soy el encargado (FirstPlayer o Creator), calculando distribución de oro...');
       console.log('activePlayers con roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
       
       // Distribuir pepitas de oro y obtener la distribución para el modal
@@ -1109,11 +1203,24 @@ const activateCollapseMode = (card, cardIndex) => {
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
 
-    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    // Determinar robustamente quién es el primer jugador
+    let firstPlayerUsername = null;
+    if (playerOrder.length > 0) {
+        firstPlayerUsername = playerOrder[0]?.username;
+    } else if (activePlayers.length > 0) {
+        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
+        firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
+    }
+
+    const isFirstPlayer = firstPlayerUsername && loggedInUser?.username && firstPlayerUsername === loggedInUser?.username;
+    console.log(`🔄 Navigation Check: isFirstPlayer=${isFirstPlayer}`);
     
     const isLastRound = round?.roundNumber === 3;
 
     if (isLastRound) {
+      if (hasTriggeredGameEnd.current) return;
+      hasTriggeredGameEnd.current = true;
       handleLastRoundEnd(roundEndData);
       return;
     }
@@ -1156,7 +1263,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
     
     createNewRound();
-  }, [roundEndCountdown, roundEndData]);
+  }, [roundEndCountdown, roundEndData, activePlayers, playerOrder, loggedInUser, round, game]);
 
   useEffect(() => {
     if (!gameEndData) return;
@@ -1272,7 +1379,8 @@ const activateCollapseMode = (card, cardIndex) => {
         ended: true,
         reason: 'GOLD_REACHED',
         winnerTeam: 'MINERS',
-        goldPosition: `[${r}][${c}]`
+        goldPosition: `[${r}][${c}]`,
+        forcedByCreator: true
       };
 
       await handleRoundEnd(mockResult);
@@ -1620,37 +1728,46 @@ const activateCollapseMode = (card, cardIndex) => {
     const initializeLeftCards = async () => {
       if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
         const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
-        const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
         
         // Hacer fetch fresco del round desde el backend
+        console.log('🃏 Fetching fresh round data for round:', round.id);
         const freshRound = await getRoundById(round.id);
         const backendLeftCards = freshRound?.leftCards;
         const backendTurn = freshRound?.turn;
         
+        console.log('🃏 Backend Round Data:', { backendLeftCards, backendTurn });
+
         if (backendLeftCards !== undefined && backendLeftCards !== null && backendLeftCards >= 0) {
-          const expectedInitialDeck = 70 - (activePlayers.length * cardsPerPlayer);
-          const isFirstTurn = backendTurn === 0 || backendTurn === undefined || backendTurn === null;
-          
-          if (isFirstTurn && backendLeftCards !== expectedInitialDeck) {
-            // Turn 0 con valor incorrecto → corregir
-            setDeckCount(expectedInitialDeck);
-            patchRound(round.id, { leftCards: expectedInitialDeck });
-          } else {
-            // Confiar en el backend
-            setDeckCount(backendLeftCards);
-          }
+            console.log('🃏 Using backend leftCards:', backendLeftCards);
+            
+            const expectedInitialDeck = 70 - (activePlayers.length * calculateCardsPerPlayer(activePlayers.length));
+            const isFirstTurn = backendTurn === 0 || backendTurn === null || backendTurn === undefined;
+
+            if (isFirstTurn && backendLeftCards !== expectedInitialDeck) {
+                 console.warn(`🃏 Initial deck mismatch! Backend: ${backendLeftCards}, Expected: ${expectedInitialDeck}. Auto-correcting...`);
+                 setDeckCount(expectedInitialDeck);
+                 patchRound(round.id, { leftCards: expectedInitialDeck });
+            } else {
+                 setDeckCount(backendLeftCards);
+            }
         } else {
-          // No existe → calcular y guardar
-          setDeckCount(initialDeck);
-          patchRound(round.id, { leftCards: initialDeck });
+             // Fallback only if backend data is missing
+             console.log("🃏 calculating initial deck locally")
+             const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+             const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
+             setDeckCount(initialDeck);
+             patchRound(round.id, { leftCards: initialDeck });
         }
-        
-        setCardPorPlayer(cardsPerPlayer);
+
+        // ... rest of the logic
         const initialCounts = {};
         activePlayers.forEach(p => {
           if (!p) return; 
           const name = p.username || p;
           if (name) {
+             // We don't have per-player card counts from backend round yet? 
+             // We'll trust the WebSocket updates for specific counts, 
+             // or initialize securely if needed. For now, rely on deckMessage.
             initialCounts[name] = cardsPerPlayer;
           }
         });
