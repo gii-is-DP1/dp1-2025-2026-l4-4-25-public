@@ -100,6 +100,7 @@ export const isSpectatorRequestAccepted = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
+  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
@@ -114,9 +115,48 @@ export const isSpectatorRequestDenied = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
+  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
     String(targetGameId) === String(gameId)
   );
+};
+
+export const isSpectatorRequestAcceptedFor = (message, username, gameId, requestId) => {
+  if (!isSpectatorRequestAccepted(message, username, gameId)) return false;
+  if (requestId === null || requestId === undefined) return true;
+
+  const parts = String(message.content).split(':');
+  const targetRequestId = parts[3];
+  if (targetRequestId !== undefined && targetRequestId !== null && String(targetRequestId).length > 0) {
+    return String(targetRequestId) === String(requestId);
+  }
+
+  const responseMsgId = message?.id;
+  const req = Number(requestId);
+  const resp = Number(responseMsgId);
+  if (Number.isFinite(req) && Number.isFinite(resp)) {
+    return resp > req;
+  }
+  return false;
+};
+
+export const isSpectatorRequestDeniedFor = (message, username, gameId, requestId) => {
+  if (!isSpectatorRequestDenied(message, username, gameId)) return false;
+  if (requestId === null || requestId === undefined) return true;
+
+  const parts = String(message.content).split(':');
+  const targetRequestId = parts[3];
+  if (targetRequestId !== undefined && targetRequestId !== null && String(targetRequestId).length > 0) {
+    return String(targetRequestId) === String(requestId);
+  }
+
+  const responseMsgId = message?.id;
+  const req = Number(requestId);
+  const resp = Number(responseMsgId);
+  if (Number.isFinite(req) && Number.isFinite(resp)) {
+    return resp > req;
+  }
+  return false;
 };

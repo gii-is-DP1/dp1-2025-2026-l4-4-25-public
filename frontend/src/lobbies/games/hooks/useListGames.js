@@ -9,7 +9,9 @@ import {
   isRequestAccepted, 
   isRequestDenied,
   isSpectatorRequestAccepted,
-  isSpectatorRequestDenied
+  isSpectatorRequestDenied,
+  isSpectatorRequestAcceptedFor,
+  isSpectatorRequestDeniedFor
 } from '../utils/listGamesHelpers';
 
 /**
@@ -168,7 +170,14 @@ const useListGames = () => {
 
       if (response.ok) {
         toast.success("Spectator request sent to the game creator.");
-        startPollingForSpectatorResponse(game, currentUser.username);
+        let createdMessageId = null;
+        try {
+          const created = await response.json();
+          createdMessageId = created?.id ?? null;
+        } catch (_) {
+          createdMessageId = null;
+        }
+        startPollingForSpectatorResponse(game, currentUser.username, createdMessageId);
       } else {
         toast.error("Error to send the spectator request. Try Again.");
       }
@@ -179,7 +188,7 @@ const useListGames = () => {
   };
 
   // Polling para verificar respuesta del creador (espectador)
-  const startPollingForSpectatorResponse = (game, username) => {
+  const startPollingForSpectatorResponse = (game, username, requestMessageId) => {
     const headers = { Authorization: `Bearer ${jwt}` };
     const interval = setInterval(async () => {
       try {
@@ -191,14 +200,20 @@ const useListGames = () => {
 
         const msgs = await res.json();
         for (const m of msgs) {
-          if (isSpectatorRequestAccepted(m, username, game.id)) {
+          const accepted = requestMessageId !== null && requestMessageId !== undefined
+            ? isSpectatorRequestAcceptedFor(m, username, game.id, requestMessageId)
+            : isSpectatorRequestAccepted(m, username, game.id);
+          if (accepted) {
             clearInterval(interval);
             toast.success('Spectator request accepted. Entering the game...');
             navigate(`/board/${game.id}`, { state: { game, isSpectator: true, returnTo: '/ListGames' } });
             return;
           }
 
-          if (isSpectatorRequestDenied(m, username, game.id)) {
+          const denied = requestMessageId !== null && requestMessageId !== undefined
+            ? isSpectatorRequestDeniedFor(m, username, game.id, requestMessageId)
+            : isSpectatorRequestDenied(m, username, game.id);
+          if (denied) {
             clearInterval(interval);
             toast.warn('Spectator request denied by the Creator.');
             return;

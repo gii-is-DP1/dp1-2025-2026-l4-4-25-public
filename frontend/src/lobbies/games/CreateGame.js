@@ -301,9 +301,19 @@ const CreateGame = () => {
   const handleAcceptSpectatorRequest = async (username) => {
     try {
       toast.success(`${username} accepted as spectator`);
+
+      const reqIds = (spectatorRequests || [])
+        .filter(s => s.username === username)
+        .map(s => s.messageId)
+        .filter(id => id !== null && id !== undefined);
+      const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+
+      const acceptContent = requestId !== null
+        ? `SPECTATOR_ACCEPTED:${username}:${game.id}:${requestId}`
+        : `SPECTATOR_ACCEPTED:${username}:${game.id}`;
       
       await sendMessage(
-        `SPECTATOR_ACCEPTED:${username}:${game.id}`,
+        acceptContent,
         game.creator,
         game.chat
       );
@@ -323,8 +333,19 @@ const CreateGame = () => {
 
   const handleDenySpectatorRequest = async (username) => {
     try {
+
+      const reqIds = (spectatorRequests || [])
+        .filter(s => s.username === username)
+        .map(s => s.messageId)
+        .filter(id => id !== null && id !== undefined);
+      const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+
+      const denyContent = requestId !== null
+        ? `SPECTATOR_DENIED:${username}:${game.id}:${requestId}`
+        : `SPECTATOR_DENIED:${username}:${game.id}`;
+
       await sendMessage(
-        `SPECTATOR_DENIED:${username}:${game.id}`,
+        denyContent,
         game.creator,
         game.chat
       );
