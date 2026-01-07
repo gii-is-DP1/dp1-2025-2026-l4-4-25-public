@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - JGR9196
+      - GBK4935
   pull_request:
     types: [opened, synchronize, reopened]
 
