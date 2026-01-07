@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../utils/cardUtils';
 
 // Función para verificar si es una carta de reparación doble
@@ -51,6 +51,32 @@ export default function InteractiveCard({
   const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
   const [showToolMenu, setShowToolMenu] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+
+  useEffect(() => {
+    if (!isMyTurn) {
+      setShowPlayerMenu(false);
+      setShowObjectiveMenu(false);
+      setShowToolMenu(false);
+      setSelectedPlayer(null);
+    }
+  }, [isMyTurn]);
+
+  useEffect(() => {
+    if (!isSelected) {
+      setShowPlayerMenu(false);
+      setShowObjectiveMenu(false);
+      setShowToolMenu(false);
+      setSelectedPlayer(null);
+    }
+  }, [isSelected]);
+
+  useEffect(() => {
+    setShowPlayerMenu(false);
+    setShowObjectiveMenu(false);
+    setShowToolMenu(false);
+    setSelectedPlayer(null);
+  }, [card.id]);
 
   const handleDragStart = (e) => {
     if (isTunnelCard(card) && isMyTurn) {
