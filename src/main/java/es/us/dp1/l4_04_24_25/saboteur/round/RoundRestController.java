@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/rounds")
 @SecurityRequirement(name = "bearerAuth")
 public class RoundRestController {
+
+    private static final Logger log = LoggerFactory.getLogger(RoundRestController.class);
 
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
@@ -74,7 +78,7 @@ public class RoundRestController {
         payload.put("boardId", newRound.getBoard().getId());
         payload.put("roundNumber", roundNumber);
         
-        System.out.println(">>> WS: Enviando NEW_ROUND a /topic/game/" + gameId + " con boardId: " + newRound.getBoard().getId());
+        log.info(">>> WS: Enviando NEW_ROUND a /topic/game/{} con boardId: {}", gameId, newRound.getBoard().getId());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
         
         return new ResponseEntity<>(newRound, HttpStatus.CREATED);
@@ -104,7 +108,7 @@ public class RoundRestController {
             payload.put("roundId", roundPatched.getId());
             payload.put("leftCards", roundPatched.getLeftCards());
             
-            System.out.println(">>> WS: Enviando cambio de turno a /topic/game/" + gameId);
+            log.info(">>> WS: Enviando cambio de turno a /topic/game/{}", gameId);
             messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
         }
         return new ResponseEntity<>(roundPatched,HttpStatus.OK);
@@ -167,7 +171,7 @@ public class RoundRestController {
         payload.put("goldDistribution", roundEndData.get("goldDistribution"));
         payload.put("playerRoles", roundEndData.get("playerRoles"));
         
-        System.out.println(">>> WS: Enviando ROUND_END a /topic/game/" + gameId);
+        log.info(">>> WS: Enviando ROUND_END a /topic/game/{}", gameId);
         messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
         
         return new ResponseEntity<>(payload, HttpStatus.OK);

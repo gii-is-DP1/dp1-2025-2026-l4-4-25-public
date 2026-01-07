@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -48,6 +50,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/games")
 @SecurityRequirement(name = "bearerAuth")
 class GameRestController {
+
+    private static final Logger log = LoggerFactory.getLogger(GameRestController.class);
 
     private final GameService gameService;
     private final PlayerService playerService;
@@ -196,7 +200,7 @@ class GameRestController {
                 ActivePlayer winner = activePlayerService.findActivePlayer(winnerId);
                 if (winner != null) {
                     game.setWinner(winner);
-                    System.out.println(">>> WINNER SET: ID=" + winnerId + ", Username=" + winner.getUsername());
+                    log.info(">>> WINNER SET: ID={}, Username={}", winnerId, winner.getUsername());
 }
             }
         }
@@ -206,7 +210,7 @@ class GameRestController {
     Game gamePatched = objectMapper.updateValue(game, updates);
     Game savedGame = gameService.updateGame(gamePatched, id);
 
-    System.out.println(">>> PATCH RECIBIDO. Updates: " + updates);
+    log.info(">>> PATCH RECIBIDO. Updates: {}", updates);
 
     if (updates.containsKey("gameStatus") && "FINISHED".equals(updates.get("gameStatus"))) {
         if (savedGame.getStartTime() != null && updates.containsKey("endTime")) {
@@ -222,17 +226,17 @@ class GameRestController {
             java.time.Duration duration = java.time.Duration.between(savedGame.getStartTime(), endTime);
             if (duration.isNegative()) {
                 duration = duration.abs();
-                System.out.println(">>> WARNING: Duration was negative, using absolute value");
+                log.warn(">>> WARNING: Duration was negative, using absolute value");
             }
             savedGame.setTime(duration);
             gameService.saveGame(savedGame);
-            System.out.println(">>> GAME FINISHED. Start: " + savedGame.getStartTime() + ", End: " + endTime + ", Duration: " + duration);
+            log.info(">>> GAME FINISHED. Start: {}, End: {}, Duration: {}", savedGame.getStartTime(), endTime, duration);
         }
     }
     
     if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
 
-        System.out.println(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+        log.info(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
 
         savedGame.setStartTime(LocalDateTime.now());
         gameService.saveGame(savedGame);
@@ -241,7 +245,7 @@ class GameRestController {
         List<Round> rounds = roundService.findByGameId(id);
 
         if (rounds.isEmpty()) {
-            System.out.println(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
+            log.error(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
         }
 
         Round currentRound = rounds.get(rounds.size() - 1);
@@ -255,8 +259,7 @@ class GameRestController {
             "round", currentRound
         );
 
-        System.out.println(">>> ENVIANDO PAYLOAD AL SOCKET:");
-        System.out.println(payload);
+        log.info(">>> ENVIANDO PAYLOAD AL SOCKET: {}", payload);
 
         messagingTemplate.convertAndSend("/topic/game/" + id, payload);
     }
@@ -277,7 +280,7 @@ class GameRestController {
                 "message", "The game has been cancelled by the creator"
             );
             
-            System.out.println(">>> GAME CANCELLED. Notifying all players via WebSocket for game ID: " + id);
+            log.info(">>> GAME CANCELLED. Notifying all players via WebSocket for game ID: {}", id);
             messagingTemplate.convertAndSend("/topic/game/" + id, payload);
             
             gameService.deleteGame(id);
