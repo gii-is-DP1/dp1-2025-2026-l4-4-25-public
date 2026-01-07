@@ -45,8 +45,9 @@ export const formatTime = (seconds) => {
 
 export const calculateCardsPerPlayer = (numPlayers) => {
   if (numPlayers <= 5) return 6;
-  else if (numPlayers <= 9 && numPlayers > 6) return 5;
-  else return 4;
+  else if (numPlayers >= 6 && numPlayers <= 7) return 5;
+  else if (numPlayers >= 8 && numPlayers <= 9) return 4;
+  else return 4; // Fallback para 10+ jugadores
 };
 
 export const calculateInitialDeck = (numPlayers, cardsPerPlayer) => {
