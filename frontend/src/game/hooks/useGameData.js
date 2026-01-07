@@ -553,6 +553,27 @@ export const useGameData = (game) => {
     }
   };
 
+  // Obtener una ronda por su ID
+  const getRoundById = async (roundId) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        }
+      });
+      if (response.ok) {
+        const roundData = await response.json();
+        console.log('📦 Round obtenido del backend:', roundData);
+        return roundData;
+      }
+    } catch (error) {
+      console.error('Error al obtener ronda por ID:', error);
+      return null;
+    }
+  };
+
   const notifyRoundEnd = async (roundId, roundEndData) => {
     try {
       const response = await fetch(`/api/v1/rounds/${roundId}/notifyRoundEnd`, {
