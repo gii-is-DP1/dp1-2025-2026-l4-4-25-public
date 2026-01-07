@@ -213,7 +213,8 @@ describe('Board Component', () => {
     patchActivePlayer: jest.fn().mockResolvedValue({}),
     patchRound: jest.fn().mockResolvedValue({}),
     postRound: jest.fn().mockResolvedValue({ id: 2, board: 2, roundNumber: 2 }),
-    notifyRoundEnd: jest.fn().mockResolvedValue(true)
+    notifyRoundEnd: jest.fn().mockResolvedValue(true),
+    getRoundById: jest.fn().mockResolvedValue({ id: 1, board: 1, roundNumber: 1, turn: 0, leftCards: 50 })
   };
 
   beforeEach(() => {

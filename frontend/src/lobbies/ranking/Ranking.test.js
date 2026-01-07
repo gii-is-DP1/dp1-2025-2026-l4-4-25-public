@@ -53,7 +53,7 @@ describe('Ranking Component Tests', () => {
         await user.selectOptions(select, 'destroyedPaths');
 
         await waitFor(() => {
-            const headers = screen.getAllByText('CAMINOS DESTRUIDOS');
+            const headers = screen.getAllByText('DESTROYED PATHS');
             
             expect(headers.length).toBeGreaterThan(0);
         });
