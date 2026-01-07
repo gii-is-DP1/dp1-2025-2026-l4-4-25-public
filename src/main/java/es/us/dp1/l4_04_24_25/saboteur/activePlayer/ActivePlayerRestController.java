@@ -35,6 +35,7 @@ import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedUserException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.game.gameStatus;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerDTO;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
@@ -256,7 +257,7 @@ class ActivePlayerRestController {
                         // Solo incrementar si el jugador que destruye es diferente al afectado
                         if(!currentUsername.equals(savedPlayer.getUsername())) {
                             if(activePlayerService.existsActivePlayer(currentUsername)) {
-                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                                ActivePlayer currentActivePlayer = activePlayerService.findByUsernameInOngoingGame(currentUsername);
                                 Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
                                 currentPlayer.setPeopleDamaged(currentPlayer.getPeopleDamaged() + 1);
                                 playerService.savePlayer(currentPlayer);
@@ -266,6 +267,7 @@ class ActivePlayerRestController {
                 }
                 
                 // Si alguna herramienta fue reparada, incrementar peopleRepaired del jugador que realizó la acción
+                // Ahora también cuenta cuando te reparas a ti mismo
                 if(pickaxeRepaired || candleRepaired || cartRepaired) {
                     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                     if(auth != null) {
@@ -273,7 +275,7 @@ class ActivePlayerRestController {
                         // Solo incrementar si el jugador que repara es diferente al afectado
                         if(!currentUsername.equals(savedPlayer.getUsername())) {
                             if(activePlayerService.existsActivePlayer(currentUsername)) {
-                                ActivePlayer currentActivePlayer = activePlayerService.findByUsername(currentUsername);
+                                ActivePlayer currentActivePlayer = activePlayerService.findByUsernameInOngoingGame(currentUsername);
                                 Player currentPlayer = playerService.findPlayer(currentActivePlayer.getId());
                                 currentPlayer.setPeopleRepaired(currentPlayer.getPeopleRepaired() + 1);
                                 playerService.savePlayer(currentPlayer);
@@ -283,8 +285,14 @@ class ActivePlayerRestController {
                 }
                 
                 List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(id);
-                if(!games.isEmpty()){
-                    Integer gameId = games.get(0).getId();
+                // Obtener la partida más reciente en la que participa este ActivePlayer
+                Game activeGame = games.stream()
+                    .filter(game -> game.getGameStatus() == gameStatus.ONGOING)
+                    .max((g1, g2) -> Integer.compare(g1.getId(), g2.getId()))
+                    .orElse(null);
+                
+                if (activeGame != null) {
+                    Integer gameId = activeGame.getId();
                     String username = savedPlayer.getUsername();
 
                     // Preparamos el mensaje
