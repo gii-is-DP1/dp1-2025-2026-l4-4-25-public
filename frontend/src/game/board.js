@@ -869,14 +869,13 @@ export default function Board() {
     }
   };
 
-const handleActionCard = (card, targetPlayer, cardIndex, selectedTool = null) => {
+const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = null) => {
   if (processingAction.current) return;
   if (roundEndedRef.current === ROUND_STATE.ENDED) return;
   processingAction.current = true;
   try {
-    setCont(timeturn);
     setCollapseMode({ active: false, card: null, cardIndex: null });
-    handleActionCardUtil(card, targetPlayer, cardIndex, {
+    const success = await handleActionCardUtil(card, targetPlayer, cardIndex, {
       isSpectator,
       loggedInUser,
       currentPlayer,
@@ -890,6 +889,9 @@ const handleActionCard = (card, targetPlayer, cardIndex, selectedTool = null) =>
       patchActivePlayer,
       selectedTool,
     });
+    if (success) {
+      setCont(timeturn);
+    }
   } finally {
     processingAction.current = false;
   }
