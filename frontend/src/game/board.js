@@ -244,6 +244,7 @@ export default function Board() {
     patchActivePlayer,
     patchRound,
     postRound,
+    getRoundById,
     notifyRoundEnd
   } = useGameData(game);
 
@@ -1787,27 +1788,49 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [roundEnded]);
 
   useEffect(() => {
-    console.log('🔍 useEffect playerCardsCount init - activePlayers:', activePlayers.length, 'round?.id:', round?.id, 'hasPatchedInitialLeftCards:', hasPatchedInitialLeftCards.current);
-    if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
-      const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
-      const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
-      setDeckCount(initialDeck);
-      setCardPorPlayer(cardsPerPlayer);
-      const initialCounts = {};
-      activePlayers.forEach(p => {
-        if (!p) return; 
-        const name = p.username || p;
-        if (name) {
-          initialCounts[name] = cardsPerPlayer;
+    const initializeLeftCards = async () => {
+      if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
+        const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+        const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
+        
+        // Hacer fetch fresco del round desde el backend
+        const freshRound = await getRoundById(round.id);
+        const backendLeftCards = freshRound?.leftCards;
+        const backendTurn = freshRound?.turn;
+        
+        if (backendLeftCards !== undefined && backendLeftCards !== null && backendLeftCards >= 0) {
+          const expectedInitialDeck = 70 - (activePlayers.length * cardsPerPlayer);
+          const isFirstTurn = backendTurn === 0 || backendTurn === undefined || backendTurn === null;
+          
+          if (isFirstTurn && backendLeftCards !== expectedInitialDeck) {
+            // Turn 0 con valor incorrecto → corregir
+            setDeckCount(expectedInitialDeck);
+            patchRound(round.id, { leftCards: expectedInitialDeck });
+          } else {
+            // Confiar en el backend
+            setDeckCount(backendLeftCards);
+          }
+        } else {
+          // No existe → calcular y guardar
+          setDeckCount(initialDeck);
+          patchRound(round.id, { leftCards: initialDeck });
         }
-      });
-      console.log('📦 Inicializando playerCardsCount:', initialCounts);
-      setPlayerCardsCount(initialCounts);
-      // Hacer patch al round con el leftCards calculado para sincronizar con backend
-      hasPatchedInitialLeftCards.current = true;
-      patchRound(round.id, { leftCards: initialDeck });
-      console.log(`📦 Initial leftCards patched to round: ${initialDeck} (70 - ${activePlayers.length} players * ${cardsPerPlayer} cards)`);
-    }
+        
+        setCardPorPlayer(cardsPerPlayer);
+        const initialCounts = {};
+        activePlayers.forEach(p => {
+          if (!p) return; 
+          const name = p.username || p;
+          if (name) {
+            initialCounts[name] = cardsPerPlayer;
+          }
+        });
+        setPlayerCardsCount(initialCounts);
+        hasPatchedInitialLeftCards.current = true;
+      }
+    };
+    
+    initializeLeftCards();
   }, [activePlayers, round?.id]);
 
   // useEffect utilizado para depurar y ver que los Squares se están cargando bien

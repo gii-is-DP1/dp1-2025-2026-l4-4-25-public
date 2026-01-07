@@ -562,6 +562,27 @@ export const useGameData = (game) => {
     }
   };
 
+  // Obtener una ronda por su ID
+  const getRoundById = async (roundId) => {
+    try {
+      const response = await fetch(`/api/v1/rounds/${roundId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        }
+      });
+      if (response.ok) {
+        const roundData = await response.json();
+        console.log('📦 Round obtenido del backend:', roundData);
+        return roundData;
+      }
+    } catch (error) {
+      console.error('Error al obtener ronda por ID:', error);
+      return null;
+    }
+  };
+
   // Notificar fin de ronda a todos los jugadores via WebSocket
   const notifyRoundEnd = async (roundId, roundEndData) => {
     try {
@@ -637,6 +658,7 @@ export const useGameData = (game) => {
     patchRound,
     postRound,
     getRoundByNumber,
+    getRoundById,
     notifyRoundEnd,
     getActivePlayersbyId
   };
