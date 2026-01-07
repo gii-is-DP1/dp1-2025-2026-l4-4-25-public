@@ -26,6 +26,7 @@ const CreateGame = () => {
   
 
   const welcomeMessageSentRef = useRef(false);
+  const joiningGameRef = useRef(false);
   
   // Estado inicial del juego desde la navegación
   const [game, setGame] = useState(location.state?.game ?? null);
@@ -121,6 +122,7 @@ const CreateGame = () => {
 
   useEffect(() => {
     if (!game?.id) return;
+    if (joiningGameRef.current) return;
 
     const currentUsername = loggedInUser?.username;
     const currentActivePlayers = game?.activePlayers ?? [];
@@ -130,8 +132,9 @@ const CreateGame = () => {
     if (currentActivePlayers.includes(currentUsername)) return;
 
     const joinGame = async () => {
+      joiningGameRef.current = true; 
       try {
-        const updatedActivePlayerList = [...currentActivePlayers, currentUsername];
+        const updatedActivePlayerList = [...new Set([...currentActivePlayers, currentUsername])];
 
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
           method: "PATCH",
@@ -154,12 +157,14 @@ const CreateGame = () => {
         console.error("Error en el proceso de unirse:", error);
         toast.error(error.message);
         navigate("/ListGames");
+      } finally {
+        joiningGameRef.current = false; 
       }
     };
 
     joinGame();
 
-}, [game?.id, game?.activePlayers]);
+}, [game?.id]);
 
   // Postear mensaje de bienvenida y obtener info del jugador (solo creador)
   useEffect(() => {
