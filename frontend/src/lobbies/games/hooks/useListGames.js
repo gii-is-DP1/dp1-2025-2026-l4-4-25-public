@@ -136,7 +136,34 @@ const useListGames = () => {
   // Manejar entrada como espectador (directo, para amigos)
   const handleSpectator = async (game) => {
     try {
-      navigate(`/board/${game.id}`, { state: { game, isSpectator: true, returnTo: '/ListGames' } });
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      };
+
+      // Obtener el juego completo (incluye activePlayers, chat, etc.)
+      const gameRes = await fetch(`/api/v1/games/${game.id}`, { method: 'GET', headers });
+      const fullGame = gameRes.ok ? await gameRes.json() : game;
+
+      // Resolver la ronda actual para entrar al board correcto
+      const roundsRes = await fetch(`/api/v1/rounds/byGameId?gameId=${game.id}`, { method: 'GET', headers });
+      const rounds = roundsRes.ok ? await roundsRes.json() : [];
+      const currentRound = Array.isArray(rounds)
+        ? [...rounds].sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0)).at(-1)
+        : null;
+
+      const boardId = typeof currentRound?.board === 'number'
+        ? currentRound.board
+        : currentRound?.board?.id;
+
+      if (!boardId) {
+        toast.error('Could not resolve the current board for this game.');
+        return;
+      }
+
+      navigate(`/board/${boardId}`, {
+        state: { game: fullGame, round: currentRound, isSpectator: true, returnTo: '/ListGames' }
+      });
       toast.info('Entering as spectator...');
     } catch (error) {
       console.error('Error entering as spectator:', error);
@@ -206,7 +233,33 @@ const useListGames = () => {
           if (accepted) {
             clearInterval(interval);
             toast.success('Spectator request accepted. Entering the game...');
-            navigate(`/board/${game.id}`, { state: { game, isSpectator: true, returnTo: '/ListGames' } });
+
+            const headers2 = {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwt}`,
+            };
+
+            const gameRes = await fetch(`/api/v1/games/${game.id}`, { method: 'GET', headers: headers2 });
+            const fullGame = gameRes.ok ? await gameRes.json() : game;
+
+            const roundsRes = await fetch(`/api/v1/rounds/byGameId?gameId=${game.id}`, { method: 'GET', headers: headers2 });
+            const rounds = roundsRes.ok ? await roundsRes.json() : [];
+            const currentRound = Array.isArray(rounds)
+              ? [...rounds].sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0)).at(-1)
+              : null;
+
+            const boardId = typeof currentRound?.board === 'number'
+              ? currentRound.board
+              : currentRound?.board?.id;
+
+            if (!boardId) {
+              toast.error('Could not resolve the current board for this game.');
+              return;
+            }
+
+            navigate(`/board/${boardId}`, {
+              state: { game: fullGame, round: currentRound, isSpectator: true, returnTo: '/ListGames' }
+            });
             return;
           }
 

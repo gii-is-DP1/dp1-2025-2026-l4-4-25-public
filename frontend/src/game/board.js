@@ -1787,19 +1787,17 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [activePlayers]);
 
   useEffect(() => {
-    if(!currentPlayer || playerOrder.length === 0 || roundEnded) return;
+    if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
-    if(loggedInUser.username !== currentPlayer){
-      setCont(timeturn);
-      return; 
-    }
+    const shouldForceTimeout = !isSpectator && loggedInUser.username === currentPlayer;
 
     const time = setInterval(() => {
       setCont((prevCont) => {
         if (prevCont <= 1) {
-          // El tiempo se ha acabado -> Forzamos cambio de turno
           clearInterval(time);
-          handleTurnTimeOut(); 
+          if (shouldForceTimeout) {
+            handleTurnTimeOut();
+          }
           return 0;
         }
         return prevCont - 1;
@@ -1807,7 +1805,7 @@ const activateCollapseMode = (card, cardIndex) => {
     }, 1000);
 
     return () => clearInterval(time);
-  }, [currentPlayer, loggedInUser.username, playerOrder, roundEnded]);
+  }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator]);
 
   useEffect(() => {
     if (roundEnded) {
