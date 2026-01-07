@@ -878,7 +878,7 @@ export default function Board() {
     }
   };
 
-const handleActionCard = (card, targetPlayer, cardIndex) => {
+const handleActionCard = (card, targetPlayer, cardIndex, selectedTool = null) => {
   if (processingAction.current) return;
   if (roundEndedRef.current === ROUND_STATE.ENDED) return;
   processingAction.current = true;
@@ -897,6 +897,7 @@ const handleActionCard = (card, targetPlayer, cardIndex) => {
       setDeckCount,
       activePlayers,
       patchActivePlayer,
+      selectedTool,
     });
   } finally {
     processingAction.current = false;

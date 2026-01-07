@@ -144,7 +144,7 @@ public class SquareRestController {
                     if(auth != null) {
                         String username = auth.getName();
                         if(activePlayerService.existsActivePlayer(username)) {
-                            ActivePlayer activePlayer = activePlayerService.findByUsername(username);
+                            ActivePlayer activePlayer = activePlayerService.findByUsernameInOngoingGame(username);
                             Player player = playerService.findPlayer(activePlayer.getId());
                             player.setBuiltPaths(player.getBuiltPaths() + 1);
                             playerService.savePlayer(player);
@@ -159,7 +159,7 @@ public class SquareRestController {
                     if(auth != null) {
                         String username = auth.getName();
                         if(activePlayerService.existsActivePlayer(username)) {
-                            ActivePlayer activePlayer = activePlayerService.findByUsername(username);
+                            ActivePlayer activePlayer = activePlayerService.findByUsernameInOngoingGame(username);
                             Player player = playerService.findPlayer(activePlayer.getId());
                             player.setDestroyedPaths(player.getDestroyedPaths() + 1);
                             playerService.savePlayer(player);
