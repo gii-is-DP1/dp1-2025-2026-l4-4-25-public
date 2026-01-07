@@ -124,6 +124,16 @@ export default function Board() {
   const [spectatorRequests, setSpectatorRequests] = useState([]);
   const isCreator = game?.creator === loggedInUser?.username;
 
+  const handleExitSpectatorMode = () => {
+    if (!isSpectator) return;
+
+    toast.dismiss();
+    sessionStorage.removeItem('newRoundData');
+
+    const returnTo = location?.state?.returnTo;
+    navigate(returnTo || '/ListGames');
+  };
+
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
       Array.from({ length: BOARD_COLS }, () => null)
@@ -461,12 +471,44 @@ export default function Board() {
     }
   };
   
+  
+    // Handlers para solicitudes de espectador
+    const deleteMessagesByIds = async (ids) => {
+      const safeIds = (ids || []).filter(id => id !== null && id !== undefined);
+      if (safeIds.length === 0) return;
+
+      const results = await Promise.all(
+        safeIds.map((id) =>
+          fetch(`/api/v1/messages/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          })
+        )
+      );
+
+      const failed = results.filter(r => !r.ok);
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} message(s)`);
+      }
+    };
+
     const handleAcceptSpectatorRequest = async (username) => {
       try {
         toast.success(`${username} accepted as spectator`);
 
+        const reqIds = (spectatorRequests || [])
+          .filter(s => s.username === username)
+          .map(s => s.messageId)
+          .filter(id => id !== null && id !== undefined);
+        const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+        
+        // Enviar mensaje de aceptación
         const acceptMessage = {
-          content: `SPECTATOR_ACCEPTED:${username}:${game.id}`,
+          content: requestId !== null
+            ? `SPECTATOR_ACCEPTED:${username}:${game.id}:${requestId}`
+            : `SPECTATOR_ACCEPTED:${username}:${game.id}`,
           activePlayer: loggedInUser.username,
           chat: game.chat
         };
@@ -483,17 +525,8 @@ export default function Board() {
         const msgsToDelete = spectatorRequests
           .filter(s => s.username === username)
           .map(s => s.messageId);
-        
-        if (msgsToDelete.length > 0) {
-          await fetch('/api/v1/messages/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${jwt}`,
-            },
-            body: JSON.stringify(msgsToDelete),
-          });
-        }
+
+        await deleteMessagesByIds(msgsToDelete);
         
         setSpectatorRequests(prev => prev.filter(p => p.username !== username));
         
@@ -505,8 +538,17 @@ export default function Board() {
 
     const handleDenySpectatorRequest = async (username) => {
       try {
+        const reqIds = (spectatorRequests || [])
+          .filter(s => s.username === username)
+          .map(s => s.messageId)
+          .filter(id => id !== null && id !== undefined);
+        const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+
+        // Enviar mensaje de rechazo
         const denyMessage = {
-          content: `SPECTATOR_DENIED:${username}:${game.id}`,
+          content: requestId !== null
+            ? `SPECTATOR_DENIED:${username}:${game.id}:${requestId}`
+            : `SPECTATOR_DENIED:${username}:${game.id}`,
           activePlayer: loggedInUser.username,
           chat: game.chat
         };
@@ -523,17 +565,8 @@ export default function Board() {
         const msgsToDelete = spectatorRequests
           .filter(s => s.username === username)
           .map(s => s.messageId);
-        
-        if (msgsToDelete.length > 0) {
-          await fetch('/api/v1/messages/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${jwt}`,
-            },
-            body: JSON.stringify(msgsToDelete),
-          });
-        }
+
+        await deleteMessagesByIds(msgsToDelete);
         
         toast.info(`${username} spectator request denied`);
         setSpectatorRequests(prev => prev.filter(p => p.username !== username));
@@ -1557,19 +1590,17 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [activePlayers]);
 
   useEffect(() => {
-    if(!currentPlayer || playerOrder.length === 0 || roundEnded) return;
+    if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
-    if(loggedInUser.username !== currentPlayer){
-      setCont(timeturn);
-      return; 
-    }
+    const shouldForceTimeout = !isSpectator && loggedInUser.username === currentPlayer;
 
     const time = setInterval(() => {
       setCont((prevCont) => {
         if (prevCont <= 1) {
-          // El tiempo se ha acabado -> Forzamos cambio de turno
           clearInterval(time);
-          handleTurnTimeOut(); 
+          if (shouldForceTimeout) {
+            handleTurnTimeOut();
+          }
           return 0;
         }
         return prevCont - 1;
@@ -1577,7 +1608,7 @@ const activateCollapseMode = (card, cardIndex) => {
     }, 1000);
 
     return () => clearInterval(time);
-  }, [currentPlayer, loggedInUser.username, playerOrder, roundEnded]);
+  }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator]);
 
   useEffect(() => {
     if (roundEnded) {
@@ -1871,7 +1902,7 @@ const activateCollapseMode = (card, cardIndex) => {
         deck={deck}
       />
       
-      <SpectatorIndicator isSpectator={isSpectator} />
+      <SpectatorIndicator isSpectator={isSpectator} onExit={handleExitSpectatorMode} />
 
       <PlayerRole 
         playerRol={playerRol} 

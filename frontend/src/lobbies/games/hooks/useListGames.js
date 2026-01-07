@@ -9,7 +9,9 @@ import {
   isRequestAccepted, 
   isRequestDenied,
   isSpectatorRequestAccepted,
-  isSpectatorRequestDenied
+  isSpectatorRequestDenied,
+  isSpectatorRequestAcceptedFor,
+  isSpectatorRequestDeniedFor
 } from '../utils/listGamesHelpers';
 
 const useListGames = () => {
@@ -124,7 +126,34 @@ const useListGames = () => {
 
   const handleSpectator = async (game) => {
     try {
-      navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      };
+
+      // Obtener el juego completo (incluye activePlayers, chat, etc.)
+      const gameRes = await fetch(`/api/v1/games/${game.id}`, { method: 'GET', headers });
+      const fullGame = gameRes.ok ? await gameRes.json() : game;
+
+      // Resolver la ronda actual para entrar al board correcto
+      const roundsRes = await fetch(`/api/v1/rounds/byGameId?gameId=${game.id}`, { method: 'GET', headers });
+      const rounds = roundsRes.ok ? await roundsRes.json() : [];
+      const currentRound = Array.isArray(rounds)
+        ? [...rounds].sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0)).at(-1)
+        : null;
+
+      const boardId = typeof currentRound?.board === 'number'
+        ? currentRound.board
+        : currentRound?.board?.id;
+
+      if (!boardId) {
+        toast.error('Could not resolve the current board for this game.');
+        return;
+      }
+
+      navigate(`/board/${boardId}`, {
+        state: { game: fullGame, round: currentRound, isSpectator: true, returnTo: '/ListGames' }
+      });
       toast.info('Entering as spectator...');
     } catch (error) {
       console.error('Error entering as spectator:', error);
@@ -157,7 +186,14 @@ const useListGames = () => {
 
       if (response.ok) {
         toast.success("Spectator request sent to the game creator.");
-        startPollingForSpectatorResponse(game, currentUser.username);
+        let createdMessageId = null;
+        try {
+          const created = await response.json();
+          createdMessageId = created?.id ?? null;
+        } catch (_) {
+          createdMessageId = null;
+        }
+        startPollingForSpectatorResponse(game, currentUser.username, createdMessageId);
       } else {
         toast.error("Error to send the spectator request. Try Again.");
       }
@@ -167,7 +203,8 @@ const useListGames = () => {
     }
   };
 
-  const startPollingForSpectatorResponse = (game, username) => {
+  // Polling para verificar respuesta del creador (espectador)
+  const startPollingForSpectatorResponse = (game, username, requestMessageId) => {
     const headers = { Authorization: `Bearer ${jwt}` };
     const interval = setInterval(async () => {
       try {
@@ -179,14 +216,46 @@ const useListGames = () => {
 
         const msgs = await res.json();
         for (const m of msgs) {
-          if (isSpectatorRequestAccepted(m, username, game.id)) {
+          const accepted = requestMessageId !== null && requestMessageId !== undefined
+            ? isSpectatorRequestAcceptedFor(m, username, game.id, requestMessageId)
+            : isSpectatorRequestAccepted(m, username, game.id);
+          if (accepted) {
             clearInterval(interval);
             toast.success('Spectator request accepted. Entering the game...');
-            navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
+
+            const headers2 = {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwt}`,
+            };
+
+            const gameRes = await fetch(`/api/v1/games/${game.id}`, { method: 'GET', headers: headers2 });
+            const fullGame = gameRes.ok ? await gameRes.json() : game;
+
+            const roundsRes = await fetch(`/api/v1/rounds/byGameId?gameId=${game.id}`, { method: 'GET', headers: headers2 });
+            const rounds = roundsRes.ok ? await roundsRes.json() : [];
+            const currentRound = Array.isArray(rounds)
+              ? [...rounds].sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0)).at(-1)
+              : null;
+
+            const boardId = typeof currentRound?.board === 'number'
+              ? currentRound.board
+              : currentRound?.board?.id;
+
+            if (!boardId) {
+              toast.error('Could not resolve the current board for this game.');
+              return;
+            }
+
+            navigate(`/board/${boardId}`, {
+              state: { game: fullGame, round: currentRound, isSpectator: true, returnTo: '/ListGames' }
+            });
             return;
           }
 
-          if (isSpectatorRequestDenied(m, username, game.id)) {
+          const denied = requestMessageId !== null && requestMessageId !== undefined
+            ? isSpectatorRequestDeniedFor(m, username, game.id, requestMessageId)
+            : isSpectatorRequestDenied(m, username, game.id);
+          if (denied) {
             clearInterval(interval);
             toast.warn('Spectator request denied by the Creator.');
             return;

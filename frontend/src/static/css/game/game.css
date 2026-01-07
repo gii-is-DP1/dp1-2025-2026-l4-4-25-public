@@ -89,6 +89,23 @@
   box-shadow: 0 4px 6px rgba(0, 212, 255, 0.3);
   animation: pulse-spectator 2s infinite;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-exit-spectator {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-exit-spectator:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 @keyframes pulse-spectator {
