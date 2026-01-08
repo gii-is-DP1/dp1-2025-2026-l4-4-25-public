@@ -1,25 +1,76 @@
-# Getting Started with Create React App
+# Saboteur Game - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the React frontend for the Saboteur card game application, developed as part of the DP1 (Design and Software Testing I) course at the University of Seville.
 
-# Initial Users
+## About the Game
 
-## 1. Administrator:
-#### User: admin1
-#### Password: `4dm1n`
+Saboteur is a strategic card game where players take on roles as either gold-diggers or saboteurs. Gold-diggers work together to build tunnels to reach gold, while saboteurs secretly try to prevent them from succeeding. This digital implementation includes multiplayer lobbies, real-time gameplay, user profiles, achievements, and statistics tracking.
 
-## 2. Players:
-#### User 1: player1
-#### Password 1: `saboteur123`
+## Technologies Used
 
-#### User 2: player2
-#### Password 2: `saboteur123`
+- **React 18**: Modern UI library with hooks
+- **React Router**: Client-side routing and navigation
+- **Axios**: HTTP client for API communication
+- **JWT Authentication**: Secure user authentication
+- **CSS3**: Custom styling with responsive design
+- **Jest & React Testing Library**: Component testing
 
-#### User 3: player3
-#### Password 3: `saboteur123`
+## Project Structure
 
+```
+frontend/
+├── public/           # Static assets
+├── src/
+│   ├── admin/       # Admin panel components
+│   ├── auth/        # Authentication components
+│   ├── components/  # Reusable UI components
+│   ├── game/        # Game board and gameplay logic
+│   ├── home/        # Landing page
+│   ├── lobbies/     # Lobby system and profiles
+│   ├── services/    # API service layer
+│   ├── static/      # CSS and images
+│   ├── util/        # Utility functions
+│   └── App.js       # Main application component
+└── package.json
+```
 
-## Available Scripts
+## Prerequisites
+
+- Node.js 18 or newer
+- npm or yarn package manager
+- Backend server running on `http://localhost:8080`
+
+## Installation
+
+1. Clone the repository and navigate to the frontend folder:
+```bash
+cd frontend
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+## Initial Users
+
+For testing purposes, the application comes with pre-configured users:
+
+### Administrator Account:
+- **Username**: `admin1`
+- **Password**: `4dm1n`
+- **Permissions**: Full system access, user management, achievement editing
+
+### Player Accounts:
+- **Username**: `player1` | **Password**: `saboteur123`
+- **Username**: `player2` | **Password**: `saboteur123`
+- **Username**: `player3` | **Password**: `saboteur123`
+
+All player accounts have standard game access with profile customization and statistics tracking.
+
+## Running the Application
+
+**Important**: Make sure the backend server is running on `http://localhost:8080` before starting the frontend.
 
 In the project directory, you can run:
 
@@ -34,6 +85,8 @@ You may also see any lint errors in the console.
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
+For coverage report, run: `npm test -- --coverage`
+
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
 ### `npm run build`
@@ -56,32 +109,124 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
+## Key Features
+
+### 🎮 Game Features
+- **Real-time Multiplayer**: Create and join game lobbies with 3-10 players
+- **Turn-based Gameplay**: Strategic card placement and tunnel building
+- **Role Assignment**: Random assignment of gold-digger and saboteur roles
+- **Card System**: Path cards, action cards, and gold cards with unique abilities
+
+### 👤 User Management
+- **JWT Authentication**: Secure login and registration system
+- **User Profiles**: Customizable avatars and personal information
+- **Statistics Tracking**: Win/loss records, games played, and performance metrics
+
+### 🏆 Achievement System
+- **Progressive Achievements**: Unlock badges by completing challenges
+- **Multiple Categories**: Beginner, Intermediate, and Advanced achievements
+- **Admin Management**: Create and edit custom achievements
+
+### 📊 Admin Dashboard
+- **User Administration**: View, edit, and manage user accounts
+- **Game Monitoring**: Track active games and player statistics
+- **Achievement Control**: Create and modify achievement definitions
+
+## API Integration
+
+The frontend communicates with the backend through RESTful APIs:
+
+- **Authentication**: `/api/v1/auth/*`
+- **Users**: `/api/v1/users/*`
+- **Games**: `/api/v1/games/*`
+- **Achievements**: `/api/v1/achievements/*`
+- **Statistics**: `/api/v1/stats/*`
+
+All authenticated requests include JWT tokens in the Authorization header.
+
+## Troubleshooting
+
+### Backend Connection Issues
+- Verify the backend is running on `http://localhost:8080`
+- Check CORS configuration in the backend
+- Ensure JWT tokens are valid and not expired
+
+### Port Already in Use
+If port 3000 is busy, you can specify a different port:
+```bash
+PORT=3001 npm start
+```
+
+### Build Failures
+Clear the cache and reinstall dependencies:
+```bash
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+## Development Guidelines
+
+### Code Style
+- Use functional components with hooks
+- Follow ESLint rules configured in the project
+- Use meaningful component and variable names
+- Keep components small and focused
+
+### Testing
+- Write unit tests for utility functions
+- Create integration tests for critical user flows
+- Maintain minimum 80% code coverage
+
+## Deployment
+
+### Option 1: Static Hosting (Netlify, Vercel)
+1. Build the production version: `npm run build`
+2. Deploy the `build/` folder to your hosting provider
+
+### Option 2: Docker
+A Dockerfile is provided in the root directory for containerized deployment.
+
+### Option 3: Traditional Server
+Configure your web server (nginx, Apache) to serve the `build/` folder and redirect all routes to `index.html`.
+
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- [Create React App Documentation](https://facebook.github.io/create-react-app/docs/getting-started)
+- [React Documentation](https://reactjs.org/)
+- [React Router Documentation](https://reactrouter.com/)
+- [JWT Authentication Guide](https://jwt.io/introduction)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Additional Resources
 
-### Code Splitting
+- **Code Splitting**: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- **Bundle Analysis**: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- **Progressive Web App**: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- **Advanced Configuration**: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- **Troubleshooting Build Issues**: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Contributing
 
-### Analyzing the Bundle Size
+This project is part of an academic course. For contributions:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes with clear messages
+4. Push to your fork
+5. Submit a pull request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## License
 
-### Making a Progressive Web App
+This project is developed for educational purposes as part of the DP1 course at the University of Seville.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Support
 
-### Advanced Configuration
+For questions or issues:
+- Check the documentation in the `docs/` folder
+- Review existing GitHub issues
+- Contact the development team
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Course**: Design and Testing I (DP1)  
+**Institution**: University of Seville  
+**Academic Year**: 2025-2026
