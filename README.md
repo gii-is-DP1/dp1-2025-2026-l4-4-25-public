@@ -1,87 +1,263 @@
-# Getting Started with Create React App
+# ⛏️🎮 Saboteur - The Game 🎮⛏️
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack web application implementation of the popular strategy card game **Saboteur**, developed as part of the Design and Testing I (DP1) Group L4-4 at the University of Seville.
 
-# Initial Users
+## 📖 About the Game
 
-## 1. Administrator:
-#### User: admin1
-#### Password: `4dm1n`
+Saboteur is a strategic multiplayer card game where players are secretly assigned roles as either **Miners** or **Saboteurs**. Miners works together to build tunnels through a mine to reach the gold, while saboteurs secretly try to prevent them from succeeding. This digital implementation provides a complete online multiplayer experience with user management, statistics tracking, and an achievement system.
 
-## 2. Players:
-#### User 1: player1
-#### Password 1: `saboteur123`
+### Game Features
+- 🎯 **3-12 Players**: Support for multiplayer lobbies
+- 🎭 **Secret Roles**: Random role assignment creates mystery and deduction gameplay
+- 🃏 **Card System**: Path cards, action cards, and special gold cards
+- 🏆 **Achievement System**: Unlock badges and track progress
+- 📊 **Statistics Tracking**: Win/loss records, games played, and performance metrics
+- 👤 **User Profiles**: Customizable avatars and personal information
+- 🔐 **JWT Authentication**: Secure user authentication and authorization
 
-#### User 2: player2
-#### Password 2: `saboteur123`
+## 🛠️ Technology Stack
 
-#### User 3: player3
-#### Password 3: `saboteur123`
+### Backend
+- **Java 21**: Modern Java development
+- **Spring Boot 3.5.5**: Application framework
+- **Spring Security**: JWT-based authentication
+- **Spring Data JPA**: Database access layer
+- **H2 Database**: In-memory database for development
+- **Maven**: Build and dependency management
+- **Lombok**: Reduce boilerplate code
+- **MapStruct**: Object mapping
+
+### Frontend
+- **React 18**: Modern UI library with hooks
+- **React Router**: Client-side routing
+- **Axios**: HTTP client for API calls
+- **CSS3**: Custom responsive styling
+- **Jest & React Testing Library**: Testing framework
+
+### Testing & Quality
+- **JUnit 5**: Unit testing
+- **JaCoCo**: Code coverage reporting
+- **Allure**: Test reporting
+- **Spring Boot Test**: Integration testing
+
+## 🚀 Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25.git
+cd dp1-2025-2026-l4-4-25
+```
+
+### 2. Running the Backend
+
+The backend is a Spring Boot application built with Maven.
+
+#### Option A: Using Maven Wrapper (Recommended)
+
+```bash
+./mvnw spring-boot:run
+```
+
+On Windows:
+```bash
+mvnw.cmd spring-boot:run
+```
+
+#### Option B: Build and Run JAR
+
+```bash
+./mvnw clean package
+java -jar target/*.jar
+```
+
+The backend will start on [http://localhost:8080](http://localhost:8080)
+
+**API Documentation**: Access Swagger UI at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+### 3. Running the Frontend
+
+Navigate to the frontend directory and start the development server:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+The frontend will open automatically at [http://localhost:3000](http://localhost:3000)
+
+## 🗃️ Database Configuration
+
+The application uses an **H2 in-memory database** by default, which is automatically populated with initial data at startup.
+
+- **Console Access**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
+- **JDBC URL**: `jdbc:h2:mem:testdb`
+- **Username**: `sa`
+- **Password**: _(empty)_
+
+Initial data is loaded from `src/main/resources/data.sql`
+
+## 👥 Initial Users
+
+For testing and development, the following users are pre-configured:
+
+### Administrator
+- **Username**: `admin1`
+- **Password**: `4dm1n`
+- **Permissions**: Full system access, user management, achievement editing
+
+### Players
+- 1️⃣**Username**: `player1` | **Password**: `saboteur123`
+- 2️⃣**Username**: `player2` | **Password**: `saboteur123`
+- 3️⃣**Username**: `player3` | **Password**: `saboteur123`
+
+## 🏗️ Project Structure
+
+```
+dp1-2025-2026-l4-4-25/
+├── frontend/                # React frontend application
+│   ├── public/             # Static assets
+│   └── src/
+│       ├── admin/          # Admin panel components
+│       ├── auth/           # Authentication
+│       ├── game/           # Game logic and board
+│       ├── lobbies/        # Lobby system
+│       ├── services/       # API services
+│       └── static/         # CSS and images
+├── src/
+│   ├── main/
+│   │   ├── java/           # Java source code
+│   │   │   └── es/us/dp1/l4_04_24_25/
+│   │   │       ├── achievement/    # Achievement system
+│   │   │       ├── auth/           # Authentication & JWT
+│   │   │       ├── card/           # Card entities and logic
+│   │   │       ├── game/           # Game management
+│   │   │       ├── lobby/          # Lobby system
+│   │   │       ├── player/         # Player management
+│   │   │       ├── statistics/     # Stats tracking
+│   │   │       └── user/           # User management
+│   │   └── resources/
+│   │       ├── application.properties  # Configuration
+│   │       └── data.sql                # Initial data
+│   └── test/               # Test files
+├── docs/                   # Documentation
+├── pom.xml                 # Maven configuration
+├── docker-compose.yml      # Docker setup
+└── README.md              # This file
+```
+
+## 🧪 Running Tests
+
+### Backend Tests
+
+Run all tests:
+```bash
+./mvnw test
+```
+
+Generate coverage report with JaCoCo:
+```bash
+./mvnw clean test jacoco:report
+```
+
+Coverage report will be available at: `target/site/jacoco/index.html`
+
+Generate Allure report:
+```bash
+./mvnw clean test allure:report
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+npm test -a
+```
+
+## 🎮 How to Play
+
+1. **Create an Account**: Register a new user or use one of the pre-configured accounts
+2. **Join or Create a Lobby**: Navigate to the lobby system
+3. **Wait for Players**: The game requires 3-12 players to start
+4. **Receive Your Role**: Roles are assigned secretly at the start of each round
+5. **Play Your Cards**: Build paths to the gold (miners) or sabotage the efforts (saboteurs)
+6. **Win Gold**: Complete your objective to earn gold nuggets
+7. **Play 3 Rounds**: The player with the most gold after 3 rounds wins!
 
 
-## Available Scripts
+## 🔧 Configuration
 
-In the project directory, you can run:
+Key configuration files:
 
-### `npm start`
+- **Backend**: `src/main/resources/application.properties`
+- **Frontend**: `frontend/src/services/` (API endpoints)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Environment Variables
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+You can configure the following environment variables:
 
-### `npm test`
+```properties
+# Database
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.username=sa
+spring.datasource.password=
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# JWT
+jwt.secret=your-secret-key
+jwt.expiration=86400000
 
-### `npm run build`
+# Server
+server.port=8080
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+This will start both the backend and frontend in containers.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📚 API Documentation
 
-### `npm run eject`
+Once the backend is running, access the complete API documentation:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **Swagger UI**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **OpenAPI JSON**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Main API Endpoints
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `GET /api/v1/games` - List all games
+- `POST /api/v1/games` - Create a new game
+- `GET /api/v1/users/{id}` - Get user profile
+- `GET /api/v1/achievements` - List achievements
+- `GET /api/v1/stats/{userId}` - Get user statistics
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📄 License
 
-## Learn More
+This project is developed for educational purposes as part of the DP1 course at the University of Seville.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 👨‍💻 Development Team
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Course**: Design and Testing I (DP1)  
+**Institution**: University of Seville - Software Engineering Degree  
+**Academic Year**: 2025-2026  
+**Group**: L4-04
 
-### Code Splitting
+## 📞 Support
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+For questions or issues:
+- Check the documentation in the `docs/` folder
+- Review the [frontend README](frontend/README.md) for frontend-specific info
+- Open an issue on GitHub
+- Contact the development team
 
-### Analyzing the Bundle Size
+## 🔗 Additional Resources
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [React Documentation](https://reactjs.org/)
+- [Spring Security & JWT Guide](https://spring.io/guides/tutorials/spring-boot-oauth2/)
+- [Maven Documentation](https://maven.apache.org/guides/)
+- [H2 Database Documentation](https://www.h2database.com/)
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+DP1 | L4 Group 04 - University of Seville
