@@ -19,7 +19,7 @@ export default function EditAchievements() {
     tittle: '',
     description: '',
     badgeImage: '',
-    threshold: 0,
+    threshold: 1,
     metric: 'GAMES_PLAYED'
   });
 
@@ -258,7 +258,7 @@ export default function EditAchievements() {
                 type="number"
                 value={newAchievement.threshold}
                 onChange={(e) => handleCreateChange('threshold', parseInt(e.target.value))}
-                min="0"
+                min="1"
                 required
               />
             </div>
