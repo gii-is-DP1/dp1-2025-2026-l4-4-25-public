@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import tokenService from '../../services/token.service';
 import ProfileLogo from '../../lobbies/profiles/components/ProfileLogo';
+import BadgeImageSelector from './components/BadgeImageSelector';
 import '../../static/css/lobbies/profile.css';
 import '../../static/css/lobbies/achievements.css';
 import '../../static/css/admin/editAchievements.css';
@@ -12,6 +13,8 @@ export default function EditAchievements() {
   const [message, setMessage] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
+  const [editDropdownOpen, setEditDropdownOpen] = useState(false);
   const [newAchievement, setNewAchievement] = useState({
     tittle: '',
     description: '',
@@ -241,11 +244,12 @@ export default function EditAchievements() {
               />
             </div>
             <div className="form-row">
-              <label>Badge Image URL:</label>
-              <input
-                type="text"
-                value={newAchievement.badgeImage}
-                onChange={(e) => handleCreateChange('badgeImage', e.target.value)}
+              <BadgeImageSelector
+                badgeImage={newAchievement.badgeImage}
+                onImageChange={(image) => handleCreateChange('badgeImage', image)}
+                dropdownOpen={createDropdownOpen}
+                toggleDropdown={() => setCreateDropdownOpen(!createDropdownOpen)}
+                label="Badge Image:"
               />
             </div>
             <div className="form-row">
@@ -292,11 +296,12 @@ export default function EditAchievements() {
                     />
                   </div>
                   <div className="form-row">
-                    <label>Badge Image URL:</label>
-                    <input
-                      type="text"
-                      value={ach.badgeImage || ''}
-                      onChange={(e) => handleChange(ach.id, 'badgeImage', e.target.value)}
+                    <BadgeImageSelector
+                      badgeImage={ach.badgeImage || ''}
+                      onImageChange={(image) => handleChange(ach.id, 'badgeImage', image)}
+                      dropdownOpen={editDropdownOpen}
+                      toggleDropdown={() => setEditDropdownOpen(!editDropdownOpen)}
+                      label="Badge Image:"
                     />
                   </div>
                   <div className="form-row">
