@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -49,6 +51,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/activePlayers")
 @SecurityRequirement(name = "bearerAuth")
 class ActivePlayerRestController {
+
+    private static final Logger log = LoggerFactory.getLogger(ActivePlayerRestController.class);
 
     private final ActivePlayerService activePlayerService;
     private final PlayerService playerService;
@@ -267,6 +271,7 @@ class ActivePlayerRestController {
                 }
                 
                 // Si alguna herramienta fue reparada, incrementar peopleRepaired del jugador que realizó la acción
+                // Ahora también cuenta cuando te reparas a ti mismo
                 if(pickaxeRepaired || candleRepaired || cartRepaired) {
                     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                     if(auth != null) {
@@ -307,7 +312,7 @@ class ActivePlayerRestController {
                     
                     payload.put("tools", toolsPayload);
 
-                    System.out.println(">>> WS Tools Update para: " + username + " en partida " + gameId);
+                    log.info(">>> WS Tools Update para: {} en partida {}", username, gameId);
                     messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
             }
         }

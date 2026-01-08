@@ -32,9 +32,9 @@ import ReadMe from "./lobbies/ReadMe";
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
     <div role="alert">
-      <p>Algo fue mal:</p>
+      <p>Something went wrong:</p>
       <pre>{error.message}</pre>
-      <button onClick={resetErrorBoundary}>Intentar de nuevo</button>
+      <button onClick={resetErrorBoundary}>Try Again</button>
     </div>
   );
 }

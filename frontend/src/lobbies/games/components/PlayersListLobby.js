@@ -21,7 +21,6 @@ const PlayersListLobby = ({
 
     const fetchAvatars = async () => {
       try {
-        // Evitamos duplicados
         const uniqueUsernames = Array.from(new Set(activePlayers));
 
         const responses = await Promise.all(

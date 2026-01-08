@@ -141,8 +141,8 @@ class AchievementServiceTests {
     @Test
     @Transactional
     void shouldFindByTittle() {
-        Achievement achievement = this.achievementService.findByTittle("TEST3?"); 
-        assertEquals(202, achievement.getId());
+        Achievement achievement = this.achievementService.findByTittle(TEST_TITTLE_EXISTS); 
+        assertEquals(200, achievement.getId());
     }
 
     @Test
