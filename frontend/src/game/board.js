@@ -171,6 +171,22 @@ export default function Board() {
   const BOARD_ROWS = 9;
   const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
   const [objectiveCards, setObjectiveCards] = useState({});
+  // Estado para cartas objetivo permanentemente reveladas (persiste en sessionStorage)
+  const [permanentlyRevealedGoals, setPermanentlyRevealedGoals] = useState(() => {
+    // Inicializar desde sessionStorage si existe
+    const savedKey = round?.id ? `revealedGoals_${round.id}` : null;
+    if (savedKey) {
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return {};
+        }
+      }
+    }
+    return {};
+  });
   const [revealedObjective, setRevealedObjective] = useState(null);
   const [showRoleNotification, setShowRoleNotification] = useState(false);
   const [myRole, setMyRole] = useState(null);
@@ -256,8 +272,33 @@ export default function Board() {
       hasPatchedInitialLeftCards.current = false;
       console.log('🔄 hasPatchedInitialLeftCards reset to false');
       lastRoundId.current = round.id;
+      
+      // Cargar cartas reveladas desde sessionStorage para esta ronda
+      const savedKey = `revealedGoals_${round.id}`;
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setPermanentlyRevealedGoals(parsed);
+          console.log('📋 Loaded revealed goals from sessionStorage:', parsed);
+        } catch (e) {
+          console.error('Error parsing revealed goals from sessionStorage:', e);
+          setPermanentlyRevealedGoals({});
+        }
+      } else {
+        setPermanentlyRevealedGoals({});
+      }
     }
   }, [round?.id]);
+
+  // Persistir cartas reveladas en sessionStorage cuando cambien
+  useEffect(() => {
+    if (round?.id && Object.keys(permanentlyRevealedGoals).length > 0) {
+      const savedKey = `revealedGoals_${round.id}`;
+      sessionStorage.setItem(savedKey, JSON.stringify(permanentlyRevealedGoals));
+      console.log('💾 Saved revealed goals to sessionStorage:', permanentlyRevealedGoals);
+    }
+  }, [permanentlyRevealedGoals, round?.id]);
 
   const lastTurnToast = useRef({username: null, ts: 0}); 
   const lastTimeoutToastTs = useRef(0);
@@ -519,6 +560,14 @@ export default function Board() {
   const handleWsGoalRevealed = async ({ row, col, goalType }) => {
     console.log(`🎯 Received GOAL_REVEALED at (${row}, ${col}) type: ${goalType}`);
     const normalized = goalType; 
+    const positionKey = `[${row}][${col}]`;
+    
+    // Guardar en permanentlyRevealedGoals para persistir en sessionStorage
+    setPermanentlyRevealedGoals(prev => ({
+      ...prev,
+      [positionKey]: goalType.toLowerCase()
+    }));
+    
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
       
@@ -534,7 +583,7 @@ export default function Board() {
 
     setObjectiveCards(prev => ({
       ...prev, 
-      [`[${row}][${col}]`]: normalized
+      [positionKey]: normalized
     }));
     
     addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
@@ -1898,6 +1947,36 @@ const activateCollapseMode = (card, cardIndex) => {
           }
         })
       );
+      
+      // Restaurar cartas objetivo reveladas desde sessionStorage
+      const savedKey = `revealedGoals_${round.id}`;
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const revealedGoals = JSON.parse(saved);
+          console.log('🔄 Restoring revealed goals from sessionStorage:', revealedGoals);
+          
+          Object.entries(revealedGoals).forEach(([posKey, cardType]) => {
+            // Parsear la clave de posición "[row][col]" 
+            const match = posKey.match(/\[(\d+)\]\[(\d+)\]/);
+            if (match) {
+              const row = parseInt(match[1], 10);
+              const col = parseInt(match[2], 10);
+              if (baseBoard[row] && baseBoard[row][col]) {
+                baseBoard[row][col] = {
+                  ...baseBoard[row][col],
+                  revealed: true,
+                  cardType: cardType
+                };
+                console.log(`✅ Restored revealed goal at [${row}][${col}] = ${cardType}`);
+              }
+            }
+          });
+        } catch (e) {
+          console.error('Error restoring revealed goals:', e);
+        }
+      }
+      
       setBoardCells(baseBoard);
     };
 
