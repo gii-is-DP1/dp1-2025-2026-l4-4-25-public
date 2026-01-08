@@ -171,7 +171,7 @@ const CreateGame = () => {
       try {
         const loggedInUser = tokenService.getUser();
         if (!loggedInUser || !loggedInUser.id) {
-          console.error("No se encontró el ID del usuario.");
+          console.error("User ID not found.");
           return;
         }
 

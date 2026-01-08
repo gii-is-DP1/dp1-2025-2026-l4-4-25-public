@@ -192,7 +192,7 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
       hasAtLeastOneAdjacent = true;
       const adjacentConnections = getCardConnections(adjacentCard);
       
-      console.log('Carta adyacente en [' + newRow + '][' + newCol + '] dirección ' + dir.name + ':', {
+      console.log('Adjacent card at [' + newRow + '][' + newCol + '] direction ' + dir.name + ':', {
         id: adjacentCard.id,
         image: adjacentCard.image,
         type: adjacentCard.type,
@@ -212,7 +212,7 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
       const adjacentHasConnection = adjacentConnections[oppositeDirection[dir.name]];
       const cardHasConnection = cardConnections[dir.name];
       
-      console.log('Verificando dirección ' + dir.name + ':', {
+      console.log('Checking direction ' + dir.name + ':', {
         cartaNuevaTiene: cardHasConnection,
         cartaAdyacenteTiene: adjacentHasConnection,
         direccionOpuesta: oppositeDirection[dir.name]
@@ -220,7 +220,7 @@ function checkAdjacentCardsWithContinuity(board, row, col, cardToPlace) {
     
       if (cardHasConnection || adjacentHasConnection) {
         if (!checkPathContinuity(cardConnections, adjacentConnections, dir.name)) {
-          console.log('❌ FALLO: No hay continuidad en dirección ' + dir.name);
+          console.log('❌ FAIL: No continuity in direction ' + dir.name);
           return false; 
         }
       }

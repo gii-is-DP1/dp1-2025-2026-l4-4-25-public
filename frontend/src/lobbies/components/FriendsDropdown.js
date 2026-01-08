@@ -70,7 +70,7 @@ const FriendsDropdown = () => {
         } else {
           setFriends([]);}}
     } catch (err) {
-      console.error('Error de carga', err);
+      console.error('Load error', err);
     } finally {
       setLoading(false)}};
 
@@ -94,7 +94,7 @@ const FriendsDropdown = () => {
         setReceivedRequests(pendingRequests);
         setContReciv(pendingRequests.length);}
     } catch (err) {
-      console.error('Error de carga de solicitudes:',err)}};
+      console.error('Error loading requests:',err)}};
 
   const loadSentRequests = async () => {
     try {
@@ -110,7 +110,7 @@ const FriendsDropdown = () => {
         const pendingRequests = requests.filter(req => req.status === 'PENDING');
         setSentRequests(pendingRequests)}
     }catch(err){
-      console.error('Error de carga de solicitudes enviadas', err);
+      console.error('Error loading sent requests', err);
     }finally{
       setLoading(false)}};
 

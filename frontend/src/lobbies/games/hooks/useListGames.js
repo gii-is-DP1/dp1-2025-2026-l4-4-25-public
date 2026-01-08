@@ -332,7 +332,7 @@ const useListGames = () => {
           }
         }
       } catch (error) {
-        console.error('error del polling', error);
+        console.error('Polling error', error);
       }
     }, 2000);
   };

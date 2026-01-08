@@ -63,9 +63,9 @@ const useAchievementsData = () => {
         const playerAchievements = profile.accquiredAchievements || [];
         const playerAchievementIds = playerAchievements.map(ach => ach.id);
         
-        console.log("Todos los logros:", allAchievements);
-        console.log("Logros del jugador:", playerAchievements);
-        console.log("IDs de logros del jugador:", playerAchievementIds);
+        console.log("All achievements:", allAchievements);
+        console.log("Player achievements:", playerAchievements);
+        console.log("Player achievement IDs:", playerAchievementIds);
         
         const getCurrentValue = (metric) => {
           let value;
@@ -118,7 +118,7 @@ const useAchievementsData = () => {
           return 0;
         });
         
-        console.log("Logros con estado: ", achievementsWithStatus);
+        console.log("Achievements with status: ", achievementsWithStatus);
         setAchievements(achievementsWithStatus);
         setError(null);
       } catch (error) {

@@ -94,21 +94,21 @@ export default function ReadMe() {
                             <span className="icon">🚫</span>
                             <div>
                                 <strong>It won't let me register a new user</strong>
-                                <p>[Explicar problema caché]</p>
+                                <p>[Explain cache issue]</p>
                             </div>
                         </div>
                         <div className="important-item info">
                             <span className="icon">⏱️</span>
                             <div>
                                 <strong>Does it take too long to load the items and cards in a game?</strong>
-                                <p>[Explicar problema de carga en board]</p>
+                                <p>[Explain board loading issue]</p>
                             </div>
                         </div>
                         <div className="important-item warning">
                             <span className="icon">📥</span>
                             <div>
                                 <strong>Other</strong>
-                                <p>[Explicacion]</p>
+                                <p>[Explanation]</p>
                             </div>
                         </div>
                     </div>

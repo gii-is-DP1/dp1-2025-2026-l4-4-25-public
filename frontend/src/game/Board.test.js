@@ -252,13 +252,13 @@ describe('Board Component', () => {
     return view;
   };
 
-  test('1. RENDERIZADO: Board muestra pantalla de carga inicialmente', async () => {
+  test('1. RENDER: Board shows loading screen initially', async () => {
     await renderComponent();
     // El componente debe mostrar loading screen o estar en proceso de carga
     // Puede que ya haya terminado de cargar debido a los mocks rápidos
   });
 
-  test('2. RENDERIZADO: Board muestra todos los componentes después de cargar', async () => {
+  test('2. RENDER: Board shows all components after loading', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -274,7 +274,7 @@ describe('Board Component', () => {
     expect(screen.getByText('Game Log')).toBeInTheDocument();
   });
 
-  test('3. RENDERIZADO: Mostrar indicador de espectador cuando isSpectator es true', async () => {
+  test('3. RENDER: Show spectator indicator when isSpectator is true', async () => {
     mockLocation.state = { game: mockGame, round: mockRound, isSpectator: true };
     await renderComponent();
     
@@ -406,7 +406,7 @@ describe('Board Component', () => {
     }, { timeout: 5000 });
   });
 
-  test('10. ADMIN: Manejo de acción FORCE_FINISH', async () => {
+  test('10. ADMIN: Handle FORCE_FINISH action', async () => {
     const adminMessage = {
       adminAction: {
         action: 'FORCE_FINISH',
@@ -426,7 +426,7 @@ describe('Board Component', () => {
     }, { timeout: 1000 });
   });
 
-  test('11. ADMIN: Manejo de acción PLAYER_EXPELLED para el jugador actual', async () => {
+  test('11. ADMIN: Handle PLAYER_EXPELLED for the current player', async () => {
     const adminMessage = {
       adminAction: {
         action: 'PLAYER_EXPELLED',
@@ -447,7 +447,7 @@ describe('Board Component', () => {
     }, { timeout: 1000 });
   });
 
-  test('12. ADMIN: Manejo de acción PLAYER_EXPELLED para otro jugador', async () => {
+  test('12. ADMIN: Handle PLAYER_EXPELLED for another player', async () => {
     const adminMessage = {
       adminAction: {
         action: 'PLAYER_EXPELLED',
@@ -469,7 +469,7 @@ describe('Board Component', () => {
     }, { timeout: 1000 });
   });
 
-  test('13. INTERACCIÓN: Descartar carta cuando es el turno del jugador', async () => {
+  test("13. INTERACTION: Discard card when it's the player's turn", async () => {
     window.discardSelectedCard = jest.fn(() => true);
     mockGameData.patchRound.mockResolvedValue({});
     
@@ -491,7 +491,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('14. INTERACCIÓN: Modo colapso - Activar y desactivar', async () => {
+  test('14. INTERACTION: Collapse mode - enable and disable', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -511,7 +511,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('15. INTERACCIÓN: Hacer clic en celda en modo colapso', async () => {
+  test('15. INTERACTION: Click a cell in collapse mode', async () => {
     mockGameData.patchSquare.mockResolvedValue({});
     mockGameData.patchRound.mockResolvedValue({});
     
@@ -530,7 +530,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('16. SOLICITUDES ESPECTADOR: Aceptar solicitud (solo creador)', async () => {
+  test('16. SPECTATOR REQUESTS: Accept request (creator only)', async () => {
     global.fetch = jest.fn((url) => {
       if (url.includes('/api/v1/messages/byChatId')) {
         return Promise.resolve({
@@ -553,7 +553,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('17. SOLICITUDES ESPECTADOR: Denegar solicitud (solo creador)', async () => {
+  test('17. SPECTATOR REQUESTS: Deny request (creator only)', async () => {
     global.fetch = jest.fn((url) => {
       if (url.includes('/api/v1/messages/byChatId')) {
         return Promise.resolve({
@@ -576,7 +576,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('18. ESTADO: Verificar que playerOrder se inicializa correctamente', async () => {
+  test('18. STATE: Verify playerOrder initializes correctly', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -593,7 +593,7 @@ describe('Board Component', () => {
     expect(player1 || player2 || screen.getByText('Players List')).toBeInTheDocument();
   });
 
-  test('19. ESTADO: Contador de turno se resetea correctamente', async () => {
+  test('19. STATE: Turn counter resets correctly', async () => {
     const turnChangedMessage = {
       action: 'TURN_CHANGED',
       newTurnIndex: 0,
@@ -609,7 +609,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('20. WEBSOCKET: Revelación de carta objetivo con oro', async () => {
+  test('20. WEBSOCKET: Reveal objective card with gold', async () => {
     const cardPlacedWithGold = {
       action: 'CARD_PLACED',
       row: 2,
@@ -632,7 +632,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('21. WEBSOCKET: Revelación de carta objetivo con carbón', async () => {
+  test('21. WEBSOCKET: Reveal objective card with coal', async () => {
     const cardPlacedWithCarbon = {
       action: 'CARD_PLACED',
       row: 4,
@@ -655,7 +655,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('22. ESTADO: Actualización de conteo de cartas por jugador', async () => {
+  test('22. STATE: Update card count per player', async () => {
     const deckMessage = {
       action: 'DECK_COUNT',
       username: 'JaviOsuna',
@@ -670,7 +670,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('23. NAVEGACIÓN: No es creador - no puede ver solicitudes de espectador', async () => {
+  test('23. NAVIGATION: Not creator - cannot see spectator requests', async () => {
     tokenService.getUser.mockReturnValue({ username: 'PilarPacheco', id: 2 });
     
     await renderComponent();
@@ -682,7 +682,7 @@ describe('Board Component', () => {
     expect(screen.queryByText('Spectator Requests')).not.toBeInTheDocument();
   });
 
-  test('24. WEBSOCKET: Mensaje sin acción reconocida', async () => {
+  test('24. WEBSOCKET: Message with unrecognized action', async () => {
     const unknownMessage = {
       action: 'UNKNOWN_ACTION'
     };
@@ -699,7 +699,7 @@ describe('Board Component', () => {
     consoleSpy.mockRestore();
   });
 
-  test('25. ESTADO: Cargar datos de sessionStorage para nueva ronda', async () => {
+  test('25. STATE: Load sessionStorage data for new round', async () => {
     const savedData = JSON.stringify({
       game: mockGame,
       round: { ...mockRound, roundNumber: 2 },
@@ -721,7 +721,7 @@ describe('Board Component', () => {
     mockRemoveItem.mockRestore();
   });
 
-  test('26. INTERACCIÓN: Espectador no puede descartar cartas', async () => {
+  test('26. INTERACTION: Spectator cannot discard cards', async () => {
     mockLocation.state = { game: mockGame, round: mockRound, isSpectator: true };
     
     await renderComponent();
@@ -742,7 +742,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('27. ESTADO: Inicialización del tablero con celdas correctas', async () => {
+  test('27. STATE: Board initialization with correct cells', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -757,7 +757,7 @@ describe('Board Component', () => {
     expect(screen.getByText('Game Board')).toBeInTheDocument();
   });
 
-  test('28. WEBSOCKET: Turno cambiado con notificación para el jugador actual', async () => {
+  test('28. WEBSOCKET: Turn changed with notification for the current player', async () => {
     const turnChangedMessage = {
       action: 'TURN_CHANGED',
       newTurnIndex: 0,
@@ -773,7 +773,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('29. ESTADO: Hook useGameData se llama con el juego correcto', async () => {
+  test('29. STATE: useGameData hook is called with the correct game', async () => {
     await renderComponent();
     
     await waitFor(() => {
@@ -781,7 +781,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('30. RENDERIZADO: Mostrar modal de fin de partida cuando gameEndData existe', async () => {
+  test('30. RENDER: Show end-of-game modal when gameEndData exists', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -789,7 +789,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('31. WEBSOCKET: Ronda terminada - ignorar cambios de turno', async () => {
+  test('31. WEBSOCKET: Round ended - ignore turn changes', async () => {
     const roundEndMessage = {
       action: 'ROUND_END',
       winnerTeam: 'MINERS',
@@ -807,7 +807,7 @@ describe('Board Component', () => {
     });
   });
 
-  test('32. INTEGRACIÓN: Polling de solicitudes de espectador funciona correctamente', async () => {
+  test('32. INTEGRATION: Spectator requests polling works correctly', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -817,7 +817,7 @@ describe('Board Component', () => {
     expect(global.fetch).toHaveBeenCalled();
   });
 
-  test('33. RENDERIZADO: Componentes de chat se renderizan correctamente', async () => {
+  test('33. RENDER: Chat components render correctly', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -830,7 +830,7 @@ describe('Board Component', () => {
     }, { timeout: 5000 });
   });
 
-  test('34. ESTADO: Modo colapso inactivo por defecto', async () => {
+  test('34. STATE: Collapse mode is inactive by default', async () => {
     await renderComponent();
     
     await act(async () => {
@@ -847,7 +847,7 @@ describe('Board Component', () => {
     expect(collapseMode === null || collapseMode.textContent === 'Inactive').toBe(true);
   });
 
-  test('35. WEBSOCKET: Mensaje DECK_COUNT con acción no reconocida', async () => {
+  test('35. WEBSOCKET: DECK_COUNT message with unrecognized action', async () => {
     const unknownDeckMessage = {
       action: 'UNKNOWN_DECK_ACTION'
     };
