@@ -97,7 +97,7 @@ const GameInvitationListener = () => {
       } else {
         toast.error('🔴Game not found')}
     } catch (err) {
-      console.error('ERROR de aceptar la invitación',err);
+      console.error('Error accepting invitation',err);
       toast.error('Failed to join game');
     }
   };

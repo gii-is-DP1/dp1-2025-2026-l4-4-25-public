@@ -789,7 +789,7 @@ export default function Board() {
     // Handler para cuando se crea una nueva ronda - todos los jugadores navegan al nuevo board
 const handleWsNewRound = (message) => {
   const { newRound, boardId } = message;
-  console.log('🔄 WS NEW_ROUND recibido:', message);
+  console.log('🔄 WS NEW_ROUND received:', message);
   
   // Limpiar sessionStorage anterior para evitar conflictos
   sessionStorage.removeItem('savedGameData');
@@ -803,7 +803,7 @@ const handleWsNewRound = (message) => {
   
   // Navegar y forzar reload para reiniciar todo el estado
   const targetBoardId = boardId || newRound?.board;
-  console.log('Navegando a board:', targetBoardId);
+  console.log('Navigating to board:', targetBoardId);
   window.location.href = `/board/${targetBoardId}`;
 };
     
@@ -1050,7 +1050,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
   const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
     if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
-    console.log('⛔ nextTurn bloqued: ronda ended');
+    console.log('⛔ nextTurn blocked: round ended');
     return false;
     }
     if (isTurnChanging.current && !force) return false;
@@ -1200,8 +1200,8 @@ const activateCollapseMode = (card, cardIndex) => {
 
     // Solo el primer jugador (o el creador si forzó el fin) calcula y envía los datos
     if (shouldExecuteLogic) {
-      console.log('Soy el encargado (FirstPlayer o Creator), calculando distribución de oro...');
-      console.log('activePlayers con roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
+      console.log('I am responsible (FirstPlayer or Creator), calculating gold distribution...');
+      console.log('activePlayers with roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
       
       // Distribuir pepitas de oro y obtener la distribución para el modal
       const winnerRol = winnerTeam === 'MINERS' ? false : true;
@@ -1708,8 +1708,8 @@ const activateCollapseMode = (card, cardIndex) => {
         await Promise.all(updates);
         await loadActivePlayers();
       } catch (err) {
-        console.error('Error al persistir roles:', err);
-        toast.error('Error al guardar los roles asignados');
+        console.error('Error persisting roles:', err);
+        toast.error('Error saving assigned roles');
       }
     };
 
@@ -1723,7 +1723,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
       // Si se fuerza la reasignación (nueva ronda), siempre reasignar roles
       if (forceRolesReassignment.current) {
-        console.log('🎭 Forzando reasignación de roles para nueva ronda');
+        console.log('🎭 Forcing role reassignment for new round');
         forceRolesReassignment.current = false;
         const rolesAssigned = assignRolesGame(activePlayers);
         publishRoles(rolesAssigned);

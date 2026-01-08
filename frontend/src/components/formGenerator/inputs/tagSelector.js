@@ -92,7 +92,7 @@ const TagSelector = forwardRef((props, tagRef) => {
           {
             maxReached ? 
               <label htmlFor='tags-input'>
-                <p style={{color: '#cc0033', fontSize: '13px'}}>Límite de etiquetas alcanzado.</p>
+                <p style={{color: '#cc0033', fontSize: '13px'}}>Tag limit reached.</p>
               </label>
             :
               <></>
@@ -108,7 +108,7 @@ const TagSelector = forwardRef((props, tagRef) => {
           styles={colourStyles}
           value={selectedOptions}
           onChange={handleSelectChange}
-          placeholder="Selecciona las etiquetas"
+          placeholder="Select tags"
           ref={tagRef}
           >
         </Select>

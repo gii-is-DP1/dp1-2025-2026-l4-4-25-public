@@ -43,7 +43,7 @@ export default function PlayerCards({
       const ids = nonRotatedHand.map(card => card.id);
       await patchDeck(currentUsername, ids);
     } catch (e) {
-      console.error('Error sincronizando deck en servidor:', e);
+      console.error('Error syncing deck on server:', e);
     }
   };
 
@@ -94,7 +94,7 @@ export default function PlayerCards({
           await createNewDeck(username, cardsPerPlayer);
         }
       } catch (e) {
-        console.error('Error en initDeck:', e);
+        console.error('Error in initDeck:', e);
         deckInitializedRef.current = false;
       }
     };
@@ -115,20 +115,20 @@ export default function PlayerCards({
 
   const drawCard = () => {
     if (deckCount <= 0) {
-      console.log('No hay más cartas en el mazo');
+      console.log('No more cards in the deck');
       return null;
     }
     const usedCardIds = new Set(hand.map(c => c.id));
     const availablePool = availableCards.filter(c => !usedCardIds.has(c.id));
     
     if (availablePool.length === 0) {
-      console.log('No hay cartas disponibles para robar');
+      console.log('No available cards to draw');
       return null;
     }
 
     const randomIndex = Math.floor(Math.random() * availablePool.length);
     const drawnCard = availablePool[randomIndex];
-    console.log('Carta robada:', drawnCard);
+    console.log('Card drawn:', drawnCard);
     
     return drawnCard;
   };

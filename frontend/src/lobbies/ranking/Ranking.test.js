@@ -27,7 +27,7 @@ describe('Ranking Component Tests', () => {
         </BrowserRouter>
     );
 
-    test('debe resaltar la fila del usuario actual', async () => {
+    test('should highlight the current user row', async () => {
         global.fetch.mockResolvedValueOnce({
             ok: true,
             json: () => Promise.resolve(mockPlayersData),
@@ -38,7 +38,7 @@ describe('Ranking Component Tests', () => {
         expect(userRow).toHaveClass('current-user-row');
     });
 
-    test('debe cambiar la métrica y reordenar los jugadores correctamente', async () => {
+    test('should change the metric and reorder players correctly', async () => {
         const user = userEvent.setup();
         global.fetch.mockResolvedValueOnce({
             ok: true,

@@ -80,7 +80,7 @@ export default function UserEditAdmin() {
     event.preventDefault();
     console.log("Intentando guardar usuario con ID:", user?.id);
     if (!user || (user.id !== null && typeof user.id !== 'number')) { 
-        alert("Error: ID de usuario inválido. Recarga la página.");
+      alert("Error: Invalid user ID. Reload the page.");
         return;
     }
     const request = {

@@ -61,7 +61,7 @@ export const useGameData = (game) => {
         }
 
       } catch (err) {
-        console.error(`Error al cargar datos de ${username}:`, err);
+        console.error(`Error loading data for ${username}:`, err);
         return null;
       }
     }));
@@ -565,11 +565,11 @@ export const useGameData = (game) => {
       });
       if (response.ok) {
         const roundData = await response.json();
-        console.log('📦 Round obtenido del backend:', roundData);
+        console.log('📦 Round fetched from backend:', roundData);
         return roundData;
       }
     } catch (error) {
-      console.error('Error al obtener ronda por ID:', error);
+      console.error('Error fetching round by ID:', error);
       return null;
     }
   };

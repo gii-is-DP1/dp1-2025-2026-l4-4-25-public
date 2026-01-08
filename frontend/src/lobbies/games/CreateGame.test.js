@@ -150,25 +150,25 @@ describe('CreateGame Component', () => {
       </BrowserRouter>
     )};
 
-  test('1. RENDERIZADO: CreateGame con todo el game info', () => {
+  test('1. RENDER: CreateGame with full game info', () => {
     renderComponent();
     expect(screen.getByText('Lobby Info')).toBeInTheDocument();
     expect(screen.getByText('Join Requests')).toBeInTheDocument();
     expect(screen.getByText('Save Settings')).toBeInTheDocument()});
 
-  test('2. RENDERIZADO: mostrar el panel de solicitudes de unión (CREADOR)', () => {
+  test('2. RENDER: show join requests panel (CREATOR)', () => {
     const joinRequest = { username:'PilarPacheco', messageId: 1 };
     useLobbyData.mockReturnValue({...mockLobbyData, joinRequests: [joinRequest]});
 
     renderComponent();
     expect(screen.getByText(/join requests/i)).toBeInTheDocument()});
 
-  test('3. RENDERIZADO: mostrar la configuración del juego (SOLO CREADOR)', () => {
+  test('3. RENDER: show game settings (CREATOR ONLY)', () => {
     renderComponent();
     expect(screen.getByText(/max players/i)).toBeInTheDocument();
     expect(screen.getByText(/privacy/i)).toBeInTheDocument()});
 
-  test('4. SOLICITUDES: aceptar la solicitud de unión (SOLO CREADOR)', async () => {
+  test('4. REQUESTS: accept join request (CREATOR ONLY)', async () => {
     const joinRequest = { username:'PilarPacheco', messageId: 1 };
     mockLobbyData.updateGame.mockResolvedValue({...mockGame, activePlayers: ['JaviOsuna','PilarPacheco']});
 
@@ -185,7 +185,7 @@ describe('CreateGame Component', () => {
     expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('PilarPacheco'));
   });
 
-  test('5. SOLICITUDES: rechazo de la solicitud de unión a la partida (SOLO CREADOR)', async () => {
+  test('5. REQUESTS: deny join request (CREATOR ONLY)', async () => {
     const joinRequest = { username:'PilarPacheco', messageId: 1 };
     
     useLobbyData.mockReturnValue({...mockLobbyData, joinRequests: [joinRequest]});
@@ -199,7 +199,7 @@ describe('CreateGame Component', () => {
     });
     expect(toast.info).toHaveBeenCalledWith(expect.stringContaining('denied'))});
 
-  test('6. CONFIGURACIÓN DE LA PARTIDA: Actualización de la configuración del juego', async () => {
+  test('6. GAME SETTINGS: Update game settings', async () => {
     mockLobbyData.updateGame.mockResolvedValue(mockGame);
     renderComponent();
 
@@ -211,7 +211,7 @@ describe('CreateGame Component', () => {
     });
     expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('updated'))});
 
-  test('7. INICIO DE LA PARTIDA: manejo del inicio del juego', async () => {
+  test('7. GAME START: handle starting the game', async () => {
     const mockRound = { id: 1, board: 1 };
     mockLobbyData.postRound.mockResolvedValue(mockRound);
     mockLobbyData.updateGame.mockResolvedValue({ ...mockGame, gameStatus: 'ONGOING' });
@@ -229,7 +229,7 @@ describe('CreateGame Component', () => {
     expect(mockLobbyData.updateGame).toHaveBeenCalledWith({gameStatus: 'ONGOING'});
     expect(toast.success).toHaveBeenCalledWith('Game started successfully!')});
 
-  test('8. CANCELAR UNA PARTIDA', async () => {
+  test('8. CANCEL A GAME', async () => {
     mockLobbyData.deleteGame.mockResolvedValue();
     renderComponent();
 
@@ -241,7 +241,7 @@ describe('CreateGame Component', () => {
     });
     expect(mockNavigate).toHaveBeenCalledWith('/lobby')});
 
-  test('9. EXPULSAR A UN JUGADOR', async () => {
+  test('9. EXPEL A PLAYER', async () => {
     const gameWithPlayers = {...mockGame, activePlayers: ['javiOsuna', 'PilarPacheco']};
     
     mockLocation.state = { game: gameWithPlayers };
@@ -256,7 +256,7 @@ describe('CreateGame Component', () => {
       expect(mockLobbyData.updateGame).toHaveBeenCalled()});
   });
 
-  test('10. SALIR AL LOBBY (PARA JUGADORES)', async () => {
+  test('10. EXIT TO LOBBY (FOR PLAYERS)', async () => {
     const nonCreatorUser = { username: 'PilarPacheco', id: 2 };
     tokenService.getUser.mockReturnValue(nonCreatorUser);
     const gameWithPlayers = {...mockGame, activePlayers: ['JaviOsuna', 'PilarPacheco']};
@@ -276,7 +276,7 @@ describe('CreateGame Component', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/lobby');
   });
 
-  test('11. MENSAJE WEBSOCKET: Mensaje sobre la actualización del juego', async () => {
+  test('11. WEBSOCKET MESSAGE: Game update message', async () => {
     const updatedGame = { ...mockGame, maxPlayers: 7 };
     const socketMessage = { game: updatedGame };
     useWebSocket.mockReturnValue(socketMessage);
@@ -286,7 +286,7 @@ describe('CreateGame Component', () => {
       expect(useLobbyData).toHaveBeenCalled()});
   });
 
-  test('12. MENSAJE WEBSOCKET: Mensaje sobre el inicio del juego', async () => {
+  test('12. WEBSOCKET MESSAGE: Game start message', async () => {
     const mockRound = { id: 1, board: 1 };
     const socketMessage = {game: {...mockGame, gameStatus: 'ONGOING'}, round: mockRound};
     useWebSocket.mockReturnValue(socketMessage);
@@ -297,7 +297,7 @@ describe('CreateGame Component', () => {
         state: { game: socketMessage.game, round: mockRound}})});
   });
 
-  test('13. ADMINISTRADOR: Forzar finalizar una partida', async () => {
+  test('13. ADMIN: Force finish a game', async () => {
     const adminMsg = {adminAction: {action: 'FORCE_FINISH', reason:'Test reason'}};
     useWebSocket.mockReturnValue(adminMsg);
     renderComponent();
@@ -306,7 +306,7 @@ describe('CreateGame Component', () => {
       expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Admin has deleted'))});
   });
 
-  test('14. ADMINISTRADOR: Expulsar a un jugador', async () => {
+  test('14. ADMIN: Expel a player', async () => {
     const adminMsg = {adminAction: { action: 'PLAYER_EXPELLED', affectedPlayer: 'testuser', reason: 'Test reason'}};
     useWebSocket.mockReturnValue(adminMsg);
     renderComponent();
@@ -315,7 +315,7 @@ describe('CreateGame Component', () => {
       expect(toast.warning).toHaveBeenCalledWith(expect.stringContaining('expelled'))});
   });
 
-  test('15. ACEPTAR SOLICITUD DE ESPECTADOR (CREADOR)', async () => {
+  test('15. ACCEPT SPECTATOR REQUEST (CREATOR)', async () => {
     const spectatorReq = { username: 'LauraMartin', messageId: 2 };
     useLobbyData.mockReturnValue({...mockLobbyData, spectatorRequests: [spectatorReq]});
     renderComponent();
@@ -329,7 +329,7 @@ describe('CreateGame Component', () => {
     expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('spectator'));
   });
 
-  test('16. DENEGAR SOLICITUD DE ESPECTADOR (CREADOR)', async () => {
+  test('16. DENY SPECTATOR REQUEST (CREATOR)', async () => {
     const spectatorReq = { username: 'LauraMartin', messageId: 2 };
     useLobbyData.mockReturnValue({...mockLobbyData, spectatorRequests: [spectatorReq]});
     renderComponent();
@@ -343,7 +343,7 @@ describe('CreateGame Component', () => {
     expect(toast.info).toHaveBeenCalledWith(expect.stringContaining('denied'));
   });
 
-  test('17. VISTA DEL JUGADOR: Player no puede ver los controles/paneles/botones si no es Creador', () => {
+  test('17. PLAYER VIEW: Player cannot see controls/panels/buttons if not Creator', () => {
     const nonCreatorUser = { username:'PilarPacheco', id: 2 };
     tokenService.getUser.mockReturnValue(nonCreatorUser);
     renderComponent();
@@ -351,7 +351,7 @@ describe('CreateGame Component', () => {
     expect(screen.queryByText(/save settings/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/cancel/i)).not.toBeInTheDocument()});
 
-  test('18. EXPULSIÓN DE JUGADOR: Monitoreo de la expulsión de un jugador', async () => {
+  test("18. PLAYER EXPULSION: Monitor a player's expulsion", async () => {
     const nonCreatorUser = { username:'PilarPacheco', id: 2 };
     tokenService.getUser.mockReturnValue(nonCreatorUser);
 
@@ -374,7 +374,7 @@ describe('CreateGame Component', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/lobby');
   });
 
-  test('19. CANCELACIÓN DE PARTIDA: Los jugadores son reedirigos al /lobby cuando el creador cancela la partida', async () => {
+  test('19. GAME CANCELLATION: Players are redirected to /lobby when creator cancels the game', async () => {
     const nonCreatorUser = { username: 'PilarPacheco', id: 2 };
     tokenService.getUser.mockReturnValue(nonCreatorUser);
     const gameWithPlayers = {...mockGame, activePlayers: ['JaviOsuna', 'PilarPacheco']};
