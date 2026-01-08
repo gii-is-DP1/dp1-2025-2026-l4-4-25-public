@@ -490,7 +490,7 @@ const CreateGame = () => {
           <LobbyControls
             isCreator={isCreator}
             gameId={game?.id}
-            canStart={canStartGame(game?.activePlayers?.length ?? 0)}
+            canStart={canStartGame(game?.activePlayers?.length ?? 0, 3)}
             onSave={handleSubmit}
             onStart={handleStart}
             onCancel={handleCancel}
