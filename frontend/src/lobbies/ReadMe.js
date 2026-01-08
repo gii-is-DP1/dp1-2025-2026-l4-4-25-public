@@ -39,32 +39,32 @@ export default function ReadMe() {
                         <div className="rule-item">
                             <span className="rule-number">1</span>
                             <div className="rule-content">
-                                <h4>tip1</h4>
-                                <p>DESCRIPTION</p></div>
+                                <h4>Secret Roles</h4>
+                                <p>At the start of each round, roles are assigned randomly. Your role is hidden from other players, creating an atmosphere of mystery and deduction.</p></div>
                         </div>
                         <div className="rule-item">
                             <span className="rule-number">2</span>
                             <div className="rule-content">
-                                <h4>tip2</h4>
-                                <p>DESCRIPTION</p></div>
+                                <h4>Path Cards</h4>
+                                <p>Use path cards to build tunnels connecting the starting position to the gold nuggets. Each card must connect properly to adjacent paths following the tunnel rules.</p></div>
                         </div>
                         <div className="rule-item">
                             <span className="rule-number">3</span>
                             <div className="rule-content">
-                                <h4>tip3</h4>
-                                <p>DESCRIPTION</p></div>
+                                <h4>Action Cards</h4>
+                                <p>Use action cards to sabotage opponents (break their tools), help allies (fix tools), or reveal hidden goal cards to discover where the gold is located.</p></div>
                         </div>
                         <div className="rule-item">
                             <span className="rule-number">4</span>
                             <div className="rule-content">
-                                <h4>tip4</h4>
-                                <p>DESCRIPTION</p></div>
+                                <h4>Strategy and Deduction</h4>
+                                <p>Watch other players' moves carefully. Identify who might be a saboteur based on their actions. Saboteurs must act subtly to avoid being discovered.</p></div>
                         </div>
                         <div className="rule-item">
                             <span className="rule-number">5</span>
                             <div className="rule-content">
-                                <h4>tip5</h4>
-                                <p>DESCRIPTION</p></div>
+                                <h4>Gold Distribution</h4>
+                                <p>At the end of each round, gold nuggets are distributed among the winners. The team that completes their objective receives points, and after 3 rounds, the player with the most gold wins!</p></div>
                         </div>
                     </div>
                 </div>
@@ -75,41 +75,20 @@ export default function ReadMe() {
                         <div className="tip-card tip-gold">
                             <h4>🏆 MINERS</h4>
                             <ul>
-                                <li>1</li>
-                                <li>2</li></ul>
+                                <li>Communicate with your team through your moves and card choices</li>
+                                <li>Build efficient paths toward the goal cards - don't waste cards!</li>
+                                <li>Use action cards to reveal goal positions and identify saboteurs</li>
+                                <li>Protect key miners by fixing their tools when sabotaged</li>
+                                <li>Watch for suspicious behavior - not everyone is on your side!</li></ul>
                         </div>
                         <div className="tip-card tip-saboteur">
                             <h4>🎭 SABOTEURS</h4>
                             <ul>
-                                <li>1</li>
-                                <li>2</li></ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="info-section">
-                    <h2 className="info-title">⚠️ Common Errors ⚠️</h2>
-                    <div className="important-points">
-                        <div className="important-item warning">
-                            <span className="icon">🚫</span>
-                            <div>
-                                <strong>It won't let me register a new user</strong>
-                                <p>[Explicar problema caché]</p>
-                            </div>
-                        </div>
-                        <div className="important-item info">
-                            <span className="icon">⏱️</span>
-                            <div>
-                                <strong>Does it take too long to load the items and cards in a game?</strong>
-                                <p>[Explicar problema de carga en board]</p>
-                            </div>
-                        </div>
-                        <div className="important-item warning">
-                            <span className="icon">📥</span>
-                            <div>
-                                <strong>Other</strong>
-                                <p>[Explicacion]</p>
-                            </div>
+                                <li>Blend in! Place path cards occasionally to avoid suspicion</li>
+                                <li>Sabotage subtly - break tools of key players strategically</li>
+                                <li>Build dead-end paths to confuse and mislead the miners</li>
+                                <li>Don't reveal your identity too early in the game</li>
+                                <li>Coordinate with other saboteurs if you can identify them</li></ul>
                         </div>
                     </div>
                 </div>
