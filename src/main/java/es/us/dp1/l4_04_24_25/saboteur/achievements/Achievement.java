@@ -48,7 +48,7 @@ public class Achievement extends BaseEntity{
 
     private String badgeImage;
 
-    @Min(0)
+    @Min(1)
     private Integer threshold; 
 
     @Enumerated(EnumType.STRING)
