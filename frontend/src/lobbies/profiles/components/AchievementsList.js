@@ -32,7 +32,7 @@ const AchievementsList = ({ achievements, username, profileImage }) => {
     { value: 'ALL', label: 'All Metrics' },
     { value: 'GAMES_PLAYED', label: 'Games Played' },
     { value: 'VICTORIES', label: 'Victories' },
-    { value: 'BUILDED_PATHS', label: 'Built Paths' },
+    { value: 'BUILT_PATHS', label: 'Built Paths' },
     { value: 'DESTROYED_PATHS', label: 'Destroyed Paths' },
     { value: 'GOLD_NUGGETS', label: 'Gold Nuggets' },
     { value: 'TOOLS_DAMAGED', label: 'Tools Damaged' },

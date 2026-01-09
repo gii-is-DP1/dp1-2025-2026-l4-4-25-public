@@ -89,7 +89,7 @@ INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, descri
 VALUES (201, 1, 30, 'VETERAN_BADGE', 'GAMES_PLAYED', 'Play 30 games to become a veteran miner.', 'Veteran Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (202, 1, 40, 'BUILDER_BADGE', 'BUILDED_PATHS', 'Build 40 tunnels to demonstrate your architectural skill.', 'Tunnel Architect');
+VALUES (202, 1, 40, 'BUILDER_BADGE', 'BUILT_PATHS', 'Build 40 tunnels to demonstrate your architectural skill.', 'Tunnel Architect');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
 VALUES (203, 1, 60, 'GOLD_HUNTER_BADGE', 'GOLD_NUGGETS', 'Collect 60 gold nuggets to become the best treasure hunter.', 'Gold Hunter');
@@ -110,7 +110,7 @@ INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, descri
 VALUES (208, 1, 10, 'TROUBLEMAKER_BADGE', 'TOOLS_DAMAGED', 'Damage 10 tools to sow chaos in the mine.', 'Chaos Master');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (209, 1, 100, 'MASTER_BUILDER_BADGE', 'BUILDED_PATHS', 'Build 100 tunnels to become the ultimate master builder.', 'Master Architect');
+VALUES (209, 1, 100, 'MASTER_BUILDER_BADGE', 'BUILT_PATHS', 'Build 100 tunnels to become the ultimate master builder.', 'Master Architect');
 
 -- Logros para jugador
 INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 6);

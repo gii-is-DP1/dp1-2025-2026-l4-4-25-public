@@ -76,7 +76,7 @@ const useAchievementsData = () => {
             case 'VICTORIES':
               value = profile?.wonGames ?? 0;
               break;
-            case 'BUILDED_PATHS':
+            case 'BUILT_PATHS':
               value = profile?.builtPaths ?? 0;
               break;
             case 'DESTROYED_PATHS':

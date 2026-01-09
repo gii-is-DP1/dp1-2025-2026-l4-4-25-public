@@ -178,7 +178,7 @@ export default function EditAchievements() {
   const metrics = [
     'GAMES_PLAYED',
     'VICTORIES',
-    'BUILDED_PATHS',
+    'BUILT_PATHS',
     'DESTROYED_PATHS',
     'GOLD_NUGGETS',
     'TOOLS_DAMAGED',
