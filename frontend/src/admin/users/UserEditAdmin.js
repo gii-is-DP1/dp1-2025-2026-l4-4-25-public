@@ -25,38 +25,27 @@ export default function UserEditAdmin() {
     birthDate: "",
     email: "",
     image: "",
-    authority: { id: 2, authority: "PLAYER" }, // Por defecto, todo usuario que se añada será Player, esto antes estaba en null
+    authority: { id: 2, authority: "PLAYER" }, // Por defecto, todo usuario que se añada será Player.
   };
-
-  //const id = getIdFromUrl(2);
   const { id: useIdFromUrl } = useParams();
   const id = useIdFromUrl && useIdFromUrl !== "new" ? parseInt(useIdFromUrl, 10) : null; // El 10 es para base 10*/
   // Comprobamos si el usuario logueado en ese mismo instante (el admin) se edita a sí mismo
   const isEditingSelf = loggedInUser && loggedInUser.id === id; 
-  // console.log("1. ID obtenido de useParams:", id, "(Tipo:", typeof id, ")"); // LOG 1
+
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
-  const [user, setUser] = useFetchState(
-    emptyItem,
-    id ? `/api/v1/users/${id}` : null,
-    jwt,
-    setMessage,
-    setVisible,
-    id
-  );
+  const [user, setUser] = useFetchState(emptyItem, id ? `/api/v1/users/${id}` : null, jwt, setMessage, setVisible, id);
 
   const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-  const auths = useFetchData(`/api/v1/users/authorities`, jwt); // Devuelve lista de objetos authorities: {"id":1, "authority":"ADMIN"}
+  const auths = useFetchData(`/api/v1/users/authorities`, jwt); 
 
   useEffect(() => {
-    // Corregir 'authority': la API lo devuelve como String y se lo queremos pasar en formato objeto
     if (typeof user.authority === 'string' && auths.length > 0) {
       const matchingAuth = auths.find(a => a.authority === user.authority);
       if (matchingAuth) {
-        // Reemplaza el string (p.ej. "PLAYER") por el objeto (p.ej. {id: 2, authority: "PLAYER"})
         setUser(prevUser => ({ ...prevUser, authority: matchingAuth }));
       }
     }
@@ -72,7 +61,6 @@ export default function UserEditAdmin() {
         if(file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-            // reader.result tendrá la imagen como una cadena Base64
             setProfileImage(reader.result);
         };
         reader.readAsDataURL(file);
@@ -87,16 +75,12 @@ export default function UserEditAdmin() {
     } else {
       setUser({ ...user, [name]: value });}}
 
-  /*function handleChange(event) {
-    const {name,value } = event.target;
-    setUser({ ...user, [name]: value });
-  } */
  
   function handleSubmit(event) {
     event.preventDefault();
     console.log("Intentando guardar usuario con ID:", user?.id);
-    if (!user || (user.id !== null && typeof user.id !== 'number')) { // Evaluamos que user.id puede ser null si estamos haciendo un Add User
-        alert("Error: ID de usuario inválido. Recarga la página.");
+    if (!user || (user.id !== null && typeof user.id !== 'number')) { 
+      alert("Error: Invalid user ID. Reload the page.");
         return;
     }
     const request = {
@@ -108,9 +92,6 @@ export default function UserEditAdmin() {
       delete request.password;}
     
     // Eliminamos de la request el campo authority ya que este nunca se va a editar y va a mantener el que tenía de siempre (PLAYER)
-    /*if (user.id) { // Solo borramos este campo si estamos con un usuario existente, si creamos un usuario de 0 este campo no se borrará y se pondrá por defecto el del emptyItem
-    delete request.authority;
-    }*/
 
     fetch("/api/v1/users" + (user.id ? "/" + user.id : ""), {
       method: user.id ? "PUT" : "POST",
@@ -238,7 +219,7 @@ export default function UserEditAdmin() {
             <Input
               type="select"
               name="authority"
-              value={String(user.authority?.id || 2)} //Player (2) por defecto (Es una buena práctica pasarlo a String para un value)
+              value={String(user.authority?.id || 2)} 
               onChange={handleChange}
               disabled={isEditingSelf}
               className="custom-input"

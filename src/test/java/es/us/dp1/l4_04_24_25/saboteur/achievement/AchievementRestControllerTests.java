@@ -86,7 +86,7 @@ class AchievementRestControllerTests {
         achievement.setDescription("Build 50 paths");
         achievement.setBadgeImage("badge.png");
         achievement.setThreshold(50);
-        achievement.setMetric(Metric.BUILDED_PATHS);
+        achievement.setMetric(Metric.BUILT_PATHS);
         achievement.setCreator(creator);
         
         achievement.setPlayers(new ArrayList<>());
@@ -115,7 +115,7 @@ class AchievementRestControllerTests {
         mockMvc.perform(get("/api/v1/achievements/{id}", TEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tittle").value(TEST_TITTLE))
-                .andExpect(jsonPath("$.metric").value("BUILDED_PATHS"));
+                .andExpect(jsonPath("$.metric").value("BUILT_PATHS"));
     }
 
     @Test

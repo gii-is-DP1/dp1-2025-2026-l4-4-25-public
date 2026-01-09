@@ -10,8 +10,6 @@ const useWebSocket = (topic) => {
 
     useEffect(() => {
         if (!topic) return;
-
-        // Limpiar data cuando cambia el topic
         setData(null);
 
         const socket = new SockJS("http://localhost:8080/ws");
@@ -24,7 +22,6 @@ const useWebSocket = (topic) => {
                 stompClient.subscribe(topic, (message) => {
                     try {
                         const body = JSON.parse(message.body);
-                        // Añadir timestamp para forzar que React detecte el cambio
                         setData({ ...body, _ts: Date.now() });
                     } catch (error) {
                         console.error("Error parsing WS message:", error);

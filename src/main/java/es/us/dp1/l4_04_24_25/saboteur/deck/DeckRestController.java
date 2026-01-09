@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -41,6 +43,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/decks")
 @SecurityRequirement(name = "bearerAuth")
 public class DeckRestController {
+
+    private static final Logger log = LoggerFactory.getLogger(DeckRestController.class);
 
     private final DeckService deckService;
     private final ObjectMapper objectMapper;
@@ -213,8 +217,7 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
                     "username", username,
                     "leftCards", leftCards
                 ));
-                System.out.println("WS >> Deck update enviado a game " + gameId +
-            " | user=" + username + " | leftCards=" + leftCards);
+                log.info("WS >> Deck update enviado a game {} | user={} | leftCards={}", gameId, username, leftCards);
             }
 
         }

@@ -15,9 +15,14 @@ const LobbyControls = ({
       {isCreator ? (
         <>
           <button onClick={onSave}>📑 SAVE CHANGES</button>
-          {canStart && (
-            <button onClick={onStart}>▶️ START</button>
-          )}
+          <button 
+            onClick={onStart} 
+            disabled={!canStart}
+            title={!canStart ? "You need at least 3 players to start" : ""}
+            style={!canStart ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
+            ▶️ START
+          </button>
           <button className="button-small">🔗 ID : {gameId}</button>
           <button onClick={onCancel}>❌ CANCEL</button>
         </>

@@ -105,9 +105,41 @@ const useAdminGames = () => {
   const refreshGames = () => {
     fetchGames()};
 
-  const handleSpectate = (game) => {
-    navigate(`/board/${game.id}`, { state: { game, isSpectator: true } });
-    toast.info('Entering as spectator...');};
+  const handleSpectate = async (game) => {
+    try {
+      const jwt = tokenService.getLocalAccessToken();
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      };
+
+      const gameRes = await fetch(`/api/v1/games/${game.id}`, { method: 'GET', headers });
+      const fullGame = gameRes.ok ? await gameRes.json() : game;
+
+      const roundsRes = await fetch(`/api/v1/rounds/byGameId?gameId=${game.id}`, { method: 'GET', headers });
+      const rounds = roundsRes.ok ? await roundsRes.json() : [];
+      const currentRound = Array.isArray(rounds)
+        ? [...rounds].sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0)).at(-1)
+        : null;
+
+      const boardId = typeof currentRound?.board === 'number'
+        ? currentRound.board
+        : currentRound?.board?.id;
+
+      if (!boardId) {
+        toast.error('Could not resolve the current board for this game.');
+        return;
+      }
+
+      navigate(`/board/${boardId}`, {
+        state: { game: fullGame, round: currentRound, isSpectator: true, returnTo: '/admin/games' }
+      });
+      toast.info('Entering as spectator...');
+    } catch (error) {
+      console.error('Error entering as spectator:', error);
+      toast.error('Could not connect as spectator.');
+    }
+  };
 
   return {
     filteredGames,

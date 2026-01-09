@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,14 +37,16 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 public class RoundRestController {
 
+    private static final Logger log = LoggerFactory.getLogger(RoundRestController.class);
+
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
     private final GameService gameService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    
     @Autowired
-    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService, SimpMessagingTemplate messagingTemplate) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService,
+            SimpMessagingTemplate messagingTemplate) {
         this.roundService = roundService;
         this.objectMapper = objectMapper;
         this.gameService = gameService;
@@ -50,7 +54,7 @@ public class RoundRestController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Round>> findAll(){
+    public ResponseEntity<List<Round>> findAll() {
         List<Round> res = (List<Round>) roundService.findAll();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
@@ -59,106 +63,113 @@ public class RoundRestController {
     public ResponseEntity<Round> findById(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(roundService.findRound(id), HttpStatus.OK);
     }
-    
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Round> create(@RequestParam @Valid Integer gameId, @RequestParam @Valid Integer roundNumber) {
         Game game = gameService.findGame(gameId);
         Round newRound = roundService.initializeRound(game, roundNumber);
-        
-        // Enviar mensaje WebSocket a todos los jugadores para que naveguen a la nueva ronda
+
+        // Enviar mensaje WebSocket a todos los jugadores para que naveguen a la nueva
+        // ronda
         Map<String, Object> payload = new HashMap<>();
         payload.put("action", "NEW_ROUND");
         payload.put("newRound", newRound);
         payload.put("boardId", newRound.getBoard().getId());
         payload.put("roundNumber", roundNumber);
-        
-        System.out.println(">>> WS: Enviando NEW_ROUND a /topic/game/" + gameId + " con boardId: " + newRound.getBoard().getId());
+
+        log.info(">>> WS: Enviando NEW_ROUND a /topic/game/{} con boardId: {}", gameId, newRound.getBoard().getId());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
-        
+
         return new ResponseEntity<>(newRound, HttpStatus.CREATED);
     }
 
-
     @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Round> update(@PathVariable("id") Integer id, @RequestBody @Valid Round round){
+    public ResponseEntity<Round> update(@PathVariable("id") Integer id, @RequestBody @Valid Round round) {
         RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "ID", id);
         return new ResponseEntity<>(roundService.updateRound(round, id), HttpStatus.OK);
     }
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Round> patch(@PathVariable("id") Integer id, @RequestBody Map<String,Object> updates) throws JsonMappingException{
+    public ResponseEntity<Round> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates)
+            throws JsonMappingException {
         RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "ID", id);
         Round round = roundService.findRound(id);
         Round roundPatched = objectMapper.updateValue(round, updates);
         roundService.updateRound(roundPatched, id);
-        if(updates.containsKey("turn")){
-            //Obtenemos ID del juego para saber a que topic enviarlo
+        if (updates.containsKey("turn")) {
+            // Obtenemos ID del juego para saber a que topic enviarlo
             Integer gameId = roundPatched.getGame().getId();
             Map<String, Object> payload = new HashMap<>();
             payload.put("action", "TURN_CHANGED");
             payload.put("newTurnIndex", roundPatched.getTurn());
             payload.put("roundId", roundPatched.getId());
             payload.put("leftCards", roundPatched.getLeftCards());
-            
-            System.out.println(">>> WS: Enviando cambio de turno a /topic/game/" + gameId);
+
+            log.info(">>> WS: Enviando cambio de turno a /topic/game/{}", gameId);
             messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
         }
-        return new ResponseEntity<>(roundPatched,HttpStatus.OK);
+        return new ResponseEntity<>(roundPatched, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> deleteRound(@PathVariable Integer id){
+    public ResponseEntity<MessageResponse> deleteRound(@PathVariable Integer id) {
         RestPreconditions.checkNotNull(roundService.findRound(id), "Round", "id", id);
         roundService.deleteRound(id);
         return new ResponseEntity<>(new MessageResponse("Round deleted!"), HttpStatus.OK);
     }
 
     @GetMapping("byGameId")
-    public ResponseEntity<List<Round>> findByGameId(@RequestParam Integer gameId){
+    public ResponseEntity<List<Round>> findByGameId(@RequestParam Integer gameId) {
         List<Round> res = roundService.findByGameId(gameId);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    
+
     @GetMapping("byGameIdAndNumber")
-    public ResponseEntity<Round> findByGameIdAndRoundNumber(@RequestParam Integer gameId, @RequestParam Integer roundNumber){
+    public ResponseEntity<Round> findByGameIdAndRoundNumber(@RequestParam Integer gameId,
+            @RequestParam Integer roundNumber) {
         Round res = roundService.findByGameIdAndRoundNumber(gameId, roundNumber);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    
+
     @GetMapping("byWinnerRol")
-    public ResponseEntity<List<Round>> findByWinnerRol(@RequestParam boolean winnerRol){
+    public ResponseEntity<List<Round>> findByWinnerRol(@RequestParam boolean winnerRol) {
         List<Round> res = roundService.findByWinnerRol(winnerRol);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    
+
     @GetMapping("byRoundNumber")
-    public ResponseEntity<List<Round>> findByRoundNumber(@RequestParam Integer roundNumber){
+    public ResponseEntity<List<Round>> findByRoundNumber(@RequestParam Integer roundNumber) {
         List<Round> res = roundService.findByRoundNumber(roundNumber);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    
+
     @GetMapping("byLeftCards")
-    public ResponseEntity<List<Round>> findByLeftCardsLessThanEqual(@RequestParam Integer leftCards){
+    public ResponseEntity<List<Round>> findByLeftCardsLessThanEqual(@RequestParam Integer leftCards) {
         List<Round> res = roundService.findByLeftCardsLessThanEqual(leftCards);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    
+
+    @GetMapping("byBoardId")
+    public ResponseEntity<Round> findByBoardId(@RequestParam Integer boardId) {
+        Round res = roundService.findByBoardId(boardId);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
     // Endpoint para notificar el fin de ronda a todos los jugadores via WebSocket
     @PostMapping("/{id}/notifyRoundEnd")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Map<String, Object>> notifyRoundEnd(
-            @PathVariable("id") Integer id, 
+            @PathVariable("id") Integer id,
             @RequestBody Map<String, Object> roundEndData) {
-        
+
         Round round = roundService.findRound(id);
         RestPreconditions.checkNotNull(round, "Round", "ID", id);
-        
+
         Integer gameId = round.getGame().getId();
-        
+
         Map<String, Object> payload = new HashMap<>();
         payload.put("action", "ROUND_END");
         payload.put("roundId", id);
@@ -166,20 +177,22 @@ public class RoundRestController {
         payload.put("reason", roundEndData.get("reason"));
         payload.put("goldDistribution", roundEndData.get("goldDistribution"));
         payload.put("playerRoles", roundEndData.get("playerRoles"));
-        
-        System.out.println(">>> WS: Enviando ROUND_END a /topic/game/" + gameId);
+
+        log.info(">>> WS: Enviando ROUND_END a /topic/game/{}", gameId);
         messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
-        
+
         return new ResponseEntity<>(payload, HttpStatus.OK);
     }
 
-    /*@PostMapping("/initialize/{gameId}")
-    public ResponseEntity<Round> initializeRound(@PathVariable Integer gameId) {
-        Game game = gameService.findGame(gameId);
-
-        // Suponemos que siempre se crea la primera ronda (por ahora)
-        Round round = roundService.initializeRound(game, 1);
-
-        return ResponseEntity.ok(round);
-    } */
+    /*
+     * @PostMapping("/initialize/{gameId}")
+     * public ResponseEntity<Round> initializeRound(@PathVariable Integer gameId) {
+     * Game game = gameService.findGame(gameId);
+     * 
+     * // Suponemos que siempre se crea la primera ronda (por ahora)
+     * Round round = roundService.initializeRound(game, 1);
+     * 
+     * return ResponseEntity.ok(round);
+     * }
+     */
 }

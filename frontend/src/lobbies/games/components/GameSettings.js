@@ -14,7 +14,7 @@ const GameSettings = ({
       <div className="form-group">
         <label>Number of players</label>
         <select
-          id="num-jugadores"
+          id="num-players"
           className="form-control"
           value={numPlayers}
           onChange={(e) => onNumPlayersChange(e.target.value)}
@@ -33,7 +33,7 @@ const GameSettings = ({
       </div>
 
       <div className="form-group privacy-toggle">
-        <label>Privacity</label>
+        <label>Privacy</label>
         <div className="toggle-switch">
           <span>{isPrivate ? "Private" : "Public"}</span>
           <label className="switch">
