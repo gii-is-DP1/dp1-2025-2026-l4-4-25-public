@@ -37,5 +37,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: >
           ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar 
-          -Dsonar.projectKey=   #Por poner el proyecto
+          -Dsonar.projectKey=gii-is-DP1_dp1-2025-2026-l4-4-25-public
           -Dsonar.organization=gii-is-dp1
