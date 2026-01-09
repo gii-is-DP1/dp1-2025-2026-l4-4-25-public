@@ -26,10 +26,10 @@ class AchievementRepositoryTests {
 
     private static final int TEST_ACHIEVEMENT_ID = 200;
     private static final int TEST_NON_EXISTENT_ACHIEVEMENT_ID = 999;
-    private static final String TEST_TITTLE_EXISTS = "Constructor Maestro";
+    private static final String TEST_TITTLE_EXISTS = "Beginner Miner";
     private static final String TEST_TITTLE_NON_EXISTS = "Título Que No Existe";
     private static final int TEST_ADMIN_ID = 1;
-    private static final int TEST_PLAYER_ID_WITH_ACHIEVEMENTS = 4;
+    private static final int TEST_PLAYER_ID_WITH_ACHIEVEMENTS = 6;
 
     // Crea un logro "válido" para los tests
     private Achievement createNewAchievement(String tittle) {
