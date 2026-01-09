@@ -122,6 +122,11 @@ export default function Board() {
   const [round, setRound] = useState(initialState.round);
   const [roundEnded, setRoundEnded] = useState(false); 
 
+  const [roundEndData, setRoundEndData] = useState(null);
+  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  const [gameEndData, setGameEndData] = useState(null);
+  const [gameEndCountdown, setGameEndCountdown] = useState(10);
+
   // EFFECT: Fetch Game/Round data if missing (e.g. reload on new round URL without state)
   // Moved here to avoid ReferenceError: round is not defined
   useEffect(() => {
@@ -155,8 +160,13 @@ export default function Board() {
       fetchMissingData();
   }, [urlBoardId, game, round]); 
 
-  // Save game state to sessionStorage to persist on reload
+  // Save game state to sessionStorage to persist on reload.
+  // Once the game has ended we stop persisting to avoid redirect loops
+  // (the App-level StrictInGameRedirect uses savedGameData presence as "in game").
   useEffect(() => {
+    if (gameEndData) {
+      return;
+    }
     if (game && round) {
       const stateToSave = {
         game: game,
@@ -165,7 +175,7 @@ export default function Board() {
       };
       sessionStorage.setItem('savedGameData', JSON.stringify(stateToSave));
     }
-  }, [game, round, isSpectator]); 
+  }, [game, round, isSpectator, gameEndData]);
   // Estados del tablero
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
@@ -205,10 +215,6 @@ export default function Board() {
       setLoadingProgress(progress);
       return up})}; 
 
-  const [roundEndData, setRoundEndData] = useState(null);
-  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
-  const [gameEndData, setGameEndData] = useState(null);
-  const [gameEndCountdown, setGameEndCountdown] = useState(10);
   const [spectatorRequests, setSpectatorRequests] = useState([]);
   const creatorUsername = game?.creator?.username || game?.creator;
   const isCreator = creatorUsername === loggedInUser?.username;
@@ -711,12 +717,16 @@ export default function Board() {
       if (adminAction.action === "FORCE_FINISH") {
         toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
         setTimeout(() => {
+          sessionStorage.removeItem('savedGameData');
+          sessionStorage.removeItem('newRoundData');
           navigate('/lobby')}, 3000);
 
       } else if (adminAction.action === "PLAYER_EXPELLED") {
         if (adminAction.affectedPlayer === currentUser) {
           toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
           setTimeout(() => {
+            sessionStorage.removeItem('savedGameData');
+            sessionStorage.removeItem('newRoundData');
             navigate('/lobby')}, 3000);
         } else {
           toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
@@ -1333,6 +1343,7 @@ const activateCollapseMode = (card, cardIndex) => {
     if (!gameEndData || gameEndCountdown > 0) return;
     
     console.log('🏁 Game finished, returning to lobby...');
+    sessionStorage.removeItem('savedGameData');
     sessionStorage.removeItem('newRoundData');
     navigate('/lobby');
   }, [gameEndCountdown, gameEndData, navigate]);
