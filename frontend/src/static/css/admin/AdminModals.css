@@ -1,0 +1,237 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.modal-close-btn:hover {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-info p {
+  margin: 8px 0;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.modal-info strong {
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.modal-warning {
+  background: rgba(255, 183, 77, 0.1);
+  border-left: 4px solid #ffb74d;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+}
+
+.modal-warning p {
+  margin: 0;
+  color: #ffb74d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.modal-field {
+  margin-bottom: 16px;
+}
+
+.modal-field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #b0b0b0;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.modal-field select,
+.modal-field textarea {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+
+.modal-field select:focus,
+.modal-field textarea:focus {
+  outline: none;
+  border-color: #7dd3fc;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.1);
+}
+
+.modal-field select:disabled,
+.modal-field textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.modal-field small {
+  display: block;
+  margin-top: 6px;
+  color: #888;
+  font-size: 12px;
+  text-align: right;
+}
+
+.modal-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-modal-cancel,
+.btn-modal-confirm-danger {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-modal-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+}
+
+.btn-modal-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.btn-modal-confirm-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-modal-confirm-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-modal-cancel:disabled,
+.btn-modal-confirm-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
