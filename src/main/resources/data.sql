@@ -83,34 +83,34 @@ VALUES (108, 9, 6, TRUE, 1, 2, NULL, NULL);
 
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (200, 1, 1, 'VICTORY_BADGE', 'GAMES_PLAYED', 'Play your first game to earn this achievement.', 'Beginner Miner');
+VALUES (200, 1, 1, '/images/achievement-images/played-games.png', 'GAMES_PLAYED', 'Play your first game to earn this achievement.', 'Beginner Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (201, 1, 30, 'VETERAN_BADGE', 'GAMES_PLAYED', 'Play 30 games to become a veteran miner.', 'Veteran Miner');
+VALUES (201, 1, 30, '/images/achievement-images/played-games.png', 'GAMES_PLAYED', 'Play 30 games to become a veteran miner.', 'Veteran Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (202, 1, 40, 'BUILDER_BADGE', 'BUILT_PATHS', 'Build 40 tunnels to demonstrate your architectural skill.', 'Tunnel Architect');
+VALUES (202, 1, 40, '/images/achievement-images/built-paths.png', 'BUILT_PATHS', 'Build 40 tunnels to demonstrate your architectural skill.', 'Tunnel Architect');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (203, 1, 60, 'GOLD_HUNTER_BADGE', 'GOLD_NUGGETS', 'Collect 60 gold nuggets to become the best treasure hunter.', 'Gold Hunter');
+VALUES (203, 1, 60, '/images/achievement-images/gold-nuggets.png', 'GOLD_NUGGETS', 'Collect 60 gold nuggets to become the best treasure hunter.', 'Gold Hunter');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (204, 1, 20, 'SABOTEUR_BADGE', 'DESTROYED_PATHS', 'Destroy 20 tunnels to perfect your sabotage skills.', 'Expert Saboteur');
+VALUES (204, 1, 20, '/images/achievement-images/destroyed-paths.png', 'DESTROYED_PATHS', 'Destroy 20 tunnels to perfect your sabotage skills.', 'Expert Saboteur');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (205, 1, 5, 'MECHANIC_BADGE', 'TOOLS_REPAIRED', 'Repair 5 tools to help your fellow miners.', 'Mine Helper');
+VALUES (205, 1, 5, '/images/achievement-images/repaired-tools.png', 'TOOLS_REPAIRED', 'Repair 5 tools to help your fellow miners.', 'Mine Helper');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (206, 1, 50, 'PROFESSIONAL_BADGE', 'VICTORIES', 'Win 50 games to reach professional miner level.', 'Professional Miner');
+VALUES (206, 1, 50, '/images/achievement-images/victories.png', 'VICTORIES', 'Win 50 games to reach professional miner level.', 'Professional Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (207, 1, 100, 'LEGEND_BADGE', 'GAMES_PLAYED', 'Play 100 games to become a living legend.', 'Cave Legend');
+VALUES (207, 1, 100, '/images/achievement-images/played-games.png', 'GAMES_PLAYED', 'Play 100 games to become a living legend.', 'Cave Legend');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (208, 1, 10, 'TROUBLEMAKER_BADGE', 'TOOLS_DAMAGED', 'Damage 10 tools to sow chaos in the mine.', 'Chaos Master');
+VALUES (208, 1, 10, '/images/achievement-images/destroyed-tools.png', 'TOOLS_DAMAGED', 'Damage 10 tools to sow chaos in the mine.', 'Chaos Master');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (209, 1, 100, 'MASTER_BUILDER_BADGE', 'BUILT_PATHS', 'Build 100 tunnels to become the ultimate master builder.', 'Master Architect');
+VALUES (209, 1, 100, '/images/achievement-images/built-paths.png', 'BUILT_PATHS', 'Build 100 tunnels to become the ultimate master builder.', 'Master Architect');
 
 -- Logros para jugador
 INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 6);
