@@ -44,7 +44,7 @@ function StrictInGameRedirect({ jwt, children }) {
     savedGameData = null;
   }
 
-  const activeBoardId = savedGameData?.round?.board?.id ?? savedGameData?.round?.board;
+  const activeBoardId = savedGameData?.round?.board;
 
   if (!activeBoardId) {
     return children;
