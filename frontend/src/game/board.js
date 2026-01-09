@@ -188,8 +188,7 @@ export default function Board() {
     return {};
   });
   const [revealedObjective, setRevealedObjective] = useState(null);
-  const [showRoleNotification, setShowRoleNotification] = useState(false);
-  const [myRole, setMyRole] = useState(null);
+
   const [destroyingCell, setDestroyingCell] = useState(null); 
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -243,7 +242,7 @@ export default function Board() {
   const lastCollapseLog = useRef(0);
   const seenPrivateMessages = useRef(new Set());
   const lastPublishedRoles = useRef([]);
-  const roleNotificationShown = useRef(false);
+
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
@@ -1681,16 +1680,7 @@ const activateCollapseMode = (card, cardIndex) => {
       setPlayerRol(rolesList);
       if (isSpectator) return;
 
-      // Solo mostrar notificación si no se ha mostrado antes
-      if (!roleNotificationShown.current) {
-        const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
-        if (currentPlayerRole) {
-          roleNotificationShown.current = true;
-          setMyRole(currentPlayerRole);
-          setShowRoleNotification(true);
-          setTimeout(() => setShowRoleNotification(false), 5000);
-        }
-      }
+
     };
 
     const persistRoles = async (rolesList) => {
@@ -2032,18 +2022,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
   return (
     <div className="board-container">
-      {showRoleNotification && myRole && (
-        <div className="role-notification-overlay">
-          <div className="role-notification-card">
-            <h2 className="role-notification-title">YOUR ROLE:</h2>
-            <img 
-              src={myRole.roleImg} 
-              alt={myRole.roleName} 
-              className="role-notification-image"
-            />
-            <p className="role-notification-name">{myRole.roleName}</p>
-          </div>
-        </div>)}
+
 
       {isCreator && spectatorRequests.length > 0 && (
         <SpectatorRequestsInGame
