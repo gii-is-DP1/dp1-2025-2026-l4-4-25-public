@@ -96,5 +96,22 @@ public class GameService {
     public Iterable<Game> findAllPrivateGames() {
         return gameRepository.findAllPrivateGames();
     }
+
+    @Transactional(readOnly = true)
+    public boolean isUserInActiveGame(Integer userId) {
+        List<Game> allGames = (List<Game>) gameRepository.findAll();
+        return allGames.stream()
+            .filter(game -> game.getGameStatus() == gameStatus.CREATED || game.getGameStatus() == gameStatus.ONGOING)
+            .anyMatch(game -> {
+                boolean isCreator = game.getCreator() != null && game.getCreator().getId().equals(userId);
+                boolean isActivePlayer = game.getActivePlayers() != null && 
+                    game.getActivePlayers().stream()
+                        .anyMatch(ap -> ap.getId().equals(userId));
+                boolean isWatcher = game.getWatchers() != null &&
+                    game.getWatchers().stream()
+                        .anyMatch(w -> w.getId().equals(userId));
+                return isCreator || isActivePlayer || isWatcher;
+            });
+    }
     
 }

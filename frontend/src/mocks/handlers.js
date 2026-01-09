@@ -11,6 +11,10 @@ export const handlers = [
     return res(ctx.status(200), ctx.json(mockUsers));
   }),
 
+  rest.get('/api/v1/users/:id/inActiveGame', (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json(false));
+  }),
+
   rest.delete('/api/v1/users/:id', (req, res, ctx) => {
     return res(ctx.status(200), ctx.json({ message: 'User deleted successfully' }));
   }),
