@@ -23,6 +23,41 @@ export default function UserListAdmin() {
   );
   const [alerts, setAlerts] = useState([]);
 
+  async function handleDelete(user) {
+    try {
+      const response = await fetch(`/api/v1/users/${user.id}/inActiveGame`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${jwt}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.ok) {
+        const isInActiveGame = await response.json();
+        if (isInActiveGame) {
+          setMessage("Cannot delete this user because they are currently in an active game (CREATED or ONGOING status).");
+          setVisible(true);
+          return;
+        }
+      }
+      
+      deleteFromList(
+        `/api/v1/users/${user.id}`,
+        user.id,
+        [users, setUsers],
+        [alerts, setAlerts],
+        setMessage,
+        setVisible
+      );
+    } catch (error) {
+      console.error("Error checking user game status:", error);
+      setMessage("Error checking user status. Please try again.");
+      setVisible(true);
+    }
+  }
+
   const userList = users.map((user) => {
     console.log("Renderizando usuario:", user);
     return(
@@ -73,16 +108,7 @@ export default function UserListAdmin() {
               size="sm"
               color="danger"
               aria-label={"delete-" + user.id}
-              onClick={() =>
-                deleteFromList(
-                  `/api/v1/users/${user.id}`,
-                  user.id,
-                  [users, setUsers],
-                  [alerts, setAlerts],
-                  setMessage,
-                  setVisible
-                )
-              }
+              onClick={() => handleDelete(user)}
               disabled = {loggedInUser?.id === user.id}
               className="action-btn action-delete"
             >
