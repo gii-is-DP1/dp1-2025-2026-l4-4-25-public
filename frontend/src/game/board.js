@@ -60,6 +60,8 @@ export default function Board() {
   const navigate = useNavigate();
   const loggedInUser = tokenService.getUser();
 
+  const hasDeniedIllegalAccess = useRef(false);
+
   useEffect(() => {
     toast.dismiss();
     return () => {
@@ -122,6 +124,116 @@ export default function Board() {
   const [round, setRound] = useState(initialState.round);
   const [roundEnded, setRoundEnded] = useState(false); 
 
+  // Si un usuario loggueado intenta acceder a /board/:boardId a través de la URL sin ser parte de la partida, se le redirige a /lobby mostrando un toast.
+  useEffect(() => {
+    if (!jwt || !loggedInUser?.username || !urlBoardId) {
+      return;
+    }
+    if (hasDeniedIllegalAccess.current) {
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+    const delayMs = 200;
+
+    const readSavedGameData = () => {
+      try {
+        const raw = sessionStorage.getItem('savedGameData');
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const extractUsernames = (list) => {
+      if (!Array.isArray(list)) return [];
+      return list
+        .map(p => p?.username || p?.user?.username || (typeof p === 'string' ? p : null))
+        .filter(Boolean);
+    };
+
+    const extractBoardIdsFromRounds = (rounds) => {
+      if (!Array.isArray(rounds)) return [];
+      return rounds
+        .map(r => r?.board?.id ?? r?.board)
+        .filter(v => v !== null && v !== undefined)
+        .map(String);
+    };
+
+    const deny = () => {
+      if (hasDeniedIllegalAccess.current) return;
+      hasDeniedIllegalAccess.current = true;
+      sessionStorage.removeItem('savedGameData');
+      sessionStorage.removeItem('newRoundData');
+      navigate('/lobby', { replace: true });
+      
+    };
+
+    const verify = () => {
+      if (cancelled) return;
+
+      const saved = readSavedGameData();
+      const candidateGame = location?.state?.game || game || saved?.game;
+      const candidateRound = location?.state?.round || round || saved?.round;
+
+      // Wait until we have enough info to validate.
+      if (!candidateGame || !candidateRound) {
+        attempts += 1;
+        if (attempts >= maxAttempts) {
+          // If we still couldn't resolve data, fail closed.
+          deny();
+          return;
+        }
+        setTimeout(verify, delayMs);
+        return;
+      }
+
+      const allowedUsernames = new Set([
+        ...extractUsernames(candidateGame.activePlayers),
+        ...extractUsernames(candidateGame.watchers)
+      ].map(String));
+
+      // If activePlayers isn't ready yet, retry briefly (race during game start).
+      if (allowedUsernames.size === 0) {
+        attempts += 1;
+        if (attempts >= maxAttempts) {
+          deny();
+          return;
+        }
+        setTimeout(verify, delayMs);
+        return;
+      }
+
+      if (!allowedUsernames.has(String(loggedInUser.username))) {
+        deny();
+        return;
+      }
+
+      const candidateBoardId = candidateRound?.board?.id ?? candidateRound?.board;
+      if (candidateBoardId && String(candidateBoardId) !== String(urlBoardId)) {
+        // If we're not on the round's board, let the existing mismatch logic handle it.
+        return;
+      }
+
+      const boardIds = new Set([
+        ...extractBoardIdsFromRounds(candidateGame.rounds),
+        String(candidateBoardId ?? '')
+      ].filter(Boolean));
+
+      // If we can map the game -> rounds -> board, ensure the requested board belongs to that game.
+      if (boardIds.size > 0 && !boardIds.has(String(urlBoardId))) {
+        deny();
+      }
+    };
+
+    verify();
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedInUser?.username, navigate, urlBoardId, location?.state, game, round]);
+
   const [roundEndData, setRoundEndData] = useState(null);
   const [roundEndCountdown, setRoundEndCountdown] = useState(10);
   const [gameEndData, setGameEndData] = useState(null);
@@ -165,6 +277,9 @@ export default function Board() {
   // (the App-level StrictInGameRedirect uses savedGameData presence as "in game").
   useEffect(() => {
     if (gameEndData) {
+      return;
+    }
+    if (hasDeniedIllegalAccess.current) {
       return;
     }
     if (game && round) {

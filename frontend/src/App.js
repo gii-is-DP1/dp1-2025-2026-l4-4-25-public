@@ -44,8 +44,7 @@ function StrictInGameRedirect({ jwt, children }) {
     savedGameData = null;
   }
 
-  const activeBoardId = savedGameData?.round?.board;
-  const winner = savedGameData?.game?.winner;
+  const activeBoardId = savedGameData?.round?.board?.id ?? savedGameData?.round?.board;
 
   if (!activeBoardId) {
     return children;
@@ -54,7 +53,7 @@ function StrictInGameRedirect({ jwt, children }) {
   const boardMatch = matchPath('/board/:boardId', location.pathname);
   if (boardMatch) {
     const currentBoardId = boardMatch.params?.boardId;
-    if (currentBoardId && winner === null && String(currentBoardId) !== String(activeBoardId)) {
+    if (currentBoardId && String(currentBoardId) !== String(activeBoardId)) {
       return <Navigate to={`/board/${activeBoardId}`} replace />;
     }
     return children;
