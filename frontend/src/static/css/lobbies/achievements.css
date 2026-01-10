@@ -73,7 +73,7 @@
 
 .filter-group label {
   font-weight: 700;
-  color: #6b5310;
+  color: #9b7714;
   font-size: 1.05rem;
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
 }
@@ -84,7 +84,7 @@
   border: 2px solid #d4af37;
   border-radius: 10px;
   background: linear-gradient(145deg, #ffffff, #fffef5);
-  color: #6b5310;
+  color: #866405;
   cursor: pointer;
   font-weight: 700;
   transition: all 0.3s ease;
