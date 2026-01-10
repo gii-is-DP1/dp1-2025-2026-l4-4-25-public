@@ -1,10 +1,10 @@
 name: SonarCloud
+
 on:
   push:
     branches:
       - main
       - JGR9196
-      - GBK4935
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -12,6 +12,7 @@ jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,11 +32,15 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      - name: Give execute permission to mvnw
+        run: chmod +x mvnw
+
       - name: Build and analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Necesario para info de PRs
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: >
-          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar 
-          -Dsonar.projectKey=   #Por poner el proyecto
+        run: |
+          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=gii-is-DP1_dp1-2025-2026-l4-4-25-public \
           -Dsonar.organization=gii-is-dp1
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
