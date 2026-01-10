@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { ErrorBoundary } from "react-error-boundary";
 import AppNavbar from "./AppNavbar";
@@ -28,6 +28,8 @@ import Stats from "./lobbies/profiles/Stats";
 import GameInvitationListener from "./components/GameInvitationListener";
 import Ranking from "./lobbies/ranking/Ranking";
 import ReadMe from "./lobbies/ReadMe";
+import BackgroundMusic from "./components/BackgroundMusic";
+import SaboteurCursor from "./components/SaboteurCursor";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -40,6 +42,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 }
 
 function App() {
+  const location = useLocation();
   const jwt = tokenService.getLocalAccessToken();
   let roles = []
   if (jwt) {
@@ -49,6 +52,7 @@ function App() {
   function getRolesFromJWT(jwt) {
     return jwt_decode(jwt).authorities;
   }
+
 
   let adminRoutes = <></>;
   let ownerRoutes = <></>;
@@ -101,8 +105,11 @@ function App() {
   return (
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
+        <SaboteurCursor />
+        
         <AppNavbar />
         {jwt && <GameInvitationListener />}
+        <BackgroundMusic />
         <ToastContainer 
           position="top-right" 
           autoClose={2500} 
