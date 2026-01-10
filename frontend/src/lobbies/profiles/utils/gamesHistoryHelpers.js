@@ -14,11 +14,9 @@ export const sortGamesByDate = (games) => {
   if (!games) return [];
   
   return [...games].sort((a, b) => {
-    // Si tienen fecha, ordenar por fecha
     if (a.endDate && b.endDate) {
       return new Date(b.endDate) - new Date(a.endDate);
     }
-    // Si no, ordenar por ID (descendente)
     return b.id - a.id;
   });
 };

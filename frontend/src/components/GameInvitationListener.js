@@ -13,7 +13,7 @@ const GameInvitationListener = () => {
     
     if (!jwt || !currentUser?.username) return;
 
-    const intervalId = setInterval(async () => { // Polling cada 3s
+    const intervalId = setInterval(async () => { 
       try {
         const response = await fetch(`/api/v1/messages`, {
           headers: {'Authorization':`Bearer ${jwt}`,'Content-Type':'application/json'}});
@@ -97,7 +97,7 @@ const GameInvitationListener = () => {
       } else {
         toast.error('🔴Game not found')}
     } catch (err) {
-      console.error('ERROR de aceptar la invitación',err);
+      console.error('Error accepting invitation',err);
       toast.error('Failed to join game');
     }
   };

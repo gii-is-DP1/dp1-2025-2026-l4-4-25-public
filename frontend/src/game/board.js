@@ -1,402 +1,2146 @@
-import React, {useState,useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import tokenService from '../services/token.service.js';
+
+// Componentes
+import PlayerCards from './components/PlayerCards';
+import PlayerRole from './components/PlayerRole';
+import SpectatorIndicator from './components/SpectatorIndicator';
+import SpectatorRequestsInGame from './components/SpectatorRequestsInGame';
+import GameControls from './components/GameControls';
+import GameBoard from './components/GameBoard';
+import PlayersList from './components/PlayersList';
+import GameLog from './components/GameLog';
+import ChatBox from './components/ChatBox';
+import RoundEndModal from './components/RoundEnd';
+import GameEnd from './components/GameEnd';
+import LoadingScreen from './components/LoadingScreen';
+
+// Utilidades
+import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
+import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
+import { checkRoundEnd, distributeGold, resetToolsForNewRound } from './utils/roundEndLogic';
+import { extractSpectatorRequests } from '../lobbies/games/utils/lobbyUtils';
+import saboteurRol from './cards-images/roles/saboteurRol.png';
+import minerRol from './cards-images/roles/minerRol.png';
+
+// Hooks personalizados
+import { useGameData } from './hooks/useGameData';
+
+// Estilos
 import '../App.css';
 import '../static/css/home/home.css';
-import { Link, useLocation } from 'react-router-dom';
-import '../static/css/game/game.css'; 
-import minerRol from '../game/cards-images/roles/minerRol.png';
-import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
-// import getIdFromUrl from "../../util/getIdFromUrl";
-import tokenService from '../services/token.service.js';
-import avatar from "../static/images/icons/1.jpeg"
+import '../static/css/game/game.css';
+import useWebSocket from "../hooks/useWebSocket";
+
 
 const jwt = tokenService.getLocalAccessToken();
+const timeturn = 10;
+
+const getSavedRoundData = () => {
+  const savedData = sessionStorage.getItem('newRoundData');
+  if (savedData) {
+    sessionStorage.removeItem('newRoundData');
+    return JSON.parse(savedData);
+  }
+  // Try to recover from general session storage (reload fix)
+  const recoveredData = sessionStorage.getItem('savedGameData');
+  if (recoveredData) {
+      return JSON.parse(recoveredData);
+  }
+  return null;
+};
+
+const savedRoundData = getSavedRoundData();
 
 export default function Board() {
-   const location = useLocation();
- 
- const timeturn=60;
+  const { boardId: urlBoardId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const loggedInUser = tokenService.getUser();
 
-  const [CardPorPlayer, setCardPorPlayer] = useState(0);
-  const [deckCount, setDeckCount] = useState(60);
-  const [profileImage, setProfileImage] = useState(avatar);
-  const [game, setGame] = useState(location.state?.game);
-  const [message, setMessage] = useState([]); // UseState que almacenan los mensajes (Chat de texto)
+  useEffect(() => {
+    toast.dismiss();
+    return () => {
+      toast.dismiss();
+    };
+  }, []);
+
+  if (location.state) {
+    sessionStorage.removeItem('newRoundData');
+  }
+
+  // Dar prioridad a location.state sobre savedRoundData
+  // CHECK: If savedRoundData exists but belongs to a DIFFERENT board, ignore it to prevent "stuck in previous round"
+  let loadedState = null;
+  
+  if (location.state) {
+    loadedState = {
+      game: location.state.game,
+      round: location.state.round || null,
+      isSpectator: location.state.isSpectator || false
+    };
+  } else if (savedRoundData) {
+      // Validate Board ID if possible
+      const savedBoardId = savedRoundData.round?.board?.id || savedRoundData.round?.board;
+      if (urlBoardId && savedBoardId && String(savedBoardId) !== String(urlBoardId)) {
+          console.warn(`⚠️ State mismatch detected! URL Board: ${urlBoardId}, Saved Board: ${savedBoardId}. Discarding saved state.`);
+          loadedState = null; // Force fetch
+      } else {
+          loadedState = savedRoundData;
+      }
+  }
+
+  const initialState = loadedState || {
+    game: null,
+    round: null,
+    isSpectator: false
+  };
+
+  // Estados principales
+  const [isSpectator] = useState(initialState.isSpectator);
+
+  const [playerCardsCount, setPlayerCardsCount] = useState({});
+  const [deckCount, setDeckCount] = useState(0);
+  const [game, setGame] = useState(initialState.game);
+  const [message, setMessage] = useState([]);
+
+
+
+
   const [newMessage, setNewMessage] = useState('');
-  const [numRound, setNumRound] = useState('1'); 
-  const [currentPlayer, setCurrentPlayer] = useState(); // Nos ayudará para el NextTurn (saber el usuario que tiene el turno)
-  const [cont, setCont] = useState(timeturn); 
+  const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
+  const [currentPlayer, setCurrentPlayer] = useState();
+  const [cont, setCont] = useState(timeturn);
   const [gameLog, setGameLog] = useState([]);
-  const [playerOrder, setPlayerOrder] = useState([]); // Lista de los jugadores ordenados por birthDate, NO FUNCIONA AUN X ESO EL ESTADO INICIAL (PARA PRUEBAS)
-  const [playerRol, setPlayerRol] = useState([]); // Para los roles de saboteur y minero
-  const [activePlayers, setActivePlayers] = useState([]); // Lista de arrays de isactivePlayer
-  const nPlayers=setActivePlayers.length; // Total de jugadores en la partida
-  const [privateLog, setPrivateLog] = useState([]); 
+  const [logData, setLogData] = useState(null);
+  const [playerOrder, setPlayerOrder] = useState([]);
+  const [playerRol, setPlayerRol] = useState([]);
+  const [privateLog, setPrivateLog] = useState([]);
+  const [playerTools, setPlayerTools] = useState({});
+  const [round, setRound] = useState(initialState.round);
+  const [roundEnded, setRoundEnded] = useState(false); 
+
+  const [roundEndData, setRoundEndData] = useState(null);
+  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  const [gameEndData, setGameEndData] = useState(null);
+  const [gameEndCountdown, setGameEndCountdown] = useState(10);
+
+  // EFFECT: Fetch Game/Round data if missing (e.g. reload on new round URL without state)
+  // Moved here to avoid ReferenceError: round is not defined
+  useEffect(() => {
+      const fetchMissingData = async () => {
+          if ((!game || !round || (round.board?.id && String(round.board.id) !== String(urlBoardId))) && urlBoardId) {
+                  console.log(`🔄 Fetching Round data for Board ID: ${urlBoardId}...`);
+                  try {
+                      setIsLoading(true);
+                      const res = await fetch(`/api/v1/rounds/byBoardId?boardId=${urlBoardId}`, {
+                          headers: { "Authorization": `Bearer ${jwt}` }
+                      });
+                      if (res.ok) {
+                          const fetchedRound = await res.json();
+                          console.log('✅ Fetched Round:', fetchedRound);
+                          setRound(fetchedRound);
+                          if (fetchedRound.game) {
+                              setGame(fetchedRound.game);
+                          }
+                      } else {
+                          console.error('❌ Failed to fetch round by board ID');
+                          toast.error('Failed to load game data');
+                      }
+                  } catch (err) {
+                      console.error('Network error fetching round:', err);
+                  } finally {
+                      setIsLoading(false);
+                  }
+          }
+      };
+
+      fetchMissingData();
+  }, [urlBoardId, game, round]); 
+
+  // Save game state to sessionStorage to persist on reload.
+  // Once the game has ended we stop persisting to avoid redirect loops
+  // (the App-level StrictInGameRedirect uses savedGameData presence as "in game").
+  useEffect(() => {
+    if (gameEndData) {
+      return;
+    }
+    if (game && round) {
+      const stateToSave = {
+        game: game,
+        round: round,
+        isSpectator: isSpectator
+      };
+      sessionStorage.setItem('savedGameData', JSON.stringify(stateToSave));
+    }
+  }, [game, round, isSpectator, gameEndData]);
+  // Estados del tablero
+  const BOARD_COLS = 11;
+  const BOARD_ROWS = 9;
+  const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
+  const [objectiveCards, setObjectiveCards] = useState({});
+  // Estado para cartas objetivo permanentemente reveladas (persiste en sessionStorage)
+  const [permanentlyRevealedGoals, setPermanentlyRevealedGoals] = useState(() => {
+    // Inicializar desde sessionStorage si existe
+    const savedKey = round?.id ? `revealedGoals_${round.id}` : null;
+    if (savedKey) {
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return {};
+        }
+      }
+    }
+    return {};
+  });
+  const [revealedObjective, setRevealedObjective] = useState(null);
+
+  const [destroyingCell, setDestroyingCell] = useState(null); 
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingSteps, setLoadingSteps] = useState([{label: 'Loading Game Data', completed:false}, 
+    {label: 'Loading Players', completed:false}, {label: 'Loading Board', completed:false}, {label: 'Loading Cards', completed:false}, 
+    {label: 'Loading Chat', completed:false}, {label: 'Assigning Rols', completed:false}, {label: 'Initializing Game State', completed:false}]);
+
+  const updateLoadingStep = (stepIndex, completed = true) => {
+    setLoadingSteps(prev => {
+      const up = [...prev];
+      up[stepIndex].completed = completed;
+      const completedCont = up.filter(s => s.completed).length;
+      const progress = Math.round((completedCont/up.length)*100);
+      setLoadingProgress(progress);
+      return up})}; 
+
+  const [spectatorRequests, setSpectatorRequests] = useState([]);
+  const creatorUsername = game?.creator?.username || game?.creator;
+  const isCreator = creatorUsername === loggedInUser?.username;
+
+  const handleExitSpectatorMode = () => {
+    if (!isSpectator) return;
+
+    toast.dismiss();
+    sessionStorage.removeItem('newRoundData');
+
+    const returnTo = location?.state?.returnTo;
+    navigate(returnTo || '/ListGames');
+  };
+
+  const [boardCells, setBoardCells] = useState(() => {
+    const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
+      Array.from({ length: BOARD_COLS }, () => null)
+    );
+    initialBoard[4][1] = { type: 'start', owner: 'system', placedAt: Date.now() };
+    initialBoard[4][9] = { type: 'objective', owner: 'system', placedAt: Date.now() };
+    initialBoard[2][9] = { type: 'objective', placedAt: Date.now() };
+    initialBoard[6][9] = { type: 'objective', placedAt: Date.now() };
+    return initialBoard;
+  });
+
+  const hasPatchedBoardBusy = useRef(false);
+  const hasPatchedInitialLeftCards = useRef(false);
+  const lastLoggedTurn = useRef(null);
+  const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
+  const lastObjectiveHideLog = useRef(0);
+  const lastCollapseLog = useRef(0);
+  const seenPrivateMessages = useRef(new Set());
+  const lastPublishedRoles = useRef([]);
 
 
-useEffect(() => {
-  // console.log("game", game)
+  const boardGridRef = useRef(null);
+  const processingAction = useRef(false);
+  const isTurnChanging = useRef(false);
+  const isNavigatingToNewRound = useRef(false);
+  const hasTriggeredGameEnd = useRef(false);
+  const ROUND_STATE = {
+    ACTIVE: 'ACTIVE',
+    ENDING: 'ENDING',
+    ENDED: 'ENDED'
+  };
+  const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
+  const lastRoundId = useRef(null);
+  const forceRolesReassignment = useRef(false);
+  const playersOutOfCardsLogged = useRef(new Set());
 
-  const fetchPlayerByUsername = async (username) => {
+  useEffect(() => {
+    console.log('🔄 useEffect round.id check - round?.id:', round?.id, 'lastRoundId.current:', lastRoundId.current);
+    if (round?.id && round.id !== lastRoundId.current) {
+      roundEndedRef.current = ROUND_STATE.ACTIVE;
+      if (lastRoundId.current !== null) {
+        forceRolesReassignment.current = true;
+        console.log('🎭 Mark to reassign roles in new round');
+      }
+      playersOutOfCardsLogged.current.clear();
+      hasPatchedInitialLeftCards.current = false;
+      console.log('🔄 hasPatchedInitialLeftCards reset to false');
+      lastRoundId.current = round.id;
+      
+      // Cargar cartas reveladas desde sessionStorage para esta ronda
+      const savedKey = `revealedGoals_${round.id}`;
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setPermanentlyRevealedGoals(parsed);
+          console.log('📋 Loaded revealed goals from sessionStorage:', parsed);
+        } catch (e) {
+          console.error('Error parsing revealed goals from sessionStorage:', e);
+          setPermanentlyRevealedGoals({});
+        }
+      } else {
+        setPermanentlyRevealedGoals({});
+      }
+    }
+  }, [round?.id]);
+
+  // Persistir cartas reveladas en sessionStorage cuando cambien
+  useEffect(() => {
+    if (round?.id && Object.keys(permanentlyRevealedGoals).length > 0) {
+      const savedKey = `revealedGoals_${round.id}`;
+      sessionStorage.setItem(savedKey, JSON.stringify(permanentlyRevealedGoals));
+      console.log('💾 Saved revealed goals to sessionStorage:', permanentlyRevealedGoals);
+    }
+  }, [permanentlyRevealedGoals, round?.id]);
+
+  const lastTurnToast = useRef({username: null, ts: 0}); 
+  const lastTimeoutToastTs = useRef(0);
+  const lastReceivedTurnKey = useRef({ key: null, ts: 0 });
+
+
+  // Hook personalizado para cargar datos del juego
+  const {
+    ListCards,
+    activePlayers,
+    postDeck,
+    getDeck,
+    patchDeck,
+    fetchOtherPlayerDeck,
+    findActivePlayerUsername,
+    loadActivePlayers,
+    loggedActivePlayer,
+    chat,
+    getChat,
+    fetchCards,
+    fetchAndSetLoggedActivePlayer,
+    deck,
+    squaresById,
+    patchSquare,
+    pactchBoard,
+    getBoard,
+    getSquareByCoordinates,
+    getLog,
+    patchLog,
+    getmessagebychatId,
+    patchActivePlayer,
+    patchRound,
+    postRound,
+    getRoundById,
+    notifyRoundEnd
+  } = useGameData(game);
+
+  
+    const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
+    const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
+    const boardMessage = useWebSocket(`/topic/game/${boardId}`);
+    const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
+    const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
+    console.log('- deckTopic:', deckTopic);
+    const deckMessage = useWebSocket(deckTopic);
+    
+    console.log('-WebSocket states:', { boardMessage: boardMessage ? 'connected' : 'null', gameMessage: gameMessage ? 'connected' : 'null',  deckMessage: deckMessage ? 'connected' : 'null'});
+
+    useEffect(() => {
+      if(!boardMessage) return;
+      const {action} = boardMessage;
+
+      switch(action){
+        case "CARD_PLACED":
+          handleWsCardPlaced(boardMessage);
+          if (boardMessage.goalReveals && Array.isArray(boardMessage.goalReveals)) {
+            boardMessage.goalReveals.forEach(goal => {
+              handleWsGoalRevealed(goal);
+              
+              if (goal.goalType === 'gold') {
+                console.log('🏆 Gold revealed → blocking turn immediately');
+                roundEndedRef.current = ROUND_STATE.ENDING;
+                setRoundEnded(true);
+              }
+            });
+          } 
+          else if (boardMessage.goalReveal) {
+            handleWsGoalRevealed(boardMessage.goalReveal);
+
+            if (boardMessage.goalReveal.goalType === 'gold'){
+              console.log('🏆 Gold revealed → blocking turn immediately');
+              roundEndedRef.current = ROUND_STATE.ENDING;
+              setRoundEnded(true);
+            }
+          }
+          break;
+        case "CARD_DESTROYED":
+          handleWsCardDestroyed(boardMessage);
+          break;
+        default:
+          console.warn("WS action unrecognized:", action);
+      }
+    },[boardMessage]);
+
+    useEffect(()=>{
+      if(!gameMessage) return; 
+      
+      if (gameMessage.adminAction) {
+        handleAdminAction(gameMessage);
+        return;
+      }
+
+      const {action} = gameMessage; 
+      switch (action) {
+      case "TURN_CHANGED":
+        handleWsTurnChanged(gameMessage);
+        break;
+
+      case "TOOLS_CHANGED":
+        handleWsToolsChanged(gameMessage);
+        break;
+        
+      case "NEW_ROUND":
+        handleWsNewRound(gameMessage);
+        break;
+        
+      case "ROUND_END":
+        handleWsRoundEnd(gameMessage);
+        break;
+      
+      default:
+        break;
+    }
+    },[gameMessage])
+    
+    const lastProcessedDeckTs = useRef(null);
+
+    if (deckMessage && deckMessage._ts !== lastProcessedDeckTs.current) {
+      lastProcessedDeckTs.current = deckMessage._ts;
+      
+      if (deckMessage.action === "DECK_COUNT") {
+        const { username, leftCards } = deckMessage;
+        setTimeout(() => {
+          setPlayerCardsCount(prev => ({
+            ...prev,
+            [username]: leftCards
+          }));
+          
+          if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
+            playersOutOfCardsLogged.current.add(username);
+            addLog(`🃏 ${username} has run out of cards!`, 'warning');
+          }
+        }, 0);
+      }
+    }
+    
+    useEffect(() => {
+      const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
+      console.log('🔍 playerCardsCount changed:', playerCardsCount, 'totalCards:', totalCards);
+      if (totalCards === 0 && roundEndedRef.current === ROUND_STATE.ACTIVE) {
+        console.log('🔍 Calling checkForRoundEnd because totalCards === 0');
+        checkForRoundEnd();
+      }
+    }, [playerCardsCount]);
+    
+    useEffect(() => {
+    }, [playerOrder]);
+
+    useEffect(() => {
+      if (!isCreator || !game?.chat) return;
+      
+      let cancelled = false;
+      
+      const fetchSpectatorRequests = async () => {
+        try {
+          const res = await fetch(`/api/v1/messages/byChatId?chatId=${game.chat}`, {
+            headers: { Authorization: `Bearer ${jwt}` },
+          });
+          if (!res.ok) return;
+          
+          const msgs = await res.json();
+          const spectatorReqs = extractSpectatorRequests(msgs);
+          
+          if (!cancelled) {
+            setSpectatorRequests(spectatorReqs);
+          }
+        } catch (error) {
+          console.error('Error fetching spectator requests', error);
+        }
+      };
+
+      fetchSpectatorRequests();
+      const interval = setInterval(fetchSpectatorRequests, 5000);
+      return () => { 
+        cancelled = true; 
+        clearInterval(interval); 
+      };
+    }, [isCreator, game?.chat, jwt]);
+    
+    const handleWsCardPlaced =  async ({row, col, card, player, squareId})=>{
+      console.log('📥 WebSocket CARD_PLACED received:', { row, col, card, player, squareId });
+      let fullCard = card;
+      const cardId = typeof card === 'number' ? card : card?.id;
+      
+      if (cardId && Array.isArray(ListCards)) {
+        const foundCard = ListCards.find(c => c.id === cardId);
+        if (foundCard) {
+          fullCard = {
+            ...foundCard,
+            ...card, 
+            arriba: foundCard.arriba,
+            abajo: foundCard.abajo,
+            izquierda: foundCard.izquierda,
+            derecha: foundCard.derecha,
+            centro: foundCard.centro,
+            image: foundCard.image
+          };
+          console.log('✅ Card found in ListCards:', fullCard);
+        } else {
+          console.warn('⚠️ Card not found in ListCards, using WS data');
+        }
+      }
+      
+      console.log('📥 Final card properties:', {
+        id: fullCard?.id,
+        image: fullCard?.image,
+        arriba: fullCard?.arriba,
+        abajo: fullCard?.abajo,
+        izquierda: fullCard?.izquierda,
+        derecha: fullCard?.derecha,
+        centro: fullCard?.centro,
+        rotacion: fullCard?.rotacion
+      });
+      
+      const actor = player || currentPlayer || 'unknown';
+      const now = Date.now();
+      const sameAsLast =
+        lastPlacedLog.current &&
+        lastPlacedLog.current.row === row &&
+        lastPlacedLog.current.col === col &&
+        now - lastPlacedLog.current.ts < 1500;
+
+      if (sameAsLast) return;
+      lastPlacedLog.current = { player: actor, row, col, ts: now };
+
+      setBoardCells(prev => {
+        const next = prev.map(r => r.slice());
+        next[row][col] = {
+          ...fullCard,
+          type: "tunnel",
+          owner: player,
+          placedAt: Date.now(),
+          occupied: true,
+          squareId: squareId,
+          arriba: fullCard?.arriba,
+          abajo: fullCard?.abajo,
+          izquierda: fullCard?.izquierda,
+          derecha: fullCard?.derecha,
+          centro: fullCard?.centro
+        };
+        return next;
+      });
+      addLog(`<b>${actor}</b> placed a card at (${row}, ${col})`, "action");
+    }
+
+    const handleWsCardDestroyed = ({ row, col, player }) => {
+
+      setDestroyingCell({ row, col });
+      setTimeout(() => {
+        setBoardCells(prev => {
+          const next = prev.map(r => r.slice());
+          next[row][col] = null;
+          return next});
+        setDestroyingCell(null);
+      }, 800); 
+    };
+
+  const handleWsGoalRevealed = async ({ row, col, goalType }) => {
+    console.log(`🎯 Received GOAL_REVEALED at (${row}, ${col}) type: ${goalType}`);
+    const normalized = goalType; 
+    const positionKey = `[${row}][${col}]`;
+    
+    // Guardar en permanentlyRevealedGoals para persistir en sessionStorage
+    setPermanentlyRevealedGoals(prev => ({
+      ...prev,
+      [positionKey]: goalType.toLowerCase()
+    }));
+    
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      
+      if (next[row] && next[row][col]) {
+        next[row][col] = {
+          ...next[row][col], 
+          revealed: true, 
+          cardType: goalType.toLowerCase() 
+        };
+      }
+      return next;
+    });
+
+    setObjectiveCards(prev => ({
+      ...prev, 
+      [positionKey]: normalized
+    }));
+    
+    addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
+    if (goalType.toLowerCase() === 'gold') {
+      console.log("🏆 GOLD DETECTED. Ending round immediately...");
+      const mockResult = {
+        ended: true,
+        reason: 'GOLD_REACHED',
+        winnerTeam: 'MINERS',
+        goldPosition: `[${row}][${col}]`
+      };
+      await handleRoundEnd(mockResult);
+    }
+  };
+  
+  
+    // Handlers para solicitudes de espectador
+    const deleteMessagesByIds = async (ids) => {
+      const safeIds = (ids || []).filter(id => id !== null && id !== undefined);
+      if (safeIds.length === 0) return;
+
+      const results = await Promise.all(
+        safeIds.map((id) =>
+          fetch(`/api/v1/messages/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          })
+        )
+      );
+
+      const failed = results.filter(r => !r.ok);
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} message(s)`);
+      }
+    };
+
+    const handleAcceptSpectatorRequest = async (username) => {
+      try {
+        toast.success(`${username} accepted as spectator`);
+
+        const reqIds = (spectatorRequests || [])
+          .filter(s => s.username === username)
+          .map(s => s.messageId)
+          .filter(id => id !== null && id !== undefined);
+        const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+        
+        // Enviar mensaje de aceptación
+        const acceptMessage = {
+          content: requestId !== null
+            ? `SPECTATOR_ACCEPTED:${username}:${game.id}:${requestId}`
+            : `SPECTATOR_ACCEPTED:${username}:${game.id}`,
+          activePlayer: loggedInUser.username,
+          chat: game.chat
+        };
+        
+        await fetch(`/api/v1/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify(acceptMessage),
+        });
+
+        const msgsToDelete = spectatorRequests
+          .filter(s => s.username === username)
+          .map(s => s.messageId);
+
+        await deleteMessagesByIds(msgsToDelete);
+        
+        setSpectatorRequests(prev => prev.filter(p => p.username !== username));
+        
+      } catch (err) {
+        console.error(err);
+        toast.error('Error to accept spectator request.');
+      }
+    };
+
+    const handleDenySpectatorRequest = async (username) => {
+      try {
+        const reqIds = (spectatorRequests || [])
+          .filter(s => s.username === username)
+          .map(s => s.messageId)
+          .filter(id => id !== null && id !== undefined);
+        const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+
+        // Enviar mensaje de rechazo
+        const denyMessage = {
+          content: requestId !== null
+            ? `SPECTATOR_DENIED:${username}:${game.id}:${requestId}`
+            : `SPECTATOR_DENIED:${username}:${game.id}`,
+          activePlayer: loggedInUser.username,
+          chat: game.chat
+        };
+        
+        await fetch(`/api/v1/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify(denyMessage),
+        });
+
+        const msgsToDelete = spectatorRequests
+          .filter(s => s.username === username)
+          .map(s => s.messageId);
+
+        await deleteMessagesByIds(msgsToDelete);
+        
+        toast.info(`${username} spectator request denied`);
+        setSpectatorRequests(prev => prev.filter(p => p.username !== username));
+        
+      } catch (err) {
+        console.error(err);
+        toast.error('Error to deny spectator request.');
+      }
+    };
+
+    const handleAdminAction = (message) => {
+      const {adminAction} = message;
+      const currentUser = tokenService.getUser()?.username;
+
+      if (adminAction.action === "FORCE_FINISH") {
+        toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
+        setTimeout(() => {
+          sessionStorage.removeItem('savedGameData');
+          sessionStorage.removeItem('newRoundData');
+          navigate('/lobby')}, 3000);
+
+      } else if (adminAction.action === "PLAYER_EXPELLED") {
+        if (adminAction.affectedPlayer === currentUser) {
+          toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
+          setTimeout(() => {
+            sessionStorage.removeItem('savedGameData');
+            sessionStorage.removeItem('newRoundData');
+            navigate('/lobby')}, 3000);
+        } else {
+          toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
+          if (message.game) {
+            setGame(message.game)}}}
+    };
+
+    const handleWsTurnChanged = async (message) =>{
+      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+        console.log('⛔ TURN_CHANGED ignored: round ended');
+        return;
+      }
+      const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
+      const { newTurnIndex, roundId, leftCards } = payload;
+      const turnKey = `${roundId}:${newTurnIndex}`;
+      const now = Date.now();
+      if (lastReceivedTurnKey.current.key === turnKey && (now - lastReceivedTurnKey.current.ts) < 2000) {
+          return;
+      }
+      lastReceivedTurnKey.current = { key: turnKey, ts: now };
+
+      setRound(prev => ({ ...prev, id: roundId, turn: newTurnIndex }));
+
+      if(leftCards !== undefined && leftCards !== null){
+        setDeckCount(leftCards);
+      }
+
+      if (playerOrder && playerOrder.length > 0) {
+        const safeIndex = newTurnIndex % playerOrder.length;
+        const nextPlayerObj = playerOrder[safeIndex];
+
+        if (nextPlayerObj) {
+          const nextUsername = nextPlayerObj.username;
+          const nextClass = `player${safeIndex + 1}`; 
+
+          setCurrentPlayer(nextUsername);
+        
+          setCont(timeturn);
+
+          if (lastLoggedTurn.current !== nextUsername) {
+            addLog(`Turn of <span class="${nextClass}">${nextUsername}</span>`, "turn");
+            lastLoggedTurn.current = nextUsername;
+          }
+
+          if (nextUsername === loggedInUser.username) {
+            const now2 = Date.now(); 
+            const last = lastTurnToast.current;
+            if (last.username !== nextUsername || (now2 - last.ts) > 3000) {
+              toast.info("🎲 It's your turn! 🎲");
+              lastTurnToast.current = { username: nextUsername, ts: now2 };
+            }
+          }
+        }
+      }
+    }; 
+
+    const handleWsToolsChanged = (message) =>{
+      const {username, tools} = message; 
+      setPlayerTools(prev => ({
+        ...prev,
+        [username]:{
+          pickaxe: tools.pickaxe,
+          candle: tools.candle,
+          wagon: tools.wagon
+        }
+      }));
+    };
+    
+    // Handler para cuando se crea una nueva ronda - todos los jugadores navegan al nuevo board
+const handleWsNewRound = (message) => {
+  const { newRound, boardId } = message;
+  console.log('🔄 WS NEW_ROUND received:', message);
+  
+  // Limpiar sessionStorage anterior para evitar conflictos
+  sessionStorage.removeItem('savedGameData');
+  
+  // Guardar datos en sessionStorage para recuperarlos después del reload
+  sessionStorage.setItem('newRoundData', JSON.stringify({
+    game: game,
+    round: newRound,
+    isSpectator: isSpectator
+  }));
+  
+  // Navegar y forzar reload para reiniciar todo el estado
+  const targetBoardId = boardId || newRound?.board;
+  console.log('Navigating to board:', targetBoardId);
+  window.location.href = `/board/${targetBoardId}`;
+};
+    
+    const handleWsRoundEnd = (message) => {
+      const { winnerTeam, reason, goldDistribution, playerRoles, roundId } = message;
+      console.log('🏆 WS ROUND_END received:', message, 'current round.id:', round?.id);
+
+      if (roundId && round?.id && roundId !== round.id) {
+        console.log('🏆 Ignoring ROUND_END from different round:', roundId, '!=', round.id);
+        return;
+      }
+      roundEndedRef.current = ROUND_STATE.ENDED;
+      setRoundEnded(true);
+      
+      isNavigatingToNewRound.current = false;
+      const roundResult = {
+        winnerTeam,
+        reason,
+        goldDistribution,
+        playerRoles
+      };
+      
+      setRoundEndData(roundResult);
+      setRoundEndCountdown(10);
+    };
+    
+    const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
+    if (processingAction.current) return;
+    processingAction.current = true;
+
+    if (roundEndedRef.current === ROUND_STATE.ENDED) {
+      toast.info("The round has already ended");
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
-        method: "GET",
+      if (isSpectator) {
+        addPrivateLog("Spectators cannot place cards", "warning");
+        return;
+      }
+
+      const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
+
+      if (loggedInUser.username !== currentPlayer) {
+        toast.warning("It's not your turn!");
+        return;
+      }
+      
+      const currentPlayerTools = playerTools[loggedInUser.username];
+      if (currentPlayerTools) {
+        const hasBrokenTool = !currentPlayerTools.pickaxe || !currentPlayerTools.candle || !currentPlayerTools.wagon;
+        if (hasBrokenTool) {
+          toast.error("🔧 You can't place tunnel cards while you have a broken tool!");
+          return;
+        }
+      }
+      
+      setCont(timeturn);
+
+      let actualSquareId = squareId;
+      if (!actualSquareId) {
+        const square = await getSquareByCoordinates(boardId, col, row);
+        if (square) {
+          actualSquareId = square.id;
+        } else {
+          toast.error('Could not find square at this position');
+          return;
+        }
+      }
+
+      patchSquare(actualSquareId, {
+        occupation: true,
+        card: card?.id || card,
+      });
+
+      if (window.removeCardAndDraw) {
+        window.removeCardAndDraw(cardIndex);
+      }
+      const newDeckCount = Math.max(0, deckCount - 1);
+      setDeckCount(newDeckCount);
+      setCollapseMode({ active: false, card: null, cardIndex: null });
+      toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
+
+      if (roundEndedRef.current === ROUND_STATE.ACTIVE) {
+        nextTurn({newDeckCount: newDeckCount});
+      }
+    } finally {
+      processingAction.current = false;
+    }
+  };
+
+const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = null) => {
+  if (processingAction.current) return;
+  if (roundEndedRef.current === ROUND_STATE.ENDED) return;
+  processingAction.current = true;
+  try {
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+    const success = await handleActionCardUtil(card, targetPlayer, cardIndex, {
+      isSpectator,
+      loggedInUser,
+      currentPlayer,
+      playerTools,
+      setPlayerTools,
+      addLog,
+      addPrivateLog,
+      nextTurn,
+      setDeckCount,
+      activePlayers,
+      patchActivePlayer,
+      selectedTool,
+    });
+    if (success) {
+      setCont(timeturn);
+    }
+  } finally {
+    processingAction.current = false;
+  }
+};
+
+  const handleMapCard = (card, objectivePosition, cardIndex) => {
+    if (processingAction.current) return;
+    processingAction.current = true;
+    try {
+      if (isSpectator) {
+        addPrivateLog("ℹ️ Spectators cannot use this", "warning");
+        return;}
+      setCont(timeturn);
+
+      const objectiveCardType = objectiveCards[objectivePosition];
+      setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); 
+      toast.info(`🔍 Revealing objective... Look at the board!`);
+      setTimeout(() => {
+        setRevealedObjective(null);
+        const now = Date.now();
+        if (now - lastObjectiveHideLog.current > 2000) {
+          addPrivateLog('🔍 Objective card hidden again', 'info');
+          lastObjectiveHideLog.current = now;
+        }
+      }, 5000);
+
+      if (window.removeCardAndDraw) {
+        window.removeCardAndDraw(cardIndex);}
+
+      setCollapseMode({ active: false, card: null, cardIndex: null });
+      const newDeckCount = Math.max(0, deckCount - 1);
+      setDeckCount(newDeckCount);
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      addColoredLog(currentIndex,currentPlayer,`🗺️ Used a map card to reveal an objective`);
+      
+      nextTurn({newDeckCount: newDeckCount});
+    } finally {
+      processingAction.current = false;
+    }
+  };
+
+const activateCollapseMode = (card, cardIndex) => {
+    setCollapseMode({ active: true, card, cardIndex });
+    toast.info('💣Click on a tunnel card to destroy it');
+    const now = Date.now();
+    if (now - lastCollapseLog.current > 2000) {
+      addPrivateLog('💣Click on a tunnel card in the board to destroy it', 'info');
+      lastCollapseLog.current = now;
+    }
+  };
+
+  const handleCellClick = async (row, col) => {
+  if (!collapseMode.active) return;
+  if (processingAction.current) return;
+  if (roundEndedRef.current === ROUND_STATE.ENDED) return;
+  processingAction.current = true;
+
+  const cell = boardCells[row][col];
+  if (!cell || cell.type === 'start' || cell.type === 'objective') {
+    processingAction.current = false;
+    return;
+  }
+ 
+  if (cell.type !== 'tunnel') {
+    toast.warning('🔴You can only destroy tunnel cards');
+    processingAction.current = false;
+    return;
+  }
+
+  setCont(timeturn);
+  setDestroyingCell({ row, col });
+
+  try {  
+    if (cell.squareId) {
+      patchSquare(cell.squareId, {
+        occupation: false,
+        card: null,
+      });
+    } else {
+      console.error(`❌ ERROR: If you want to destroy the cell [${row},${col}] but no have squareId. The server request CANCELLED.`);
+      toast.error("Error of sincronizitation: Cannot destroy the card on the server.");
+      return; 
+    }
+
+    setBoardCells(prev => {
+      const next = prev.map(r => r.slice());
+      next[row][col] = null; 
+      return next;
+    });
+
+    if (window.removeCardAndDraw) {
+      window.removeCardAndDraw(collapseMode.cardIndex);
+    }
+
+    const newDeckCount = Math.max(0, deckCount - 1);
+    setDeckCount(newDeckCount);
+
+    const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+    addColoredLog(
+      currentIndex,
+      playerOrder[currentIndex].username,
+      `💣 Destroyed a tunnel card at [${row},${col}]. ${newDeckCount} cards left in the deck.`
+    );
+
+    toast.success('Tunnel card destroyed!');
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+    setDestroyingCell(null);
+    nextTurn({newDeckCount: newDeckCount});
+  } finally {
+    processingAction.current = false;
+  }
+};
+
+
+  useEffect(() => {
+    window.activateCollapseMode = activateCollapseMode;
+    return () => {
+      delete window.activateCollapseMode;
+    };
+  }, []);
+  const addLog = (msg, type = "info") => {
+    appendAndPersistLog(msg, type);
+  };
+  const addPrivateLog = () => {};
+
+  const addColoredLog = (playerIndex, playerName, action) => {
+    const coloredName = `<span class="player${playerIndex + 1}">${playerName}</span>`;
+    addLog(`${coloredName} ${action}`, "action");
+  };
+
+  const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
+    if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+    console.log('⛔ nextTurn blocked: round ended');
+    return false;
+    }
+    if (isTurnChanging.current && !force) return false;
+    if (playerOrder.length === 0) return false;
+
+    isTurnChanging.current = true;
+    setTimeout(() => { isTurnChanging.current = false; }, 1000);
+
+    setCollapseMode({ active: false, card: null, cardIndex: null });
+
+    const currentTurnIndex = round?.turn || 0; 
+    const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
+
+    try{
+      if(round && round.id){
+        const patchBody = {turn: nextIndex};
+        if(newDeckCount !== null){
+          patchBody.leftCards = newDeckCount; 
+        }
+
+        patchRound(round.id, patchBody);
+
+      }else{
+        console.error("No round ID available");
+      }
+      return true; 
+    } catch(error){
+      console.error("Error passing turn:", error);
+      toast.error("Error passing turn.");
+      isTurnChanging.current = false;
+      return false;
+    }
+  };
+
+  const checkForRoundEnd = async () => {
+    console.log('🔍 checkForRoundEnd called. roundEndedRef:', roundEndedRef.current, 'deck:', deck?.id, 'deckCount:', deckCount);
+    
+    if (roundEndedRef.current === ROUND_STATE.ENDED) {
+      console.log('🔍 checkForRoundEnd: round already ended, exiting');
+      return;
+    }
+    
+    if (!deck || !deck.id) {
+      console.log('🔍 checkForRoundEnd: deck not available, exiting');
+      return;
+    }
+    
+    const roundEndResult = await checkRoundEnd(boardCells, deckCount, activePlayers, objectiveCards, playerCardsCount);
+    console.log('🔍 checkForRoundEnd result:', roundEndResult);
+    
+    if (roundEndResult.ended) {
+      roundEndedRef.current = ROUND_STATE.ENDED; 
+      setRoundEnded(true);
+      if (roundEndResult.reason === 'GOLD_REACHED' && roundEndResult.goldPosition) {
+        const [r, c] = roundEndResult.goldPosition
+          .replace('[', '')
+          .replace(']', '')
+          .split(',')
+          .map(Number);
+
+        setBoardCells(prev => {
+          const next = prev.map(row => row.slice());
+          if (next[r]?.[c]) {
+            next[r][c] = {
+              ...next[r][c],
+              revealed: true,
+              cardType: 'gold'
+            };
+          }
+          return next;
+        });
+      }
+      handleRoundEnd(roundEndResult);
+    }
+  };
+
+  const handleLastRoundEnd = async (result) => {
+    console.log('Final of last round - Preparing game end...');
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await loadActivePlayers();
+    
+    const playerRankings = roundEndData?.goldDistribution?.map(p => ({
+      username: p.username,
+      totalNuggets: p.totalNuggets || 0
+    })) || [];
+    
+    console.log('📊 Player rankings:', playerRankings);
+    const sortedRankings = [...playerRankings].sort((a, b) => b.totalNuggets - a.totalNuggets);
+    const winnerUsername = sortedRankings.length > 0 ? sortedRankings[0].username : null;
+    console.log('👑 Winner:', winnerUsername);
+
+    // Solo el primer jugador procesa las estadísticas y logros (para evitar duplicados)
+    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    
+    if (isFirstPlayer && winnerUsername) {
+      try {
+        console.log('🏆 Processing game statistics and achievements for game:', game.id);
+        const achievementResponse = await fetch(`/api/v1/achievements/process/${game.id}?winnerUsername=${encodeURIComponent(winnerUsername)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`
+          }
+        });
+        if (achievementResponse.ok) {
+          console.log('✅ Game statistics and achievements processed successfully');
+        } else {
+          console.error('❌ Error processing game statistics and achievements:', achievementResponse.status);
+        }
+      } catch (error) {
+        console.error('❌ Error processing game statistics and achievements:', error);
+      }
+    }
+  
+    setGameEndData({ playerRankings });
+    setGameEndCountdown(10);
+  };
+
+  const handleRoundEnd = async (result) => {
+    const { reason, winnerTeam, goldPosition } = result;
+    
+    // Verificar si soy el primer jugador (responsable de calcular y enviar datos)
+    let firstPlayerUsername = null;
+    if (playerOrder.length > 0) {
+        firstPlayerUsername = playerOrder[0]?.username;
+    } else if (activePlayers.length > 0) {
+        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
+        firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
+    }
+
+    const isFirstPlayer = firstPlayerUsername && loggedInUser?.username && firstPlayerUsername === loggedInUser?.username;
+    const shouldExecuteLogic = isFirstPlayer || result.forcedByCreator;
+
+    console.log(`🤖 handleRoundEnd Check: isFirstPlayer=${isFirstPlayer}, forced=${result.forcedByCreator} -> Executing=${shouldExecuteLogic}`);
+    
+    if (reason === 'GOLD_REACHED') {
+      addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
+      
+      if (revealedObjective?.position !== goldPosition) {
+        setRevealedObjective({ position: goldPosition, cardType: 'gold' });
+      }
+    } else if (reason === 'NO_CARDS' || reason === 'ALL_PLAYERS_OUT_OF_CARDS') {
+      addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
+    }
+
+    // Solo el primer jugador (o el creador si forzó el fin) calcula y envía los datos
+    if (shouldExecuteLogic) {
+      console.log('I am responsible (FirstPlayer or Creator), calculating gold distribution...');
+      console.log('activePlayers with roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
+      
+      // Distribuir pepitas de oro y obtener la distribución para el modal
+      const winnerRol = winnerTeam === 'MINERS' ? false : true;
+      const goldDistribution = await distributeGold(activePlayers, winnerRol);
+      await loadActivePlayers();
+      
+      const playerRolesData = activePlayers.map(p => ({
+        username: p.user?.username || p.username,
+        rol: p.rol === true ? 'SABOTEUR' : 'MINER'}));
+      
+      console.log('playerRolesData ready:', playerRolesData);
+      isNavigatingToNewRound.current = false;
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      await patchRound(round.id, { winnerRol: winnerRol });
+
+      const result = await notifyRoundEnd(round.id, {
+        winnerTeam,
+        reason,
+        goldDistribution,
+        playerRoles: playerRolesData
+      });
+      
+      if (!result) {
+        setRoundEndData({ winnerTeam, reason, goldDistribution, playerRoles: playerRolesData });
+        setRoundEndCountdown(10);
+      }
+    }
+    
+  };
+
+  useEffect(() => {
+    if (!roundEndData) return;
+    
+    const interval = setInterval(() => {
+      setRoundEndCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [roundEndData]);
+
+  useEffect(() => {
+    if (!roundEndData || roundEndCountdown > 0) return;
+
+    // Determinar robustamente quién es el primer jugador
+    let firstPlayerUsername = null;
+    if (playerOrder.length > 0) {
+        firstPlayerUsername = playerOrder[0]?.username;
+    } else if (activePlayers.length > 0) {
+        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
+        firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
+    }
+
+    const isFirstPlayer = firstPlayerUsername && loggedInUser?.username && firstPlayerUsername === loggedInUser?.username;
+    console.log(`🔄 Navigation Check: isFirstPlayer=${isFirstPlayer}`);
+    
+    const isLastRound = round?.roundNumber === 3;
+
+    if (isLastRound) {
+      if (hasTriggeredGameEnd.current) return;
+      hasTriggeredGameEnd.current = true;
+      handleLastRoundEnd(roundEndData);
+      return;
+    }
+
+    // Solo el primer jugador crea la nueva ronda
+    // Los demás esperarán el mensaje WebSocket NEW_ROUND
+    if (!isFirstPlayer) {
+      console.log('🔄 Not the first player, waiting for WebSocket NEW_ROUND message...');
+      return; // Los demás jugadores esperan el WebSocket
+    }
+    
+    if (isNavigatingToNewRound.current) return;
+    isNavigatingToNewRound.current = true;
+    
+    const createNewRound = async () => {
+      try {
+        console.log('🔧 Resetting tools for all players...');
+        await resetToolsForNewRound(activePlayers);
+        
+        const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
+        console.log('✅ New round created:', newRound);
+        
+        // El backend enviará el WebSocket NEW_ROUND a todos los jugadores
+        // La navegación real se hace en handleWsNewRound cuando llegue el mensaje
+        // Pero por si acaso el WS no llega, navegamos directamente
+        if (newRound && newRound.board) {
+          sessionStorage.setItem('newRoundData', JSON.stringify({
+            game: game,
+            round: newRound,
+            isSpectator: isSpectator
+          }));
+          window.location.href = `/board/${newRound.board}`;
+        }
+        
+      } catch (error) {
+        console.error('❌ Error creating new round:', error);
+        toast.error('Error creating new round');
+        isNavigatingToNewRound.current = false;
+      }
+    };
+    
+    createNewRound();
+  }, [roundEndCountdown, roundEndData, activePlayers, playerOrder, loggedInUser, round, game]);
+
+  useEffect(() => {
+    if (!gameEndData) return;
+    
+    const interval = setInterval(() => {
+      setGameEndCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [gameEndData]);
+
+  useEffect(() => {
+    if (!gameEndData || gameEndCountdown > 0) return;
+    
+    console.log('🏁 Game finished, returning to lobby...');
+    sessionStorage.removeItem('savedGameData');
+    sessionStorage.removeItem('newRoundData');
+    navigate('/lobby');
+  }, [gameEndCountdown, gameEndData, navigate]);
+
+  const handleDiscard = () => {
+    if (processingAction.current) return;
+    if (roundEndedRef.current === ROUND_STATE.ENDED) return;
+    processingAction.current = true;
+    try {
+      if (isSpectator) {
+        toast.info("🔍 Spectators cannot discard cards");
+        return;
+      }
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      if (loggedInUser.username !== currentPlayer) {
+        toast.warning("It's not your turn!");
+        return;
+      }
+      if (window.discardSelectedCard && window.discardSelectedCard()) {
+        const newDeckCount = Math.max(0, deckCount - 1);
+        setDeckCount(newDeckCount);
+        setCollapseMode({ active: false, card: null, cardIndex: null });
+        nextTurn({newDeckCount: newDeckCount});
+        addColoredLog(
+          currentIndex,
+          playerOrder[currentIndex].username,
+          `🎴 Discarded a card and take one. ${newDeckCount} cards left in the deck.`);
+        toast.success('Card discarded successfully!');
+        
+      } else {
+        toast.warning("Please select a card to discard (right-click in the card)");}
+    } finally {
+      processingAction.current = false;
+    }
+  };
+
+  const handleTurnTimeOut = () => {
+    if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+      console.log("Timeout ignored: round has ended.");
+      return; 
+    }
+    if (processingAction.current) return;
+    const now = Date.now();
+      if ((now - lastTimeoutToastTs.current) > 3000) {
+        toast.error("⌛ Time's up! Passing turn...");
+        lastTimeoutToastTs.current = now;
+      }
+    nextTurn({ force: true });
+  };
+
+  const handleForceEndRound = async () => {
+    if (!isCreator) {
+      toast.error('Only the game creator can force end the round');
+      return}
+
+    if (processingAction.current) return;
+    processingAction.current = true;
+
+    try {
+      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
+        toast.info('Round already ending or ended');
+        return}
+
+      const objectivePositions = [ '[2][9]', '[4][9]', '[6][9]' ];
+      let goldPosKey = objectivePositions.find(k => objectiveCards[k] === 'gold');
+      if (!goldPosKey) {
+        goldPosKey = objectivePositions[0];
+      }
+
+      // Parsear coordenadas
+      const match = goldPosKey.match(/\[(\d+)\]\[(\d+)\]/);
+      const r = match ? Number(match[1]) : 4;
+      const c = match ? Number(match[2]) : 9;
+
+      // Revelar visualmente la carta objetivo
+      setBoardCells(prev => {
+        const next = prev.map(row => row.slice());
+        if (next[r] && next[r][c]) {
+          next[r][c] = {
+            ...next[r][c],
+            revealed: true,
+            cardType: 'gold'
+          };
+        }
+        return next;
+      });
+
+      roundEndedRef.current = ROUND_STATE.ENDING;
+      setRoundEnded(true);
+
+      const mockResult = {
+        ended: true,
+        reason: 'GOLD_REACHED',
+        winnerTeam: 'MINERS',
+        goldPosition: `[${r}][${c}]`,
+        forcedByCreator: true
+      };
+
+      await handleRoundEnd(mockResult);
+    } finally {
+      processingAction.current = false;
+    }
+  };
+  const postMessage = async (content, activePlayerUsername, chatId) => {
+    try {
+      const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${jwt}`,
         },
+        body: JSON.stringify({
+          content: content,
+          activePlayer: activePlayerUsername,
+          chat: chatId,
+        }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        // console.log('players', data)
-        return data;
-      } else {
-        console.error('Respuesta no OK:', response.status);
-        alert('Error al obtener el jugador.');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error to send a message:', errorText);
+        toast.error('Error to send a message');
       }
     } catch (error) {
-      console.error('Hubo un problema con la petición fetch:', error);
-      alert('Error de red. No se pudo conectar con el servidor.');
+      console.error('Network error while sending message:', error);
+      toast.error('Network error. Could not send the message.');
     }
   };
 
-  const loadActivePlayers = async () => {
-    const initialPlayers = game?.activePlayers || [];
-    //prueba
-    const usernames = ['Alexby205', 'Mantecao', 'Julio', 'Fran', 'Javi Osuna', 'Victor', 'Luiscxx', 'DiegoREY', 'Bedilia'];
-    //prueba
-    const mockPlayers = usernames.map((username, index) => ({
-      username,
-      birthDate: new Date(1990 + index, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(), 
-      profileImage: avatar, 
-      wins: Math.floor(Math.random() * 10), 
-    }));
-    /*const fetchedPlayers = await Promise.all(initialPlayers.map(username => fetchPlayerByUsername(username)));
-    const validPlayers = fetchedPlayers.filter(player => player !== null); */
-    const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
-    try{
-      const player = await fetchPlayerByUsername(username);
-      if (!player) return null;
-      return {
-        username: player.username,
-        birthDate: player.birthDate,
-        profileImage: player.image || avatar, // Usa su imagen real o el avatar por defecto
-        wins: player.wins ?? 0,
+  const resolveActivePlayerUsername = () => {
+    if (isSpectator) return loggedInUser?.username;
+    return loggedActivePlayer?.username;
+  };
+
+  const chatIdFromState = () => chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
+
+  const SendMessage = async (e) => {
+    e.preventDefault();
+
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage) {
+      return;
+    }
+
+    const messagePrefix = isSpectator ? '[]' : '';
+    const finalMessage = messagePrefix + trimmedMessage;
+
+    if (!isSpectator && !loggedActivePlayer) {
+      toast.error('Cannot identify your active player');
+      console.error('ActivePlayer not available for user:', loggedInUser.username);
+      return;
+    }
+
+    const activePlayerUsername = resolveActivePlayerUsername();
+
+    if (!activePlayerUsername) {
+      toast.error('Cannot identify your username');
+      console.error('Username not found. isSpectator:', isSpectator, 'loggedActivePlayer:', loggedActivePlayer);
+      return;
+    }
+
+    const chatId = chatIdFromState();
+
+    if (!chatId) {
+      toast.error('Cannot identify the game chat');
+      console.error('Chat ID not found. chat state:', chat, 'game:', game);
+      return;
+    }
+
+    setMessage(prev => [...prev, { author: loggedInUser.username, text: finalMessage }]);
+    await postMessage(finalMessage, activePlayerUsername, chatId);
+    setNewMessage('');
+  };
+
+  const appendAndPersistLog = async (msg, type = "info") => {
+    setGameLog(prev => [...prev, { msg, type }]);
+
+    const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+    const roundId = typeof round?.id === 'number' ? round.id : round?.round?.id;
+
+    const nextMessages = [...(logData?.messages || []), msg];
+
+    if (logId && roundId) {
+      setLogData(prev => ({
+        ...(prev || {}),
+        id: logId,
+        messages: nextMessages
+      }));
+      patchLog(logId, { round: roundId, messages: nextMessages });
+    }
+  };
+
+  useEffect(() => {
+    const initializeGame = async () => {
+      try {
+        updateLoadingStep(0);
+        await fetchCards();
+        updateLoadingStep(1);
+        await loadActivePlayers();
+        updateLoadingStep(2);
+        const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+        if (logId) {
+          const log = await getLog(logId);
+          if (log) {
+            setLogData(log);
+            const mapped = (log.messages || []).map(m => ({ msg: m, type: "info" }));
+            setGameLog(mapped);}}
+        
+        updateLoadingStep(3);
+        updateLoadingStep(4);
+        await getChat();
+        await fetchAndSetLoggedActivePlayer();
+        updateLoadingStep(5);
+
+        async function handlerounds() {
+          const irounds = game?.rounds?.length || 0;
+          if (irounds <= 0) {
+            setNumRound(1);}}
+        await handlerounds();
+        updateLoadingStep(6);
+
+        if (isSpectator) {
+          addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
+          toast.info('Spectator mode activated✅');}
+
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error('Error initializing game:', error);
+        toast.error('Error loading game data');
+        setIsLoading(false);
+      }
+    };
+
+    initializeGame();
+  }, []);
+
+  useEffect(() => {
+    const fetchLogForRound = async () => {
+      const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+      if (!logId) return;
+
+      const log = await getLog(logId);
+      if (log) {
+        setLogData(log);
+        const mapped = (log.messages || []).map(m => ({ msg: m, type: "info" }));
+        setGameLog(mapped);
+      }
+    };
+
+    fetchLogForRound();
+  }, [round]);
+
+  useEffect(() => {
+    if (activePlayers.length > 1) {
+      const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
+      setPlayerOrder(res);
+      
+      const initialTurnIndex = round?.turn || 0;
+      const safeIndex = initialTurnIndex % res.length;
+      const initialPlayerUsername = res[safeIndex].username;
+
+      setCurrentPlayer(prev => {
+        if (prev && res.find(p => p.username === prev)) {
+          return prev;
+        }
+        return initialPlayerUsername;
+      });
+    }
+  }, [activePlayers, round]);
+
+  useEffect(() => {
+    if (boardGridRef.current) {
+      const scrollHeight = boardGridRef.current.scrollHeight;
+      const clientHeight = boardGridRef.current.clientHeight;
+      const centerScroll = (scrollHeight - clientHeight) / 2;
+      boardGridRef.current.scrollTop = centerScroll;
+    }
+  }, [boardCells]);
+
+  useEffect(() => {
+    const fetchCompleteGame = async () => {
+      if (!game?.id) return;
+
+      try {
+        const response = await fetch(`/api/v1/games/${game.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          }
+        });
+
+        if (response.ok) {
+          const completeGame = await response.json();
+          setGame(completeGame);
+        }
+      } catch (error) {
+        console.error('Error loading complete game:', error);
+      }
+    };
+
+    fetchCompleteGame();
+  }, []);
+
+  useEffect(() => {
+    if (activePlayers.length === 0) return;
+
+    const initialTools = {};
+    activePlayers.forEach(player => {
+      initialTools[player.username] = {
+        candle: player.candleState ?? true,
+        wagon: player.cartState ?? player.wagon ?? true,
+        pickaxe: player.pickaxeState ?? true
       };
-    }catch (err) {
-        console.error(`Error al cargar datos de ${username}:`, err);
-        return null;
+    });
+    setPlayerTools(initialTools);
+    let cancelled = false;
+
+    const buildRolesFromBackend = () =>
+      activePlayers
+        .filter(player => typeof player.rol === 'boolean')
+        .map(player => ({
+          username: player.username,
+          role: player.rol ? 'SABOTEUR' : 'MINER',
+          roleImg: player.rol ? saboteurRol : minerRol,
+          roleName: player.rol ? 'SABOTEUR' : 'MINER'
+        }));
+
+    const sameRoles = (prev, next) => {
+      if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+      if (prev.length !== next.length) return false;
+      const sortByUser = (arr) => [...arr].sort((a, b) => a.username.localeCompare(b.username));
+      const a = sortByUser(prev);
+      const b = sortByUser(next);
+      return a.every((item, idx) => item.username === b[idx].username && item.role === b[idx].role);
+    };
+
+    const publishRoles = (rolesList) => {
+      if (cancelled) return;
+      if (sameRoles(lastPublishedRoles.current, rolesList)) return;
+
+      lastPublishedRoles.current = rolesList.map(({ username, role }) => ({ username, role }));
+      setPlayerRol(rolesList);
+      if (isSpectator) return;
+
+
+    };
+
+    const persistRoles = async (rolesList) => {
+      const updates = rolesList
+        .map(roleInfo => {
+          const target = activePlayers.find(p => p.username === roleInfo.username);
+          if (!target?.id) return null;
+          return patchActivePlayer(target.id, { rol: roleInfo.role === 'SABOTEUR' });
+        })
+        .filter(Boolean);
+
+      if (updates.length === 0) return;
+
+      try {
+        await Promise.all(updates);
+        await loadActivePlayers();
+      } catch (err) {
+        console.error('Error persisting roles:', err);
+        toast.error('Error saving assigned roles');
+      }
+    };
+
+    const syncRoles = async () => {
+      const expectedSaboteurs = calculateSaboteurCount(activePlayers.length);
+      const backendRoles = buildRolesFromBackend();
+      const saboteursAlready = backendRoles.filter(r => r.role === 'SABOTEUR').length;
+      const rolesComplete =
+        backendRoles.length === activePlayers.length &&
+        saboteursAlready === expectedSaboteurs;
+
+      // Si se fuerza la reasignación (nueva ronda), siempre reasignar roles
+      if (forceRolesReassignment.current) {
+        console.log('🎭 Forcing role reassignment for new round');
+        forceRolesReassignment.current = false;
+        const rolesAssigned = assignRolesGame(activePlayers);
+        publishRoles(rolesAssigned);
+        await persistRoles(rolesAssigned);
+        return;
+      }
+
+      if (rolesComplete) {
+        publishRoles(backendRoles);
+        return;
+      }
+
+      const rolesAssigned = assignRolesGame(activePlayers);
+      publishRoles(rolesAssigned);
+      await persistRoles(rolesAssigned);
+    };
+
+    syncRoles();
+
+    return () => { cancelled = true; };
+  }, [activePlayers]);
+
+  useEffect(() => {
+    if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
+
+    const shouldForceTimeout = !isSpectator && loggedInUser.username === currentPlayer;
+
+    const time = setInterval(() => {
+      setCont((prevCont) => {
+        if (prevCont <= 1) {
+          clearInterval(time);
+          if (shouldForceTimeout) {
+            handleTurnTimeOut();
+          }
+          return 0;
+        }
+        return prevCont - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(time);
+  }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator]);
+
+  useEffect(() => {
+    if (roundEnded) {
+      setCont(0);
     }
-  }));
-    const validPlayers = fetchedPlayers.filter(p => p !== null);
-    setActivePlayers([...validPlayers, ...mockPlayers]); 
-  };
+  }, [roundEnded]);
 
-  loadActivePlayers();
+  useEffect(() => {
+    const initializeLeftCards = async () => {
+      if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
+        const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+        
+        // Hacer fetch fresco del round desde el backend
+        console.log('🃏 Fetching fresh round data for round:', round.id);
+        const freshRound = await getRoundById(round.id);
+        const backendLeftCards = freshRound?.leftCards;
+        const backendTurn = freshRound?.turn;
+        
+        console.log('🃏 Backend Round Data:', { backendLeftCards, backendTurn });
 
-  async function handlerounds() {
-    const irounds = game?.rounds?.length || 0;
-    if (irounds <= 0) {
-      setNumRound(1);
-    }
-  }
+        if (backendLeftCards !== undefined && backendLeftCards !== null && backendLeftCards >= 0) {
+            console.log('🃏 Using backend leftCards:', backendLeftCards);
+            
+            const expectedInitialDeck = 70 - (activePlayers.length * calculateCardsPerPlayer(activePlayers.length));
+            const isFirstTurn = backendTurn === 0 || backendTurn === null || backendTurn === undefined;
 
-  handlerounds();
+            if (isFirstTurn && backendLeftCards !== expectedInitialDeck) {
+                 console.warn(`🃏 Initial deck mismatch! Backend: ${backendLeftCards}, Expected: ${expectedInitialDeck}. Auto-correcting...`);
+                 setDeckCount(expectedInitialDeck);
+                 patchRound(round.id, { leftCards: expectedInitialDeck });
+            } else {
+                 setDeckCount(backendLeftCards);
+            }
+        } else {
+             // Fallback only if backend data is missing
+             console.log("🃏 calculating initial deck locally")
+             const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+             const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
+             setDeckCount(initialDeck);
+             patchRound(round.id, { leftCards: initialDeck });
+        }
 
-  
-}, []);
-useEffect(() => {
-  if(activePlayers.length > 1){
-    const res = [...activePlayers].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate)); 
-    setPlayerOrder(res);
-    setCurrentPlayer(res[0].username);
-    console.log('ORDEN ACTUALIZADO', res);
-  }
-}, [activePlayers]);
+        // ... rest of the logic
+        const initialCounts = {};
+        activePlayers.forEach(p => {
+          if (!p) return; 
+          const name = p.username || p;
+          if (name) {
+             // We don't have per-player card counts from backend round yet? 
+             // We'll trust the WebSocket updates for specific counts, 
+             // or initialize securely if needed. For now, rely on deckMessage.
+            initialCounts[name] = cardsPerPlayer;
+          }
+        });
+        setPlayerCardsCount(initialCounts);
+        hasPatchedInitialLeftCards.current = true;
+      }
+    };
+    
+    initializeLeftCards();
+  }, [activePlayers, round?.id]);
 
-
-
-/*
-useEffect(() => {
-  
-  const fetchActivePlayers = async () => {
+  useEffect(() => {
+  const fetchSquares = async () => {
     try {
-      const response = await fetch(`/api/v1/games/${game.id}/activePlayers`, {
+      const squaresResponse = await fetch(`/api/v1/squares`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          "Authorization": `Bearer ${jwt}`
         }
       });
-      const data = await response.json();
-      setActivePlayer(data);
+
+      if (squaresResponse.ok) {
+        const response = await squaresResponse.json();
+        console.log("Squares:", response);
+      } else {
+        toast.error("Error trying to fetch Squares");
+      }
     } catch (error) {
-      console.error(error);}};
-    fetchActivePlayers();
-  }, [game.id]);
-  */
- //NO HACE FALTA LO COGEMOS DE NAVIGATE 
+      console.error( error);
+      toast.error(error.message);
+    }}
+    fetchSquares(); 
 
-const loggedInUser = tokenService.getUser();
+  }, []);
 
-const assignRolesGame = () => {
-  const n = activePlayers.length;
-  let numSaboteur = 0;
-  let numMiner = 0;
-  if(n===1){numSaboteur = 1; numMiner = 3;}
-  else if(n===4){numSaboteur = 1; numMiner = 3;}
-  else if(n===5){numSaboteur = 2; numMiner = 3;}
-  else if(n===6){numSaboteur = 2; numMiner = 4;}
-  else if(n===7){numSaboteur = 3; numMiner = 4;}
-  else if(n===8){numSaboteur = 3; numMiner = 5;}
-  else if(n===9){numSaboteur = 4; numMiner = 5;}
-  else if(n===10){numSaboteur = 4; numMiner = 6;}
-  else if(n===11){numSaboteur = 5; numMiner = 6;}
-  else if(n===12){numSaboteur = 5; numMiner = 7;}
+  useEffect(() => {
+    if (!round || !round.board || !squaresById) return;
 
-  const sArray = (array) => {
-  const res = [...array];
-  for (let i = res.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i + 1));
-    [res[i], res[j]] = [res[j], res[i]];}
-  return res;};
+    const loadBoard = async () => {
+      const boardId = typeof round.board === 'number' ? round.board : round.board.id;
+      if (!boardId) return;
 
-  const sPlayers = sArray(activePlayers);
-  const roles = sPlayers.map((p, i) => ({
-    username: p.username || p,
-    role: i<numSaboteur ? 'SABOTEUR':'MINER',
-    roleImg: i<numSaboteur ? saboteurRol:minerRol}));
+      let busyIds = [];
+      let boardData = null;
+      
+      if (Array.isArray(round.board.busy) && round.board.busy.length > 0) {
+        busyIds = round.board.busy;
+        boardData = await getBoard(boardId);
+      } else {
+        boardData = await getBoard(boardId);
+        busyIds = (boardData?.busy || []).map(sq => sq.id ?? sq);
+      }
 
-  return roles;};
+      if (boardData?.objectiveCardsOrder) {
+        const order = boardData.objectiveCardsOrder.split(',');
+        console.log('- BOARD DEBUG - objectiveCardsOrder from server:', order);
+        
+        const mapping = {
+          '[2][9]': order[0],
+          '[4][9]': order[1],
+          '[6][9]': order[2]
+        };
+        
+        setObjectiveCards(mapping);
+        console.log('- OBJECTIVE CARDS - Final mapping:', mapping);
+      }
 
-useEffect(() => {
-  if(activePlayers.length > 0){
-    console.log(playerRol)
-    const rolesAssigned = assignRolesGame(activePlayers);
-    setPlayerRol(rolesAssigned); }
-}, [activePlayers]);
+      const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
+        Array.from({ length: BOARD_COLS }, () => null)
+      );
+      baseBoard[4][1] = { type: 'start', owner: 'system', fixed: true };
+      baseBoard[4][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[2][9] = { type: 'objective', owner: 'system', fixed: true };
+      baseBoard[6][9] = { type: 'objective', owner: 'system', fixed: true };
 
+      await Promise.all(
+        busyIds.map(async (squareId) => {
+          const sq = await squaresById(squareId);
+          if (!sq) return;
 
-const nextTurn = () => {
-  if (playerOrder.length === 0) return;
-  const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-  const nextIndex = (currentIndex + 1) % playerOrder.length; 
-  setCurrentPlayer(playerOrder[nextIndex].username);
-  setCont(timeturn);
-  const nextName = playerOrder[nextIndex].username;
-  const nextClass = `player${nextIndex + 1}`;
-  addLog(`🔁 Turn of <span class="${nextClass}">${nextName}</span>`, "turn");};
+          const row = sq.coordinateY;
+          const col = sq.coordinateX;
+          if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+            const existing = baseBoard[row][col];
+            const isSpecial = existing && (existing.type === 'start' || existing.type === 'objective');
+            if (isSpecial) {
+              return; 
+            }
 
+            const cardFromBackend = sq.card;
+            if (!cardFromBackend) {
+              return}
+      
+            const cardId = typeof cardFromBackend === 'number' ? cardFromBackend : cardFromBackend?.id;
+            let fullCard = cardFromBackend;
+            
+            if (cardId && Array.isArray(ListCards)) {
+              const foundCard = ListCards.find(c => c.id === cardId);
+              if (foundCard) {
+                fullCard = {
+                  ...foundCard,
+                  ...cardFromBackend, 
+                  arriba: foundCard.arriba,
+                  abajo: foundCard.abajo,
+                  izquierda: foundCard.izquierda,
+                  derecha: foundCard.derecha,
+                  centro: foundCard.centro,
+                  image: foundCard.image
+                };
+              }
+            }
 
-const deck = () => {
-    return null; // AUN POR DEFINIR, ESTA FUNCIÓN TIENE QUE IR RESTANDO CARTAS DEL MAZO SEGÚN SE VAYA ROBANDO/DESCARTANDO ¿CREAR OTRA FUNCIÓN QUE ASIGNE CARTA DE ESE MAZO A UN JUGADOR?
-};
+            baseBoard[row][col] = {
+              squareId: sq.id,
+              backendType: sq.type,
+              occupied: sq.occupation,
+              card: fullCard,
+              type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
+              image: fullCard?.image,
+              rotacion: fullCard?.rotacion ?? sq.rotacion,
+              arriba: fullCard?.arriba,
+              abajo: fullCard?.abajo,
+              izquierda: fullCard?.izquierda,
+              derecha: fullCard?.derecha,
+              centro: fullCard?.centro
+            };
+          }
+        })
+      );
+      
+      // Restaurar cartas objetivo reveladas desde sessionStorage
+      const savedKey = `revealedGoals_${round.id}`;
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const revealedGoals = JSON.parse(saved);
+          console.log('🔄 Restoring revealed goals from sessionStorage:', revealedGoals);
+          
+          Object.entries(revealedGoals).forEach(([posKey, cardType]) => {
+            // Parsear la clave de posición "[row][col]" 
+            const match = posKey.match(/\[(\d+)\]\[(\d+)\]/);
+            if (match) {
+              const row = parseInt(match[1], 10);
+              const col = parseInt(match[2], 10);
+              if (baseBoard[row] && baseBoard[row][col]) {
+                baseBoard[row][col] = {
+                  ...baseBoard[row][col],
+                  revealed: true,
+                  cardType: cardType
+                };
+                console.log(`✅ Restored revealed goal at [${row}][${col}] = ${cardType}`);
+              }
+            }
+          });
+        } catch (e) {
+          console.error('Error restoring revealed goals:', e);
+        }
+      }
+      
+      setBoardCells(baseBoard);
+    };
 
-const numPep = () => {
-    return 0; // PEPITAS TOTALES, SIRVE PARA LAS ESTADISTICAS
-};
+    loadBoard();
+  }, [round?.id, ListCards]);
 
-const statePic = () => {
-    return "🟢"; // ESTADO PICO, SIRVE PARA LAS ESTADISTICAS
-};
+  useEffect(() => {
+  const fetchChatMessages = async () => {
+    const chatId = chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
+    
+    if (!chatId) {
+      return}
 
-const stateVag = () => {
-    return "🟢"; // ESTADO VAGONETA, SIRVE PARA LAS ESTADISTICAS
-};
-
-const stateLint = () => {
-    return "🟢"; // ESTADO LINTERNA, SIRVE PARA LAS ESTADISTICAS
-};
-
-const repartoCartas = () => {
-    return null; 
-};
-
-const addLog = (msg,type="info") => {
-  setGameLog(prev => [...prev, { msg,type }]);}; 
-
-const addPrivateLog = (msg, type = "info") => {
-  setPrivateLog(prev => [...prev, { msg, type }]);};
-
-const messagesEndRef = useRef(null);
-useEffect(() => {
-  messagesEndRef.current?.scrollIntoView({behavior:'smooth'});
-}, [gameLog]); 
-
- useEffect(() => {
-    const time = setInterval(() => {
-      setCont(p => {
-        if (p <= 1) {
-          nextTurn(); // YA DEFINIDO. Hay que definir para que al acabar el contador el turno sea cedido al siguiente jugador
-          return timeturn;}
-        return p-1;});
-    }, 1000);
-    return () => clearInterval(time);
-  }, [currentPlayer, playerOrder]);
-
-  const formatTime = (s) => {
-    const min = Math.floor(s/60).toString().padStart(2, '0');
-    const sec = (s%60).toString().padStart(2, '0');
-    return `${min}:${sec}`;
+    try {
+      const messages = await getmessagebychatId(chatId);
+      
+      if (Array.isArray(messages)) {
+        const formattedMessages = messages.map(msg => {
+          let author = 'Unknown';
+          
+          if (msg.activePlayer?.player?.user?.username) {
+            author = msg.activePlayer.player.user.username;
+          } else if (msg.activePlayer?.player?.username) {
+            author = msg.activePlayer.player.username;
+          } else if (msg.activePlayer?.username) {
+            author = msg.activePlayer.username;
+          } else if (typeof msg.activePlayer === 'string') {
+            author = msg.activePlayer;
+          }
+          
+          return {
+            author: author,
+            text: msg.content || ''
+          };
+        });
+        
+        setMessage(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+    }
   };
 
-useEffect(() => {
-  if (activePlayers.length > 0) {
-    let cardsPerPlayer = 0;
-    if (activePlayers.length <= 5) cardsPerPlayer = 6;
-    else if (activePlayers.length <= 9) cardsPerPlayer = 5;
-    else cardsPerPlayer = 4;
-    const initialDeck = 60 - (activePlayers.length * cardsPerPlayer);
-    setDeckCount(initialDeck); 
-    setCardPorPlayer(cardsPerPlayer);}
-}, [activePlayers]);
-
-const deckfuction = () => deckCount;
-
-const handleDiscard = () => {
-  const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-  if (loggedInUser.username!==currentPlayer) {
-    addPrivateLog("⚠️ It's not your turn!", "warning");
-    return;}
-  if (deckCount>0) {
-    setDeckCount(p =>p-1);
-    nextTurn();           
-    setCont(timeturn);    
-    addColoredLog(currentIndex, playerOrder[currentIndex].username, `🎴 Discarded a card. ${deckCount - 1} cards left in the deck.`);
-  } else {
-    addLog("⛔No more cards left in the deck!", "warning");}};
+  fetchChatMessages();
+  const pollInterval = setInterval(fetchChatMessages, 1000);
+  return () => clearInterval(pollInterval);
+}, [chat, game]); 
 
 
-  const SendMessage = (e) => {
-    e.preventDefault(); // No quitar que sino no se actualiza
-    setMessage([...message,{ author:'Player1', text:newMessage}]); // Indicar el player con la llamda del backend
-    setNewMessage(''); 
-  };
-
-  const addColoredLog = (playerIndex, playerName, action) => {
-     const coloredName = `<span class="player${playerIndex + 1}">${playerName}</span>`;
-     addLog(`${coloredName} ${action}`, "action");};
-
-
-  const cards = [...Array(CardPorPlayer)].map((_, i) => (
-    <button key={i} className="card-slot">Cards {i + 1}</button>));
+  // Render 
+  if (isLoading) {
+    return <LoadingScreen progress={loadingProgress} loadingSteps={loadingSteps} />;}
 
   return (
     <div className="board-container">
 
+
+      {isCreator && spectatorRequests.length > 0 && (
+        <SpectatorRequestsInGame
+          spectatorRequests={spectatorRequests}
+          onAccept={handleAcceptSpectatorRequest}
+          onDeny={handleDenySpectatorRequest}
+        />
+      )}
+
+      {roundEndData && !gameEndData && (
+        <RoundEndModal
+          winnerTeam={roundEndData.winnerTeam}
+          reason={roundEndData.reason}
+          goldDistribution={roundEndData.goldDistribution}
+          playerRoles={roundEndData.playerRoles}
+          countdown={roundEndCountdown}
+          roundNumber={round.roundNumber}
+        />
+      )}
+      
+      {gameEndData && (
+        <GameEnd
+          playerRankings={gameEndData.playerRankings}
+          countdown={gameEndCountdown}
+          gameId={game?.id}
+          activePlayers={activePlayers}
+        />
+      )}
+
       <div className="logo-container">
-        <img src="/logo1-recortado.png" alt="logo" className="logo-img1"/>
+        <img src="/logo1-recortado.png" alt="logo" className="logo-img1" />
       </div>
 
-      <div className="player-cards">
-        <div className="cards-label">MY CARDS</div>
-        <div className="cards-list">
-            {cards}
-        </div>
-      </div>
-
-      <div className="my-role">
-        MY ROLE:
-        <div className="logo-img">
-      <img 
-        src={Array.isArray(playerRol) 
-              ? playerRol.find(p => p.username === loggedInUser.username)?.roleImg || minerRol
-              : minerRol
-            } 
-        alt="My Role" 
-        className="logo-img"
+      <PlayerCards 
+        game={game} 
+        ListCards={ListCards} 
+        activePlayers={activePlayers} 
+        postDeck={postDeck} 
+        getDeck={getDeck}
+        patchDeck={patchDeck}
+        fetchOtherPlayerDeck={fetchOtherPlayerDeck}
+        findActivePlayerUsername={findActivePlayerUsername} 
+        playerCardsCount={playerCardsCount}
+        isSpectator={isSpectator}
+        onTunnelCardDrop={handleCardDrop}
+        onActionCardUse={handleActionCard}
+        onMapCardUse={handleMapCard}
+        playerOrder={playerOrder}
+        currentUsername={loggedInUser?.username}
+        currentPlayer={currentPlayer}
+        deckCount={deckCount}
+        deck={deck}
       />
-        </div>
-      </div>
+      
+      <SpectatorIndicator isSpectator={isSpectator} onExit={handleExitSpectatorMode} />
 
-      <div className="n-deck">
-        🎴{deckfuction()}
-      </div>
+      <PlayerRole 
+        playerRol={playerRol} 
+        loggedInUser={loggedInUser} 
+        isSpectator={isSpectator} 
+      />
 
-      <button className="n-discard" onClick={handleDiscard}>
-        📥 Discard
-      </button>
+      <GameControls
+        deckCount={deckCount}
+        formatTime={formatTime}
+        cont={cont}
+        numRound={numRound}
+        handleDiscard={handleDiscard}
+        isSpectator={isSpectator}
+        isCreator={isCreator}
+        handleForceEndRound={handleForceEndRound}
+      />
 
-      <div className="time-card">
-       ⏰ {formatTime(cont)}
-      </div>
+      <GameBoard
+        boardCells={boardCells}
+        boardGridRef={boardGridRef}
+        handleCardDrop={handleCardDrop}
+        handleCellClick={handleCellClick}
+        ListCards={ListCards}
+        currentPlayer={currentPlayer}
+        currentUsername={loggedInUser?.username}
+        collapseModeActive={collapseMode.active}
+        revealedObjective={revealedObjective}
+        objectiveCards={objectiveCards}
+        destroyingCell={destroyingCell}
+      />
 
-      <div className="round-box">
-        🕓·ROUND {numRound}/3 
-      </div>
+      <div className="turn-box">🔴 · TURN OF {currentPlayer}</div>
 
-      <div className="board-grid">
-        {[...Array(35)].map((_, i) => (
-          <div key={i} className="board-cell">
-          </div>
-        ))}
-      </div>
+      <PlayersList 
+        activePlayers={playerOrder} 
+        playerCardsCount={playerCardsCount}
+        onActionCardDrop={handleActionCard}
+        isMyTurn={loggedInUser?.username === currentPlayer}
+        currentUsername={loggedInUser?.username}
+        playerTools={playerTools}
+      />
 
-      <div className="turn-box">
-        🔴 · TURNO DE {currentPlayer}
-      </div>
+      <GameLog gameLog={gameLog} privateLog={privateLog} />
 
-      <div className="players-var">
-        {activePlayers.map((activePlayers, index) => (
-          <div key={index} className={`player-card player${index + 1}`}>
-            <div className="player-avatar">
-              <img src={activePlayers.profileImage || avatar} alt={activePlayers.username || activePlayers} />
-            </div>
-            <div className={`player-name player${index + 1}`}>
-              {activePlayers.username || activePlayers}
-            </div>
-            <div className="player-lint"> 🔦 : 🟢 {/*stateLint*/}</div>
-            <div className="player-vag">🪨 : 🟢 {/*stateVag*/}</div> 
-            <div className="player-pic"> ⛏️ : 🟢 {/*statePic*/} </div> {/* Habrá que poner la funcion que hace que verifique si un usuario tiene esa acción disponible*/}
-            <div className="player-pep"> 🪙 : 0 {/*numPep*/} 🎴 : {CardPorPlayer} </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="game-log">
-        <div className="game-log-header">💻 GAME LOG 💻</div>
-        <div className="game-log-messages">
-          {gameLog.length === 0 && privateLog.length === 0 ? (
-            <p className="no-log">❕No actions yet...</p>
-          ) : (
-            <>
-              {gameLog.map((log, index) => (
-                <p
-                  key={`global-${index}`}
-                  className={`log-entry ${log.type}`}
-                  dangerouslySetInnerHTML={{ __html: log.msg }}/>))}
-
-              {privateLog.map((log, index) => (
-                <p
-                  key={`private-${index}`}
-                  className={`log-entry ${log.type}`}
-                  dangerouslySetInnerHTML={{ __html: log.msg }}/>))}
-            </>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-
-      <div className="chat-box">
-        <div className="chat-header">TEXT CHAT</div>
-
-        <div className="chat-messages">
-          {message.length===0 ? ( <p className="no-messages">Not messages yet...</p>
-          ):(
-            message.map((msg, index) => (
-              <p key={index}><strong>{playerOrder.username}:</strong> {msg.text}</p>
-            ))
-          )}
-        </div>
-        <form className="chat-input" onSubmit={SendMessage}>
-          <input
-            type="text"
-            placeholder="Write a message📥"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-          />
-        </form>
-      </div>
+      <ChatBox
+        message={message}
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        SendMessage={SendMessage}
+        isSpectator={isSpectator}
+      />
     </div>
   );
 }

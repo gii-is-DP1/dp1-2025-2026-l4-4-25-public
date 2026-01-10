@@ -1,8 +1,10 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, matchPath, useLocation } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { ErrorBoundary } from "react-error-boundary";
 import AppNavbar from "./AppNavbar";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Home from "./home";
 import PrivateRoute from "./privateRoute";
 import Register from "./auth/register";
@@ -13,6 +15,7 @@ import Logout from "./auth/logout";
 import tokenService from "./services/token.service";
 import UserListAdmin from "./admin/users/UserListAdmin";
 import UserEditAdmin from "./admin/users/UserEditAdmin";
+import AdminGames from "./admin/games/AdminGames";
 import Lobby from "./lobbies/lobby"; 
 import CreateGame from "./lobbies/games/CreateGame";
 import ListGames from "./lobbies/games/ListGames";
@@ -21,13 +24,51 @@ import Info from "./lobbies/info";
 import GamesPlayed from "./lobbies/profiles/GamesPlayed";
 import Achievements from "./lobbies/profiles/Achievements";
 import EditAchievements from "./admin/achievements/EditAchievements";
+import Stats from "./lobbies/profiles/Stats";
+import GameInvitationListener from "./components/GameInvitationListener";
+import Ranking from "./lobbies/ranking/Ranking";
+import ReadMe from "./lobbies/ReadMe";
+
+function StrictInGameRedirect({ jwt, children }) {
+  const location = useLocation();
+
+  if (!jwt) {
+    return children;
+  }
+
+  let savedGameData = null;
+  try {
+    const raw = sessionStorage.getItem('savedGameData');
+    savedGameData = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    savedGameData = null;
+  }
+
+  const activeBoardId = savedGameData?.round?.board;
+  const winner = savedGameData?.game?.winner;
+
+  if (!activeBoardId) {
+    return children;
+  }
+
+  const boardMatch = matchPath('/board/:boardId', location.pathname);
+  if (boardMatch) {
+    const currentBoardId = boardMatch.params?.boardId;
+    if (currentBoardId && winner === null && String(currentBoardId) !== String(activeBoardId)) {
+      return <Navigate to={`/board/${activeBoardId}`} replace />;
+    }
+    return children;
+  }
+
+  return <Navigate to={`/board/${activeBoardId}`} replace />;
+}
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
     <div role="alert">
-      <p>Algo fue mal:</p>
+      <p>Something went wrong:</p>
       <pre>{error.message}</pre>
-      <button onClick={resetErrorBoundary}>Intentar de nuevo</button>
+      <button onClick={resetErrorBoundary}>Try Again</button>
     </div>
   );
 }
@@ -47,7 +88,6 @@ function App() {
   let ownerRoutes = <></>;
   let userRoutes = <></>;
   let vetRoutes = <></>;
-  let publicRoutes = <></>;
 
   roles.forEach((role) => {
     if (role === "ADMIN") {
@@ -55,43 +95,39 @@ function App() {
         <>
           <Route path="/users" exact={true} element={<PrivateRoute><UserListAdmin /></PrivateRoute>} />
           <Route path="/users/:id" exact={true} element={<PrivateRoute><UserEditAdmin /></PrivateRoute>} />    
+          <Route path="/admin/games" element={<PrivateRoute><AdminGames /></PrivateRoute>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/info" element={<Info />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />  
           <Route path="/EditAchievement" element={<EditAchievements />} />
+          <Route path="/achievements/admin" element={<PrivateRoute><EditAchievements /></PrivateRoute>} />
         </>)
     }
     if (role === "PLAYER") {
       ownerRoutes = (
         <>
-          {/*<Route path="/register" element={<Register />} />*/}
           <Route path="/info" element={<Info />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/editProfile" element={<EditProfile />} />
           <Route path="/GamesPlayed" element={<GamesPlayed />} />
           <Route path="/Achievement" element={<Achievements />} />
+          <Route path="/stats" element={<Stats />} />
+          <Route path="/ReadMe" element={<ReadMe />} />
 
         </>)
     }    
   })
-  if (!jwt) {
-    publicRoutes = (
-      <>        
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </>
-    )
-  } else {
+  if (jwt) {
     userRoutes = (
       <>
-        {/* <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} /> */}  
         <Route path="/lobby" element={<PrivateRoute><Lobby /></PrivateRoute>} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/CreateGame/:id" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
-        <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
+        <Route path="/board/:boardId" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
+        <Route path="/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
       </>
     )
   }
@@ -100,14 +136,30 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
         <AppNavbar />
-        <Routes>
-          <Route path="/" exact={true} element={<Home />} />
-          {publicRoutes}
-          {userRoutes}
-          {adminRoutes}
-          {ownerRoutes}
-          {vetRoutes}
-        </Routes>
+        {jwt && <GameInvitationListener />}
+        <ToastContainer 
+          position="top-right" 
+          autoClose={2500} 
+          hideProgressBar={false} 
+          newestOnTop={true} 
+          closeOnClick 
+          rtl={false} 
+          pauseOnFocusLoss={false} 
+          draggable 
+          pauseOnHover={false}
+          limit={3}
+        />
+        <StrictInGameRedirect jwt={jwt}>
+          <Routes>
+            <Route path="/" exact={true} element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            {userRoutes}
+            {adminRoutes}
+            {ownerRoutes}
+            {vetRoutes}
+          </Routes>
+        </StrictInGameRedirect>
       </ErrorBoundary>
     </div>
   );

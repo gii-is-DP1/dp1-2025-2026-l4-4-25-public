@@ -31,7 +31,7 @@ public class Message extends BaseEntity{
     //Relación muchos mensajes 1 participante
     @JsonSerialize(using = ActivePlayerSerializer.class)
     @JsonDeserialize(using = ActivePlayerDeserializer.class)
-    @ManyToOne(optional = false)
+    @ManyToOne()
     private ActivePlayer activePlayer;
 
     //Relación muchos mensajes 1 chat

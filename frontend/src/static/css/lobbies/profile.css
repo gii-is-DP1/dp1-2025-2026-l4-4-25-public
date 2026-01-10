@@ -1,9 +1,9 @@
 .profile-overlay {
   position: absolute;
-  top: 15%;
+  top: 10%;
   left: 5%;
   width: 90%;
-  height: 60%;
+  max-height: 80%;
   background-color: rgba(184, 211, 219, 0.582);
   border-radius: 20px;
   padding: 2rem;
@@ -11,11 +11,12 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  justify-content: right; 
+  justify-content: flex-start; 
   align-items: center;
   box-shadow: 0 0 30px rgba(122, 110, 63, 0.5);
   backdrop-filter: blur(40px);
   text-align: center;
+  overflow-y: auto;
 }
 
 .profile-bottom-buttons {
@@ -24,8 +25,6 @@
   justify-content: center;
 }
 
-
-/* Cabecera del perfil: avatar + info */
 .profile-header {
   color:#e6b800;
   display: flex;
@@ -34,7 +33,6 @@
   gap: 1.5rem;
 }
 
-/* Imagen de perfil */
 .profile-avatar {
   width: 230px;
   height: 230px;
@@ -43,14 +41,12 @@
   object-fit: cover;
 }
 
-/* Información del usuario */
 .profile-info h2 {
   margin: 0;
   font-size: 1.8rem;
   font-weight: bold;
 }
 
-/* Contenedor de botones (fecha + editar) */
 .profile-buttons {
   margin-top: 0.8rem;
   display: flex;
@@ -59,7 +55,6 @@
   gap: 0.8rem;
 }
 
-/* Botón de editar perfil */
 .button-small {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
@@ -80,11 +75,13 @@
 }
 
 .edit-profile-container {
+  z-index: 1;
   display: flex;
+  z-index: 1;
   justify-content: center;
   align-items: flex-start;
-  gap: 3rem; /* separación entre columnas */
-  margin-top: 6rem; /* para dejar espacio al logo */
+  gap: 3rem;
+  margin-top: 6rem;
 }
 
 .edit-profile-left,
@@ -103,7 +100,7 @@
 }
 
 .edit-profile-right {
-  width: 50%; /* donde irá el formulario */
+  width: 50%;
 }
 
 .profile-image-preview {
@@ -115,7 +112,6 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-/* Contenedor de dropdown y input */
 .profile-image-options {
     display: flex;
     flex-direction: column; 
@@ -126,48 +122,147 @@
 }
 
 .profile-image-options input[type="file"] {
-  width: 80%; /* ajustable, para que no se salga */
+  width: 80%; 
 }
 
-/*Para mostrar que eres Admin en el profile*/
-
-/* --- Estilo Premium para la Insignia de Administrador --- */
 .admin-badge {
-    /* Fondo con degradado dorado/amarillo */
+
     background: linear-gradient(145deg, #f3e5ab 0%, #f1c40f 45%, #e6b800 100%);
     
-    /* Fuente y texto */
-    color: #333; /* Color oscuro para contraste */
+
+    color: #333; 
     font-size: 1.5rem;
-    font-weight: 900; /* Extra bold */
+    font-weight: 900; 
     text-transform: uppercase;
     letter-spacing: 2px;
-    padding: 0.5rem 1.5rem; /* Relleno */
+    padding: 0.5rem 1.5rem; 
     border-radius: 10px;
-    display: inline-block; /* Para que el padding y el tamaño funcionen bien */
-
-    /* Efectos 3D y Premium */
-    border: 1px solid rgba(255, 255, 255, 0.5); /* Borde ligero para el brillo */
+    display: inline-block; 
+    border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: 
-        0 4px 15px rgba(240, 199, 38, 0.7), /* Sombra exterior dorada/brillante */
-        inset 0 0 10px rgba(255, 255, 255, 0.8), /* Brillo interior */
-        inset 0 -5px 5px rgba(0, 0, 0, 0.2); /* Sombra para efecto de relieve (ligeramente levantado) */
-    
-    /* Efecto de inclinación para hacerlo más dinámico (opcional) */
+        0 4px 15px rgba(240, 199, 38, 0.7), 
+        inset 0 0 10px rgba(255, 255, 255, 0.8), 
+        inset 0 -5px 5px rgba(0, 0, 0, 0.2); 
     transform: rotate(-3deg);
     transition: transform 0.3s ease-in-out;
 }
 
-/* Pequeño efecto al pasar el ratón */
 .admin-badge:hover {
     transform: scale(1.05) rotate(-3deg);
     cursor: default;
 }
 
-/* El texto del nombre de usuario también se ve premium para el admin */
 .profile-info h2.admin-username {
     color: #f1c40f; 
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
 }
 
+.achievements-section {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
 
+.achievements-title {
+  font-size: 2rem;
+  color: #f1c40f;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.achievement-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.achievement-card.unlocked {
+  border-color: #f1c40f;
+  background: linear-gradient(145deg, rgba(241, 196, 15, 0.3), rgba(241, 196, 15, 0.2));
+  box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);
+}
+
+.achievement-card.locked {
+  opacity: 0.6;
+  border-color: #7f8c8d;
+  filter: grayscale(50%);
+}
+
+.achievement-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.achievement-card.unlocked:hover {
+  box-shadow: 0 6px 25px rgba(241, 196, 15, 0.6);
+}
+
+.achievement-icon {
+  font-size: 3rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.achievement-details {
+  flex: 1;
+  text-align: left;
+}
+
+.achievement-details h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #5c5026;
+  font-weight: bold;
+}
+
+.achievement-description {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.3;
+}
+
+.achievement-progress {
+  font-size: 0.9rem;
+  color: #f1c40f;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.view-all-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.7rem 1.5rem;
+  background: #f1c40f;
+  color: #000;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.view-all-link:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(241, 196, 15, 0.8);
+  background: #e6b800;
+}

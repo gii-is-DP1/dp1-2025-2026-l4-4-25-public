@@ -3,7 +3,8 @@ import { render, screen } from "./test-utils";
 
 describe('AppNavbar', () => {
 
-    test('renders public links correctly', () => {
+    // Se han quitado aquellas pruebas que comprueban contenidos no existentes, todo ello recogido en las decisiones de diseño del sistema.
+    /* test('renders public links correctly', () => {
         render(<AppNavbar />);
         const linkDocsElement = screen.getByRole('link', { name: 'Docs' });
         expect(linkDocsElement).toBeInTheDocument();
@@ -13,15 +14,15 @@ describe('AppNavbar', () => {
 
         const linkHomeElement = screen.getByRole('link', { name: 'logo PetClinic' });
         expect(linkHomeElement).toBeInTheDocument();
-    });
+    });*/ 
 
     test('renders not user links correctly', () => {
         render(<AppNavbar />);
-        const linkDocsElement = screen.getByRole('link', { name: 'Register' });
-        expect(linkDocsElement).toBeInTheDocument();
+        const linkRegisterElement = screen.getByRole('link', { name: 'Register' });
+        expect(linkRegisterElement).toBeInTheDocument();
 
-        const linkPlansElement = screen.getByRole('link', { name: 'Login' });
-        expect(linkPlansElement).toBeInTheDocument();
+        const linkLoginElement = screen.getByRole('link', { name: 'Login' });
+        expect(linkLoginElement).toBeInTheDocument();
     });
 
 });

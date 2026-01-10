@@ -2,10 +2,10 @@ package es.us.dp1.l4_04_24_25.saboteur.player;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 
-public interface PlayerRepository extends CrudRepository<Player, Integer> {
+public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     @Override
     Optional<Player> findById(Integer id);

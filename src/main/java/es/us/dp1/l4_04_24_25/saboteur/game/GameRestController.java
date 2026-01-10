@@ -1,14 +1,20 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +37,6 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedLinkException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
@@ -46,17 +51,24 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 class GameRestController {
 
+    private static final Logger log = LoggerFactory.getLogger(GameRestController.class);
+
     private final GameService gameService;
     private final PlayerService playerService;
     private final ObjectMapper objectMapper;
     private final RoundService roundService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ActivePlayerService activePlayerService;
+
 
     @Autowired
-    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService) {
+    public GameRestController(GameService gameService, PlayerService playerService, ObjectMapper objectMapper, RoundService roundService, SimpMessagingTemplate messagingTemplate, ActivePlayerService activePlayerService) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.objectMapper = objectMapper;
         this.roundService = roundService;
+        this.messagingTemplate = messagingTemplate;
+        this.activePlayerService = activePlayerService;
     }
 
 
@@ -68,18 +80,18 @@ class GameRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-
-    @GetMapping("byLink")
-    public ResponseEntity<Game> findByLink(@RequestParam String link){
-        Game res;
-        res = gameService.findByLink(link);
+    @GetMapping("byCreator")
+    public ResponseEntity<List<Game>> findByCreator(@RequestParam String creatorUsername){
+        List<Game> res;
+        res = gameService.findByCreator(creatorUsername);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping("byCreator")
-    public ResponseEntity<Game> findByCreator(@RequestParam String creatorUsername){
-        Game res;
-        res = gameService.findByCreator(creatorUsername);
+    @GetMapping("myGames")
+    public ResponseEntity<List<Game>> findMyGames(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        List<Game> res = gameService.findGamesByPlayerUsername(username);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -90,18 +102,16 @@ class GameRestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Game> create(@RequestBody @Valid Game game) throws DuplicatedLinkException, EmptyActivePlayerListException {
+    public ResponseEntity<Game> create(@RequestBody @Valid Game game) throws EmptyActivePlayerListException {
         Game newGame = new Game();
         BeanUtils.copyProperties(game, newGame, "id", "time", "gameStatus", "chat", "watchers", "rounds" );
         if (newGame.getActivePlayers() == null || newGame.getActivePlayers().isEmpty()) {
             throw new IllegalArgumentException("A game must have at least one active player (the creator).");
         }
-        if (gameService.existsByLink(newGame.getLink())) {
-            throw new EmptyActivePlayerListException("A game with the same link already exists.");
-        }
         Chat chat = new Chat();
         chat.setGame(newGame);
         newGame.setChat(chat);
+        newGame.setCreatedAt(LocalDateTime.now());
         Game savedGame = gameService.saveGame(newGame);
         return new ResponseEntity<Game>(savedGame, HttpStatus.CREATED);
     }
@@ -173,20 +183,111 @@ class GameRestController {
         game.setRounds(updatedRounds);
     }
 
-    Game gamePatched = objectMapper.updateValue(game, updates);
-    gameService.updateGame(gamePatched, id);
+    if (updates.containsKey("winner")) {
+        Object winnerObj = updates.get("winner");
+        if (winnerObj != null) {
+            Integer winnerId = null;
+            if (winnerObj instanceof Map) {
+                Map<String, Object> winnerMap = (Map<String, Object>) winnerObj;
+                if (winnerMap.containsKey("id")) {
+                    winnerId = ((Number) winnerMap.get("id")).intValue();
+                }
+            } else if (winnerObj instanceof Number) {
+                winnerId = ((Number) winnerObj).intValue();
+            }
+            
+            if (winnerId != null) {
+                ActivePlayer winner = activePlayerService.findActivePlayer(winnerId);
+                if (winner != null) {
+                    game.setWinner(winner);
+                    log.info(">>> WINNER SET: ID={}, Username={}", winnerId, winner.getUsername());
+}
+            }
+        }
+        updates.remove("winner");
+    }
 
-    return new ResponseEntity<>(gamePatched, HttpStatus.OK);
+    Game gamePatched = objectMapper.updateValue(game, updates);
+    Game savedGame = gameService.updateGame(gamePatched, id);
+
+    log.info(">>> PATCH RECIBIDO. Updates: {}", updates);
+
+    if (updates.containsKey("gameStatus") && "FINISHED".equals(updates.get("gameStatus"))) {
+        if (savedGame.getStartTime() != null && updates.containsKey("endTime")) {
+            String endTimeStr = updates.get("endTime").toString();
+            LocalDateTime endTime;
+            try {
+                java.time.Instant instant = java.time.Instant.parse(endTimeStr);
+                endTime = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+            } catch (Exception e) {
+                endTime = LocalDateTime.parse(endTimeStr.replace("Z", ""));
+            }
+            
+            java.time.Duration duration = java.time.Duration.between(savedGame.getStartTime(), endTime);
+            if (duration.isNegative()) {
+                duration = duration.abs();
+                log.warn(">>> WARNING: Duration was negative, using absolute value");
+            }
+            savedGame.setTime(duration);
+            gameService.saveGame(savedGame);
+            log.info(">>> GAME FINISHED. Start: {}, End: {}, Duration: {}", savedGame.getStartTime(), endTime, duration);
+        }
+    }
+    
+    if (updates.containsKey("gameStatus") && "ONGOING".equals(updates.get("gameStatus"))) {
+
+        log.info(">>> CAMBIO A ONGOING DETECTADO. Preparando payload para WebSocket.");
+
+        savedGame.setStartTime(LocalDateTime.now());
+        gameService.saveGame(savedGame);
+
+        // 1. Obtener la ronda actual
+        List<Round> rounds = roundService.findByGameId(id);
+
+        if (rounds.isEmpty()) {
+            log.error(">>> ERROR: NO EXISTE ROUND PARA ESTE GAME");
+        }
+
+        Round currentRound = rounds.get(rounds.size() - 1);
+
+        // 2. Cargar el game completo
+        Game fullGame = gameService.findGame(id);
+
+        // 3. Montar payload explícito
+        Map<String, Object> payload = Map.of(
+            "game", fullGame,
+            "round", currentRound
+        );
+
+        log.info(">>> ENVIANDO PAYLOAD AL SOCKET: {}", payload);
+
+        messagingTemplate.convertAndSend("/topic/game/" + id, payload);
+    }
+
+    return new ResponseEntity<>(savedGame, HttpStatus.OK);
 }
 
     @DeleteMapping(value = "{gameId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<MessageResponse> delete(@PathVariable("gameId") int id) {
-        RestPreconditions.checkNotNull(gameService.findGame(id), "Game", "ID", id);
-        if (gameService.findGame(id).getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED")))
+        Game game = gameService.findGame(id);
+        RestPreconditions.checkNotNull(game, "Game", "ID", id);
+        
+        if (game.getGameStatus().equals(Enum.valueOf(gameStatus.class, "CREATED"))) {
+            Map<String, Object> payload = Map.of(
+                "gameCancelled", true,
+                "gameId", id,
+                "message", "The game has been cancelled by the creator"
+            );
+            
+            log.info(">>> GAME CANCELLED. Notifying all players via WebSocket for game ID: {}", id);
+            messagingTemplate.convertAndSend("/topic/game/" + id, payload);
+            
             gameService.deleteGame(id);
-        else
+        } else {
             throw new IllegalStateException("You can't delete an ongoing or finished game!");
+        }
+        
         return new ResponseEntity<>(new MessageResponse("Game deleted!"), HttpStatus.OK);
     }
     

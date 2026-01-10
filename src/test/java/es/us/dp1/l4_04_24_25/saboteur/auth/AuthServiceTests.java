@@ -1,75 +1,90 @@
 package es.us.dp1.l4_04_24_25.saboteur.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import es.us.dp1.l4_04_24_25.saboteur.user.AuthoritiesService;
-import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
+import java.util.Collection;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Owner;
 
 @Epic("Users & Admin Module")
 @Feature("Authentication")
-@Owner("DP1-tutors")
 @SpringBootTest
-public class AuthServiceTests {
+@AutoConfigureTestDatabase
+class AuthServiceTests {
 
-	@Autowired
-	protected AuthService authService;
-	@Autowired
-	protected UserService userService;
-	@Autowired
-	protected AuthoritiesService authoritiesService;
-	/*
-	@Test
-	@Transactional
-	public void shouldCreateAdminUser() {
-		SignupRequest request = createRequest("ADMIN", "admin2");
-		int userFirstCount = ((Collection<User>) this.userService.findAll()).size();
-		this.authService.createUser(request);
-		int userLastCount = ((Collection<User>) this.userService.findAll()).size();
-		assertEquals(userFirstCount + 1, userLastCount);
-	}
+    @Autowired
+    private AuthService authService;
+    
+    @Autowired
+    private ActivePlayerService activePlayerService;
 
+    @Test
+    @Transactional
+    void shouldCreateAdminUser() {
+        SignupRequest request = createRequest("ADMIN", "newAdminUser");
+        int countBefore = ((Collection<ActivePlayer>) this.activePlayerService.findAll()).size();
+        
+        this.authService.createUser(request);
+        
+        int countAfter = ((Collection<ActivePlayer>) this.activePlayerService.findAll()).size();
+        assertEquals(countBefore + 1, countAfter);
+    }
 
+    @Test
+    @Transactional
+    void shouldCreatePlayerUser() {
+        SignupRequest request = createRequest("PLAYER", "newPlayerUser");
+        int countBefore = ((Collection<ActivePlayer>) this.activePlayerService.findAll()).size();
+        
+        this.authService.createUser(request);
+        
+        int countAfter = ((Collection<ActivePlayer>) this.activePlayerService.findAll()).size();
+        assertEquals(countBefore + 1, countAfter);
+    }
+    
+    @Test
+    void shouldThrowExceptionForFutureBirthDate() {
+        SignupRequest request = createRequest("PLAYER", "futureUser");
+        request.setBirthDate("2099-01-01"); 
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            this.authService.createUser(request);
+        });
+        assertEquals("Birth date must be before current date", exception.getMessage());
+    }
 
-	@Test
-	@Transactional
-	public void shouldCreatePlayerUser() {
-		SignupRequest request = createRequest("PLAYER", "playertest");
-		int userFirstCount = ((Collection<User>) this.userService.findAll()).size();
-		//int playerFirstCount = ((Collection<Player>) this.playerService.findAll()).size();
-		this.authService.createUser(request);
-		int userLastCount = ((Collection<User>) this.userService.findAll()).size();
-		//int playerLastCount = ((Collection<Player>) this.playerService.findAll()).size();
-		assertEquals(userFirstCount + 1, userLastCount);
-		//assertEquals(playFirstCount + 1, playerLastCount);
-	}
+    @Test
+    void shouldThrowExceptionForInvalidDateFormat() {
+        SignupRequest request = createRequest("PLAYER", "badDateUser");
+        request.setBirthDate("fecha-invalida"); 
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            this.authService.createUser(request);
+        });
+        assertEquals("Invalid birth date format. Expected yyyy-MM-dd", exception.getMessage());
+    }
 
-	private SignupRequest createRequest(String auth, String username) {
-		SignupRequest request = new SignupRequest();
-		request.setBirthDate("2000-01-01");
-		request.setName("Test");
-		request.setImage("path/to/image");
-		request.setEmail("hola@gmail.com");
-
-		request.setAuthority(auth);
-		
-		request.setPassword("prueba");
-		
-		request.setUsername(username);
-
-		if(auth == "PLAYER") {
-			User playerUser = new User();
-			playerUser.setUsername("clinicOwnerTest");
-			playerUser.setPassword("clinicOwnerTest");
-			playerUser.setAuthority(authoritiesService.findByAuthority("PLAYER"));
-			userService.saveUser(playerUser);
-		}
-
-		return request;
-	}
-	*/
-
+    private SignupRequest createRequest(String auth, String username) {
+        SignupRequest request = new SignupRequest();
+        request.setUsername(username);
+        request.setPassword("password123");
+        request.setName("Test User");
+        request.setBirthDate("2000-01-01");
+        request.setEmail(username + "@example.com");
+        request.setImage("https://example.com/avatar.png");
+        request.setAuthority(auth);
+        
+        return request;
+    }
 }

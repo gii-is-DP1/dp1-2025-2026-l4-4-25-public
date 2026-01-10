@@ -30,13 +30,10 @@ export default function PlayerCards({
   const [deckChecked, setDeckChecked] = useState(false);
   const [cardRotations, setCardRotations] = useState({}); 
 
-  // Se encarga de realizar el patch del deck en el servidor con la nueva mano
   const syncServerDeck = async (nextHand) => {
     try {
-      // Asegurarse de que solo cartas con rotacion=false van al servidor
       const nonRotatedHand = nextHand.map(card => {
         if (card.rotacion === true) {
-          // Si la carta está rotada, buscar su versión no rotada
           const nonRotatedVersion = findRotatedPair(card, ListCards);
           return nonRotatedVersion || card;
         }
@@ -46,7 +43,7 @@ export default function PlayerCards({
       const ids = nonRotatedHand.map(card => card.id);
       await patchDeck(currentUsername, ids);
     } catch (e) {
-      console.error('Error sincronizando deck en servidor:', e);
+      console.error('Error syncing deck on server:', e);
     }
   };
 
@@ -57,7 +54,6 @@ export default function PlayerCards({
     return pool.slice(0, Math.min(count, pool.length));
   };
 
-  // Comprobar si el jugador tiene un mazo en el servidor, si no lo tiene, crearlo
   const deckInitializedRef = useRef(false);
     useEffect(() => {
   window.getCurrentHandSize = () => hand.length;
@@ -98,7 +94,7 @@ export default function PlayerCards({
           await createNewDeck(username, cardsPerPlayer);
         }
       } catch (e) {
-        console.error('Error en initDeck:', e);
+        console.error('Error in initDeck:', e);
         deckInitializedRef.current = false;
       }
     };
@@ -117,23 +113,22 @@ export default function PlayerCards({
     initDeck();
   }, [currentUsername, activePlayers, isSpectator, ListCards]);
 
-  // Función para coger una carta del mazo
   const drawCard = () => {
     if (deckCount <= 0) {
-      console.log('No hay más cartas en el mazo');
+      console.log('No more cards in the deck');
       return null;
     }
     const usedCardIds = new Set(hand.map(c => c.id));
     const availablePool = availableCards.filter(c => !usedCardIds.has(c.id));
     
     if (availablePool.length === 0) {
-      console.log('No hay cartas disponibles para robar');
+      console.log('No available cards to draw');
       return null;
     }
 
     const randomIndex = Math.floor(Math.random() * availablePool.length);
     const drawnCard = availablePool[randomIndex];
-    console.log('Carta robada:', drawnCard);
+    console.log('Card drawn:', drawnCard);
     
     return drawnCard;
   };
@@ -146,16 +141,12 @@ export default function PlayerCards({
  const removeCardAndDraw = (cardIndex) => {
   setHand(prevHand => {
     const newHand = [...prevHand];
-
-    // Quita carta SIEMPRE
     newHand.splice(cardIndex, 1);
-
-    // Intenta robar, pero si no hay mazo, NO repone carta
     const drawnCard = drawCard();
     if (drawnCard) newHand.push(drawnCard);
 
     syncServerDeck(newHand);
-    return newHand; // Aquí sí puede quedar en 0 cartas
+    return newHand; 
   });
 };
 
@@ -173,7 +164,6 @@ export default function PlayerCards({
       if (drawnCard) {
         newHand.push(drawnCard);
       }
-      // Sincroniza servidor con la nueva mano
       syncServerDeck(newHand);
       return newHand;
     });
@@ -189,25 +179,15 @@ export default function PlayerCards({
   const toggleCardRotation = (index) => {
     const currentCard = hand[index];
     if (!currentCard) return;
-    
-    console.log('🔄 Carta original a rotar:', currentCard);
-    console.log('📦 Total de cartas disponibles (ListCards):', ListCards.length);
-    console.log('🔎 Buscando carta con rotacion opuesta:', !currentCard.rotacion);
-    
-    // Buscar la pareja rotada en todas las cartas disponibles
+
     const rotatedPair = findRotatedPair(currentCard, ListCards);
     
-    console.log('🔍 Pareja rotada encontrada en backend:', rotatedPair);
-    
     if (rotatedPair) {
-      // Reemplazar la carta en la mano con su pareja rotada
       setHand(prevHand => {
         const newHand = [...prevHand];
         newHand[index] = rotatedPair;
         return newHand;
       });
-      
-      // Sincronizar con el servidor
       setTimeout(() => {
         const updatedHand = [...hand];
         updatedHand[index] = rotatedPair;
@@ -218,20 +198,18 @@ export default function PlayerCards({
     }
   };
 
-  // Manejar el reemplazo de carta cuando se usa la pareja rotada
   const handleCardReplaced = (index, newCard) => {
     setHand(prevHand => {
       const newHand = [...prevHand];
       newHand[index] = newCard;
       return newHand;
     });
-    // Resetear la rotación visual ya que ahora usamos la carta rotada del backend
+  
     setCardRotations(prev => {
       const newRotations = { ...prev };
       delete newRotations[index];
       return newRotations;
     });
-    // Sincronizar con el servidor DESPUÉS de actualizar el estado local
     setTimeout(() => {
       syncServerDeck(hand.map((c, i) => i === index ? newCard : c));
     }, 0);

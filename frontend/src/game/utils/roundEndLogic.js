@@ -1,5 +1,3 @@
-
-// Lógica de finalización de rondas y de la partida general según :
 import tokenService from '../../services/token.service';
 
 import { hasPathFromStart, canExitToDirection } from './cardUtils';
@@ -20,11 +18,11 @@ const jwt = tokenService.getLocalAccessToken();
           const activePlayer = await response.json();
           return activePlayer;
         } else {
-          console.error('Respuesta no OK al obtener el deck del activePlayerId:', response.status);
+          console.error('Response not OK to obtain the deck for activePlayerId:', response.status);
           return null;
         }
       } catch (error) {
-        console.error('Error de red al obtener el deck del activePlayerId:', error);
+        console.error('Network error to obtain activePlayerId:', error);
         return null;
       }
     };
@@ -42,24 +40,21 @@ const patchActivePlayer = async (activePlayerId, data) => {
 
     if (response.ok) {
       const updatedPlayer = await response.json();
-      console.log('ActivePlayer actualizado:', updatedPlayer);
+      console.log('ActivePlayer updated:', updatedPlayer);
       return updatedPlayer;
     } else {
-      console.error('Error al actualizar ActivePlayer');
+      console.error('Error updating ActivePlayer');
       return null;
     }
   } catch (error) {
-    console.error('Error en patchActivePlayer:', error);
+    console.error('Error in patchActivePlayer:', error);
     return null;
   }
 };
 
-// La ronda termina si se ha encontrado la pepita o todos los jugadores se han quedado sin cartas
 export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCards, playerCardsCount) => {
-  // Validar que players existe y tiene elementos
   if (!players || !Array.isArray(players) || players.length === 0) {
-    return { ended: false };
-  }
+    return { ended: false }}
 
   const goldReached = checkPathToGold(boardCells, objectiveCards);
   
@@ -67,12 +62,11 @@ export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCar
     return {
       ended: true,
       reason: 'GOLD_REACHED',
-      winnerTeam: 'MINERS', // Siempre ganan los mineros si encuentran el oro
+      winnerTeam: 'MINERS',
       goldPosition: goldReached.position
     };
   }
 
-  // Verificar si todos los jugadores se han quedado sin cartas
   const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
   console.log('🔍 checkRoundEnd - totalCards:', totalCards, 'playerCardsCount:', playerCardsCount);
   if (totalCards === 0) {
@@ -86,12 +80,8 @@ export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCar
 
   if (deckCount <= 0) {
     try {
-      // Obtener los decks de todos los jugadores en paralelo
       const decksPromises = players.map(player => getActivePlayerDeck(player.id));
       const decks = await Promise.all(decksPromises);
-      
-      // Verificar si todos los decks están vacíos o no existen
-      // const allPlayersOutOfCards = decks.every(deck => !deck || !deck.cards || deck.cards.length === 0);
       const allPlayersOutOfCards = decks.every(deck => deck.cards.length === 0);
 
       if (allPlayersOutOfCards) {
@@ -102,7 +92,7 @@ export const checkRoundEnd = async (boardCells, deckCount, players, objectiveCar
         };
       }
     } catch (error) {
-      console.error('Error al verificar decks de jugadores:', error);
+      console.error('Error checking player decks:', error);
     }
   }
 
@@ -118,25 +108,18 @@ const checkPathToGold = (boardCells, objectiveCards) => {
   ];
 
   for (const pos of objectivePositions) {
-    // Verificar que la carta objetivo sea de oro
     if (objectiveCards[pos.key] === 'gold') {
-      // Verificar si hay alguna carta de camino adyacente a la posición del objetivo
       const adjacentPositions = [
-        { row: pos.row - 1, col: pos.col, directionToObjective: 'abajo' },   // carta arriba del objetivo -> necesita salir hacia abajo
-        { row: pos.row + 1, col: pos.col, directionToObjective: 'arriba' },  // carta abajo del objetivo -> necesita salir hacia arriba
-        { row: pos.row, col: pos.col - 1, directionToObjective: 'derecha' }, // carta a la izquierda del objetivo -> necesita salir hacia derecha
-        { row: pos.row, col: pos.col + 1, directionToObjective: 'izquierda' } // carta a la derecha del objetivo -> necesita salir hacia izquierda
+        { row: pos.row - 1, col: pos.col, directionToObjective: 'abajo' },   
+        { row: pos.row + 1, col: pos.col, directionToObjective: 'arriba' }, 
+        { row: pos.row, col: pos.col - 1, directionToObjective: 'derecha' }, 
+        { row: pos.row, col: pos.col + 1, directionToObjective: 'izquierda' } 
       ];
 
       for (const adjPos of adjacentPositions) {
         const adjCell = boardCells[adjPos.row]?.[adjPos.col];
-        
-        // Verificar que hay una carta de túnel adyacente
         if (adjCell && adjCell.occupied && adjCell.type === 'tunnel') {
-          // Primero verificar que hay un camino desde el inicio hasta esta carta
           if (hasPathFromStart(boardCells, adjPos.row, adjPos.col, adjCell)) {
-            // NUEVA VALIDACIÓN: Verificar que la carta puede "salir" hacia el objetivo
-            // Si la carta tiene centro=true, no puede atravesarse aunque tenga conexión en esa dirección
             if (canExitToDirection(adjCell, adjPos.directionToObjective)) {
               return { 
                 reached: true, 
@@ -154,7 +137,6 @@ const checkPathToGold = (boardCells, objectiveCards) => {
   return null;
 };
 
-// Función auxiliar para obtener pepitas actuales del backend
 const fetchCurrentGoldNuggets = async (playerId) => {
   try {
     const response = await fetch(`/api/v1/activePlayers/${playerId}`, {
@@ -169,21 +151,17 @@ const fetchCurrentGoldNuggets = async (playerId) => {
       const playerData = await response.json();
       return playerData.goldNugget || 0;
     } else {
-      console.error('Error al obtener goldNuggets del jugador:', response.status);
+      console.error('Error to obtain goldNuggets:', response.status);
       return 0;
     }
   } catch (error) {
-    console.error('Error en fetchCurrentGoldNuggets:', error);
+    console.error('Error in fetchCurrentGoldNuggets:', error);
     return 0;
   }
 };
 
-// Reparto de pepitas según las reglas del Saboteur
-// Retorna un array con la distribución de oro para mostrar en el modal
-// winnerRol: true = SABOTEURS ganan, false = MINERS ganan
 export const distributeGold = async (players, winnerRol) => {
     const goldDistribution = [];
-    // p.rol es booleano: true = SABOTEUR, false = MINER
     const winners = players.filter(p => p.rol === winnerRol);
     
     console.log('distributeGold - players:', players);
@@ -191,7 +169,6 @@ export const distributeGold = async (players, winnerRol) => {
     console.log('distributeGold - winners:', winners);
     
     if (winnerRol === true) {
-      // Saboteurs win
       const saboteurCount = winners.length;
       let nuggetsPerSaboteur = 0;
       
@@ -206,7 +183,6 @@ export const distributeGold = async (players, winnerRol) => {
       for (const p of players) {
         const roleName = p.rol === true ? 'SABOTEUR' : 'MINER';
         
-        // Obtener pepitas actuales desde el backend
         const currentGold = await fetchCurrentGoldNuggets(p.id);
         console.log(`💰 Player ${p.user?.username || p.username} current gold from backend: ${currentGold}`);
         
@@ -231,16 +207,13 @@ export const distributeGold = async (players, winnerRol) => {
         }
       }
     } else {
-      // Miners win
       for (const p of players) {
         const roleName = p.rol === true ? 'SABOTEUR' : 'MINER';
-        
-        // Obtener pepitas actuales desde el backend
         const currentGold = await fetchCurrentGoldNuggets(p.id);
         console.log(`💰 Player ${p.user?.username || p.username} current gold from backend: ${currentGold}`);
         
         if (p.rol === winnerRol) {
-          const randomGold = Math.floor(Math.random() * 3) + 1; // 1, 2 o 3
+          const randomGold = Math.floor(Math.random() * 3) + 1; 
           const newTotal = currentGold + randomGold;
           await patchActivePlayer(p.id, { goldNugget: newTotal });
           console.log(`✅ Player ${p.user?.username || p.username} earned ${randomGold} gold. Total: ${newTotal}`);
@@ -269,11 +242,9 @@ export const distributeGold = async (players, winnerRol) => {
 export const prepareNewRound = (currentRoundNumber) => {
   return {
     roundNumber: currentRoundNumber + 1,
-    // Las pepitas se mantienen acumuladas en el backend
   };
 };
 
-// Función auxiliar para obtener datos actualizados del jugador desde el backend
 const fetchActivePlayerById = async (playerId) => {
   try {
     const response = await fetch(`/api/v1/activePlayers/${playerId}`, {
@@ -288,26 +259,24 @@ const fetchActivePlayerById = async (playerId) => {
       const playerData = await response.json();
       return playerData;
     } else {
-      console.error('Error al obtener activePlayer:', response.status);
+      console.error('Error to obtain activePlayer:', response.status);
       return null;
     }
   } catch (error) {
-    console.error('Error en fetchActivePlayerById:', error);
+    console.error('Error in fetchActivePlayerById:', error);
     return null;
   }
 };
 
-// Resetear herramientas de los jugadores al iniciar una nueva ronda
 export const resetToolsForNewRound = async (players) => {
   try {
     console.log('🔧 Resetting tools for new round...');
     
     for (const player of players) {
-      // Obtener datos actualizados del jugador desde el backend para asegurar que tenemos las pepitas más recientes
       const currentPlayerData = await fetchActivePlayerById(player.id);
       
       if (!currentPlayerData) {
-        console.error(`❌ No se pudo obtener datos actualizados del jugador ${player.id}`);
+        console.error(`❌ Could not obtain updated data for player ${player.id}`);
         continue;
       }
       
@@ -320,7 +289,7 @@ export const resetToolsForNewRound = async (players) => {
         pickaxeState: true,
         cartState: true,
         candleState: true,
-        goldNugget: currentGoldNuggets, // Mantener las pepitas actuales del backend
+        goldNugget: currentGoldNuggets, 
       };
       
       await patchActivePlayer(player.id, resetData);

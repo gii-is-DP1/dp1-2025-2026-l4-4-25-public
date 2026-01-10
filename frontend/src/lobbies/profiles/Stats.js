@@ -22,7 +22,7 @@ export default function Stats() {
     globalMinDuration: 0,
     globalAveragePlayers: 0,
     globalMaxPlayers: 0,
-    globalMinPlayers: 0,}); // Las inicializamos a 0 todas
+    globalMinPlayers: 0,});
 
   useEffect(() => {
     const fetchStats = async () => {

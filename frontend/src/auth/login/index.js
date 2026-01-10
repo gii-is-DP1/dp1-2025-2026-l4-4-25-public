@@ -3,11 +3,14 @@ import { Alert } from "reactstrap";
 import { Link } from 'react-router-dom';
 import FormGenerator from "../../components/formGenerator/formGenerator";
 import tokenService from "../../services/token.service";
+import WelcomeScreen from "../../components/WelcomeScreen";
 import "../../static/css/auth/authButton.css";
 import { loginFormInputs } from "./form/loginFormInputs";
 
 export default function Login() {
   const [message, setMessage] = useState(null)
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [username, setUsername] = useState("");
   const loginFormRef = React.createRef();      
   
 
@@ -27,13 +30,21 @@ export default function Login() {
       .then(function (data) {
         tokenService.setUser(data);
         tokenService.updateLocalAccessToken(data.token);
-        window.location.href = "/lobby";
+        setUsername(data.username);
+        setShowWelcome(true);
       })
       .catch((error) => {         
         setMessage(error);
       });            
   }
 
+  const handleWelcomeComplete = () => {
+    window.location.href = "/lobby";
+  };
+
+  if (showWelcome) {
+    return <WelcomeScreen username={username} onComplete={handleWelcomeComplete} />;
+  }
   
     return (
       <div className="auth-page-container">

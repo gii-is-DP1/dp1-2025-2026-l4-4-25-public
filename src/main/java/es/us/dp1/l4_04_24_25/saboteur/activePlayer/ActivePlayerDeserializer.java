@@ -22,7 +22,7 @@ public class ActivePlayerDeserializer extends JsonDeserializer<ActivePlayer>{
 
         try{
             String activePlayerUsername = p.getText();
-            result = this.activePlayerService.findByUsername(activePlayerUsername);
+            result = this.activePlayerService.findByUsernameInOngoingGame(activePlayerUsername);
 
         } catch (Exception e){
             throw new IOException ("active player not found");

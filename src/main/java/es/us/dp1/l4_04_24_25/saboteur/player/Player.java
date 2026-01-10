@@ -1,7 +1,9 @@
 package es.us.dp1.l4_04_24_25.saboteur.player;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -12,6 +14,7 @@ import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameSerializer;
+import es.us.dp1.l4_04_24_25.saboteur.request.Request;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,8 +22,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
+
 
 @Getter
 @Setter
@@ -61,7 +66,7 @@ public class Player extends User{
         joinColumns = @JoinColumn(name = "player_id"),
         inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
-    private List<Player> friends = new ArrayList<>();
+    private Set<Player> friends = new HashSet<>();
 
 
 
@@ -82,4 +87,10 @@ public class Player extends User{
     @ManyToOne 
     @JoinColumn(name = "game_id")
     private Game game;
+
+    @OneToMany(mappedBy = "receiver")
+    private List<Request> receivedRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sender")
+    private List<Request> sentRequests = new ArrayList<>();
 }

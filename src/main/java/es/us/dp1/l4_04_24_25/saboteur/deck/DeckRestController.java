@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -29,6 +32,9 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.game.gameStatus;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -38,17 +44,22 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 public class DeckRestController {
 
+    private static final Logger log = LoggerFactory.getLogger(DeckRestController.class);
+
     private final DeckService deckService;
     private final ObjectMapper objectMapper;
     private final ActivePlayerService activePlayerService;
     private final CardService cardService;
-
+    private final SimpMessagingTemplate messagingTemplate; 
+    private final GameService gameService; 
     @Autowired
-    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService) {
+    public DeckRestController(DeckService deckService, ObjectMapper objectMapper, ActivePlayerService activePlayerService, CardService cardService, SimpMessagingTemplate messagingTemplate, GameService gameService) {
         this.deckService = deckService;
         this.objectMapper = objectMapper;
         this.activePlayerService = activePlayerService;
         this.cardService = cardService;
+        this.messagingTemplate = messagingTemplate;
+        this.gameService = gameService;
     }
 
     @GetMapping
@@ -86,7 +97,9 @@ public class DeckRestController {
     return new ResponseEntity<>(savedDeck, HttpStatus.CREATED);
     }
 
+    //Revisar el PATCH
 
+    
     @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Deck> update(@PathVariable("id") Integer id, @RequestBody Deck deck) {
@@ -117,29 +130,30 @@ public class DeckRestController {
 @PatchMapping(value = "{id}")
 @ResponseStatus(HttpStatus.OK)
 public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException {
-    // 1️⃣ Obtenemos el Deck
+    
     Deck deck = deckService.findDeck(id);
     RestPreconditions.checkNotNull(deck, "Deck", "ID", id);
 
-    // 2️⃣ Actualizar ActivePlayer si viene en el JSON
+
     if (updates.containsKey("activePlayer")) {
         Object activePlayerObj = updates.get("activePlayer");
 
         if (activePlayerObj != null) {
             if (activePlayerObj instanceof Integer){
                 Integer activePlayerId = (Integer) activePlayerObj;
-                // Llamada al PATCH de ActivePlayer para actualizar su deck
+                
                 ActivePlayer ap = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
                 deck.setActivePlayer(ap);
             } else {
                 String activePlayerUsername = (String) activePlayerObj;
-                ActivePlayer ap = activePlayerService.findByUsername(activePlayerUsername);
+                // Usar findByUsernameInOngoingGame para obtener el ActivePlayer correcto de la partida actual
+                ActivePlayer ap = activePlayerService.findByUsernameInOngoingGame(activePlayerUsername);
                 Integer activePlayerId = ap.getId();
                 ActivePlayer apPatched = activePlayerService.patchActivePlayer(activePlayerId, Map.of("deck", deck.getId()));
                 deck.setActivePlayer(apPatched);
             }
         } else {
-            // Quitar el ActivePlayer anterior
+            
             if (deck.getActivePlayer() != null) {
                 deck.getActivePlayer().setDeck(null);
             }
@@ -147,7 +161,7 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
         }
     }
 
-    // 3️⃣ Actualizar Cards si vienen en el JSON
+   
     if (updates.containsKey("cards")) {
         Object cardsObj = updates.get("cards");
         List<Card> updatedCards = new ArrayList<>();
@@ -155,28 +169,58 @@ public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody M
         if (cardsObj != null) {
             List<Integer> cardIds = (List<Integer>) cardsObj;
 
-            // Desvinculamos cartas antiguas que no están en la nueva lista
+           
             List<Card> oldCards = new ArrayList<>(deck.getCards());
             for (Card oldCard : oldCards) {
                 if (!cardIds.contains(oldCard.getId())) {
-                    oldCard.setDeck(null); // desvincula del Deck
+                    oldCard.setDeck(null); 
                     cardService.saveCard(oldCard);
                     deck.getCards().remove(oldCard);
                 }
             }
 
-            // Vinculamos las nuevas cartas
+            
             for (Integer cardId : cardIds) {
                 Card card = cardService.patchCard(cardId, Map.of("deck", deck.getId()));
                 updatedCards.add(card);
             }
         }
-
+        
         deck.setCards(updatedCards);
     }
+        Deck updatedDeck = deckService.saveDeck(deck); 
 
-    // 4️⃣ Guardamos el Deck para sincronizar las colecciones en memoria
-    Deck updatedDeck = deckService.saveDeck(deck);
+        ActivePlayer currentPlayer = deck.getActivePlayer();
+        if(currentPlayer != null){
+            String username = currentPlayer.getUsername();
+            Integer leftCards = updatedDeck.getCards() != null ? updatedDeck.getCards().size() : 0;
+            // Obtener todas las partidas del jugador
+            List<Game> games = (List<Game>) gameService.findAllByActivePlayerId(currentPlayer.getId());
+            //Seleccionamos solo la partida que está en ONGOING y más reciente
+            Game activeGame = games.stream()
+            .filter(g -> g.getGameStatus() == gameStatus.ONGOING)
+            .sorted((g1, g2) -> {
+                // Ordenar por fecha de inicio descendente (más reciente primero)
+                if (g1.getStartTime() == null && g2.getStartTime() == null) return 0;
+                if (g1.getStartTime() == null) return 1;
+                if (g2.getStartTime() == null) return -1;
+                return g2.getStartTime().compareTo(g1.getStartTime());
+            })
+            .findFirst()
+            .orElse(null);
+
+            if(activeGame != null){
+                Integer gameId = activeGame.getId();
+                // Enviar mensaje a todos los suscriptores de /topic/deck-count
+                messagingTemplate.convertAndSend("/topic/game/" + gameId + "/deck", Map.of(
+                    "action", "DECK_COUNT", 
+                    "username", username,
+                    "leftCards", leftCards
+                ));
+                log.info("WS >> Deck update enviado a game {} | user={} | leftCards={}", gameId, username, leftCards);
+            }
+
+        }
 
     return new ResponseEntity<>(updatedDeck, HttpStatus.OK);
 }

@@ -44,7 +44,7 @@ public class CardRestController {
     @GetMapping
     public ResponseEntity<List<Card>> findAll() {
         List<Card> res;
-        res = (List<Card>) cardService.findAll();
+        res = (List<Card>) cardService.findPlayableCards();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
