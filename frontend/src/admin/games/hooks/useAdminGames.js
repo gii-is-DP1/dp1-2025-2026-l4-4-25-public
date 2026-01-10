@@ -23,6 +23,24 @@ const useAdminGames = () => {
     applyFilters();
   }, [filters, allGames]);
 
+  const getUsername = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') return value.username || '';
+    return '';
+  };
+
+  const getGameStatus = (game) => {
+    const status = game?.gameStatus ?? game?.status;
+    return typeof status === 'string' ? status : '';
+  };
+
+  const getIsPrivate = (game) => {
+    if (typeof game?.private === 'boolean') return game.private;
+    if (typeof game?.isPrivate === 'boolean') return game.isPrivate;
+    return false;
+  };
+
   const fetchGames = async () => {
     try {
       setLoading(true);
@@ -68,12 +86,14 @@ const useAdminGames = () => {
 
     if (filters.creator) {
       const searchTerm = filters.creator.toLowerCase();
-      filtered = filtered.filter((g) => 
-        g.creator?.toLowerCase().includes(searchTerm))}
+      filtered = filtered.filter((g) => {
+        const creatorUsername = getUsername(g.creator).toLowerCase();
+        return creatorUsername.includes(searchTerm);
+      })}
     if (filters.participant) {
       const searchTerm = filters.participant.toLowerCase();
       filtered = filtered.filter((g) => {
-        const isCreator = g.creator?.toLowerCase().includes(searchTerm);
+        const isCreator = getUsername(g.creator).toLowerCase().includes(searchTerm);
         const isActivePlayer = g.activePlayers?.some((p) => {
           const username = typeof p === 'string' ? p : p.username || '';
           return username.toLowerCase().includes(searchTerm)});
@@ -81,17 +101,21 @@ const useAdminGames = () => {
     if (filters.winner) {
       const searchTerm = filters.winner.toLowerCase();
       filtered = filtered.filter((g) => {
-        const winnerUsername = g.winner?.username || '';
+        const winnerUsername = getUsername(g.winner).toLowerCase();
         return winnerUsername.toLowerCase().includes(searchTerm)})}
     if (filters.privacy) {
       const isPrivate = filters.privacy === "private";
-      filtered = filtered.filter((g) => g.private === isPrivate)}
+      filtered = filtered.filter((g) => getIsPrivate(g) === isPrivate)}
     if (filters.status) {
+      const searchTerm = filters.status.toLowerCase();
       filtered = filtered.filter(
-        (g) => g.gameStatus.toLowerCase() === filters.status.toLowerCase())}
+        (g) => getGameStatus(g).toLowerCase() === searchTerm)}
     if (filters.minPlayers) {
+      const minPlayers = parseInt(filters.minPlayers, 10);
+      if (Number.isFinite(minPlayers)) {
       filtered = filtered.filter(
-        (g) => g.activePlayers?.length >= parseInt(filters.minPlayers))}
+          (g) => (g.activePlayers?.length || 0) >= minPlayers)}
+    }
     setFilteredGames(filtered);
   };
 
