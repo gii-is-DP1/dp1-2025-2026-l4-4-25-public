@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import getIconImage from '../../../util/getIconImage';
+import getAchievementBadgeImage from '../../../util/getAchievementBadgeImage';
 
 const BadgeImageSelector = ({ 
   badgeImage, 
@@ -21,7 +21,7 @@ const BadgeImageSelector = ({
   };
 
   const handlePredefinedImage = (imageNumber) => {
-    onImageChange(getIconImage(imageNumber));
+    onImageChange(getAchievementBadgeImage(imageNumber));
   };
 
   return (
@@ -34,22 +34,25 @@ const BadgeImageSelector = ({
           </DropdownToggle>
           <DropdownMenu>
             <DropdownItem onClick={() => handlePredefinedImage(1)}>
-              Badge 1 (Miner)
+              Badge 1 (Built Paths)
             </DropdownItem>
             <DropdownItem onClick={() => handlePredefinedImage(2)}>
-              Badge 2 (Miner)
+              Badge 2 (Destroyed Paths)
             </DropdownItem>
             <DropdownItem onClick={() => handlePredefinedImage(3)}>
-              Badge 3 (Miner)
+              Badge 3 (Destroyed Tools)
             </DropdownItem>
             <DropdownItem onClick={() => handlePredefinedImage(4)}>
-              Badge 4 (Miner)
+              Badge 4 (Gold Nuggets)
             </DropdownItem>
             <DropdownItem onClick={() => handlePredefinedImage(5)}>
-              Badge 5 (Miner)
+              Badge 5 (Played Games)
             </DropdownItem>
             <DropdownItem onClick={() => handlePredefinedImage(6)}>
-              Badge 6 (Miner)
+              Badge 6 (Repaired Tools)
+            </DropdownItem>
+            <DropdownItem onClick={() => handlePredefinedImage(7)}>
+              Badge 7 (Victories)
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>

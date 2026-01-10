@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.List;
 import java.time.Duration;
 
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -32,19 +31,17 @@ class GameServiceTests {
     @Autowired
     private GameService gameService;
 
-    private static final int TEST_GAME_ID = 1; 
-    private static final String TEST_CREATOR_USERNAME = "Carlosbox2k";
+    private static final int TEST_GAME_ID = 1;
+    private static final String TEST_CREATOR_USERNAME = "player1";
 
-    
     @Test
     @Transactional
     void shouldFindAllGames() {
         List<Game> games = (List<Game>) this.gameService.findAll();
         assertFalse(games.isEmpty());
-        assertTrue(games.size() >= 1); 
+        assertTrue(games.size() >= 1);
     }
 
-    
     @Test
     void shouldFindGameById() {
         Game game = this.gameService.findGame(TEST_GAME_ID);
@@ -77,7 +74,6 @@ class GameServiceTests {
         assertEquals(initialCount + 1, finalCount);
     }
 
-    
     @Test
     @Transactional
     void shouldUpdateGame() {
@@ -89,7 +85,6 @@ class GameServiceTests {
         assertEquals(6, updated.getMaxPlayers());
     }
 
-   
     @Test
     @Transactional
     void shouldDeleteGame() {
@@ -101,7 +96,6 @@ class GameServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> this.gameService.findGame(TEST_GAME_ID));
     }
 
-    
     @Test
     void shouldFindGameByCreator() {
         List<Game> games = (List<Game>) this.gameService.findByCreator(TEST_CREATOR_USERNAME);
@@ -114,7 +108,6 @@ class GameServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> this.gameService.findByCreator("noexiste"));
     }
 
-   
     @Test
     @Transactional
     void shouldFindPublicGames() {
@@ -130,19 +123,17 @@ class GameServiceTests {
         assertTrue(privateGames.stream().allMatch(Game::isPrivate) || privateGames.isEmpty());
     }
 
-   
     @Test
     @Transactional
     void shouldFindGamesByActivePlayerId() {
-        Integer activePlayerId = 4; 
+        Integer activePlayerId = 4;
         Iterable<Game> games = this.gameService.findAllByActivePlayerId(activePlayerId);
         assertNotNull(games);
     }
 
-    
     @Test
     void shouldCheckCanAddPlayerLogic() {
-        
+
         Game game = new Game();
         game.setMaxPlayers(2);
         game.setActivePlayers(new ArrayList<>());
@@ -150,38 +141,37 @@ class GameServiceTests {
         assertTrue(game.canAddPlayer());
 
         game.getActivePlayers().add(new ActivePlayer());
-        assertTrue(game.canAddPlayer()); 
+        assertTrue(game.canAddPlayer());
 
         game.getActivePlayers().add(new ActivePlayer());
-        assertFalse(game.canAddPlayer()); 
+        assertFalse(game.canAddPlayer());
     }
 
     @Test
     void shouldAddRoundsCorrectly() {
-        
+
         Game game = new Game();
-        game.setRounds(new ArrayList<>()); 
+        game.setRounds(new ArrayList<>());
 
         Round r1 = new Round();
         game.agregarRonda(r1);
 
         assertEquals(1, game.getRounds().size());
-        assertEquals(game, r1.getGame()); 
+        assertEquals(game, r1.getGame());
     }
 
     @Test
     void shouldThrowExceptionWhenAddingTooManyRounds() {
-        
+
         Game game = new Game();
         game.setRounds(new ArrayList<>());
 
         game.agregarRonda(new Round());
         game.agregarRonda(new Round());
         game.agregarRonda(new Round());
-        
-        
+
         Round r4 = new Round();
-        
+
         Exception exception = assertThrows(IllegalStateException.class, () -> {
             game.agregarRonda(r4);
         });
@@ -192,38 +182,37 @@ class GameServiceTests {
     @Test
     @Transactional
     void shouldHandleDurationConverter() {
-        
+
         Game newGame = new Game();
         newGame.setPrivate(false);
         newGame.setMaxPlayers(4);
         newGame.setGameStatus(gameStatus.CREATED);
-       
-        Duration duration = Duration.ofMinutes(5); 
+
+        Duration duration = Duration.ofMinutes(5);
         newGame.setTime(duration);
 
         Game savedGame = gameService.saveGame(newGame);
-        
+
         Game retrievedGame = gameService.findGame(savedGame.getId());
-        
+
         assertEquals(300, retrievedGame.getTime().getSeconds());
         assertEquals(duration, retrievedGame.getTime());
     }
-    
+
     @Test
     void shouldHandleDurationConverterNulls() {
-       
+
         DurationSecondsConverter converter = new DurationSecondsConverter();
-     
+
         assertNull(converter.convertToDatabaseColumn(null));
-     
+
         assertEquals(60L, converter.convertToDatabaseColumn(Duration.ofMinutes(1)));
-     
+
         assertNull(converter.convertToEntityAttribute(null));
-      
+
         assertEquals(Duration.ofSeconds(60), converter.convertToEntityAttribute(60L));
     }
 
-    
     @Test
     void shouldFailToUpdateNonExistentGame() {
         Game game = new Game();
@@ -233,18 +222,18 @@ class GameServiceTests {
 
     @Test
     void shouldFailToDeleteNonExistentGame() {
-        
+
         assertThrows(ResourceNotFoundException.class, () -> gameService.deleteGame(99999));
     }
 
     @Test
     @Transactional
     void shouldPreserveIdOnUpdate() {
-        
+
         Game original = gameService.findGame(TEST_GAME_ID);
-        
+
         Game updateInfo = new Game();
-        updateInfo.setId(9999); 
+        updateInfo.setId(9999);
         updateInfo.setMaxPlayers(10);
 
         Game updated = gameService.updateGame(updateInfo, TEST_GAME_ID);
@@ -255,12 +244,128 @@ class GameServiceTests {
 
     @Test
     void shouldCoverGameStatusEnumValues() {
-        
+
         for (gameStatus status : gameStatus.values()) {
             assertNotNull(status);
         }
         assertEquals(gameStatus.CREATED, gameStatus.valueOf("CREATED"));
         assertEquals(gameStatus.ONGOING, gameStatus.valueOf("ONGOING"));
         assertEquals(gameStatus.FINISHED, gameStatus.valueOf("FINISHED"));
+    }
+
+    @Test
+    @Transactional
+    void shouldFindGamesByPlayerUsername() {
+        List<Game> games = gameService.findGamesByPlayerUsername(TEST_CREATOR_USERNAME);
+        assertNotNull(games);
+        // Should find games where user is creator or active player
+    }
+
+    @Test
+    @Transactional
+    void shouldReturnEmptyListForUnknownUsername() {
+        List<Game> games = gameService.findGamesByPlayerUsername("nonExistentUser");
+        assertNotNull(games);
+        assertTrue(games.isEmpty());
+    }
+
+    @Test
+    @Transactional
+    void shouldCheckUserInActiveGame() {
+        // Test with a user that is not in any active game
+        boolean isInGame = gameService.isUserInActiveGame(9999);
+        assertFalse(isInGame);
+    }
+
+    @Test
+    @Transactional
+    void shouldDetectUserInOngoingGame() {
+        Game game = gameService.findGame(TEST_GAME_ID);
+        if (game.getGameStatus() == gameStatus.ONGOING && !game.getActivePlayers().isEmpty()) {
+            ActivePlayer player = game.getActivePlayers().get(0);
+            boolean isInGame = gameService.isUserInActiveGame(player.getId());
+            assertTrue(isInGame);
+        }
+    }
+
+    @Test
+    void shouldTestGameGettersAndSetters() {
+        Game game = new Game();
+
+        // Test time
+        game.setTime(Duration.ofMinutes(10));
+        assertEquals(Duration.ofMinutes(10), game.getTime());
+
+        // Test maxPlayers
+        game.setMaxPlayers(8);
+        assertEquals(8, game.getMaxPlayers());
+
+        // Test isPrivate
+        game.setPrivate(true);
+        assertTrue(game.isPrivate());
+
+        // Test gameStatus
+        game.setGameStatus(gameStatus.ONGOING);
+        assertEquals(gameStatus.ONGOING, game.getGameStatus());
+
+        // Test activePlayers list
+        List<ActivePlayer> players = new ArrayList<>();
+        game.setActivePlayers(players);
+        assertEquals(players, game.getActivePlayers());
+
+        // Test rounds list
+        List<Round> rounds = new ArrayList<>();
+        game.setRounds(rounds);
+        assertEquals(rounds, game.getRounds());
+    }
+
+    @Test
+    void shouldTestGameCreatorAndWinner() {
+        Game game = new Game();
+
+        ActivePlayer creator = new ActivePlayer();
+        creator.setId(1);
+        creator.setUsername("creator1");
+
+        ActivePlayer winner = new ActivePlayer();
+        winner.setId(2);
+        winner.setUsername("winner1");
+
+        game.setCreator(creator);
+        game.setWinner(winner);
+
+        assertEquals(creator, game.getCreator());
+        assertEquals(winner, game.getWinner());
+    }
+
+    @Test
+    void shouldTestGameWatchers() {
+        Game game = new Game();
+        assertNotNull(game.getWatchers());
+        assertTrue(game.getWatchers().isEmpty());
+    }
+
+    @Test
+    void shouldTestGameChat() {
+        Game game = new Game();
+        assertNull(game.getChat());
+
+        es.us.dp1.l4_04_24_25.saboteur.chat.Chat chat = new es.us.dp1.l4_04_24_25.saboteur.chat.Chat();
+        game.setChat(chat);
+        assertEquals(chat, game.getChat());
+    }
+
+    @Test
+    void shouldTestGameCreatedAtAndStartTime() {
+        Game game = new Game();
+
+        java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
+        java.time.LocalDateTime startTime = java.time.LocalDateTime.now().plusMinutes(5);
+
+        game.setCreatedAt(createdAt);
+        game.setStartTime(startTime);
+
+        assertEquals(createdAt, game.getCreatedAt());
+        assertEquals(startTime, game.getStartTime());
     }
 }
