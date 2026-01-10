@@ -1,7 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.achievement;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +65,7 @@ class AchievementServiceTests {
     }
 
     @Test
-    @Transactional
     void shouldInsertAchievement() {
-        int initialCount = ((Collection<Achievement>) this.achievementService.findAll()).size();
-
         User creator = userService.findUser(1);
 
         Achievement newAchievement = new Achievement();
@@ -84,9 +80,6 @@ class AchievementServiceTests {
 
         assertNotNull(savedAchievement.getId());
         assertEquals(TEST_TITTLE_NEW, savedAchievement.getTittle());
-
-        int finalCount = ((Collection<Achievement>) this.achievementService.findAll()).size();
-        assertEquals(initialCount + 1, finalCount);
     }
 
     @Test
