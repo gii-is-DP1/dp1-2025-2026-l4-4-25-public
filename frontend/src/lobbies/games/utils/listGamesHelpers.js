@@ -8,23 +8,27 @@ export const filterActiveGames = (games) => {
 export const applyFilters = (games, filters, onlyFriend, friendsList) => {
   let filtered = filterActiveGames(games);
 
+  // Filtro por privacidad
   if (filters.privacy) {
     const isPrivate = filters.privacy === "private";
     filtered = filtered.filter((g) => g.private === isPrivate);
   }
 
+  // Filtro por estado
   if (filters.status) {
     filtered = filtered.filter(
       (g) => g.gameStatus.toLowerCase() === filters.status.toLowerCase()
     );
   }
 
+  // Filtro por número mínimo de jugadores
   if (filters.minPlayers) {
     filtered = filtered.filter(
       (g) => g.activePlayers?.length >= parseInt(filters.minPlayers)
     );
   }
 
+  // Filtro por búsqueda (ID)
   if (filters.search) {
     const term = filters.search.toLowerCase();
     filtered = filtered.filter(
@@ -96,7 +100,6 @@ export const isSpectatorRequestAccepted = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
-  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
@@ -111,48 +114,9 @@ export const isSpectatorRequestDenied = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
-  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
     String(targetGameId) === String(gameId)
   );
-};
-
-export const isSpectatorRequestAcceptedFor = (message, username, gameId, requestId) => {
-  if (!isSpectatorRequestAccepted(message, username, gameId)) return false;
-  if (requestId === null || requestId === undefined) return true;
-
-  const parts = String(message.content).split(':');
-  const targetRequestId = parts[3];
-  if (targetRequestId !== undefined && targetRequestId !== null && String(targetRequestId).length > 0) {
-    return String(targetRequestId) === String(requestId);
-  }
-
-  const responseMsgId = message?.id;
-  const req = Number(requestId);
-  const resp = Number(responseMsgId);
-  if (Number.isFinite(req) && Number.isFinite(resp)) {
-    return resp > req;
-  }
-  return false;
-};
-
-export const isSpectatorRequestDeniedFor = (message, username, gameId, requestId) => {
-  if (!isSpectatorRequestDenied(message, username, gameId)) return false;
-  if (requestId === null || requestId === undefined) return true;
-
-  const parts = String(message.content).split(':');
-  const targetRequestId = parts[3];
-  if (targetRequestId !== undefined && targetRequestId !== null && String(targetRequestId).length > 0) {
-    return String(targetRequestId) === String(requestId);
-  }
-
-  const responseMsgId = message?.id;
-  const req = Number(requestId);
-  const resp = Number(responseMsgId);
-  if (Number.isFinite(req) && Number.isFinite(resp)) {
-    return resp > req;
-  }
-  return false;
 };

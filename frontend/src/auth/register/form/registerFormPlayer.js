@@ -44,4 +44,14 @@ export const registerFormPlayer= [
       formValidators.emailValidator
     ],
   },
+  /*
+    {
+    tag: "Profile image",
+    name: "image",
+    type: "files",
+    defaultValue: "",
+    isRequired: false,
+    validators: []
+  },
+  */
 ];

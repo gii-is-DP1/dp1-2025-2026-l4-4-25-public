@@ -8,6 +8,7 @@ import ProfileImageSelector from './components/ProfileImageSelector';
 import EditProfileFormSection from './components/EditProfileFormSection';
 
 import '../../App.css';
+//import '../../static/css/lobbies/profile.css';
 
 export default function EditProfile() {
   const [dropdownOpen, setDropdownOpen] = useState(false);

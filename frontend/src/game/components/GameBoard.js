@@ -21,9 +21,12 @@ export default function GameBoard({
 
   
   const getObjectiveCardImage = (cardType) => {
+    // console.log('MAP REVEAL TYPE:', revealedObjective?.cardType);
     switch(cardType) {
       case 'gold': return '/images/card-images/finals/gold.png';
+      //case 'coal_1':
       case 'carbon_1': return '/images/card-images/finals/carbon_1.png';
+      //case 'coal_2':
       case 'carbon_2': return '/images/card-images/finals/carbon_2.png';
       default: return objetivecardreverse;
     }};
@@ -34,6 +37,7 @@ export default function GameBoard({
     if (!cell) {
       return <div className="cell-coords">{row},{col}</div>;}
 
+    // Primero verificar si es una carta objetivo revelada (incluso si ahora es túnel)
     const positionKey = `[${row}][${col}]`;
     const isMapRevealed = revealedObjective && revealedObjective.position === positionKey;
     const isPermanentlyRevealed = cell.revealed;
@@ -48,6 +52,7 @@ export default function GameBoard({
           alt={`Objective: ${typeToShow}`} 
           className="static-card-image revealed-objective" 
           style={{
+            // Borde dorado para revelaciones de mapa o cuando se alcanza el oro
             border: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '3px solid gold' : 'none',
             boxShadow: (isMapRevealed || (isPermanentlyRevealed && cell.cardType === 'gold')) ? '0 0 20px gold' : 'none'
           }}
@@ -59,6 +64,7 @@ export default function GameBoard({
       return <img src={startCardImage} alt="Start Card" className="static-card-image" />;}
 
     if (cell.type === 'objective') {
+      // Si no está revelada, mostramos el reverso
       return <img src={objetivecardreverse} alt="Objective Card" className="static-card-image" />;
     }
 

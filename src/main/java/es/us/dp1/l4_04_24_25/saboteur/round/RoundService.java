@@ -19,6 +19,7 @@ import es.us.dp1.l4_04_24_25.saboteur.round.builder.StandardRoundBuilder;
 import es.us.dp1.l4_04_24_25.saboteur.square.SquareRepository;
 import jakarta.validation.Valid;
 
+
 @Service
 public class RoundService {
 
@@ -27,10 +28,10 @@ public class RoundService {
 
     @Autowired
     public RoundService(RoundRepository roundRepository, BoardRepository boardRepository,
-            SquareRepository squareRepository,
-            CardRepository cardRepository,
-            LogService logService,
-            StandardRoundBuilder standardRoundBuilder) {
+                        SquareRepository squareRepository,
+                        CardRepository cardRepository,
+                        LogService logService,
+                        StandardRoundBuilder standardRoundBuilder) {
         this.roundRepository = roundRepository;
         this.standardRoundBuilder = standardRoundBuilder;
     }
@@ -55,7 +56,7 @@ public class RoundService {
     @Transactional
     public Round updateRound(@Valid Round round, Integer idToUpdate) {
         Round toUpdate = findRound(idToUpdate);
-        BeanUtils.copyProperties(round, toUpdate, "id", "game", "board");
+        BeanUtils.copyProperties(round, toUpdate, "id", "game", "board"); 
         roundRepository.save(toUpdate);
         return toUpdate;
     }
@@ -65,71 +66,53 @@ public class RoundService {
         Round toDelete = findRound(id);
         roundRepository.delete(toDelete);
     }
-
+    
     @Transactional(readOnly = true)
     public List<Round> findByGameId(Integer gameId) {
         return roundRepository.findByGameId(gameId);
     }
-
+    
     @Transactional(readOnly = true)
     public Round findByGameIdAndRoundNumber(Integer gameId, Integer roundNumber) {
         return roundRepository.findByGameIdAndRoundNumber(gameId, roundNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Round", "GameId and RoundNumber",
-                        gameId + " and " + roundNumber));
+                .orElseThrow(() -> new ResourceNotFoundException("Round", "GameId and RoundNumber", gameId + " and " + roundNumber));
     }
-
+    
     @Transactional(readOnly = true)
     public List<Round> findByWinnerRol(boolean winnerRol) {
         return roundRepository.findByWinnerRol(winnerRol);
     }
-
+    
     @Transactional(readOnly = true)
     public List<Round> findByRoundNumber(Integer roundNumber) {
         return roundRepository.findByRoundNumber(roundNumber);
     }
-
+    
     @Transactional(readOnly = true)
     public List<Round> findByLeftCardsLessThanEqual(Integer leftCards) {
         return roundRepository.findByLeftCardsLessThanEqual(leftCards);
     }
 
-    @Transactional(readOnly = true)
-    public Round findByBoardId(Integer boardId) {
-        return roundRepository.findByBoardId(boardId)
-                .orElseThrow(() -> new ResourceNotFoundException("Round", "BoardId", boardId));
-    }
-
     @Transactional
     public Round patchRoundBoard(Integer roundId, Map<String, Object> updates) {
-        return findRound(roundId);
+        return findRound(roundId); 
     }
 
     @Transactional
     public Round patchRoundGame(Integer roundId, Map<String, Object> updates) {
-        return findRound(roundId);
+        return findRound(roundId); 
     }
 
     @Transactional
     public Round initializeRound(Game game, Integer roundNumber) {
-        int numPlayers = game.getActivePlayers().size();
-        int cardsPerPlayer;
-        if (numPlayers <= 5)
-            cardsPerPlayer = 6;
-        else if (numPlayers >= 6 && numPlayers <= 7)
-            cardsPerPlayer = 5;
-        else
-            cardsPerPlayer = 4;
-
-        int leftCards = 70 - (numPlayers * cardsPerPlayer);
-
         Round round = standardRoundBuilder
                 .withGame(game)
                 .withRoundNumber(roundNumber)
-                .withLeftCards(leftCards)
+                .withLeftCards(60)
                 .withTimeSpent(Duration.ZERO)
                 .withWinnerRol(false)
                 .build();
-
+        
         this.saveRound(round);
         return round;
     }

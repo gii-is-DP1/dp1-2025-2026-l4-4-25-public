@@ -26,13 +26,14 @@ const CreateGame = () => {
   
 
   const welcomeMessageSentRef = useRef(false);
-  const joiningGameRef = useRef(false);
+  
+  // Estado inicial del juego desde la navegación
   const [game, setGame] = useState(location.state?.game ?? null);
   const [player, setPlayer] = useState(null);
-  const [numPlayers, setNumPlayers] = useState(game?.maxPlayers ?? 3);
-  const [isPrivate, setIsPrivate] = useState(game?.private ?? false);
-  const [patchGame, setPatchGame] = useState(game);
-  const [inLobby, setInLobby] = useState(() => {
+  const [numPlayers, setnumPlayers] = useState(game?.maxPlayers ?? 3);
+  const [isPrivate, setisPrivate] = useState(game?.private ?? false);
+  const [patchgame, setpatchgame] = useState(game);
+  const [lobbyIn, SetLobbyIn] = useState(() => {
     try {
       return isPlayerInLobby(game?.activePlayers, loggedInUser?.username);
     } catch (e) {
@@ -42,6 +43,7 @@ const CreateGame = () => {
 
   const isCreator = game?.creator === loggedInUser?.username;
 
+  // Custom hook para manejo de datos del lobby
   const {
     game: gameFromHook,
     setGame: setGameFromHook,
@@ -54,7 +56,7 @@ const CreateGame = () => {
     deleteGame,
     sendMessage,
     deleteMessages,
-    postRound,
+    postround,
     round
   } = useLobbyData(game?.id, jwt, isCreator);
 
@@ -63,18 +65,21 @@ const CreateGame = () => {
     fetchActivePlayerByUsername,
   } = useGameData(game);
 
+  // Sincronizar el estado del juego con el hook
   useEffect(() => {
     if (gameFromHook) {
       setGame(gameFromHook);
     }
   }, [gameFromHook]);
 
+  // WebSocket para actualizaciones en tiempo real
   const socketMessage = useWebSocket(
     `/topic/game/${game?.id}`
   );
 
+  // Efecto para procesar el mensaje que viene del socket
   useEffect(() => {
-    console.log("Socket message received:", socketMessage);
+    console.log("Mensaje recibido del socket:", socketMessage);
 
     if (!socketMessage) return;
 
@@ -84,7 +89,7 @@ const CreateGame = () => {
       try {
         payload = JSON.parse(payload);
       } catch (e) {
-        console.error("Error parsing WS message:", e);
+        console.error("Error parseando mensaje WS:", e);
         return;
       }
     }
@@ -100,8 +105,8 @@ const CreateGame = () => {
       return}
 
     const { game: updatedGame, round: updatedRound } = payload;
-    console.log(" COMPLETE ROUND FROM SOCKET:", updatedRound);
-    console.log(" BOARD IN ROUND:", updatedRound?.board);
+    console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
+    console.log(" BOARD EN EL ROUND:", updatedRound?.board);
 
     if (!updatedGame) return;
 
@@ -116,7 +121,6 @@ const CreateGame = () => {
 
   useEffect(() => {
     if (!game?.id) return;
-    if (joiningGameRef.current) return;
 
     const currentUsername = loggedInUser?.username;
     const currentActivePlayers = game?.activePlayers ?? [];
@@ -126,9 +130,8 @@ const CreateGame = () => {
     if (currentActivePlayers.includes(currentUsername)) return;
 
     const joinGame = async () => {
-      joiningGameRef.current = true; 
       try {
-        const updatedActivePlayerList = [...new Set([...currentActivePlayers, currentUsername])];
+        const updatedActivePlayerList = [...currentActivePlayers, currentUsername];
 
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
           method: "PATCH",
@@ -142,26 +145,27 @@ const CreateGame = () => {
         if (patchResponse.ok) {
           const updatedGame = await patchResponse.json();
           setGame(updatedGame);
-          setInLobby(true);
+          SetLobbyIn(true);
         } else {
-          toast.error("Error trying to join the game");
+          toast.error("Error al intentar unirse a la partida");
           navigate("/ListGames");
         }
       } catch (error) {
-        console.error("Error in the join process:", error);
+        console.error("Error en el proceso de unirse:", error);
         toast.error(error.message);
         navigate("/ListGames");
-      } finally {
-        joiningGameRef.current = false; 
       }
     };
 
     joinGame();
 
-}, [game?.id]);
+}, [game?.id, game?.activePlayers]);
 
+  // Postear mensaje de bienvenida y obtener info del jugador (solo creador)
   useEffect(() => {
     if (!game?.creator || !game?.chat) return;
+    
+    // Solo enviar el mensaje de bienvenida una vez y solo si el usuario es el creador
     if (!welcomeMessageSentRef.current && isCreator) {
       welcomeMessageSentRef.current = true;
       postFirstMessage(game.creator, game.chat);
@@ -171,7 +175,7 @@ const CreateGame = () => {
       try {
         const loggedInUser = tokenService.getUser();
         if (!loggedInUser || !loggedInUser.id) {
-          console.error("User ID not found.");
+          console.error("No se encontró el ID del usuario.");
           return;
         }
 
@@ -187,18 +191,19 @@ const CreateGame = () => {
           const data = await response.json();
           setPlayer(data);
         } else {
-          console.error('Response not OK:', response.status);
-          toast.error('Error fetching player information.');
+          console.error('Respuesta no OK:', response.status);
+          toast.error('Error al obtener la información del jugador.');
         }
       } catch (error) {
-        console.error('Fetch request problem:', error);
-        toast.error('Network error. Could not connect to the server.');
+        console.error('Hubo un problema con la petición fetch:', error);
+        toast.error('Error de red. No se pudo conectar con el servidor.');
       }
     };
 
     fetchPlayer();
   }, [game?.creator, game?.chat]);
 
+  // Monitorear si el jugador es expulsado
   useEffect(() => {
     if (!game || !game.id) return;
     const currentUsername = loggedInUser?.username;
@@ -206,12 +211,12 @@ const CreateGame = () => {
 
     const currentIn = isPlayerInLobby(game.activePlayers, currentUsername);
     
-    if (inLobby && !currentIn) {
+    if (lobbyIn && !currentIn) {
       toast.error('You have been expelled from the game');
       navigate('/lobby');
     }
     
-    setInLobby(currentIn);
+    SetLobbyIn(currentIn);
   }, [game?.activePlayers]);
 
   const handleAdminActionInLobby = (payload) => {
@@ -292,22 +297,13 @@ const CreateGame = () => {
     }
   };
 
+  // Handlers para solicitudes de espectador
   const handleAcceptSpectatorRequest = async (username) => {
     try {
       toast.success(`${username} accepted as spectator`);
-
-      const reqIds = (spectatorRequests || [])
-        .filter(s => s.username === username)
-        .map(s => s.messageId)
-        .filter(id => id !== null && id !== undefined);
-      const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
-
-      const acceptContent = requestId !== null
-        ? `SPECTATOR_ACCEPTED:${username}:${game.id}:${requestId}`
-        : `SPECTATOR_ACCEPTED:${username}:${game.id}`;
       
       await sendMessage(
-        acceptContent,
+        `SPECTATOR_ACCEPTED:${username}:${game.id}`,
         game.creator,
         game.chat
       );
@@ -327,19 +323,8 @@ const CreateGame = () => {
 
   const handleDenySpectatorRequest = async (username) => {
     try {
-
-      const reqIds = (spectatorRequests || [])
-        .filter(s => s.username === username)
-        .map(s => s.messageId)
-        .filter(id => id !== null && id !== undefined);
-      const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
-
-      const denyContent = requestId !== null
-        ? `SPECTATOR_DENIED:${username}:${game.id}:${requestId}`
-        : `SPECTATOR_DENIED:${username}:${game.id}`;
-
       await sendMessage(
-        denyContent,
+        `SPECTATOR_DENIED:${username}:${game.id}`,
         game.creator,
         game.chat
       );
@@ -359,6 +344,7 @@ const CreateGame = () => {
     }
   };
 
+  // Handlers para controles del lobby
   const handleSubmit = async () => {
     const request = {
       gameStatus: "CREATED",
@@ -369,10 +355,10 @@ const CreateGame = () => {
     try {
       const updated = await updateGame(request);
       toast.success("¡Game updated successfully!");
-      setPatchGame(updated);
+      setpatchgame(updated);
     } catch (error) {
-      console.error('Fetch request problem:', error);
-      toast.error('Network error. Try Again.');
+      console.error('Hubo un problema con la petición fetch:', error);
+      toast.error('Error of network. Try Again.');
     }
   };
 
@@ -384,7 +370,7 @@ const CreateGame = () => {
       pickaxeState: true,
       cartState: true,
       candleState: true,
-      goldNugget: 0, 
+      goldNugget: 0,  // Resetear pepitas a 0 al iniciar la partida
       rol: false
     }
     try {
@@ -393,10 +379,11 @@ const CreateGame = () => {
         const playerData = await fetchActivePlayerByUsername(player);
         const resettools = await patchActivePlayer(playerData.id, tools);
       }
-      const newRound = await postRound(game.id, 1);
+      const newRound = await postround(game.id, 1);
       const updatedGame = await updateGame(request);
-      setPatchGame(updatedGame);  
+      setpatchgame(updatedGame);  
       toast.success("Game started successfully!");
+      // navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
     } catch (error) {
       console.error(error); 
       toast.error('Dont connect with the server.');
@@ -406,11 +393,11 @@ const CreateGame = () => {
   const handleCancel = async () => {
     try {
       await deleteGame();
-      toast.error("Game deleted");
+      toast.error("Partida eliminada");
       navigate("/lobby");
     } catch (error) {
       console.error(error);
-      toast.error('Could not connect to the server');
+      toast.error('No se pudo conectar con el servidor');
     }
   };
 
@@ -424,7 +411,7 @@ const CreateGame = () => {
       await updateGame({ activePlayers: newActivePlayers });
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Could not connect to the server");
+      toast.error("No se pudo conectar con el servidor");
     }
   };
 
@@ -465,9 +452,9 @@ const CreateGame = () => {
 
           <GameSettings
             numPlayers={numPlayers}
-            onNumPlayersChange={setNumPlayers}
+            onNumPlayersChange={setnumPlayers}
             isPrivate={isPrivate}
-            onPrivacyChange={setIsPrivate}
+            onPrivacyChange={setisPrivate}
             isCreator={isCreator}
           />
 
@@ -490,7 +477,7 @@ const CreateGame = () => {
           <LobbyControls
             isCreator={isCreator}
             gameId={game?.id}
-            canStart={canStartGame(game?.activePlayers?.length ?? 0, 3)}
+            canStart={canStartGame(game?.activePlayers?.length ?? 0)}
             onSave={handleSubmit}
             onStart={handleStart}
             onCancel={handleCancel}

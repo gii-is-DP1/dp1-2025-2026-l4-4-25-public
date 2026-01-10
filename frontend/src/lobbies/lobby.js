@@ -18,15 +18,19 @@ import '../static/css/home/home.css';
 export default function Lobby() {
   const navigate = useNavigate();
   const [showFriends, setShowFriends] = useState(false);
+  
+  // Custom hook para manejar usuario, player y amigos
   const { isAdmin, player, friends, jwt } = useLobbyUser();
 
   const handleCreateGame = async () => {
-    console.log("this is the player submit", player);
+    console.log("este es el player submit", player);
     
     try {
+      // Crear solicitud de juego usando helper
       const gameRequest = createGameRequest(player);
-      console.log('Sending game request:', gameRequest);
+      console.log('Enviando solicitud de partida:', gameRequest);
 
+      // POST para crear el juego
       const gameResponse = await fetch("/api/v1/games", {
         method: "POST",
         headers: { 
@@ -38,16 +42,16 @@ export default function Lobby() {
 
       if (gameResponse.ok) {
         const newGame = await gameResponse.json();
-        toast.success("Game created successfully!");
-        console.log("Game created:", newGame);
+        toast.success("¡Partida creada con éxito!");
+        console.log("Partida creada:", newGame);
         navigate('/CreateGame/' + newGame.id, { state: { game: newGame } });
       } else {
         const errorData = await gameResponse.json();
-        toast.warn(`Error creating game: ${errorData.message}`);
+        toast.warn(`Error al crear la partida: ${errorData.message}`);
       }
     } catch (error) {
-      console.error('There was a problem with the fetch request:', error);
-      toast.error('Network error. Could not connect to the server.');
+      console.error('Hubo un problema con la petición fetch:', error);
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
   };
 

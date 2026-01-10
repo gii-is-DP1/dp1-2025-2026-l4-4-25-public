@@ -47,7 +47,6 @@ import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.AccessDeniedException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DeniedPasswordChangeException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedUserException;
-import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -62,16 +61,14 @@ class UserRestController {
 	private final PasswordEncoder encoder;
 	private final AchievementService achievementService;
 	private final ObjectMapper objectMapper;
-	private final GameService gameService;
 
 	@Autowired
-	public UserRestController(UserService userService, AuthoritiesService authService, PasswordEncoder encoder, AchievementService achievementService, ObjectMapper objectMapper, GameService gameService) {
+	public UserRestController(UserService userService, AuthoritiesService authService, PasswordEncoder encoder, AchievementService achievementService, ObjectMapper objectMapper) {
 		this.userService = userService;
 		this.authService = authService;
 		this.encoder = encoder;
 		this.achievementService = achievementService;
 		this.objectMapper = objectMapper;
-		this.gameService = gameService;
 	}
 
 	@GetMapping
@@ -93,13 +90,6 @@ class UserRestController {
 	@GetMapping(value = "{id}")
 	public ResponseEntity<UserDTO> findById(@PathVariable("id") Integer id) {
 		return new ResponseEntity<>(userService.findUserDTO(id), HttpStatus.OK);
-	}
-
-	@GetMapping(value = "{id}/inActiveGame")
-	public ResponseEntity<Boolean> isUserInActiveGame(@PathVariable("id") Integer id) {
-		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
-		boolean isInActiveGame = gameService.isUserInActiveGame(id);
-		return new ResponseEntity<>(isInActiveGame, HttpStatus.OK);
 	}
 
 	@GetMapping("byUsername")

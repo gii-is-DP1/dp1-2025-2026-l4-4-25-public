@@ -65,6 +65,17 @@ export default function WelcomeScreen({ username, onComplete }) {
         ))}
       </div>
       <div className="welcome-screen-content">
+        {/*<div className="floating-tools">
+          <span className="tool pickaxe">⛏️</span>
+          <span className="tool shovel">🔨</span>
+          <span className="tool lantern">🔦</span>
+          <span className="tool gold">💎</span>
+          <span className="tool pickaxe-2">⛏️</span>
+          <span className="tool dynamite">💣</span>
+          <span className="tool coin">🪙</span>
+          <span className="tool gem">💍</span>
+        </div>*/}
+
         <div className="welcome-title-container">
           <div className="title-background-glow"></div>
           <h1 className="welcome-title glow">WELCOME TO</h1>
@@ -73,6 +84,20 @@ export default function WelcomeScreen({ username, onComplete }) {
             <span className="subtitle-text">⛏️ Dig for gold... or sabotage the miners! 💣</span>
           </div>
         </div>
+
+     {/*  <div className="welcome-roles">
+          <div className="role-card role-left">
+            <img src={minerRol} alt="Miner" className="role-image" />
+            <p className="role-name">MINER</p>
+          </div>
+          <div className="vs-divider">
+            <span className="vs-text">VS</span>
+          </div>
+          <div className="role-card role-right">
+            <img src={saboteurRol} alt="Saboteur" className="role-image" />
+            <p className="role-name">SABOTEUR</p>
+          </div>
+        </div> */}
 
         <div className="welcome-user">
           <p className="user-greeting">

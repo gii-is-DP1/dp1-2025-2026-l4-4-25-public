@@ -12,6 +12,7 @@ public interface RoundRepository extends CrudRepository<Round, Integer> {
     @Override
     Optional<Round> findById(Integer id);
 
+   
     List<Round> findByRoundNumber(Integer roundNumber);
 
     List<Round> findByGameId(Integer gameId);
@@ -21,6 +22,4 @@ public interface RoundRepository extends CrudRepository<Round, Integer> {
     List<Round> findByWinnerRol(boolean winnerRol);
 
     List<Round> findByLeftCardsLessThanEqual(Integer leftCards);
-
-    Optional<Round> findByBoardId(Integer boardId);
 }

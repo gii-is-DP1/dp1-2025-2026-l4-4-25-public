@@ -26,12 +26,12 @@ export const useGameData = (game) => {
         const data = await response.json();
         return data;
       } else {
-        console.error('Response not OK:', response.status);
-        toast.error('Error to obtain player.');
+        console.error('Respuesta no OK:', response.status);
+        toast.error('Error al obtener el jugador.');
       }
     } catch (error) {
-      console.error('A problem with the fetch request:', error);
-      toast.error('Network error. Could not connect to the server.');
+      console.error('Hubo un problema con la petición fetch:', error);
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
   };
 
@@ -44,6 +44,7 @@ export const useGameData = (game) => {
 
     const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
       try {
+        // Preferimos obtener el ActivePlayer para incluir el estado de herramientas
         const activePlayer = await fetchActivePlayerByUsername(username);
         if (activePlayer) {
           return {
@@ -61,7 +62,7 @@ export const useGameData = (game) => {
         }
 
       } catch (err) {
-        console.error(`Error loading data for ${username}:`, err);
+        console.error(`Error al cargar datos de ${username}:`, err);
         return null;
       }
     }));
@@ -83,10 +84,10 @@ export const useGameData = (game) => {
         const chatData = await response.json();
         setChat(chatData);
       } else {
-        console.error('Error getting chat:', response.status);
+        console.error('Error al obtener el chat:', response.status);
       }
     } catch (error) {
-      console.error('Network error getting chat:', error);
+      console.error('Error de red al obtener el chat:', error);
     }
   };
 
@@ -134,11 +135,12 @@ export const useGameData = (game) => {
     }
   };
 
+  // Obtiene el deck por username (resuelve a activePlayerId y luego llama al endpoint correcto)
   const getDeck = async (username) => {
     try {
       const activePlayer = await fetchActivePlayerByUsername(username);
       if (!activePlayer?.id) {
-        console.warn('ActivePlayer not found for username:', username);
+        console.warn('ActivePlayer no encontrado para username:', username);
         setDeck(null);
         return null;
       }
@@ -156,17 +158,20 @@ export const useGameData = (game) => {
         setDeck(data);
         return data;
       } else if (response.status === 404) {
+        // No existe mazo todavía
         setDeck(null);
         return null;
       } else {
-        console.error('Error getting deck:', response.status);
+        console.error('Error al obtener el mazo:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting deck:', error);
+      console.error('Error de red al obtener el mazo:', error);
       return null;
     }
   };
+
+  // Obtiene el deck de otro jugador sin modificar el estado local
   const fetchOtherPlayerDeck = async (username) => {
     try {
       const activePlayer = await fetchActivePlayerByUsername(username);
@@ -188,19 +193,21 @@ export const useGameData = (game) => {
       }
       return null;
     } catch (error) {
-      console.error('Network error getting deck of another player:', error);
+      console.error('Error al obtener deck de otro jugador:', error);
       return null;
     }
   };
 
+  // Actualiza (PATCH) el deck de un ActivePlayer por username con la lista de IDs de cartas
   const patchDeck = async (username, cardIds) => {
     try {
       const activePlayer = await fetchActivePlayerByUsername(username);
       if (!activePlayer?.id) {
-        console.warn('ActivePlayer not found for username:', username);
+        console.warn('ActivePlayer no encontrado para username:', username);
         return null;
       }
 
+      // Buscar el deck por activePlayerId para obtener su ID
       const deckRes = await fetch(`/api/v1/decks/byActivePlayerId?activePlayerId=${activePlayer.id}`, {
         method: "GET",
         headers: {
@@ -210,17 +217,18 @@ export const useGameData = (game) => {
       });
 
       if (!deckRes.ok) {
-        console.error('Could not get deck for PATCH. Status:', deckRes.status);
+        console.error('No se pudo obtener el deck para hacer PATCH. Status:', deckRes.status);
         return null;
       }
 
       const deckData = await deckRes.json();
       const deckId = deckData?.id;
       if (!deckId) {
-        console.error('Deck without valid ID for PATCH');
+        console.error('Deck sin ID válido para hacer PATCH');
         return null;
       }
 
+      // Hacemos PATCH con la lista de cartas
       const patchRes = await fetch(`/api/v1/decks/${deckId}`, {
         method: "PATCH",
         headers: {
@@ -232,7 +240,7 @@ export const useGameData = (game) => {
 
       if (!patchRes.ok) {
         const msg = await patchRes.text();
-        console.error('Error making PATCH request for deck:', patchRes.status, msg);
+        console.error('Error al hacer PATCH del deck:', patchRes.status, msg);
         return null;
       }
 
@@ -240,7 +248,7 @@ export const useGameData = (game) => {
       setDeck(updated);
       return updated;
     } catch (error) {
-      console.error('Network error making PATCH request for deck:', error);
+      console.error('Error de red al hacer PATCH del deck:', error);
       return null;
     }
   };
@@ -263,11 +271,11 @@ export const useGameData = (game) => {
       if (response.ok) {
         return await response.json();
       } else {
-        console.error('Error getting ActivePlayer:', response.status);
+        console.error('Respuesta no OK al buscar ActivePlayer:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting ActivePlayer by username:', error);
+      console.error('Error de red al buscar ActivePlayer por username:', error);
       return null;
     }
   };
@@ -285,11 +293,11 @@ export const useGameData = (game) => {
         const data = await response.json();
         return data;
       } else {
-        console.error('Response not OK getting square:', response.status);
+        console.error('Respuesta no OK al obtener square:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting square:', error);
+      console.error('Error de red al obtener square:', error);
       return null;
     }
   };
@@ -312,7 +320,7 @@ export const useGameData = (game) => {
         throw new Error(errorData.message);
       }
     } catch (error) {
-      console.error('Network error making PATCH request for square:', error);
+      console.error('Error de red al hacer PATCH del square:', error);
       return null;
     }
   };
@@ -335,7 +343,7 @@ export const useGameData = (game) => {
         throw new Error(errorData.message);
       }
     } catch (error) {
-      console.error('Network error making PATCH request for board:', error);
+      console.error('Error de red al hacer PATCH del board:', error);
       return null;
     }
   };
@@ -353,11 +361,11 @@ export const useGameData = (game) => {
         const boardData = await response.json();
         return boardData;
       } else {
-        console.error('Response not OK getting board:', response.status);
+        console.error('Respuesta no OK al obtener board:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting board:', error);
+      console.error('Error de red al obtener board:', error);
       return null;
     }
   }
@@ -379,18 +387,18 @@ export const useGameData = (game) => {
       if (response.ok) {
         const text = await response.text();
         if (!text) {
-          console.warn('Square not found for coordinates:', coordinateX, coordinateY);
+          console.warn('Square no encontrado para coordenadas:', coordinateX, coordinateY);
           return null;
         }
         const square = JSON.parse(text);
-        console.log('🔍 Square found:', square);
+        console.log('🔍 Square encontrado:', square);
         return square;
       } else {
-        console.error('Response not OK getting square by coordinates:', response.status);
+        console.error('Respuesta no OK al obtener square por coordenadas:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting square by coordinates:', error);
+      console.error('Error de red al obtener square por coordenadas:', error);
       return null;
     }
   }
@@ -408,11 +416,11 @@ export const useGameData = (game) => {
         const logData = await response.json();
         return logData;
       } else {
-        console.error('Response not OK getting log:', response.status);
+        console.error('Respuesta no OK al obtener log:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting log:', error);
+      console.error('Error de red al obtener log:', error);
       return null;
     }
   }
@@ -435,7 +443,7 @@ export const useGameData = (game) => {
         throw new Error(errorData.message);
       }
     } catch (error) {
-      console.error('Network error making PATCH request for log:', error);
+      console.error('Error de red al hacer PATCH del log:', error);
       return null;
     }
   };
@@ -453,11 +461,11 @@ export const useGameData = (game) => {
         const messages = await response.json();
         return messages;
       } else {
-        console.error('Response not OK getting messages by chatId:', response.status);
+        console.error('Respuesta no OK al obtener mensajes por chatId:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error getting messages by chatId:', error);
+      console.error('Error de red al obtener mensajes por chatId:', error);
       return null;
     }
   };
@@ -475,14 +483,14 @@ export const useGameData = (game) => {
 
     if (response.ok) {
       const updatedPlayer = await response.json();
-      console.log('ActivePlayer updated:', updatedPlayer);
+      console.log('ActivePlayer actualizado:', updatedPlayer);
       return updatedPlayer;
     } else {
-      console.error('Error updating ActivePlayer');
+      console.error('Error al actualizar ActivePlayer');
       return null;
     }
   } catch (error) {
-    console.error('Network error making PATCH request for activePlayer:', error);
+    console.error('Error en patchActivePlayer:', error);
     return null;
   }
 };
@@ -499,13 +507,13 @@ export const useGameData = (game) => {
       });
       if (response.ok) {
         const updatedRound = await response.json();
-        console.log('Round updated:', updatedRound);
+        console.log('Round actualizado:', updatedRound);
         return updatedRound;
       } else {
         return null;
       }
     } catch (error) {
-      console.error('Network error making PATCH request for round:', error);
+      console.error('Error de red al hacer PATCH del round:', error);
       return null;
     }
   };
@@ -521,19 +529,20 @@ export const useGameData = (game) => {
       });
       if (response.ok) {
         const newRound = await response.json();
-        console.log('Round created:', newRound);
+        console.log('Round creado:', newRound);
         return newRound;
       } else {
         const errorText = await response.text();
-        console.error('Error creating round:', errorText);
+        console.error('Error al crear round:', errorText);
         return null;
       }
     } catch (error) {
-      console.error('Network error making POST request for round:', error);
+      console.error('Error de red al hacer POST del round:', error);
       return null;
     }
   };
 
+  // Obtener una ronda específica por gameId y roundNumber
   const getRoundByNumber = async (gameId, roundNumber) => {
     try {
       const response = await fetch(`/api/v1/rounds/byGameIdAndNumber?gameId=${gameId}&&roundNumber=${roundNumber}`, {
@@ -548,7 +557,7 @@ export const useGameData = (game) => {
         return rounds;
       }
     } catch (error) {
-      console.error('Network error getting round:', error);
+      console.error('Error al obtener ronda:', error);
       return null;
     }
   };
@@ -565,15 +574,16 @@ export const useGameData = (game) => {
       });
       if (response.ok) {
         const roundData = await response.json();
-        console.log('📦 Round fetched from backend:', roundData);
+        console.log('📦 Round obtenido del backend:', roundData);
         return roundData;
       }
     } catch (error) {
-      console.error('Error fetching round by ID:', error);
+      console.error('Error al obtener ronda por ID:', error);
       return null;
     }
   };
 
+  // Notificar fin de ronda a todos los jugadores via WebSocket
   const notifyRoundEnd = async (roundId, roundEndData) => {
     try {
       const response = await fetch(`/api/v1/rounds/${roundId}/notifyRoundEnd`, {
@@ -586,14 +596,14 @@ export const useGameData = (game) => {
       });
       
       if (response.ok) {
-        console.log('✅ Notification of round end sent');
+        console.log('✅ Notificación de fin de ronda enviada');
         return await response.json();
       } else {
-        console.error('Error notifying round end:', response.status);
+        console.error('Error al notificar fin de ronda:', response.status);
         return null;
       }
     } catch (error) {
-      console.error('Network error notifying round end:', error);
+      console.error('Error de red al notificar fin de ronda:', error);
       return null;
     }
   };
@@ -611,11 +621,11 @@ export const useGameData = (game) => {
           const activePlayer = await response.json();
           return activePlayer;
         } else {
-          console.error('Response not OK getting activePlayer by ID:', response.status);
+          console.error('Respuesta no OK al obtener activePlayer por ID:', response.status);
           return null;
         }
       } catch (error) {
-        console.error('Network error getting activePlayer by ID:', error);
+        console.error('Error de red al obtener activePlayer por ID:', error);
         return null;
       }
     };

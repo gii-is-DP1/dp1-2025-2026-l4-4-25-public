@@ -16,7 +16,7 @@ const AdminActions = () => {
       </div>
       <div className="hero-div-lobby">
         <Link to="/EditAchievement">
-          <button className="button-edit">✏️ Achievement Management</button>
+          <button className="button-edit">✏️ Edit Achievements</button>
         </Link>
       </div>
     </>

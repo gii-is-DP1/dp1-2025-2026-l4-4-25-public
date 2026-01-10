@@ -21,7 +21,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -47,10 +46,9 @@ public class Achievement extends BaseEntity{
     private String description;
 
 
-    @Lob
     private String badgeImage;
 
-    @Min(1)
+    @Min(0)
     private Integer threshold; 
 
     @Enumerated(EnumType.STRING)

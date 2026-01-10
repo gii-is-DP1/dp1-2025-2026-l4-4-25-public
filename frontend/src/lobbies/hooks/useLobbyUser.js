@@ -14,7 +14,7 @@ const useLobbyUser = () => {
       try {
         const loggedInUser = tokenService.getUser();
         if (!loggedInUser || !loggedInUser.id) {
-          console.error("Not found user ID.");
+          console.error("No se encontró el ID del usuario.");
           return;
         }
 
@@ -26,24 +26,26 @@ const useLobbyUser = () => {
           }
         });
 
-        console.log("response of player", response);
+        console.log("response del player", response);
         
         if (response.ok) {
           const data = await response.json();
           console.log("response 2", data);
           setPlayer(data);
         } else {
-          console.error('Response not OK:', response.status);
-          toast.error('Error fetching player information.');
+          console.error('Respuesta no OK:', response.status);
+          toast.error('Error al obtener la información del jugador.');
         }
       } catch (error) {
-        console.error('Fetch request problem:', error);
-        toast.error('Network error. Could not connect to the server.');
+        console.error('Hubo un problema con la petición fetch:', error);
+        toast.error('Error de red. No se pudo conectar con el servidor.');
       }
     };
 
     const admin = isUserAdmin(jwt);
     setIsAdmin(admin);
+
+    // Solo buscar los datos del jugador si el usuario NO es un admin
     if (!admin) {
       fetchPlayer();
     }

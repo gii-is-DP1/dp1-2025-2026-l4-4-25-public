@@ -7,6 +7,11 @@ import PropTypes from 'prop-types';
 
 const TagSelector = forwardRef((props, tagRef) => {
 
+  //El parametro defaultValues debe tener la siguiente estructura:
+  // [{value: "1", label: "Amistoso", color: "#FFC107"}, {value: "2", label: "Deportivo", color: "#FFC107"}, ...]
+  //Siendo value el id del tag, label el nombre del tag y color el color del tag
+
+
   function tagsTransform(values){
     let tags = [];
     tags = values.map((tag) => ({
@@ -92,7 +97,7 @@ const TagSelector = forwardRef((props, tagRef) => {
           {
             maxReached ? 
               <label htmlFor='tags-input'>
-                <p style={{color: '#cc0033', fontSize: '13px'}}>Tag limit reached.</p>
+                <p style={{color: '#cc0033', fontSize: '13px'}}>Límite de etiquetas alcanzado.</p>
               </label>
             :
               <></>
@@ -108,7 +113,7 @@ const TagSelector = forwardRef((props, tagRef) => {
           styles={colourStyles}
           value={selectedOptions}
           onChange={handleSelectChange}
-          placeholder="Select tags"
+          placeholder="Selecciona las etiquetas"
           ref={tagRef}
           >
         </Select>

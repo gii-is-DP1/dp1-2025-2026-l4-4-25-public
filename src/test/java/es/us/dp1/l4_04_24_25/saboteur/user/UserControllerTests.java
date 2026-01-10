@@ -76,9 +76,6 @@ class UserControllerTests {
     @MockBean
     private AchievementService achievementService;
 
-    @MockBean
-    private es.us.dp1.l4_04_24_25.saboteur.game.GameService gameService;
-
     private Authorities auth;
     private User user;
     private UserDTO userDTO;

@@ -130,14 +130,14 @@ describe('ListGames Component', () => {
     );
   };
 
-  test('1. RENDER: ListGames with all components', () => {
+  test('1. RENDERIZADO: ListGames con todos los componentes', () => {
     renderComponent();
     expect(screen.getByText('List Games Header')).toBeInTheDocument();
     expect(screen.getByText('Games Grid')).toBeInTheDocument();
     expect(screen.getByText('Filters Panel')).toBeInTheDocument();
   });
 
-  test('2. RENDER: Show loading state', () => {
+  test('2. RENDERIZADO: Mostrar estado de carga', () => {
     useListGames.mockReturnValue({
       ...mockListGamesData,
       loading: true
@@ -147,13 +147,13 @@ describe('ListGames Component', () => {
     expect(screen.getByText('Loading games...')).toBeInTheDocument();
   });
 
-  test('3. RENDER: Show games list', () => {
+  test('3. RENDERIZADO: Mostrar lista de juegos', () => {
     renderComponent();
     expect(screen.getByText('JaviOsuna')).toBeInTheDocument();
     expect(screen.getByText('PilarPacheco')).toBeInTheDocument();
   });
 
-  test('4. INTERACTION: Refresh games list', () => {
+  test('4. INTERACCIÓN: Refrescar lista de juegos', () => {
     renderComponent();
     
     const refreshButton = screen.getByText('Refresh');
@@ -162,7 +162,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.refreshGames).toHaveBeenCalled();
   });
 
-  test('5. INTERACTION: Request to join a game', () => {
+  test('5. INTERACCIÓN: Solicitar unirse a un juego', () => {
     renderComponent();
     
     const requestJoinButtons = screen.getAllByText('Request Join');
@@ -171,7 +171,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.handleRequestJoin).toHaveBeenCalledWith(1);
   });
 
-  test('6. INTERACTION: Request to be a spectator', () => {
+  test('6. INTERACCIÓN: Solicitar ser espectador', () => {
     renderComponent();
     
     const requestSpectatorButtons = screen.getAllByText('Request Spectator');
@@ -180,7 +180,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.handleRequestSpectator).toHaveBeenCalledWith(1);
   });
 
-  test('7. INTERACTION: Enter as spectator', () => {
+  test('7. INTERACCIÓN: Entrar como espectador', () => {
     renderComponent();
     
     const spectateButtons = screen.getAllByText('Spectate');
@@ -189,7 +189,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.handleSpectator).toHaveBeenCalledWith(1);
   });
 
-  test('8. FILTERS: Clear filters', () => {
+  test('8. FILTROS: Limpiar filtros', () => {
     renderComponent();
     
     const clearFiltersButton = screen.getByText('Clear Filters');
@@ -198,7 +198,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.clearFilters).toHaveBeenCalled();
   });
 
-  test('9. FILTERS: Toggle friends filter', () => {
+  test('9. FILTROS: Activar/desactivar filtro de amigos', () => {
     renderComponent();
     
     const toggleFriendButton = screen.getByText('Toggle Friend Filter');
@@ -207,7 +207,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.toggleFriendFilter).toHaveBeenCalled();
   });
 
-  test('10. FILTERS: Change creator filter', () => {
+  test('10. FILTROS: Cambiar filtro de creador', () => {
     renderComponent();
     
     const filterInput = screen.getByTestId('filter-input');
@@ -216,7 +216,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.handleFilterChange).toHaveBeenCalledWith('creator', 'JaviOsuna');
   });
 
-  test('11. RENDER: Show only filtered games', () => {
+  test('11. RENDERIZADO: Mostrar solo juegos filtrados', () => {
     const filteredGames = [mockGames[0]];
     useListGames.mockReturnValue({
       ...mockListGamesData,
@@ -229,7 +229,7 @@ describe('ListGames Component', () => {
     expect(screen.queryByText('PilarPacheco')).not.toBeInTheDocument();
   });
 
-  test('12. RENDER: Show friends filter enabled', () => {
+  test('12. RENDERIZADO: Mostrar filtro de amigos activado', () => {
     useListGames.mockReturnValue({
       ...mockListGamesData,
       onlyFriend: true,
@@ -241,7 +241,7 @@ describe('ListGames Component', () => {
     expect(screen.getByText('PilarPacheco')).toBeInTheDocument();
   });
 
-  test('13. RENDER: Empty games list', () => {
+  test('13. RENDERIZADO: Lista vacía de juegos', () => {
     useListGames.mockReturnValue({
       ...mockListGamesData,
       filteredGames: []
@@ -252,7 +252,7 @@ describe('ListGames Component', () => {
     expect(screen.getByText('Games Grid')).toBeInTheDocument();
   });
 
-  test('14. INTERACTION: Multiple join requests', () => {
+  test('14. INTERACCIÓN: Múltiples solicitudes de unión', () => {
     renderComponent();
     
     const requestJoinButtons = screen.getAllByText('Request Join');
@@ -264,7 +264,7 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.handleRequestJoin).toHaveBeenCalledWith(2);
   });
 
-  test('15. INTERACTION: Multiple spectator requests', () => {
+  test('15. INTERACCIÓN: Múltiples solicitudes de espectador', () => {
     renderComponent();
     
     const requestSpectatorButtons = screen.getAllByText('Request Spectator');
@@ -276,14 +276,14 @@ describe('ListGames Component', () => {
     expect(mockListGamesData.handleRequestSpectator).toHaveBeenCalledWith(2);
   });
 
-  test('16. RENDER: Header with refresh function', () => {
+  test('16. RENDERIZADO: Header con función de refresh', () => {
     renderComponent();
     
     expect(screen.getByText('List Games Header')).toBeInTheDocument();
     expect(screen.getByText('Refresh')).toBeInTheDocument();
   });
 
-  test('17. STATE: Verify filters are passed correctly', () => {
+  test('17. ESTADO: Verificar que los filtros se pasan correctamente', () => {
     const customFilters = { creator: 'Test', maxPlayers: '5', gameStatus: 'ONGOING' };
     useListGames.mockReturnValue({
       ...mockListGamesData,
@@ -295,7 +295,7 @@ describe('ListGames Component', () => {
     expect(useListGames).toHaveBeenCalled();
   });
 
-  test('18. RENDER: Components render when not loading', () => {
+  test('18. RENDERIZADO: Componentes se renderizan cuando no hay carga', () => {
     useListGames.mockReturnValue({
       ...mockListGamesData,
       loading: false

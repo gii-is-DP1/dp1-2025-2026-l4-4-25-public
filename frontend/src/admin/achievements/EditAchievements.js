@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import tokenService from '../../services/token.service';
 import ProfileLogo from '../../lobbies/profiles/components/ProfileLogo';
-import BadgeImageSelector from './components/BadgeImageSelector';
 import '../../static/css/lobbies/profile.css';
 import '../../static/css/lobbies/achievements.css';
 import '../../static/css/admin/editAchievements.css';
@@ -13,13 +12,11 @@ export default function EditAchievements() {
   const [message, setMessage] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
-  const [editDropdownOpen, setEditDropdownOpen] = useState(false);
   const [newAchievement, setNewAchievement] = useState({
     tittle: '',
     description: '',
     badgeImage: '',
-    threshold: 1,
+    threshold: 0,
     metric: 'GAMES_PLAYED'
   });
 
@@ -27,6 +24,7 @@ export default function EditAchievements() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Verificar si es admin
   useEffect(() => {
     try {
       const payload = JSON.parse(atob(jwt.split('.')[1]));
@@ -41,12 +39,14 @@ export default function EditAchievements() {
     }
   }, [jwt, navigate]);
 
+  // Fetch achievements
   useEffect(() => {
     fetchAchievements();
   }, [jwt]);
 
   const fetchAchievements = async () => {
     try {
+      //console.log("Fetching achievements...");
       const res = await fetch('/api/v1/achievements', { 
         headers: { Authorization: `Bearer ${jwt}` } 
       });
@@ -56,7 +56,9 @@ export default function EditAchievements() {
         console.error("Error fetching achievements:", errorText);
         throw new Error(`Failed to fetch achievements: ${res.status} ${errorText}`);
       }
+      
       const data = await res.json();
+     // console.log("Achievements loaded:", data);
       setAchievements(data);
     } catch (err) {
       console.error("Error in fetchAchievements:", err);
@@ -76,6 +78,7 @@ export default function EditAchievements() {
 
   const handleUpdate = async (ach) => {
     try {
+     // console.log("Updating achievement:", ach);
       const res = await fetch(`/api/v1/achievements/${ach.id}`, {
         method: 'PUT',
         headers: { 
@@ -104,6 +107,7 @@ export default function EditAchievements() {
     if (!window.confirm('Are you sure you want to delete this achievement?')) return;
     
     try {
+    //  console.log("Deleting achievement:", id);
       const res = await fetch(`/api/v1/achievements/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${jwt}` }
@@ -132,14 +136,17 @@ export default function EditAchievements() {
     try {
       const user = tokenService.getUser();
       
+      // El UserDeserializer espera solo un string con el username, no un objeto
       const achievementData = {
         tittle: newAchievement.tittle.trim(),
         description: newAchievement.description.trim(),
         badgeImage: newAchievement.badgeImage.trim() || null,
         threshold: parseInt(newAchievement.threshold, 10),
         metric: newAchievement.metric,
-        creator: user.username 
+        creator: user.username  // Solo el string del username
       };
+      
+     // console.log("Creating achievement with data:", JSON.stringify(achievementData, null, 2));
       
       const res = await fetch('/api/v1/achievements', {
         method: 'POST',
@@ -157,6 +164,7 @@ export default function EditAchievements() {
       }
       
       const result = await res.json();
+     // console.log("Achievement created successfully:", result);
       
       setMessage({ type: 'success', text: 'Achievement created successfully!' });
       setShowCreateForm(false);
@@ -178,7 +186,7 @@ export default function EditAchievements() {
   const metrics = [
     'GAMES_PLAYED',
     'VICTORIES',
-    'BUILT_PATHS',
+    'BUILDED_PATHS',
     'DESTROYED_PATHS',
     'GOLD_NUGGETS',
     'TOOLS_DAMAGED',
@@ -188,11 +196,14 @@ export default function EditAchievements() {
   if (!isAdmin) return null;
 
   const handleBack = () => {
+    // Si vino desde achievements, volver ahí
     if (location.state?.from === '/achievements' || document.referrer.includes('/Achievement')) {
       navigate('/Achievement');
     } else if (isAdmin) {
+      // Si es admin, ir al lobby
       navigate('/lobby');
     } else {
+      // Si es player, ir al profile
       navigate('/profile');
     }
   };
@@ -244,12 +255,11 @@ export default function EditAchievements() {
               />
             </div>
             <div className="form-row">
-              <BadgeImageSelector
-                badgeImage={newAchievement.badgeImage}
-                onImageChange={(image) => handleCreateChange('badgeImage', image)}
-                dropdownOpen={createDropdownOpen}
-                toggleDropdown={() => setCreateDropdownOpen(!createDropdownOpen)}
-                label="Badge Image:"
+              <label>Badge Image URL:</label>
+              <input
+                type="text"
+                value={newAchievement.badgeImage}
+                onChange={(e) => handleCreateChange('badgeImage', e.target.value)}
               />
             </div>
             <div className="form-row">
@@ -258,7 +268,7 @@ export default function EditAchievements() {
                 type="number"
                 value={newAchievement.threshold}
                 onChange={(e) => handleCreateChange('threshold', parseInt(e.target.value))}
-                min="1"
+                min="0"
                 required
               />
             </div>
@@ -296,12 +306,11 @@ export default function EditAchievements() {
                     />
                   </div>
                   <div className="form-row">
-                    <BadgeImageSelector
-                      badgeImage={ach.badgeImage || ''}
-                      onImageChange={(image) => handleChange(ach.id, 'badgeImage', image)}
-                      dropdownOpen={editDropdownOpen}
-                      toggleDropdown={() => setEditDropdownOpen(!editDropdownOpen)}
-                      label="Badge Image:"
+                    <label>Badge Image URL:</label>
+                    <input
+                      type="text"
+                      value={ach.badgeImage || ''}
+                      onChange={(e) => handleChange(ach.id, 'badgeImage', e.target.value)}
                     />
                   </div>
                   <div className="form-row">

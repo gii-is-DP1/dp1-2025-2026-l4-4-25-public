@@ -118,7 +118,7 @@ const FormInput = forwardRef(({ tag, name, type, defaultValue, values, isRequire
                         allowReorder={true}
                         maxFiles={10}
                         name={name} /* sets the file input name, it's filepond by default */
-                        labelIdle='Drag & drop your files or <span class="filepond--label-action">Browse</span>'
+                        labelIdle='Arrastra tus archivos o <span class="filepond--label-action">Selecciona</span>'
                         credits={false}
                     />
                 </div>

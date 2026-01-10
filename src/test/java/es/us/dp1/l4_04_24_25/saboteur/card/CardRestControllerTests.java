@@ -82,10 +82,13 @@ class CardRestControllerTests {
     @Test
     @WithMockUser(value = "spring")
     void shouldFindAllCards() throws Exception {
-        when(cardService.findPlayableCards()).thenReturn(List.of(testCard));
+        when(cardService.findAll()).thenReturn(List.of(testCard));
+
         mockMvc.perform(get(BASE_URL))
-                .andExpect(status().isOk());
-        verify(cardService).findPlayableCards();
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(TEST_CARD_ID));
+
+        verify(cardService).findAll();
     }
 
     @Test

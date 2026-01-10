@@ -39,14 +39,15 @@ export default function Profile() {
                         Authorization: `Bearer ${jwt}`,
                     },
                 });
-                // 
+                // Comprobar que la respuesta es válida
                 if(!response.ok){
                     throw new Error("Could not fetch profile. User might not exist");
                 }
                 const data = await response.json();
                 setProfile(data);
                 console.log(data);
-
+                //setOriginalUsername(data.username);
+                //setOriginalPassword(data.password);
 
             } catch(error){
                 console.error("Error fetching profile:", error);
@@ -67,6 +68,7 @@ export default function Profile() {
             console.error(error);}}
     }, []);
 
+    // Si los datos aún no han llegado, muestra esto y no continúes.
     if (!profile) {
         return <div>Loading profile...</div>;
     }

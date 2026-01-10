@@ -97,7 +97,7 @@ describe('AdminGames', () => {
     expect(screen.getByTestId('unified-games-grid')).toBeInTheDocument();
   });
 
-  test('2. VIEW: shows the loading state', () => {
+  test('2. VISUALIZACIÓN: muestra el estado de carga de la pantalla', () => {
     useAdminGames.mockReturnValue({
       filteredGames: [],
       allUsers: [],
@@ -118,7 +118,7 @@ describe('AdminGames', () => {
     expect(screen.queryByTestId('admin-games-filters')).not.toBeInTheDocument();
   });
 
-  test('3. FILTERS: change the selected filter', async () => {
+  test('3. FILTROS: cambio del filtro seleccionado', async () => {
     const handleFilterChange = jest.fn();
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
@@ -142,7 +142,7 @@ describe('AdminGames', () => {
     expect(handleFilterChange).toHaveBeenCalledWith('status', 'ACTIVE');
   });
 
-  test('4. FILTERS: clears all filters (clear)', async () => {
+  test('4. FILTROS: limpia todos los filtros (clear)', async () => {
     const clearFilters = jest.fn();
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
@@ -166,7 +166,7 @@ describe('AdminGames', () => {
     expect(clearFilters).toHaveBeenCalled();
   });
 
-  test('5. UPDATE: refreshes the games list', async () => {
+  test('5. ACTUALIZACIÓN: refresca la lista de las partidas', async () => {
     const refreshGames = jest.fn();
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
@@ -190,7 +190,7 @@ describe('AdminGames', () => {
     expect(refreshGames).toHaveBeenCalled();
   });
 
-  test('6. SPECTATE: spectate a game as admin', async () => {
+  test('6. ESPECTAR: especta una partida como administrador', async () => {
     const handleSpectate = jest.fn();
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
@@ -215,7 +215,7 @@ describe('AdminGames', () => {
   });
 
 
-  test('7. FINISH: opens the force-finish tab for a game', async () => {
+  test('7. FINALIZACIÓN: abre la pestaña de finalización forzada de una partida', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -237,13 +237,11 @@ describe('AdminGames', () => {
     await user.click(forceFinishButton);
     await waitFor(() => {
       expect(screen.getByTestId('force-finish-modal')).toBeInTheDocument();
-    });
-    await waitFor(() => {
       expect(screen.getByText('Force Finish Game #1')).toBeInTheDocument();
     });
   });
 
-  test('8. FINISH: closes the force-finish tab for a game', async () => {
+  test('8. FINALIZACIÓN: cierra la pestaña de finalización forzada de una partida', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -271,7 +269,7 @@ describe('AdminGames', () => {
       expect(screen.queryByTestId('force-finish-modal')).not.toBeInTheDocument()});
   });
 
-  test('9. FINISH: successfully force-finishes a game', async () => {
+  test('9. FINALIZACIÓN: finaliza una partida con éxito', async () => {
     const refreshGames = jest.fn();
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
@@ -305,7 +303,7 @@ describe('AdminGames', () => {
     expect(refreshGames).toHaveBeenCalled();
   });
 
-  test('10. FINISH: force-finish game error', async () => {
+  test('10. FINALIZACIÓN: Error de la finalización de una partida', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -332,7 +330,7 @@ describe('AdminGames', () => {
     await waitFor(() => {expect(toast.error).toHaveBeenCalledWith('Failed to force-finish game. Please try again.')});
   });
 
-  test('11. EXPULSION: Open the tab to expel a player', async () => {
+  test('11. EXPULSIÓN: Abrir la pestaña para expulsar a un jugador', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -354,13 +352,11 @@ describe('AdminGames', () => {
     await user.click(expelButton);
     await waitFor(() => {
       expect(screen.getByTestId('expel-player-modal')).toBeInTheDocument();
-    });
-    await waitFor(() => {
       expect(screen.getByText('Expel Player from Game #1')).toBeInTheDocument();
     });
   });
 
-  test('12. EXPULSION: Close the tab to expel a player', async () => {
+  test('12. EXPULSIÓN: cierra la pestaña para expulsar a un jugador', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -388,7 +384,7 @@ describe('AdminGames', () => {
       expect(screen.queryByTestId('expel-player-modal')).not.toBeInTheDocument();});
   });
 
-  test('13. EXPULSION: successfully expels a player from a game', async () => {
+  test('13. EXPULSIÓN: expulsa al jugador con éxito de una partida', async () => {
     const refreshGames = jest.fn();
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
@@ -422,7 +418,7 @@ describe('AdminGames', () => {
     expect(refreshGames).toHaveBeenCalled();
   });
 
-  test('14. EXPULSION: expel player error', async () => {
+  test('14. EXPULSIÓN: Error al expulsar jugador de una partida', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -449,7 +445,7 @@ describe('AdminGames', () => {
     await waitFor(() => {expect(toast.error).toHaveBeenCalledWith('Failed to expel player. Please try again.')});
   });
 
-  test('15. RENDER: Renders games', () => {
+  test('15. RENDERIZADO: Renderización de las partidas', () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -472,7 +468,7 @@ describe('AdminGames', () => {
     expect(screen.getByText('Game #2')).toBeInTheDocument();
   });
 
-  test('16. RENDER: Shows the default empty state when there are no games', () => {
+  test('16. RENDERIZADO: Muestra el estado vacío predeterminado cuando no hay ninguna partida', () => {
     useAdminGames.mockReturnValue({
       filteredGames: [],
       allUsers: mockUsers,
@@ -493,7 +489,7 @@ describe('AdminGames', () => {
   });
 
 
-  test('17. NAVIGATION: Link to the lobby', () => {
+  test('17. NAVEGACIÓN: Enlace hacia el lobby', () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,
@@ -515,7 +511,7 @@ describe('AdminGames', () => {
     expect(lobbyLink).toHaveAttribute('href','/lobby');
   });
 
-  test('18. RENDER: Shows game information in each card', async () => {
+  test('18. RENDERIZADO: Muestra la información de la partida en cada caja', async () => {
     useAdminGames.mockReturnValue({
       filteredGames: mockGames,
       allUsers: mockUsers,

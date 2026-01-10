@@ -2,10 +2,16 @@ export const formValidators = {
     notEmptyValidator: {
         validate: (value) => {
             if (value == null || value === undefined) return false;
+            // Si es string
             if (typeof value === "string") return value.trim().length > 0;
+            // Si es array (por ejemplo FileList)
             if (Array.isArray(value)) return value.length > 0;
+            // Si es FileList
             if( value instanceof FileList) return value.length > 0;
+
+            // Si es otra cosa, como un date
             return true; 
+            // return value.trim().length > 0;
         },
         message: "The field cannot be empty"
     },
@@ -29,6 +35,7 @@ export const formValidators = {
     },
     emailValidator: {
         validate: (value) => {
+            // Expresión regular para validar formato de email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(value);
         },

@@ -17,6 +17,7 @@ const FriendsDropdown = () => {
   const currentUser = tokenService.getUser();
   const currentUsername = currentUser?.username;
 
+  // Polling cada 5 segundos 
   useEffect(() => {
     if (!currentUsername) return;
     loadReceivedRequests();
@@ -26,6 +27,7 @@ const FriendsDropdown = () => {
     return () => clearInterval(intervalId);
   }, [currentUsername]);
 
+  // Cargamos los datos
   useEffect(() => {
     if (!currentUsername) return;
     if (activeTab === 'friends') {
@@ -49,7 +51,7 @@ const FriendsDropdown = () => {
         console.log('DATA OF FRIENDS:', player.friends);
         if (player.friends && player.friends.length > 0) {
           if (typeof player.friends[0] === 'string') {
-            const uniqueUsernames = [...new Set(player.friends)]; 
+            const uniqueUsernames = [...new Set(player.friends)]; // Para Eliminar posibles duplicados de username (IA - 3.9)
             const friendsData = await Promise.all(
               uniqueUsernames.map(async (username) => {
                 const friendResponse = await fetch(`${API_URL}/players/byUsername?username=${username}`, {
@@ -70,7 +72,7 @@ const FriendsDropdown = () => {
         } else {
           setFriends([]);}}
     } catch (err) {
-      console.error('Load error', err);
+      console.error('Error de carga', err);
     } finally {
       setLoading(false)}};
 
@@ -94,7 +96,7 @@ const FriendsDropdown = () => {
         setReceivedRequests(pendingRequests);
         setContReciv(pendingRequests.length);}
     } catch (err) {
-      console.error('Error loading requests:',err)}};
+      console.error('Error de carga de solicitudes:',err)}};
 
   const loadSentRequests = async () => {
     try {
@@ -110,7 +112,7 @@ const FriendsDropdown = () => {
         const pendingRequests = requests.filter(req => req.status === 'PENDING');
         setSentRequests(pendingRequests)}
     }catch(err){
-      console.error('Error loading sent requests', err);
+      console.error('Error de carga de solicitudes enviadas', err);
     }finally{
       setLoading(false)}};
 
@@ -245,6 +247,7 @@ const FriendsDropdown = () => {
         headers: {'Authorization':`Bearer ${jwt}`}});
       const friendPlayer = await friendResponse.json();
 
+  // Eliminamos los amigos de ambos lados ya que ers bidereccional 
       await fetch(`${API_URL}/players/${currentPlayer.id}/removeFriends/${friendPlayer.id}`,{
         method: 'PATCH',
         headers: {'Authorization':`Bearer ${jwt}`}});

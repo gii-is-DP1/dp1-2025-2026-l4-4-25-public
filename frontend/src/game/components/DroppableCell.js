@@ -14,9 +14,9 @@ export default function DroppableCell({
   collapseModeActive,
   isDestroying
 }) {
-  const [isDragOver, setIsDragOver] = useState(false); // Resalto de la celda cuando se ha arrastrado sobre la misma.
+  const [isDragOver, setIsDragOver] = useState(false); // resaltar la celda cuando se ha arrastrado sobre la misma
 
-  const handleDragOver = (e) => { 
+  const handleDragOver = (e) => { // Cuando se arrastra una carta x una celda
     e.preventDefault();
     if (!isMyTurn) {
       e.dataTransfer.dropEffect = 'none';
@@ -28,7 +28,7 @@ export default function DroppableCell({
     } else {
       e.dataTransfer.dropEffect = 'none';}};
 
-  const handleDragLeave = () => { // Cuando se retira el cursos de la celda
+  const handleDragLeave = () => { // cuando quitamos el cursor de la celda
     setIsDragOver(false);};
 
   const handleDrop = (e) => { // Cuando dropea la carta en la celda con row y col
@@ -75,7 +75,8 @@ export default function DroppableCell({
     if (onRightClick) onRightClick(row, col);
   };
 
-  const renderCellContent = () => { 
+  const renderCellContent = () => { // El redenrizado de la celda (carta, teniendo en cuenta que se puede rotar)
+    // Hay que ver que cuando se rota al arrastrar la carta no se ve correctamente ¡OJO!
     if (!cell) {
       return <span className="cell-placeholder">+</span>;
     }

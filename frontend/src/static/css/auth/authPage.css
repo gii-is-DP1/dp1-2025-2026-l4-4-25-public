@@ -2,6 +2,8 @@ body {
   margin: 0;
   padding: 0;
   height: 100vh;
+  /*min-height: 100%;
+  width: 100%;*/
   align-items: center;
   background-image: url('../../images/home_background.jpg');
   background-size: cover;
@@ -10,9 +12,11 @@ body {
 }
 
 .auth-page-container {
+  /*height: 100%;*/
   min-height: 60vh;
   width: 70%;
   max-width: 700px;
+  /*margin: 5rem auto;*/
   display: flex;
   flex-direction: column;
   margin: auto;
@@ -26,6 +30,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  /*Para hacer scroll en el contenedor*/
   max-height: 90vh;
   overflow-y: hidden;
 
@@ -46,7 +51,7 @@ body {
   background-repeat: no-repeat; 
 }
 .logout-title {
-  color: #b8860b; 
+  color: #b8860b; /* dark goldenrod — dorado oscuro tipo pepita de oro */
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
   font-weight: bold;
   letter-spacing: 1px;
@@ -61,11 +66,12 @@ body {
   max-width: 500px;
   height: 90%;
   width: 90%;
-  background: rgba(184, 134, 11, 0.3); 
-  border: 2px solid rgba(218, 165, 32, 0.6); 
+  /* Fondo dorado translúcido */
+  background: rgba(184, 134, 11, 0.3); /* darkgoldenrod con 30% opacidad */
+  border: 2px solid rgba(218, 165, 32, 0.6); /* borde dorado suave */
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); 
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); /* brillo dorado sutil */
 }
 
 .auth-form-container{
@@ -99,14 +105,16 @@ body {
   margin-top: 30px;
 }
 
+/* Contenedor de selección de imagen de perfil */
 .profile-image-selector {
     display: flex;
-    flex-direction: column; 
+    flex-direction: column; /* Label arriba, opciones abajo */
     align-items: center; 
     gap: 1rem; 
     margin-bottom: 1rem;
 }
 
+/* Contenedor de dropdown y input */
 .profile-image-options {
     display: flex;
     flex-direction: row; 
@@ -116,6 +124,7 @@ body {
     flex-wrap: wrap; 
 }
 
+/* Previsualización de la imagen */
 .profile-image-preview {
     width: 120px; 
     height: 120px; 

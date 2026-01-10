@@ -209,7 +209,7 @@ describe('Lobby Component', () => {
       fireEvent.click(createButton);
       
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith('Game created successfully!');
+        expect(toast.success).toHaveBeenCalledWith('¡Partida creada con éxito!');
       });
       expect(mockNavigate).toHaveBeenCalledWith('/CreateGame/123', { state: { game: newGame } });
     });
@@ -226,7 +226,7 @@ describe('Lobby Component', () => {
       fireEvent.click(createButton);
       
       await waitFor(() => {
-        expect(toast.warn).toHaveBeenCalledWith('Error creating game: Error creating game');
+        expect(toast.warn).toHaveBeenCalledWith('Error al crear la partida: Error creating game');
       });
     });
 
@@ -239,7 +239,7 @@ describe('Lobby Component', () => {
       fireEvent.click(createButton);
       
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Network error. Could not connect to the server.');
+        expect(toast.error).toHaveBeenCalledWith('Error de red. No se pudo conectar con el servidor.');
       });
     });
   });

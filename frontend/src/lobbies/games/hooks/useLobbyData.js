@@ -3,13 +3,16 @@ import { toast } from 'react-toastify';
 import tokenService from '../../../services/token.service';
 import { extractJoinRequests, extractSpectatorRequests, getUniqueActivePlayers } from '../utils/lobbyUtils';
 
-
+/**
+ * Custom hook para manejar toda la lógica de datos del lobby
+ */
 const useLobbyData = (gameId, jwt, isCreator) => {
   const [joinRequests, setJoinRequests] = useState([]);
   const [spectatorRequests, setSpectatorRequests] = useState([]);
   const [game, setGame] = useState(null);
   const [round, setRound] = useState(null);
 
+  // Fetch inicial del juego
   useEffect(() => {
     if (!gameId) return;
 
@@ -37,6 +40,7 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     return () => clearInterval(interval);
   }, [gameId, jwt]);
 
+  // Fetch de solicitudes de unión (solo para creador)
   useEffect(() => {
     if (!isCreator || !game?.chat) return;
     
@@ -70,15 +74,16 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     };
   }, [isCreator, game?.chat, jwt]);
 
+  // Fetch inicial del primer mensaje de bienvenida
   const postFirstMessage = async (creatorUsername, chatId) => {
     try {
       const loggedInUser = tokenService.getUser();
       if (!loggedInUser || !loggedInUser.id) {
-        console.error("User ID not found.");
+        console.error("No se encontró el ID del usuario.");
         return;
       }
 
-      const msg = "Welcome to Saboteur";
+      const msg = "Bienvenido a Saboteur";
       const request = {
         content: msg,
         activePlayer: creatorUsername,
@@ -96,17 +101,18 @@ const useLobbyData = (gameId, jwt, isCreator) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('CreateGame chat:', data);
+        console.log('Chat del CreateGame:', data);
       } else {
-        console.error('Response not OK:', response.status);
-        toast.error('Error fetching player message.');
+        console.error('Respuesta no OK:', response.status);
+        toast.error('Error al obtener el mensaje del jugador.');
       }
     } catch (error) {
-      console.error('Fetch request problem:', error);
-      toast.error('Network error. Could not connect to the server.');
+      console.error('Hubo un problema con la petición fetch:', error);
+      toast.error('Error de red. No se pudo conectar con el servidor.');
     }
   };
 
+  // Actualizar el juego con PATCH
   const updateGame = async (updates) => {
     try {
       const response = await fetch(`/api/v1/games/${gameId}`, {
@@ -132,6 +138,7 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     }
   };
 
+  // Eliminar el juego
   const deleteGame = async () => {
     try {
       const response = await fetch(`/api/v1/games/${gameId}`, {
@@ -154,6 +161,7 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     }
   };
 
+  // Enviar mensaje (para aceptar/rechazar solicitudes)
   const sendMessage = async (content, activePlayer, chatId) => {
     try {
       await fetch(`/api/v1/messages`, { 
@@ -174,6 +182,7 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     }
   };
 
+  // Eliminar mensajes
   const deleteMessages = async (messageIds) => {
     for (const mid of messageIds) {
       try {
@@ -187,9 +196,9 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     }
   };
 
-  const postRound = async (gameId, roundNumber) => {
+  const postround = async (gameid, roundnumber) => {
     try {
-      const response = await fetch(`/api/v1/rounds?gameId=${gameId}&roundNumber=${roundNumber}`, {
+      const response = await fetch(`/api/v1/rounds?gameId=${gameid}&roundNumber=${roundnumber}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -201,10 +210,10 @@ const useLobbyData = (gameId, jwt, isCreator) => {
         setRound(data);
         return data;   
       } else {
-        console.error('Error creating round:', response.status);
+        console.error('Error al crear la ronda:', response.status);
       } 
     } catch (error) {
-      console.error('Network error creating round:', error);
+      console.error('Error de red al crear la ronda:', error);
     }
   };
 
@@ -220,7 +229,7 @@ const useLobbyData = (gameId, jwt, isCreator) => {
     deleteGame,
     sendMessage,
     deleteMessages,
-    postRound,
+    postround,
     round
   };
 };

@@ -64,7 +64,8 @@ export default function RoundEndModal({
             ))}
           </div>
         </div>
-        
+
+        {/* Countdown para la nueva ronda */}
         <div className="round-end-countdown">
           <p className="countdown-text">
             {roundNumber < 3 

@@ -15,6 +15,7 @@ export default function GameEndModal({
   // Ordenar por total de pepitas (de mayor a menor)
   const sortedRankings = [...(playerRankings || [])].sort((a, b) => b.totalNuggets - a.totalNuggets);
   
+  // El ganador es el primero del ranking
   const winner = sortedRankings[0];
 
   const handleFinish = async () => {
@@ -32,6 +33,7 @@ export default function GameEndModal({
         toast.success("Game finished successfully!");
         return}
       
+      // Obtener el ID del ganador (el que tiene más goldNuggets)
       let winnerId = null;
       if (winner && winner.username) {
         const winnerData = await fetchActivePlayerByUsername(winner.username);
@@ -47,7 +49,8 @@ export default function GameEndModal({
       };
       if (winnerId) {
         request.winner = { id: winnerId }}
-
+      
+      // Filtrar elementos undefined/null antes del forEach
       const validPlayers = activePlayers.filter(p => p && p.username);
       
       for (const player of validPlayers) {
@@ -123,12 +126,14 @@ export default function GameEndModal({
     }
   };
 
+  // Efecto para llamar a handleFinish cuando el countdown llega a 0
   useEffect(() => {
     if (countdown === 0 && !finishExecutedRef.current) {
       handleFinish();
     }
   }, [countdown]);
   
+  // Función para obtener el emoji del podio
   const getPodiumEmoji = (position) => {
     switch(position) {
       case 0: return '🥇';
@@ -145,6 +150,7 @@ export default function GameEndModal({
           🎮🏆 GAME OVER 🏆🎮
         </h2>
         
+        {/* Ganador */}
         {winner && (
           <div className="game-winner-section">
             <h3 className="winner-announcement">👑 WINNER 👑</h3>
@@ -156,6 +162,7 @@ export default function GameEndModal({
           </div>
         )}
 
+        {/* Ranking completo */}
         <div className="round-end-section">
           <h3 className="round-end-section-title">📊 FINAL RANKINGS 📊</h3>
           <div className="rankings-grid">
@@ -172,6 +179,7 @@ export default function GameEndModal({
           </div>
         </div>
 
+        {/* Countdown para volver al lobby */}
         <div className="round-end-countdown">
           <p className="countdown-text">
             Returning to lobby in: {countdown}s

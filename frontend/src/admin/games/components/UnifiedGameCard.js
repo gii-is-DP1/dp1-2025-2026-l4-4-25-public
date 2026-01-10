@@ -109,7 +109,7 @@ const UnifiedGameCard = ({ game, onSpectate, onForceFinish, onExpelPlayer }) => 
             <>
               <div className="info-item">
                 <span className="info-label">⭐ Winner:</span>
-                <span className="info-value winner-name">{game.winner || "N/A"}</span>
+                <span className="info-value winner-name">{game.winner?.username || "N/A"}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">⏱️ Duration:</span>

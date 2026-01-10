@@ -13,6 +13,12 @@ export default function Ranking() {
     const user = tokenService.getUser(); 
     const jwt = tokenService.getLocalAccessToken();
 
+    
+    const mockPlayers = [
+        { id: 101, username: "MineroPro", image: "[https://api.dicebear.com/7.x/adventurer/svg?seed=Minero](https://api.dicebear.com/7.x/adventurer/svg?seed=Minero)", wonGames: 45, playedGames: 50, acquiredGoldNuggets: 120, builtPaths: 200, destroyedPaths: 10 },
+        { id: 102, username: "SaboteadorX", image: "[https://api.dicebear.com/7.x/adventurer/svg?seed=Sabo](https://api.dicebear.com/7.x/adventurer/svg?seed=Sabo)", wonGames: 20, playedGames: 40, acquiredGoldNuggets: 50, builtPaths: 100, destroyedPaths: 50 },
+        { id: 103, username: "PicoRoto", image: "[https://api.dicebear.com/7.x/adventurer/svg?seed=Pico](https://api.dicebear.com/7.x/adventurer/svg?seed=Pico)", wonGames: 2, playedGames: 10, acquiredGoldNuggets: 5, builtPaths: 20, destroyedPaths: 2 },
+    ];
 
     useEffect(() => {
         const fetchPlayers = async () => {
@@ -32,7 +38,7 @@ export default function Ranking() {
 
                 const data = await response.json();
                 
-                const finalData = data.length > 0 ? data : [];
+                const finalData = data.length > 0 ? data : mockPlayers;
                 
                 setPlayers(finalData);
                 sortPlayers(finalData, "wonGames");
@@ -41,6 +47,8 @@ export default function Ranking() {
             } catch (error) {
                 console.error("Error fetching ranking, using mock data:", error);
                 
+                setPlayers(mockPlayers);
+                sortPlayers(mockPlayers, "wonGames");
                 setLoading(false);
             }
         };
@@ -66,11 +74,11 @@ export default function Ranking() {
 
     const getMetricLabel = (metricKey) => {
         switch(metricKey) {
-            case "wonGames": return "VICTORIES";
-            case "acquiredGoldNuggets": return "GOLDS";
-            case "builtPaths": return "BUILT PATHS";
-            case "destroyedPaths": return "DESTROYED PATHS";
-            default: return "VALUE";
+            case "wonGames": return "VICTORIAS";
+            case "acquiredGoldNuggets": return "PEPITAS";
+            case "builtPaths": return "CAMINOS CONSTRUIDOS";
+            case "destroyedPaths": return "CAMINOS DESTRUIDOS";
+            default: return "VALOR";
         }
     };
 
@@ -78,7 +86,7 @@ export default function Ranking() {
         return (
             <div className="ranking-bg">
                 <div className="ranking-container">
-                    <h2 style={{color: '#ffd700', textAlign: 'center'}}>Loading Ranking...</h2>
+                    <h2 style={{color: '#ffd700', textAlign: 'center'}}>Cargando Ranking...</h2>
                 </div>
             </div>
         );
@@ -91,7 +99,7 @@ export default function Ranking() {
                 
                 <div className="ranking-header-container">
                 <div className="ranking-header">
-                    <h1>🏆 GLOBAL RANKING 🏆</h1>
+                    <h1>🏆 RANKING GLOBAL 🏆</h1>
                 </div>
                 <div class="top-right-lobby-buttons">
                 <Link to="/lobby">
@@ -102,12 +110,12 @@ export default function Ranking() {
 
     
                 <div className="ranking-filters">
-                    <label>SORT BY:</label>
+                    <label>CLASIFICAR POR:</label>
                     <select value={metric} onChange={handleMetricChange} className="filter-select">
-                        <option value="wonGames">VICTORIES</option>
-                        <option value="acquiredGoldNuggets">GOLDS</option>
-                        <option value="builtPaths">BUILT PATHS</option>
-                        <option value="destroyedPaths">DESTROYED PATHS</option>
+                        <option value="wonGames">PARTIDAS GANADAS</option>
+                        <option value="acquiredGoldNuggets">PEPITAS DE ORO</option>
+                        <option value="builtPaths">CAMINOS CONSTRUIDOS</option>
+                        <option value="destroyedPaths">CAMINOS DESTRUIDOS</option>
                     </select>
                 </div>
 
@@ -117,9 +125,9 @@ export default function Ranking() {
                         <thead>
                             <tr>
                                 <th className="gold-text">TOP</th> 
-                                <th className="gold-text">PLAYER</th>
+                                <th className="gold-text">JUGADOR</th>
                                 <th className="text-center gold-text">{getMetricLabel(metric)}</th>
-                                <th className="text-center gold-text">GAMES PLAYED</th>
+                                <th className="text-center gold-text">PARTIDAS JUGADAS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -159,7 +167,7 @@ export default function Ranking() {
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan="4" style={{textAlign: 'center', padding: '20px', color: 'white'}}>No players available.</td>
+                                    <td colSpan="4" style={{textAlign: 'center', padding: '20px', color: 'white'}}>No hay jugadores disponibles.</td>
                                 </tr>
                             )}
                         </tbody>

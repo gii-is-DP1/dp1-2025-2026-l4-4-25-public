@@ -142,7 +142,7 @@ public class AchievementService {
                 return player.getPlayedGames() >= threshold;
             case VICTORIES:
                 return player.getWonGames() >= threshold;
-            case BUILT_PATHS:
+            case BUILDED_PATHS:
                 return player.getBuiltPaths() >= threshold;
             case DESTROYED_PATHS:
                 return player.getDestroyedPaths() >= threshold;

@@ -1,26 +1,35 @@
 package es.us.dp1.l4_04_24_25.saboteur.achievement;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
+import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementRepository;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementService;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Metric;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerRepository;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.user.User;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService; 
@@ -132,8 +141,8 @@ class AchievementServiceTests {
     @Test
     @Transactional
     void shouldFindByTittle() {
-        Achievement achievement = this.achievementService.findByTittle(TEST_TITTLE_EXISTS); 
-        assertEquals(200, achievement.getId());
+        Achievement achievement = this.achievementService.findByTittle("TEST3?"); 
+        assertEquals(202, achievement.getId());
     }
 
     @Test
@@ -216,7 +225,7 @@ class AchievementServiceTests {
         ActivePlayer player = new ActivePlayer();
         player.setBuiltPaths(20);
         Achievement achievement = new Achievement();
-        achievement.setMetric(Metric.BUILT_PATHS);
+        achievement.setMetric(Metric.BUILDED_PATHS);
         achievement.setThreshold(10);
         assertTrue(achievementService.isAchievementUnlocked(achievement, player));
     }
@@ -307,7 +316,7 @@ class AchievementServiceTests {
         ActivePlayer player = new ActivePlayer();
         player.setBuiltPaths(5);
         Achievement achievement = new Achievement();
-        achievement.setMetric(Metric.BUILT_PATHS);
+        achievement.setMetric(Metric.BUILDED_PATHS);
         achievement.setThreshold(10);
         assertFalse(achievementService.isAchievementUnlocked(achievement, player));
     }
