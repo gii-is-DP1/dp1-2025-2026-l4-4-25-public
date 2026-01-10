@@ -141,7 +141,7 @@ Checklist de cumplimiento de uso ético de la IA (Sprint 3)
 - [x] No se compartieron datos personales/sensibles con herramientas externas.
 
 ### 💻 Sprint 4 — Resumen de uso de IA
-Usos registrados: 6
+Usos registrados: 7
 
 **Ámbitos principales:**
 
@@ -227,9 +227,8 @@ Checklist de cumplimiento de uso ético de la IA del sprint 4:
 | 4.4 | 07/01/2026 18:00 | 4 | Alejandro | ChatGPT (GPT-5) | Web| "Genera un banner ASCII artístico con el nombre del proyecto y diseña la lógica en Java para una clase StartupSequence que limpie la consola y simule una secuencia de carga antes de iniciar el backend." | Branding / UX | banner.txt, startup.js, StartupSequence.java | Comprobación visual en los logs de arranque.|Errores de compilación en Java por sintaxis incorrecta en la secuencia de inicio o problemas de codificación (encoding) en el banner ASCII.| Aceptado|
 | 4.5 | 04/01/2026 19:30 | 4 | Diego | ChatGPT | Web| "Las métricas de los jugadores aparecen amontonadas en una sola columna. Ayúdame a refactorizar el componente Ranking.js para separar las estadísticas"| UI / Refactor|Ranking.js, Ranking.css|Corrección y mejora del estilo del Ranking de jugadores |Riesgos: Conflictos de selectores CSS globales que afecten a otras tablas del proyecto. Mitigaciones: Uso de prefijos específicos y encapsulamiento de estilos para el componente Ranking.| Aceptado|
 | 4.6 | 04/01/2026 19:30 | 4 | Lorenzo | Perplexity AI (Pro, 2026) | Web| (https://www.perplexity.ai/search/estoy-haciendo-un-juego-y-quie-_oq80zzwRwakWSItJvndgw)| Depuración / Diseño técnico|ActivePlayerService.java y GameRepository.java|Revisión de código por pares y pruebas funcionales iniciando dos partidas consecutivas con el mismo usuario.|Riesgos: Conflictos de selectores CSS globales que afecten a otras tablas del proyecto. Mitigaciones: Uso de prefijos específicos y encapsulamiento de estilos para el componente Ranking.| Aceptado|
+| 4.7 | 10/01/2026 19:30 | 4 | Alejandro | Gemini Pro | Web| (https://gemini.google.com/share/d6f45bed2817)| UI / Ambientación|BackgroundMusic.js, SaboteurCursor.js|"Componentes de música (YouTube API) y cursor interactivo con partículas de oro."|Riesgos: Carga de scripts externos. Mitigación: Uso de useEffect y refs para limpieza.|Aceptado|
     
-    "Filtrar partida 'ONGOING' actual para sincronización de WebSocket vía JPA."
-
 
 ## Conclusiones finales sobre el uso de la IA en el proyecto
 La reflexión principal que obtenemos sobre el uso de la IA en el proyecto es que puede a llegar a ser una herramienta realmente útil a la hora de desarrollar la aplicación. Su uso ha sido muy relevante principalmente en la explicación de código, análisis de errores y ayuda a la resolución de estos. También ha jugado un papel muy importante en la generación de _assets_ visuales del proyecto (imágenes de background, avatares predefinidos, logos...) y en los estilos CSS, ya que hemos observado que la IA resolvió esta parte del proyecto de forma bastante rápida y eficiente (aunque existieron ocasiones en las que tuvimos que iterar varias veces para obtener código CSS adecuado, aunque estos casos fueron mínimos). En términos de backend, también ha sido de gran ayuda para la generación de algunos tests, aunque la mayoría han tenido que ser modificados, pero nos han ayudado a entender mejor su funcionalidad. 
