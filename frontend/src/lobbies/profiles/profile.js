@@ -4,6 +4,7 @@ import '../../static/css/lobbies/profile.css';
 import { Link } from 'react-router-dom';
 import tokenService from '../../services/token.service.js';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
+import useAchievementsData from './hooks/useAchievementsData.js';
 
 
 const jwt = tokenService.getLocalAccessToken();
@@ -20,6 +21,7 @@ export default function Profile() {
         joined: "",
         authority: ""
     });
+    const { achievements, loading: loadingAchievements } = useAchievementsData();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -109,23 +111,51 @@ export default function Profile() {
                     <div className="profile-info">
                         <h2 className={profile.authority.authority === 'ADMIN' ? "admin-username" : ""}>{profile?.username || 'Loading...'}</h2>
                         <div className="profile-buttons">
-                            <button className="button-small">🏠Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</button>
+                            <button className="button-small">🏠 Joined in {profile?.joined ? new Date(profile.joined).toLocaleDateString() : ''}</button>
                             <Link to="/profile/editProfile">
                                 <button className="button-small">✏️ Edit Profile</button>
                             </Link>
                             {!isAdmin && (
-                                <div className="profile-bottom-buttons">
-                                <Link to="/achievement">
-                                     <button className="button-small">🏆 Achievement</button>
-                                </Link>
                                 <Link to="/stats">
                                      <button className="button-small">📊 Stats</button>
                                 </Link>
-                                </div>
                             )}
                         </div>
                     </div>
                 </div>
+
+                {!isAdmin && (
+                    <div className="achievements-section">
+                        <h3 className="achievements-title">🏆 Achievements</h3>
+                        {loadingAchievements ? (
+                            <p>Loading achievements...</p>
+                        ) : (
+                            <div className="achievements-grid">
+                                {achievements.slice(0, 6).map((ach) => (
+                                    <div 
+                                        key={ach.id} 
+                                        className={`achievement-card ${ach.unlocked ? 'unlocked' : 'locked'}`}>
+                                        <div className="achievement-icon">
+                                            {ach.unlocked?'🏆':'🔒'}
+                                        </div>
+                                        <div className="achievement-details">
+                                            <h4>{ach.tittle}</h4>
+                                            <p className="achievement-description">{ach.description}</p>
+                                            <div className="achievement-progress">
+                                                <span>{ach.progress}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {achievements.length > 6 && (
+                            <Link to="/achievement" className="view-all-link">
+                                View All Achievements 📥
+                            </Link>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
