@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - JGR9196
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -42,5 +41,5 @@ jobs:
         run: |
           ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.projectKey=gii-is-DP1_dp1-2025-2026-l4-4-25-public \
-          -Dsonar.organization=gii-is-dp1
+          -Dsonar.organization=gii-is-dp1 \
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
