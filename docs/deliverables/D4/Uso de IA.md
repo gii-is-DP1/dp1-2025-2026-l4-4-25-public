@@ -141,7 +141,7 @@ Checklist de cumplimiento de uso ético de la IA (Sprint 3)
 - [x] No se compartieron datos personales/sensibles con herramientas externas.
 
 ### 💻 Sprint 4 — Resumen de uso de IA
-Usos registrados: 7
+Usos registrados: 8
 
 **Ámbitos principales:**
 
@@ -168,15 +168,15 @@ La IA ha sido vital para diagnosticar errores de flujo complejos (como el envío
 
 Checklist de cumplimiento de uso ético de la IA del sprint 4:
 
-[x] Toda interacción significativa está en el Registro Detallado con enlace a conversación.
+- [x] Toda interacción significativa está en el Registro Detallado con enlace a conversación.
 
-[x] No se usó IA para narrativa (o hay autorización documentada).
+- [x] No se usó IA para narrativa (o hay autorización documentada).
 
-[x] Toda pieza aceptada fue comprendida y verificada por humanos (tests/revisión).
+- [x] Toda pieza aceptada fue comprendida y verificada por humanos (tests/revisión).
 
-[x] Citas/Atribuciones incluidas cuando corresponde.
+- [x] Citas/Atribuciones incluidas cuando corresponde.
 
-[x] Se usó la IA sin dar datos personales/sensibles que pudieran quedar expuestos a herramientas externas.
+- [x] Se usó la IA sin dar datos personales/sensibles que pudieran quedar expuestos a herramientas externas.
 
 ## Registro detallado de uso de AI por Sprint
 ### Sprint 1 registro detallado de uso de IA por sprint
@@ -228,6 +228,9 @@ Checklist de cumplimiento de uso ético de la IA del sprint 4:
 | 4.5 | 04/01/2026 19:30 | 4 | Diego | ChatGPT | Web| "Las métricas de los jugadores aparecen amontonadas en una sola columna. Ayúdame a refactorizar el componente Ranking.js para separar las estadísticas"| UI / Refactor|Ranking.js, Ranking.css|Corrección y mejora del estilo del Ranking de jugadores |Riesgos: Conflictos de selectores CSS globales que afecten a otras tablas del proyecto. Mitigaciones: Uso de prefijos específicos y encapsulamiento de estilos para el componente Ranking.| Aceptado|
 | 4.6 | 04/01/2026 19:30 | 4 | Lorenzo | Perplexity AI (Pro, 2026) | Web| (https://www.perplexity.ai/search/estoy-haciendo-un-juego-y-quie-_oq80zzwRwakWSItJvndgw)| Depuración / Diseño técnico|ActivePlayerService.java y GameRepository.java|Revisión de código por pares y pruebas funcionales iniciando dos partidas consecutivas con el mismo usuario.|Riesgos: Conflictos de selectores CSS globales que afecten a otras tablas del proyecto. Mitigaciones: Uso de prefijos específicos y encapsulamiento de estilos para el componente Ranking.| Aceptado|
 | 4.7 | 10/01/2026 19:30 | 4 | Alejandro | Gemini Pro | Web| (https://gemini.google.com/share/d6f45bed2817)| UI / Ambientación|BackgroundMusic.js, SaboteurCursor.js|"Componentes de música (YouTube API) y cursor interactivo con partículas de oro."|Riesgos: Carga de scripts externos. Mitigación: Uso de useEffect y refs para limpieza.|Aceptado|
+| 4.8 | 08/01/2026 10:30 | 4 | Marcos y Diego | Gemini Pro | Web| (https://gemini.google.com/share/09ae3d328ee8)| Aprendizaje para Generación de pruebas Frontend / Diseño técnico|Ranking.test.js, Lobby.test.js|Ejecución de la suite mediante npm test y validación manual de las aserciones de UI.|Riesgos: Creación de tests superficiales que solo validen el renderizado. Mitigaciones: Estudio detallado de la lógica de simulación de eventos|Aceptado|
+
+
     
 
 ## Conclusiones finales sobre el uso de la IA en el proyecto
