@@ -38,6 +38,24 @@ import useWebSocket from "../hooks/useWebSocket";
 const jwt = tokenService.getLocalAccessToken();
 const timeturn = 10;
 
+// Función para detectar si la página se cargó por un refresh (F5)
+const detectPageRefresh = () => {
+  // Método 1: Performance Navigation API (más confiable)
+  const navEntries = performance.getEntriesByType('navigation');
+  if (navEntries.length > 0) {
+    const navType = navEntries[0].type;
+    // 'reload' = F5/refresh, 'navigate' = navegación normal, 'back_forward' = botón atrás/adelante
+    return navType === 'reload';
+  }
+  // Método 2: Fallback para navegadores antiguos
+  if (performance.navigation) {
+    return performance.navigation.type === 1; // 1 = TYPE_RELOAD
+  }
+  return false;
+};
+
+const isBrowserRefresh = detectPageRefresh();
+
 const getSavedRoundData = () => {
   const savedData = sessionStorage.getItem('newRoundData');
   if (savedData) {
@@ -98,6 +116,10 @@ export default function Board() {
     isSpectator: false
   };
 
+  // Detectar si es un refresh de página usando la Performance API del navegador
+  // Esto es 100% confiable: si el usuario presionó F5 o el botón de refresh
+  const isPageRefresh = isBrowserRefresh;
+
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
 
@@ -105,6 +127,10 @@ export default function Board() {
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
+
+  // Estado para sincronización de jugadores - esperar a que todos carguen
+  // Si es refresh de página, no esperamos (el jugador ya estaba en partida)
+  const [waitingForPlayers, setWaitingForPlayers] = useState(!isPageRefresh);
 
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
@@ -201,7 +227,8 @@ export default function Board() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingSteps, setLoadingSteps] = useState([{label: 'Loading Game Data', completed:false}, 
     {label: 'Loading Players', completed:false}, {label: 'Loading Board', completed:false}, {label: 'Loading Cards', completed:false}, 
-    {label: 'Loading Chat', completed:false}, {label: 'Assigning Rols', completed:false}, {label: 'Initializing Game State', completed:false}]);
+    {label: 'Loading Chat', completed:false}, {label: 'Assigning Rols', completed:false}, {label: 'Initializing Game State', completed:false},
+    {label: 'Waiting for all players to join the game', completed:false}]);
 
   const updateLoadingStep = (stepIndex, completed = true) => {
     setLoadingSteps(prev => {
@@ -410,6 +437,12 @@ export default function Board() {
         
       case "ROUND_END":
         handleWsRoundEnd(gameMessage);
+        break;
+
+      case "ALL_PLAYERS_READY":
+        console.log('✅ Todos los jugadores están listos!');
+        setWaitingForPlayers(false);
+        setIsLoading(false);
         break;
       
       default:
@@ -1564,11 +1597,38 @@ const activateCollapseMode = (card, cardIndex) => {
 
         if (isSpectator) {
           addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
-          toast.info('Spectator mode activated✅');}
-
-        setTimeout(() => {
+          toast.info('Spectator mode activated✅');
+          // Espectadores no esperan sincronización
+          setWaitingForPlayers(false);
           setIsLoading(false);
-        }, 500);
+        } else if (isPageRefresh) {
+          // Si es refresh, el jugador ya estaba en partida - no esperamos sincronización
+          console.log('🔄 Page refresh detected - skipping player sync');
+          setWaitingForPlayers(false);
+          setIsLoading(false);
+        } else {
+          // Notificar al servidor que este jugador está listo
+          updateLoadingStep(7); // Marcar que estamos esperando jugadores
+          try {
+            await fetch('/api/v1/rounds/playerReady', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${jwt}`,
+              },
+              body: JSON.stringify({
+                roundId: round?.id,
+                username: loggedInUser?.username
+              }),
+            });
+            console.log('📤 Notificado al servidor: jugador listo');
+          } catch (err) {
+            console.error('Error notificando playerReady:', err);
+            // Si falla, salir del loading de todas formas para no bloquear
+            setWaitingForPlayers(false);
+            setIsLoading(false);
+          }
+        }
       } catch (error) {
         console.error('Error initializing game:', error);
         toast.error('Error loading game data');
@@ -1747,6 +1807,9 @@ const activateCollapseMode = (card, cardIndex) => {
   useEffect(() => {
     if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
+    // No iniciar timer hasta que todos los jugadores estén listos
+    if (waitingForPlayers) return;
+
     const isMyTurn = !isSpectator && loggedInUser.username === currentPlayer;
 
     // Only decrement timer if it's the current player's turn
@@ -1768,7 +1831,7 @@ const activateCollapseMode = (card, cardIndex) => {
     }, 1000);
 
     return () => clearInterval(time);
-  }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator]);
+  }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator, waitingForPlayers]);
 
   useEffect(() => {
     if (roundEnded) {
