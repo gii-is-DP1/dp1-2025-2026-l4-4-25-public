@@ -25,6 +25,13 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game;
+import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
+import es.us.dp1.l4_04_24_25.saboteur.game.gameStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import java.time.LocalDateTime;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 
 class DeckRestControllerTests {
 
@@ -38,6 +45,12 @@ class DeckRestControllerTests {
 
     @Mock
     private CardService cardService;
+
+    @Mock
+    private GameService gameService;
+
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -67,7 +80,6 @@ class DeckRestControllerTests {
         testDeck.setCards(List.of(c));
     }
 
-    
     @Test
     void shouldGetAllDecks() throws Exception {
         when(deckService.findAll()).thenReturn(List.of(testDeck));
@@ -143,9 +155,22 @@ class DeckRestControllerTests {
     }
 
     @Test
-    void shouldPatchDeck() throws Exception {
+    void shouldPatchDeckFull() throws Exception {
         when(deckService.findDeck(1)).thenReturn(testDeck);
+
+        // Mock active player patch
+        testPlayer.setUsername("player1");
+        when(activePlayerService.patchActivePlayer(eq(4), any())).thenReturn(testPlayer);
+
+        // Mock save deck
         when(deckService.saveDeck(any())).thenReturn(testDeck);
+
+        // Mock game service for WS
+        Game game = new Game();
+        game.setId(100);
+        game.setGameStatus(gameStatus.ONGOING);
+        game.setStartTime(LocalDateTime.now());
+        when(gameService.findAllByActivePlayerId(4)).thenReturn(List.of(game));
 
         String json = """
                 {
@@ -158,5 +183,7 @@ class DeckRestControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isOk());
+
+        verify(messagingTemplate).convertAndSend(eq("/topic/game/100/deck"), any(Map.class));
     }
 }

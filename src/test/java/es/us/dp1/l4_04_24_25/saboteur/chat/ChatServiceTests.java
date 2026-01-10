@@ -21,70 +21,68 @@ import io.qameta.allure.Feature;
 
 @Epic("Chats")
 @Feature("Chats Service Tests")
-//@Owner("DP1-tutors")
+// @Owner("DP1-tutors")
 @SpringBootTest
 @AutoConfigureTestDatabase
 class ChatServiceTests {
 
     @Autowired
     private ChatService chatService;
-    
+
     @Autowired
     private ChatRepository chatRepository;
-    
+
     @Autowired
-    private GameRepository gameRepository; 
-   
-    
+    private GameRepository gameRepository;
+
     @Test
-    void shouldFindSingleChatById(){
+    void shouldFindSingleChatById() {
         Integer id = 1;
         Chat chat = this.chatService.findChat(id);
         assertEquals(id, chat.getId());
     }
 
     @Test
-    void shouldNotFindSingleChatById(){
+    void shouldNotFindSingleChatById() {
         Integer id = 40;
-        assertThrows(ResourceNotFoundException.class, ()->this.chatService.findChat(id));
+        assertThrows(ResourceNotFoundException.class, () -> this.chatService.findChat(id));
     }
 
     @Test
-    void shouldFindAllChats(){
+    void shouldFindAllChats() {
         List<Chat> chats = (List<Chat>) this.chatService.findAll();
-        assertEquals(2, chats.size());
+        assertEquals(3, chats.size()); // 3 chats in data.sql
     }
 
     @Test
-    void shouldFindByGameId(){
+    void shouldFindByGameId() {
         Integer id = 1;
         Chat chat = this.chatService.findByGameId(id);
-        assertTrue(chat.getGame().getId()==id);
+        assertTrue(chat.getGame().getId() == id);
     }
 
     @Test
-    void shouldNotFindByGameId(){
+    void shouldNotFindByGameId() {
         Integer id = 40;
-        assertThrows(ResourceNotFoundException.class,()->this.chatService.findByGameId(id));
+        assertThrows(ResourceNotFoundException.class, () -> this.chatService.findByGameId(id));
     }
 
     @Test
     @Transactional
-    void shouldDeleteChat(){
-        
+    void shouldDeleteChat() {
+
         Integer id = 2;
         Chat chatToDelete = this.chatService.findChat(id);
         assertEquals(id, chatToDelete.getId());
-        
-        if(chatToDelete.getGame() != null) {
+
+        if (chatToDelete.getGame() != null) {
             chatToDelete.getGame().setChat(null);
             gameRepository.save(chatToDelete.getGame());
         }
 
         this.chatService.deleteChat(id);
-        assertThrows(ResourceNotFoundException.class, ()->this.chatService.findChat(id));
+        assertThrows(ResourceNotFoundException.class, () -> this.chatService.findChat(id));
     }
-
 
     @Test
     @Transactional
@@ -99,13 +97,13 @@ class ChatServiceTests {
     void shouldUpdateChat() {
         Integer id = 1;
         Chat updateInfo = new Chat();
-        
+
         Chat updated = chatService.updateChat(updateInfo, id);
-        
+
         assertNotNull(updated);
         assertEquals(id, updated.getId());
     }
-    
+
     @Test
     void shouldFailDeleteNonExistentChat() {
         assertThrows(ResourceNotFoundException.class, () -> chatService.deleteChat(999));
@@ -114,15 +112,15 @@ class ChatServiceTests {
     @Test
     @Transactional
     void shouldReturnEmptyListWhenNoChatsExist() {
-        
+
         List<Game> games = (List<Game>) gameRepository.findAll();
-        for(Game g : games) {
+        for (Game g : games) {
             g.setChat(null);
             gameRepository.save(g);
         }
-        
-        chatRepository.deleteAll(); 
-        
+
+        chatRepository.deleteAll();
+
         List<Chat> chats = (List<Chat>) chatService.findAll();
         assertTrue(chats.isEmpty());
     }
