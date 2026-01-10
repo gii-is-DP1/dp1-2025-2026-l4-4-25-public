@@ -106,9 +106,6 @@ export default function Board() {
   const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
 
-
-
-
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
   const [currentPlayer, setCurrentPlayer] = useState();
@@ -1750,15 +1747,20 @@ const activateCollapseMode = (card, cardIndex) => {
   useEffect(() => {
     if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
-    const shouldForceTimeout = !isSpectator && loggedInUser.username === currentPlayer;
+    const isMyTurn = !isSpectator && loggedInUser.username === currentPlayer;
+
+    // Only decrement timer if it's the current player's turn
+    if (!isMyTurn) {
+      // For other players, keep the timer frozen at timeturn
+      setCont(timeturn);
+      return;
+    }
 
     const time = setInterval(() => {
       setCont((prevCont) => {
         if (prevCont <= 1) {
           clearInterval(time);
-          if (shouldForceTimeout) {
-            handleTurnTimeOut();
-          }
+          handleTurnTimeOut();
           return 0;
         }
         return prevCont - 1;
@@ -2034,7 +2036,6 @@ const activateCollapseMode = (card, cardIndex) => {
   return (
     <div className="board-container">
 
-
       {isCreator && spectatorRequests.length > 0 && (
         <SpectatorRequestsInGame
           spectatorRequests={spectatorRequests}
@@ -2105,6 +2106,7 @@ const activateCollapseMode = (card, cardIndex) => {
         isSpectator={isSpectator}
         isCreator={isCreator}
         handleForceEndRound={handleForceEndRound}
+        isMyTurn={loggedInUser?.username === currentPlayer}
       />
 
       <GameBoard

@@ -8,7 +8,8 @@ export default function GameControls({
   handleDiscard, 
   isSpectator,
   isCreator,
-  handleForceEndRound
+  handleForceEndRound,
+  isMyTurn
 }) {
   return (
     <>
@@ -33,7 +34,10 @@ export default function GameControls({
         🔎 Reveal & End Round
       </button>
       
-      <div className="time-card">⏰ {formatTime(cont)}</div>
+      <div className={`time-card ${isMyTurn ? 'timer-active' : 'timer-frozen'}`}
+           title={isMyTurn ? 'Your turn - timer running' : 'Waiting for your turn'}>
+        {isMyTurn ? '⏰' : '⏸️'} {formatTime(cont)}
+      </div>
       <div className="round-box">🕓·ROUND {numRound}/3</div>
     </>
   );

@@ -238,6 +238,29 @@
   display: flex;
   align-items: left;
   gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.time-card.timer-active {
+  background: linear-gradient(135deg, #2e2e2e 0%, #1a3a1a 100%);
+  border-color: #4caf50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+.time-card.timer-frozen {
+  background: linear-gradient(135deg, #2e2e2e 0%, #3a3a1a 100%);
+  border-color: #ff9800;
+  opacity: 0.8;
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+  }
 }
 
 .round-box {
@@ -1436,4 +1459,24 @@
   font-size: 1.3rem;
   font-weight: bold;
   color: #ffd700;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
