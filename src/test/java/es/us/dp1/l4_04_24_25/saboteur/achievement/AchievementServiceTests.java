@@ -65,7 +65,13 @@ class AchievementServiceTests {
     }
 
     @Test
+    @Transactional
     void shouldInsertAchievement() {
+        try {
+            achievementService.deleteAchievement(201);
+        } catch (Exception e) {
+        }
+
         User creator = userService.findUser(1);
 
         Achievement newAchievement = new Achievement();
