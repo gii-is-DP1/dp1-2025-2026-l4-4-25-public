@@ -11,40 +11,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import es.us.dp1.l4_04_24_25.saboteur.achievements.Achievement;
 import es.us.dp1.l4_04_24_25.saboteur.achievements.AchievementService;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
-import es.us.dp1.l4_04_24_25.saboteur.deck.DeckService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
-import es.us.dp1.l4_04_24_25.saboteur.message.Message;
-import es.us.dp1.l4_04_24_25.saboteur.message.MessageService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+
 
 @Service
 public class PlayerService {
 
-    private final PlayerRepository playerRepository;
-    private final GameService gameService;
-    private final AchievementService achievementService;
-    private final DeckService deckService;
-    private final MessageService messageService;
-    
-    @PersistenceContext
-    private EntityManager entityManager;
+    private PlayerRepository playerRepository;
+    private GameService gameService;
+    private AchievementService achievementService;
 
     @Autowired
-    public PlayerService(PlayerRepository playerRepository,
-                         GameService gameService,
-                         AchievementService achievementService,
-                         DeckService deckService,
-                         MessageService messageService) {
+    public PlayerService(PlayerRepository playerRepository, GameService gameService,AchievementService achievementService) {
         this.playerRepository = playerRepository;
         this.gameService = gameService;
-        this.achievementService = achievementService;
-        this.deckService = deckService;
-        this.messageService = messageService;
+        this.achievementService= achievementService;
     }
 
     @Transactional
@@ -53,18 +37,17 @@ public class PlayerService {
         return player;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional (readOnly = true)
     public Player findPlayer(Integer id) {
-        return playerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Player", "id", id));
+        return playerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Player","id",id));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional (readOnly = true)
     public PlayerDTO findPlayerDTO(Integer id) {
-        Player player = playerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Player", "id", id));
-        return new PlayerDTO(player.getId(), player.getUsername(), player.getName(), player.getBirthDate(), player.getJoined(), player.getImage(),
-            player.getEmail(), player.getAuthority().getAuthority(), player.getPlayedGames(), player.getWonGames(), player.getDestroyedPaths(),
-            player.getBuiltPaths(), player.getAcquiredGoldNuggets(), player.getPeopleDamaged(), player.getPeopleRepaired(), player.isWatcher(),
-            player.getFriends().stream().map(f -> f.getUsername()).toList(), player.getAccquiredAchievements(), player.getGame());
+        Player player = playerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Player","id",id));
+        return new PlayerDTO(player.getId(),player.getUsername(), player.getName(), player.getBirthDate(), player.getJoined(), player.getImage(), player.getEmail(), player.getAuthority().getAuthority(),
+            player.getPlayedGames(), player.getWonGames(), player.getDestroyedPaths(), player.getBuiltPaths(), 
+            player.getAcquiredGoldNuggets(), player.getPeopleDamaged(), player.getPeopleRepaired(), player.isWatcher(), player.getFriends().stream().map(f->f.getUsername()).toList(), player.getAccquiredAchievements(), player.getGame());
     }
 
     @Transactional (readOnly = true)
@@ -125,131 +108,31 @@ public class PlayerService {
     @Transactional
     public void deletePlayer(Integer id) {
         Player toDelete = findPlayer(id);
-        Integer userId = toDelete.getId();
-        boolean isActivePlayer = toDelete instanceof ActivePlayer;
-
-        detachCommonRelationships(toDelete);
-
-        if (isActivePlayer) {
-            detachActivePlayerRelationships((ActivePlayer) toDelete);
-        }
-        entityManager.flush();
-        entityManager.clear();
-        
-        if (isActivePlayer) {
-            entityManager.createNativeQuery("DELETE FROM active_player WHERE id = :id")
-                .setParameter("id", userId)
-                .executeUpdate();
-        }
-        
-        entityManager.createNativeQuery("DELETE FROM player WHERE id = :id")
-            .setParameter("id", userId)
-            .executeUpdate();
+        playerRepository.delete(toDelete);
     }
 
     @Transactional
     public Player patchPlayer(Integer id, Map<String, Object> updates) {
-        Player player = findPlayer(id);
-        if (updates.containsKey("game")) {
-            Integer gameId = (Integer) updates.get("game");
-            Game game = gameService.findGame(gameId);
-            player.setGame(game);
-        }
-        return playerRepository.save(player);
+    Player player = findPlayer(id);
+    if (updates.containsKey("game")) {
+        Integer gameId = (Integer) updates.get("game");
+        Game game = gameService.findGame(gameId);
+        player.setGame(game); // actualiza FK, lado propietario
     }
+    return playerRepository.save(player);
+}
 
-    @Transactional
+@Transactional
     public Player patchPlayerAchievement(Integer id, Map<String, Object> updates) {
-        Player player = findPlayer(id);
-        if (updates.containsKey("accquiredAchievements")) {
-            Integer achievementId = (Integer) updates.get("accquiredAchievements");
-            Achievement achievement = achievementService.findAchievement(achievementId);
-            player.getAccquiredAchievements().add(achievement);
-        }
-        return playerRepository.save(player);
+    Player player = findPlayer(id);
+    if (updates.containsKey("accquiredAchievements")) {
+        Integer achievementId = (Integer) updates.get("accquiredAchievements");
+        Achievement achievement = achievementService.findAchievement(achievementId);
+        player.getAccquiredAchievements().add(achievement); // actualiza FK, lado propietario
     }
+    return playerRepository.save(player);
+}
 
-    @Transactional
-    public Player addFriend (Integer id, Integer friendId) {
-        Player player = findPlayer(id);
-        Player friend = findPlayer(friendId);
-
-        if(id.equals(friendId)) {
-            throw new IllegalArgumentException("A player cannot add themselves as a friend.");
-        }
-        
-        player.getFriends().add(friend);
-        friend.getFriends().add(player);
-        return playerRepository.save(player);
-    }
-
-    @Transactional
-    public Player removeFriend (Integer id, Integer friendId) {
-        Player player = findPlayer(id);
-        Player friend = findPlayer(friendId);
-            if (player.getFriends().contains(friend) && friend.getFriends().contains(player)) {
-                player.getFriends().remove(friend);
-                friend.getFriends().remove(player);
-            }
-        return playerRepository.save(player);
-        
-        }    
-    
-
-
-
-
-    private void detachCommonRelationships(Player player) {
-        for (Player friend : new ArrayList<>(player.getFriends())) {
-            friend.getFriends().remove(player);
-        }
-        player.getFriends().clear();
-
-        for (Achievement achievement : new ArrayList<>(player.getAccquiredAchievements())) {
-            achievement.getPlayers().remove(player);
-        }
-        player.getAccquiredAchievements().clear();
-
-        Game game = player.getGame();
-        if (game != null) {
-            game.getWatchers().remove(player);
-            player.setGame(null);
-        }
-    }
-
-    private void detachActivePlayerRelationships(ActivePlayer activePlayer) {
-        Deck deck = activePlayer.getDeck();
-        if (deck != null) {
-            deck.setActivePlayer(null);
-            activePlayer.setDeck(null);
-            deckService.saveDeck(deck);
-        }
-
-        for (Game created : new ArrayList<>(activePlayer.getCreatedGames())) {
-            created.setCreator(null);
-            gameService.saveGame(created);
-        }
-        activePlayer.getCreatedGames().clear();
-
-        for (Game won : new ArrayList<>(activePlayer.getWonGame())) {
-            won.setWinner(null);
-            gameService.saveGame(won);
-        }
-        activePlayer.getWonGame().clear();
-
-        Iterable<Game> gamesWithActivePlayer = gameService.findAllByActivePlayerId(activePlayer.getId());
-        for (Game game : gamesWithActivePlayer) {
-            if (game.getActivePlayers().remove(activePlayer)) {
-                gameService.saveGame(game);
-            }
-        }
-
-        for (Message message : new ArrayList<>(activePlayer.getMessages())) {
-            message.setActivePlayer(null);
-            messageService.saveMessage(message);
-        }
-        activePlayer.getMessages().clear();
-    }
     
     
 }

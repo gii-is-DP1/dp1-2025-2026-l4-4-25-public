@@ -1,13 +1,12 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,8 +23,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
-import es.us.dp1.l4_04_24_25.saboteur.game.Game;
-import es.us.dp1.l4_04_24_25.saboteur.game.GameService;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -37,16 +34,10 @@ public class RoundRestController {
 
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
-    private final GameService gameService;
-    private final SimpMessagingTemplate messagingTemplate;
-
-    
     @Autowired
-    public RoundRestController(RoundService roundService, ObjectMapper objectMapper, GameService gameService, SimpMessagingTemplate messagingTemplate) {
+    public RoundRestController(RoundService roundService, ObjectMapper objectMapper) {
         this.roundService = roundService;
         this.objectMapper = objectMapper;
-        this.gameService = gameService;
-        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -60,24 +51,13 @@ public class RoundRestController {
         return new ResponseEntity<>(roundService.findRound(id), HttpStatus.OK);
     }
     
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Round> create(@RequestParam @Valid Integer gameId, @RequestParam @Valid Integer roundNumber) {
-        Game game = gameService.findGame(gameId);
-        Round newRound = roundService.initializeRound(game, roundNumber);
-        
-        // Enviar mensaje WebSocket a todos los jugadores para que naveguen a la nueva ronda
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("action", "NEW_ROUND");
-        payload.put("newRound", newRound);
-        payload.put("boardId", newRound.getBoard().getId());
-        payload.put("roundNumber", roundNumber);
-        
-        System.out.println(">>> WS: Enviando NEW_ROUND a /topic/game/" + gameId + " con boardId: " + newRound.getBoard().getId());
-        messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
-        
-        return new ResponseEntity<>(newRound, HttpStatus.CREATED);
+    public ResponseEntity<Round> create(@RequestBody @Valid Round round) {
+        Round newRound = new Round(); 
+        BeanUtils.copyProperties(round, newRound, "id");
+        Round savedRound = this.roundService.saveRound(newRound);
+        return new ResponseEntity<>(savedRound, HttpStatus.CREATED);
     }
 
 
@@ -95,18 +75,6 @@ public class RoundRestController {
         Round round = roundService.findRound(id);
         Round roundPatched = objectMapper.updateValue(round, updates);
         roundService.updateRound(roundPatched, id);
-        if(updates.containsKey("turn")){
-            //Obtenemos ID del juego para saber a que topic enviarlo
-            Integer gameId = roundPatched.getGame().getId();
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("action", "TURN_CHANGED");
-            payload.put("newTurnIndex", roundPatched.getTurn());
-            payload.put("roundId", roundPatched.getId());
-            payload.put("leftCards", roundPatched.getLeftCards());
-            
-            System.out.println(">>> WS: Enviando cambio de turno a /topic/game/" + gameId);
-            messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
-        }
         return new ResponseEntity<>(roundPatched,HttpStatus.OK);
     }
 
@@ -146,40 +114,4 @@ public class RoundRestController {
         List<Round> res = roundService.findByLeftCardsLessThanEqual(leftCards);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    
-    // Endpoint para notificar el fin de ronda a todos los jugadores via WebSocket
-    @PostMapping("/{id}/notifyRoundEnd")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Map<String, Object>> notifyRoundEnd(
-            @PathVariable("id") Integer id, 
-            @RequestBody Map<String, Object> roundEndData) {
-        
-        Round round = roundService.findRound(id);
-        RestPreconditions.checkNotNull(round, "Round", "ID", id);
-        
-        Integer gameId = round.getGame().getId();
-        
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("action", "ROUND_END");
-        payload.put("roundId", id);
-        payload.put("winnerTeam", roundEndData.get("winnerTeam"));
-        payload.put("reason", roundEndData.get("reason"));
-        payload.put("goldDistribution", roundEndData.get("goldDistribution"));
-        payload.put("playerRoles", roundEndData.get("playerRoles"));
-        
-        System.out.println(">>> WS: Enviando ROUND_END a /topic/game/" + gameId);
-        messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
-        
-        return new ResponseEntity<>(payload, HttpStatus.OK);
-    }
-
-    /*@PostMapping("/initialize/{gameId}")
-    public ResponseEntity<Round> initializeRound(@PathVariable Integer gameId) {
-        Game game = gameService.findGame(gameId);
-
-        // Suponemos que siempre se crea la primera ronda (por ahora)
-        Round round = roundService.initializeRound(game, 1);
-
-        return ResponseEntity.ok(round);
-    } */
 }

@@ -8,9 +8,9 @@ public interface BoardRepository extends CrudRepository<Board, Integer> {
 
     List<Board> findByBase(Integer base);
 
-    List<Board> findByHeight(Integer heigth);
+    List<Board> findByHeigth(Integer heigth);
 
-    List<Board> findByBaseAndHeight(Integer base, Integer heigth);
+    List<Board> findByBaseAndHeigth(Integer base, Integer heigth);
 
     public void saveAndFlush(Board board);
 }

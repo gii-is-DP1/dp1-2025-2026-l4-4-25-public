@@ -27,7 +27,7 @@ public class Card extends BaseEntity {
 
     @Column(name = "status", nullable = false)
     @NotNull
-    private boolean status = false;
+    private boolean status;
 
     @Column(name = "image", nullable = false)
     @NotBlank

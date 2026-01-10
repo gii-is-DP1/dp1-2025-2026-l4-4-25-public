@@ -1,8 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
+import java.util.Map; // Necesario para el PATCH/Map
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,30 +9,19 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import es.us.dp1.l4_04_24_25.saboteur.board.BoardRepository;
-import es.us.dp1.l4_04_24_25.saboteur.card.CardRepository;
+import es.us.dp1.l4_04_24_25.saboteur.board.Board; 
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
-import es.us.dp1.l4_04_24_25.saboteur.game.Game;
-import es.us.dp1.l4_04_24_25.saboteur.log.LogService;
-import es.us.dp1.l4_04_24_25.saboteur.round.builder.StandardRoundBuilder;
-import es.us.dp1.l4_04_24_25.saboteur.square.SquareRepository;
+import es.us.dp1.l4_04_24_25.saboteur.game.Game; 
 import jakarta.validation.Valid;
-
 
 @Service
 public class RoundService {
 
     private final RoundRepository roundRepository;
-    private final StandardRoundBuilder standardRoundBuilder;
 
     @Autowired
-    public RoundService(RoundRepository roundRepository, BoardRepository boardRepository,
-                        SquareRepository squareRepository,
-                        CardRepository cardRepository,
-                        LogService logService,
-                        StandardRoundBuilder standardRoundBuilder) {
+    public RoundService(RoundRepository roundRepository) {
         this.roundRepository = roundRepository;
-        this.standardRoundBuilder = standardRoundBuilder;
     }
 
     @Transactional
@@ -101,19 +89,5 @@ public class RoundService {
     @Transactional
     public Round patchRoundGame(Integer roundId, Map<String, Object> updates) {
         return findRound(roundId); 
-    }
-
-    @Transactional
-    public Round initializeRound(Game game, Integer roundNumber) {
-        Round round = standardRoundBuilder
-                .withGame(game)
-                .withRoundNumber(roundNumber)
-                .withLeftCards(60)
-                .withTimeSpent(Duration.ZERO)
-                .withWinnerRol(false)
-                .build();
-        
-        this.saveRound(round);
-        return round;
     }
 }

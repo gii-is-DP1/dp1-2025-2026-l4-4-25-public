@@ -1,488 +1,467 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { toast } from 'react-toastify';
-import tokenService from "../../services/token.service";
-import useWebSocket from "../../hooks/useWebSocket";
-import useLobbyData from "./hooks/useLobbyData";
-import { canStartGame, isPlayerInLobby, removePlayerFromLobby } from "./utils/lobbyUtils";
+import React, { useState,useEffect } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import tokenService from '../../services/token.service';
+import '../../static/css/lobbies/games/CreateGame.css'; 
 
-// Importar componentes modulares
-import LobbyInfo from "./components/LobbyInfo";
-import JoinRequestsPanel from "./components/JoinRequestsPanel";
-import SpectatorRequestsPanel from "./components/SpectatorRequestsPanel";
-import GameSettings from "./components/GameSettings";
-import PlayersListLobby from "./components/PlayersListLobby";
-import InviteFriends from "./components/InviteFriends";
-import LobbyControls from "./components/LobbyControls";
-
-import "../../static/css/lobbies/games/CreateGame.css";
-import { useGameData } from "../../game/hooks/useGameData";
 
 const CreateGame = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const [game, setGame] = useState(location.state?.game);
+  const [chat,setchat] = useState()
+  const [numPlayers, setnumPlayers] = useState('3');
+  const [isPrivate, setisPrivate] = useState(false);
+  const [player, setPlayer] = useState([])
+  const[patchgame,setpatchgame]  = useState()
+  const navigate = useNavigate(); 
   const jwt = tokenService.getLocalAccessToken();
   const loggedInUser = tokenService.getUser();
-  
-
-  const welcomeMessageSentRef = useRef(false);
-  
-  // Estado inicial del juego desde la navegación
-  const [game, setGame] = useState(location.state?.game ?? null);
-  const [player, setPlayer] = useState(null);
-  const [numPlayers, setnumPlayers] = useState(game?.maxPlayers ?? 3);
-  const [isPrivate, setisPrivate] = useState(game?.private ?? false);
-  const [patchgame, setpatchgame] = useState(game);
-  const [lobbyIn, SetLobbyIn] = useState(() => {
-    try {
-      return isPlayerInLobby(game?.activePlayers, loggedInUser?.username);
-    } catch (e) {
-      return false;
-    }
-  });
-
   const isCreator = game?.creator === loggedInUser?.username;
 
-  // Custom hook para manejo de datos del lobby
-  const {
-    game: gameFromHook,
-    setGame: setGameFromHook,
-    joinRequests,
-    setJoinRequests,
-    spectatorRequests,
-    setSpectatorRequests,
-    postFirstMessage,
-    updateGame,
-    deleteGame,
-    sendMessage,
-    deleteMessages,
-    postround,
-    round
-  } = useLobbyData(game?.id, jwt, isCreator);
 
-  const {
-    patchActivePlayer,
-    fetchActivePlayerByUsername,
-  } = useGameData(game);
+  
 
-  // Sincronizar el estado del juego con el hook
+
   useEffect(() => {
-    if (gameFromHook) {
-      setGame(gameFromHook);
-    }
-  }, [gameFromHook]);
-
-  // WebSocket para actualizaciones en tiempo real
-  const socketMessage = useWebSocket(
-    `/topic/game/${game?.id}`
-  );
-
-  // Efecto para procesar el mensaje que viene del socket
-  useEffect(() => {
-    console.log("Mensaje recibido del socket:", socketMessage);
-
-    if (!socketMessage) return;
-
-    let payload = socketMessage;
-
-    if (typeof payload === "string") {
+    console.log("Entrando al useEffect. Valor de game:", game);
+      if (!game || isCreator) return;
+      // Función para unirse a la partida
+      const joinGame = async () => {
+      console.log("Intentando unirse a la partida como invitado...");
       try {
-        payload = JSON.parse(payload);
-      } catch (e) {
-        console.error("Error parseando mensaje WS:", e);
-        return;
-      }
-    }
+        //Obtenemos el username del usuario actual
+        const currentUser = tokenService.getUser();
+        if(!currentUser || !currentUser.username) {
+          alert("No se pudo identificar al usuario para unirse")
+          navigate("/lobby");
+          return;
+        }
+        // Traemos la última versión de la partida
+        const gameResponse = await fetch(`/api/v1/games/${game.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+        });
+        if(!gameResponse.ok){
+          alert("Error al cargar los datos de la partida");
+          navigate("/ListGames");
+          return;
+        }
 
-    if (payload.gameCancelled) {
-      toast.error("The game has been cancelled by the creator");
-      setTimeout(() => {
-        navigate('/lobby')}, 2000);
-      return}
+        const currentGame = await gameResponse.json();
+        // Obtenemos la lista de players de la partida
+        const activePlayerList = currentGame.activePlayers || [];
+        // Evaluamos si el usuario actual está en la partida
+        const amIAlreadyIn = activePlayerList.includes(currentUser.username);
 
-    if (payload.adminAction) {
-      handleAdminActionInLobby(payload);
-      return}
+        
+        if(amIAlreadyIn){
+          console.log("Ya estás en la partida");
+          setGame(currentGame);
+          return;
+        }
 
-    const { game: updatedGame, round: updatedRound } = payload;
-    console.log(" ROUND COMPLETO DEL SOCKET:", updatedRound);
-    console.log(" BOARD EN EL ROUND:", updatedRound?.board);
+        const updatedActivePlayerList = Array.from(
+        new Set([...(activePlayerList ?? []), currentUser.username])
+);
 
-    if (!updatedGame) return;
-
-    setGame(updatedGame);
-
-    if (updatedGame.gameStatus === "ONGOING" && updatedRound?.board) {
-      navigate(`/board/${updatedRound.board}`, {
-        state: { game: updatedGame, round: updatedRound }
-      });
-    }
-  }, [socketMessage]);
-
-  useEffect(() => {
-    if (!game?.id) return;
-
-    const currentUsername = loggedInUser?.username;
-    const currentActivePlayers = game?.activePlayers ?? [];
-
-    if (isCreator) return;
-    if (!currentUsername) return;
-    if (currentActivePlayers.includes(currentUsername)) return;
-
-    const joinGame = async () => {
-      try {
-        const updatedActivePlayerList = [...currentActivePlayers, currentUsername];
-
+        // Hacemos el PATCH al Game con la lista ya actualizada
         const patchResponse = await fetch(`/api/v1/games/${game.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${jwt}`
           },
-          body: JSON.stringify({ activePlayers: updatedActivePlayerList }),
+          body: JSON.stringify({activePlayers: updatedActivePlayerList}),
         });
 
-        if (patchResponse.ok) {
+        if(patchResponse.ok){
           const updatedGame = await patchResponse.json();
-          setGame(updatedGame);
-          SetLobbyIn(true);
-        } else {
-          toast.error("Error al intentar unirse a la partida");
+          setGame(updatedGame)    
+          console.log("Unido a la partida con éxito")
+        }else{
+          alert("Error al intentar unirse a la partida");
           navigate("/ListGames");
         }
-      } catch (error) {
+      } catch(error){
         console.error("Error en el proceso de unirse:", error);
-        toast.error(error.message);
+        alert(error.message);
         navigate("/ListGames");
       }
-    };
-
-    joinGame();
-
-}, [game?.id, game?.activePlayers]);
-
-  // Postear mensaje de bienvenida y obtener info del jugador (solo creador)
-  useEffect(() => {
-    if (!game?.creator || !game?.chat) return;
+    }; 
     
-    // Solo enviar el mensaje de bienvenida una vez y solo si el usuario es el creador
-    if (!welcomeMessageSentRef.current && isCreator) {
-      welcomeMessageSentRef.current = true;
-      postFirstMessage(game.creator, game.chat);
-    }
+      
+        if(!isCreator){
+          joinGame(); // Solo si no es el creador de la partida se ejecuta la lógica de unirse
+        }
 
-    const fetchPlayer = async () => {
-      try {
-        const loggedInUser = tokenService.getUser();
+
+  },[game?.id])
+  
+  useEffect(()=>{
+    const postFirstMessage = async () => {
+        try {
+          const loggedInUser = tokenService.getUser();
         if (!loggedInUser || !loggedInUser.id) {
           console.error("No se encontró el ID del usuario.");
           return;
+        } 
+        const msg = "Bienvenido a Saboteur"
+          const request = {
+            content: msg,
+            activePlayer: game.creator,
+            chat:game.chat
         }
-
-        const response = await fetch(`/api/v1/players?username=${game.creator}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
+          const response = await fetch(`/api/v1/messages`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(request),
+      });
+          console.log(response);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('chat del creategame ', data)
+            setchat(data);
+          } else {
+            console.error('Respuesta no OK:', response.status);
+            alert('Error al obtener el mensaje del jugador.');
           }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setPlayer(data);
-        } else {
-          console.error('Respuesta no OK:', response.status);
-          toast.error('Error al obtener la información del jugador.');
+        } catch (error) {
+          console.error('Hubo un problema con la petición fetch:', error);
+          alert('Error de red. No se pudo conectar con el servidor.');
         }
-      } catch (error) {
-        console.error('Hubo un problema con la petición fetch:', error);
-        toast.error('Error de red. No se pudo conectar con el servidor.');
+      };
+
+      console.log('game del navigate', game)
+      console.log('chat del navigate', game.chat)
+      
+      const fetchPlayer = async () => {
+        try {
+          const loggedInUser = tokenService.getUser();
+        if (!loggedInUser || !loggedInUser.id) {
+          console.error("No se encontró el ID del usuario.");
+          return;
+        } 
+       
+        
+          const response = await fetch(`/api/v1/players?username=${game.creator}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${jwt}`
+            }
+          });
+          console.log(response);
+          if (response.ok) {
+            const data = await response.json();
+            setPlayer(data);
+          } else {
+            console.error('Respuesta no OK:', response.status);
+            alert('Error al obtener la información del jugador.');
+          }
+        } catch (error) {
+          console.error('Hubo un problema con la petición fetch:', error);
+          alert('Error de red. No se pudo conectar con el servidor.');
+        }
+      };
+      
+      postFirstMessage();
+      fetchPlayer();
+  },[game?.creator, game?.chat])
+//para refrescar los activeplayers
+  useEffect(() => {
+    if (!game?.id) return;
+
+    const fetchGame = async () => {
+      try {
+        const res = await fetch(`/api/v1/games/${game.id}`, {
+          headers: { "Authorization": `Bearer ${jwt}` },
+        });
+        if (!res.ok) return;
+        /*
+        const latestgame = await res.json();
+        setGame({ ...(game || {}), activePlayers: latestgame.activePlayers, maxPlayers:latestgame.maxPlayers });
+        */
+        const latestgame = await res.json();
+  setGame(prev => ({
+    ...prev,
+    ...latestgame,
+    activePlayers: Array.from(new Set(latestgame.activePlayers ?? [])),
+    maxPlayers: latestgame.maxPlayers,
+  }));
+      } catch (err) {
+        console.error("Error fetching game:", err);
       }
     };
 
-    fetchPlayer();
-  }, [game?.creator, game?.chat]);
+    fetchGame();
+    const iv = setInterval(fetchGame, 3000);
+    return () => clearInterval(iv);
+  }, [game?.id, jwt]);
+  
 
-  // Monitorear si el jugador es expulsado
-  useEffect(() => {
-    if (!game || !game.id) return;
-    const currentUsername = loggedInUser?.username;
-    if (!currentUsername) return;
-
-    const currentIn = isPlayerInLobby(game.activePlayers, currentUsername);
-    
-    if (lobbyIn && !currentIn) {
-      toast.error('You have been expelled from the game');
-      navigate('/lobby');
-    }
-    
-    SetLobbyIn(currentIn);
-  }, [game?.activePlayers]);
-
-  const handleAdminActionInLobby = (payload) => {
-    const { adminAction } = payload;
-    if (!adminAction) return;
-    const currentUser = tokenService.getUser()?.username;
-    if (adminAction.action === "FORCE_FINISH") {
-      toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
-      setTimeout(() => {
-        navigate('/lobby')}, 3000);
-    } else if (adminAction.action === "PLAYER_EXPELLED") {
-      if (adminAction.affectedPlayer === currentUser) {
-        toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
-        setTimeout(() => {
-          navigate('/lobby');
-        }, 3000);
-      } else {
-        toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
-        if (payload.game) {
-          setGame(payload.game);
-        }}}
-  };
-
-  const handleAcceptRequest = async (username) => {
-    try {
-      const currentActivePlayers = Array.from(new Set(game.activePlayers ?? []));
-      
-      if (isPlayerInLobby(currentActivePlayers, username)) {
-        toast.info(`${username} is already in the lobby`);
-        setJoinRequests(prev => prev.filter(p => p.username !== username));
-        return;
-      }
-
-      const newActive = [...currentActivePlayers, username];
-      const updated = await updateGame({ activePlayers: newActive });
-      
-      toast.success(`${username} accepted to the game`);
-      
-      await sendMessage(
-        `REQUEST_ACCEPTED:${username}:${game.id}`,
-        game.creator,
-        game.chat
-      );
-
-      const msgsToDelete = joinRequests
-        .filter(j => j.username === username)
-        .map(j => j.messageId);
-      
-      await deleteMessages(msgsToDelete);
-      setJoinRequests(prev => prev.filter(p => p.username !== username));
-      
-    } catch (err) {
-      console.error(err);
-      toast.error('Error to accept the request. Try Again.');
-    }
-  };
-
-  const handleDenyRequest = async (username) => {
-    try {
-      await sendMessage(
-        `REQUEST_DENIED:${username}:${game.id}`,
-        game.creator,
-        game.chat
-      );
-
-      const msgsToDelete = joinRequests
-        .filter(j => j.username === username)
-        .map(j => j.messageId);
-      
-      await deleteMessages(msgsToDelete);
-      
-      toast.info(`${username} has been denied`);
-      setJoinRequests(prev => prev.filter(p => p.username !== username));
-      
-    } catch (err) {
-      console.error(err);
-      toast.error('Error to connect with the server. Try Again.');
-    }
-  };
-
-  // Handlers para solicitudes de espectador
-  const handleAcceptSpectatorRequest = async (username) => {
-    try {
-      toast.success(`${username} accepted as spectator`);
-      
-      await sendMessage(
-        `SPECTATOR_ACCEPTED:${username}:${game.id}`,
-        game.creator,
-        game.chat
-      );
-
-      const msgsToDelete = spectatorRequests
-        .filter(s => s.username === username)
-        .map(s => s.messageId);
-      
-      await deleteMessages(msgsToDelete);
-      setSpectatorRequests(prev => prev.filter(p => p.username !== username));
-      
-    } catch (err) {
-      console.error(err);
-      toast.error('Error to accept spectator request. Try Again.');
-    }
-  };
-
-  const handleDenySpectatorRequest = async (username) => {
-    try {
-      await sendMessage(
-        `SPECTATOR_DENIED:${username}:${game.id}`,
-        game.creator,
-        game.chat
-      );
-
-      const msgsToDelete = spectatorRequests
-        .filter(s => s.username === username)
-        .map(s => s.messageId);
-      
-      await deleteMessages(msgsToDelete);
-      
-      toast.info(`${username} spectator request denied`);
-      setSpectatorRequests(prev => prev.filter(p => p.username !== username));
-      
-    } catch (err) {
-      console.error(err);
-      toast.error('Error to connect with the server. Try Again.');
-    }
-  };
-
-  // Handlers para controles del lobby
-  const handleSubmit = async () => {
+  async function handleSubmit() {
+    //necesitamos el patch de game
+    //el player  primero tiene  que esstar en la tabla activeplayers para poder meterlo en game-activeplayers
     const request = {
       gameStatus: "CREATED",
       private: isPrivate,
       maxPlayers: parseInt(numPlayers),
+      //activePlayers: [player.username]
     };
 
+    console.log('Enviando request:', request);
+    
+
+    const jwt = tokenService.getLocalAccessToken();
+
     try {
-      const updated = await updateGame(request);
-      toast.success("¡Game updated successfully!");
-      setpatchgame(updated);
+      const response = await fetch(`/api/v1/games/${game.id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(request),
+      });
+      console.log(response)
+
+      if (response.ok) {
+        const newGame = await response.json();
+        alert("¡Partida actualizada con éxito!");
+        setpatchgame(newGame)
+        console.log(newGame)
+        //navigate(`/board/${newGame.id}`); 
+      } else {
+        const errorData = await response.json();
+        alert(`Error al actualizar la partida: ${errorData.message}`);
+      }
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
-      toast.error('Error of network. Try Again.');
+      alert('Error de red. No se pudo conectar con el servidor.');
     }
+  }
+
+  async function handleStart() {
+  const request = {
+    gameStatus: "ONGOING", 
   };
 
-  const handleStart = async () => {
-    const request = {
-      gameStatus: "ONGOING",
-    };
-    const tools = {
-      pickaxeState: true,
-      cartState: true,
-      candleState: true,
-      goldNugget: 0,  // Resetear pepitas a 0 al iniciar la partida
-      rol: false
-    }
-    try {
-      console.log("Starting game:", game);
-      for (const player of game.activePlayers) {
-        const playerData = await fetchActivePlayerByUsername(player);
-        const resettools = await patchActivePlayer(playerData.id, tools);
-      }
-      const newRound = await postround(game.id, 1);
-      const updatedGame = await updateGame(request);
-      setpatchgame(updatedGame);  
-      toast.success("Game started successfully!");
-      // navigate(`/board/${newRound.board}`, { state: { game: newGame, round: newRound } });
-    } catch (error) {
-      console.error(error); 
-      toast.error('Dont connect with the server.');
-    }
-  };
+  try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "PATCH",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}` 
+      },
+      body: JSON.stringify(request),
+    });
 
-  const handleCancel = async () => {
+    if (response.ok) {
+      const newGame = await response.json();
+      setpatchgame(newGame);
+      alert("¡Partida iniciada con éxito!");
+      navigate(`/board/${newGame.id}`, { state: { game: newGame } });
+    } else {
+      const errorData = await response.json();
+      alert(`Error al iniciar la partida: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo conectar con el servidor');
+  }
+}
+
+  async function handleCancel() {
     try {
-      await deleteGame();
-      toast.error("Partida eliminada");
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}` 
+      },
+    });
+
+    if (response.ok) {
+      const newGame = await response.json();
+      alert("Partida eliminada");
       navigate("/lobby");
-    } catch (error) {
-      console.error(error);
-      toast.error('No se pudo conectar con el servidor');
+    } else {
+      const errorData = await response.json();
+      alert(`Error al eliminar la partida: ${errorData.message}`);
     }
-  };
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo conectar con el servidor');
+  }
 
-  const handleExpelPlayer = async (usernameToExpel) => {
-    const newActivePlayers = removePlayerFromLobby(
-      game.activePlayers,
-      usernameToExpel
-    );
-
+  }
+  async function handleCopyLink() {
+    console.log("Link", game.link)
+    const linkToCopy = game.link;
     try {
-      await updateGame({ activePlayers: newActivePlayers });
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("No se pudo conectar con el servidor");
+      await navigator.clipboard.writeText(linkToCopy);
+      alert("¡Enlace copiado al portapapeles!");
+    } catch (err) {
+      console.error('Error al copiar el enlace: ', err);
+      alert('No se pudo copiar el enlace.');
     }
-  };
+  }
+async function handleExpelPlayer(usernameToExpel) {
+  const currentActivePlayers = game.activePlayers;
+  const newActivePlayers = currentActivePlayers.filter(p => p !== usernameToExpel);
 
-  const handleExitLobby = async () => {
-    const currentPlayer = tokenService.getUser();
-    const newActivePlayers = removePlayerFromLobby(
-      game.activePlayers,
-      currentPlayer.username
-    );
+  try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ activePlayers: newActivePlayers }),
+    });
 
-    try {
-      await updateGame({ activePlayers: newActivePlayers });
+    if (response.ok) {
+      const updatedGame = await response.json();
+      
+      setGame(updatedGame); 
+    } else {
+      alert("Error al expulsar al jugador");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("No se pudo conectar con el servidor");
+  }
+};
+
+async function handleExitLobby() {
+  const currentPlayer = tokenService.getUser();
+  const currentActivePlayers = game.activePlayers;
+  const newActivePlayers = currentActivePlayers.filter(p => p !== currentPlayer.username);
+
+  try {
+    const response = await fetch(`/api/v1/games/${game.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ activePlayers: newActivePlayers }),
+    });
+
+    if (response.ok) {
+      const updatedGame = await response.json();
+      setGame(updatedGame);
       navigate("/lobby");
-      toast.success("Just left the game");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Dont connect with the server");
+    } else {
+      alert("Error al salir de la partida");
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    alert("No se pudo conectar con el servidor");
+  }
+}
 
   return (
     <div className="home-page-container">
-      <div className="hero-div">
-        <LobbyInfo gameId={game?.id} />
-        
+      <div className="hero-div"> 
+        <h1>Create Game</h1>
         <div className="creategame-card">
-          <JoinRequestsPanel
-            joinRequests={isCreator ? joinRequests : []}
-            onAccept={handleAcceptRequest}
-            onDeny={handleDenyRequest}
-          />
-          
-          <SpectatorRequestsPanel
-            spectatorRequests={isCreator ? spectatorRequests : []}
-            onAccept={handleAcceptSpectatorRequest}
-            onDeny={handleDenySpectatorRequest}
-          />
-
-          <GameSettings
-            numPlayers={numPlayers}
-            onNumPlayersChange={setnumPlayers}
-            isPrivate={isPrivate}
-            onPrivacyChange={setisPrivate}
-            isCreator={isCreator}
-          />
-
-          <PlayersListLobby
-            activePlayers={game?.activePlayers ?? []}
-            maxPlayers={game?.maxPlayers ?? 0}
-            creatorUsername={game?.creator}
-            isCreator={isCreator}
-            onExpelPlayer={handleExpelPlayer}
-          />
-
           {isCreator && (
-            <InviteFriends 
-              gameId={game?.id} 
-              chatId={game?.chat} 
-              activePlayers={game?.activePlayers ?? []}
-            />
+          <div className="form-group">
+            <label>Number of players</label>
+            <select
+              id="num-jugadores"
+              className="form-control"
+              value={numPlayers}
+              onChange={(e) => setnumPlayers(e.target.value)}
+            >
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+            </select>
+          </div>
           )}
+          <div className="active-players-section">
+            <h2>Players : ({game?.activePlayers?.length ?? 0}/{game?.maxPlayers ?? 0})</h2>
+            <div className="active-players-list">
+              {(game?.activePlayers ?? []).map((username, index) => (
+                <div key={username ?? index} className="player-card2">
+                  <div className="player-avatar" title={username}>
+                  </div>
+                  <div className="player-name">{username}</div>
+                  {isCreator && username !== game.creator && (
+                    <button
+                      className="expel-player-btn"
+                      onClick={() => handleExpelPlayer(username)}>
+                      ❌ expulsar
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          {isCreator && (
+          <div className="form-group privacy-toggle">
+            <label>Privacity</label>
+            <div className="toggle-switch">
+              <span>{isPrivate ? "Private" : "Public"}</span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={() => setisPrivate(!isPrivate)}
+                />
+                <span className="slider round"></span>
+              </label>
+            </div>
+          </div>
+            )}
 
-          <LobbyControls
-            isCreator={isCreator}
-            gameId={game?.id}
-            canStart={canStartGame(game?.activePlayers?.length ?? 0)}
-            onSave={handleSubmit}
-            onStart={handleStart}
-            onCancel={handleCancel}
-            onExitLobby={handleExitLobby}
-          />
+        <div className="form-group add-friends-section">
+          <label>Invite friends</label>
+          <div className="friends-list">
+            <div className="add-friend-button">
+              <button>
+                <img src="https://via.placeholder.com/40/DDDDDD/6D4C41?text=%2B" alt="Invite more friends" />
+              </button>
+            </div>
+          </div>
+        </div>
+        {game && game.activePlayers?.length > 0 && (
+          <div className="active-players-section"></div>)}
+            <div className="card-footer">
+              {isCreator ? (
+                <>
+                  <button onClick={handleSubmit}>📑 SAVE CHANGES</button>
+                  <button onClick={handleStart}>▶️ START</button>
+                  <button onClickCapture={handleCopyLink}>🔗 LINK</button>
+                    <button onClick={handleCancel}>❌ CANCEL</button>
+                  
+                </>
+              ) : (
+                <Link to="/lobby">
+                  <button className="button-small" onClick={handleExitLobby}>🚪 EXIT LOBBY</button>
+                </Link>
+              )}
+                {!isCreator && (
+                    <div className="waiting-piece">
+                      <div className="spinner"></div>
+                      <span>WAITING ...</span>
+                    </div>
+                  )}
+            </div>    
         </div>
       </div>
     </div>

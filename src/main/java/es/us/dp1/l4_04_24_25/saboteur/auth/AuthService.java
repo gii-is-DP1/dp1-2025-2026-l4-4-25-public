@@ -1,7 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.auth;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import jakarta.transaction.Transactional;
@@ -39,22 +37,6 @@ public class AuthService {
 
 	@Transactional
 	public void createUser(@Valid SignupRequest request) {
-		// Validar que birthDate sea anterior a la fecha actual
-		if (request.getBirthDate() != null) {
-			try {
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				LocalDate birthDate = LocalDate.parse(request.getBirthDate(), formatter);
-				if (birthDate.isAfter(LocalDate.now()) || birthDate.isEqual(LocalDate.now())) {
-					throw new IllegalArgumentException("Birth date must be before current date");
-				}
-			} catch (Exception e) {
-				if (e instanceof IllegalArgumentException) {
-					throw e;
-				}
-				throw new IllegalArgumentException("Invalid birth date format. Expected yyyy-MM-dd");
-			}
-		}
-		
 		//CreateUser modificado para que cree un ActivePlayer, estos datos se extenderán a la tabla Player y User
 		/*
 		User user = new User();

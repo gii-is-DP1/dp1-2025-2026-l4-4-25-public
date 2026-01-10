@@ -26,5 +26,5 @@ public interface AchievementRepository extends CrudRepository<Achievement, Integ
     @Query("SELECT COUNT(a) FROM Achievement a JOIN a.players p WHERE p.id = :playerId")
     Integer countAchievementsByPlayerId(@Param("playerId") Integer playerId);
 
-    boolean existsByTittle(String tittle);
+    boolean existsByTittle (String tittle);
 }

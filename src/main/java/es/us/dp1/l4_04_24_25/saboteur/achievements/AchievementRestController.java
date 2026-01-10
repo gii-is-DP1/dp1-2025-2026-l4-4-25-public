@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,12 +21,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
-import es.us.dp1.l4_04_24_25.saboteur.exceptions.BadRequestException;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedAchievementException;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
@@ -103,29 +99,13 @@ public class AchievementRestController {
         return new ResponseEntity<>(savedAchievement, HttpStatus.CREATED);
     }
 
-/* 
+
     @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Achievement> update(@PathVariable("id") Integer id, @RequestBody @Valid Achievement achievement){
         RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
         return new ResponseEntity<>(achievementService.updateAchievement(achievement, id), HttpStatus.OK);
     }
-    */
-
-    @PutMapping("/{id}")
-	public ResponseEntity<Void> update(@RequestBody @Valid Achievement newAchievement, BindingResult br, @PathVariable("id") int id) {
-		Achievement achievementToUpdate=this.findById(id).getBody();
-		if(br.hasErrors())
-			throw new BadRequestException(br.getAllErrors());
-
-		else if(newAchievement.getId()==null || !newAchievement.getId().equals(id))
-			throw new BadRequestException("Achievement id is not consistent with resource URL:"+id);
-		else{
-			BeanUtils.copyProperties(newAchievement, achievementToUpdate, "id");
-			achievementService.saveAchievement(achievementToUpdate);
-		}			
-		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-	}
 
     @PatchMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -174,13 +154,4 @@ public class AchievementRestController {
         public ResponseEntity<Achievement> findByTittle(@RequestParam String tittle){
             return new ResponseEntity<>(achievementService.findByTittle(tittle), HttpStatus.OK);
         }
-
-    @PostMapping("/process/{gameId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<MessageResponse> processAchievementsForGame(
-            @PathVariable("gameId") Integer gameId,
-            @RequestParam("winnerUsername") String winnerUsername) {
-        achievementService.processAchievementsForGame(gameId, winnerUsername);
-        return new ResponseEntity<>(new MessageResponse("Achievements processed successfully for game " + gameId), HttpStatus.OK);
-    }
     }

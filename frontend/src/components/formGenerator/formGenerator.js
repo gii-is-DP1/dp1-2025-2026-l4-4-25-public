@@ -2,7 +2,7 @@ import "./css/formGenerator.css";
 import "filepond/dist/filepond.min.css";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 
-import React, {
+import {
   useState,
   useImperativeHandle,
   forwardRef,
@@ -61,25 +61,17 @@ const FormGenerator = forwardRef((props, ref) => {
     e.preventDefault();
     let formValuesCopy = {};
 
-    if (!formInputs.current || formInputs.current.length === 0) {
-      return;
-    }
-
     for (let i = 0; i < props.inputs.length; i++) {
       let input = props.inputs[i];
-      const currentInput = formInputs.current[i];
-
-      if (!currentInput) continue;
-
       if (input.type === "files") {
-        formValuesCopy[input.name] = currentInput.files.map((file) =>
+        formValuesCopy[input.name] = formInputs.current[i].files.map((file) =>
           file.getFileEncodeBase64String()
         );
       } else if (input.type === "interval") {
-        formValuesCopy[`min_${input.name}`] = currentInput.min;
-        formValuesCopy[`max_${input.name}`] = currentInput.max;
+        formValuesCopy[`min_${input.name}`] = formInputs.current[i].min;
+        formValuesCopy[`max_${input.name}`] = formInputs.current[i].max;
       } else {
-        formValuesCopy[input.name] = currentInput.value;
+        formValuesCopy[input.name] = formInputs.current[i].value;
       }
     }
     setFormValues(formValuesCopy);
@@ -114,26 +106,15 @@ const FormGenerator = forwardRef((props, ref) => {
       props.onSubmit({ values: formValues });
       setSubmitForm(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitForm]);
 
   useEffect(() => {
-    if (!props.listenEnterKey) {
-      return;
-    }
-
-    const listener = (e) => {
-      if (e.key === "Enter") {
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Enter" && props.listenEnterKey) {
         handleSubmit(e);
       }
-    };
-
-    document.addEventListener("keyup", listener);
-    return () => {
-      document.removeEventListener("keyup", listener);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.listenEnterKey]);
+    });
+  }, []);
 
   return (
     <div className="class-profile-form">
@@ -153,11 +134,12 @@ const FormGenerator = forwardRef((props, ref) => {
         {Object.keys(formValues).length > 0 &&
           props.inputs.map((input, index) => {
             return (
-              <React.Fragment key={index}>
+              <>
                 {props.childrenPosition !== -1 &&
                   index === props.childrenPosition &&
                   props.children}
                 <FormInput
+                  key={index}
                   tag={input.tag}
                   name={input.name}
                   type={input.type}
@@ -174,7 +156,7 @@ const FormGenerator = forwardRef((props, ref) => {
                   disabled={input.disabled}
                   ref={(input) => (formInputs.current[index] = input)}
                 />
-              </React.Fragment>
+              </>
             );
           })}
         {props.childrenPosition === -1 && props.children}

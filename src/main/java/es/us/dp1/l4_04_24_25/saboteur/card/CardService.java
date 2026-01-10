@@ -1,6 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.card;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
@@ -40,11 +39,6 @@ public class CardService {
     @Transactional(readOnly = true)
     public Iterable<Card> findAll() {
         return cardRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public List<Card> findPlayableCards() {
-        return cardRepository.findPlayableCards();
     }
 
     @Transactional

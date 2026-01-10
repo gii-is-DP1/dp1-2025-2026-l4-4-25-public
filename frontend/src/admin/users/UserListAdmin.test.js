@@ -5,12 +5,14 @@ import UserListAdmin from "./UserListAdmin";
 describe('UserListAdmin', () => {
     test('renders correctly', async () => {
         render(<UserListAdmin />);
-        const heading = screen.getByRole('heading', { name: /User Management/i });
-        expect(heading).toBeInTheDocument();
+        testRenderList('users');
     });
 
     test('renders users correctly', async () => {
         render(<UserListAdmin />);
+        const owner1 = await screen.findByRole('cell', { 'name': 'owner1' });
+        expect(owner1).toBeInTheDocument();
+
         const editButtons = await screen.findAllByRole('link', { 'name': /edit/ });
         expect(editButtons).toHaveLength(2);
 

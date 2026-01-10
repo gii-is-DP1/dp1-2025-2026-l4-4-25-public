@@ -1,166 +1,110 @@
 package es.us.dp1.l4_04_24_25.saboteur.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
-import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 
-@ExtendWith(MockitoExtension.class)
+@Epic("Messages")
+@Feature ("Messages Tests")
+//@Owner("DP1-tutors")
+@SpringBootTest
+@AutoConfigureTestDatabase
 class MessageServiceTests {
-
-    @Mock
-    private MessageRepository messageRepository;
-
-    @InjectMocks
+    @Autowired
     private MessageService messageService;
 
-    private Message message;
-    private Chat chat;
-    private ActivePlayer activePlayer;
-
-    @BeforeEach
-    void setup() {
-        
-        chat = new Chat();
-        chat.setId(1);
-
-        activePlayer = new ActivePlayer();
-        activePlayer.setId(1);
-
-        message = new Message();
-        message.setId(1);
-        message.setContent("Hello World");
-        message.setChat(chat);
-        message.setActivePlayer(activePlayer);
+    @Test
+    void shouldFindSingleMessageById(){
+        Integer id = 1;
+        Message message = this.messageService.findMessage(id);
+        assertEquals(id, message.getId());
     }
 
     @Test
-    void shouldSaveMessage() {
-        
-        when(messageRepository.save(any(Message.class))).thenReturn(message);
-        Message savedMessage = messageService.saveMessage(message);
-        assertThat(savedMessage).isNotNull();
-        assertThat(savedMessage.getContent()).isEqualTo("Hello World");
-        verify(messageRepository).save(message);
+    void shouldNotFindSingleMessageById(){
+        Integer id = 30;
+        assertThrows(ResourceNotFoundException.class, () -> this.messageService.findMessage(id));
     }
 
     @Test
-    void shouldFindMessageById() {
-        
-        when(messageRepository.findById(1)).thenReturn(Optional.of(message));
-        Message result = messageService.findMessage(1);
-        assertThat(result).isEqualTo(message);
-        verify(messageRepository).findById(1);
+    void shouldFindAllMessages(){
+        List<Message> messages = (List<Message>) this.messageService.findAll();
+        assertEquals(2, messages.size());
     }
 
     @Test
-    void shouldThrowExceptionWhenMessageNotFound() {
-        
-        when(messageRepository.findById(99)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> messageService.findMessage(99));
+    void ShouldFindByChatId(){
+        Integer id = 1;
+        List<Message> messages = (List<Message>) this.messageService.findAllByChatId(id);
+        assertTrue(messages.stream().allMatch(x-> x.getChat().getId()==id));
+    }
+    
+    @Test
+    void ShouldNotFindByChatId(){
+        Integer id = 40;
+        List<Message> messages = (List<Message>) this.messageService.findAllByChatId(id);
+        assertTrue(messages.isEmpty());
+    }
+    @Test
+    void ShouldFindByChatIdAndId(){
+        Integer Cid = 1;
+        Integer Mid= 1;
+        Message message = this.messageService.findByChatIdAndId(Cid, Mid);
+        assertTrue(message.getChat().getId()==Cid && message.getId()==Mid);
     }
 
     @Test
-    void shouldFindAllMessages() {
-        
-        when(messageRepository.findAll()).thenReturn(List.of(message));
-        Iterable<Message> result = messageService.findAll();
-        assertThat(result).hasSize(1);
-        verify(messageRepository).findAll();
+    void ShouldNotFindByChatIdAndId(){
+        Integer Cid = 2;
+        Integer Mid = 4;
+        assertThrows(ResourceNotFoundException.class, ()->this.messageService.findByChatIdAndId(Cid, Mid));
     }
 
     @Test
-    void shouldUpdateMessage() {
-        
-        Message updateInfo = new Message();
-        updateInfo.setContent("Updated Content");
-        when(messageRepository.findById(1)).thenReturn(Optional.of(message));
-        when(messageRepository.save(any(Message.class))).thenReturn(message);
-
-        Message updatedMessage = messageService.updateMessage(updateInfo, 1);
-
-        assertThat(updatedMessage.getContent()).isEqualTo("Updated Content");
-        verify(messageRepository).save(message);
+    void ShouldFindAllByActivePlayerId(){
+        Integer id = 4;
+        List<Message> messages = (List<Message>) this.messageService.findAllByActivePlayerId(id);
+        assertTrue(messages.stream().allMatch(x->x.getActivePlayer().getId()==id));
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistentMessage() {
-        
-        Message updateInfo = new Message();
-        when(messageRepository.findById(99)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> messageService.updateMessage(updateInfo, 99));
+    void ShouldNotFindAllByActivePlayerId(){
+        Integer id = 50;
+        List<Message> messages = (List<Message>) this.messageService.findAllByActivePlayerId(id);
+        assertTrue(messages.isEmpty());
     }
 
     @Test
-    void shouldDeleteMessage() {
-        
-        when(messageRepository.findById(1)).thenReturn(Optional.of(message));
-        doNothing().when(messageRepository).delete(message);
-
-        messageService.deleteMessage(1);
-
-        verify(messageRepository).delete(message);
+    void shouldUpdateMessage(){
+        Integer id = 2;
+        Message message = this.messageService.findMessage(id);
+        message.setContent("Updated");
+        Message updatedMessage = this.messageService.updateMessage(message, id);
+        assertEquals("Updated", updatedMessage.getContent()); 
     }
 
     @Test
-    void shouldThrowExceptionWhenDeletingNonExistentMessage() {
-        
-        when(messageRepository.findById(99)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> messageService.deleteMessage(99));
-    }
-
-    @Test
-    void shouldFindAllByChatId() {
-        
-        when(messageRepository.findAllByChatId(1)).thenReturn(List.of(message));
-        Iterable<Message> result = messageService.findAllByChatId(1);
-        assertThat(result).isNotEmpty();
-        verify(messageRepository).findAllByChatId(1);
-    }
-
-    @Test
-    void shouldFindAllByActivePlayerId() {
-        
-        when(messageRepository.findAllByActivePlayerId(1)).thenReturn(List.of(message));
-
-        Iterable<Message> result = messageService.findAllByActivePlayerId(1);
-        assertThat(result).isNotEmpty();
-        verify(messageRepository).findAllByActivePlayerId(1);
-    }
-
-    @Test
-    void shouldFindByChatIdAndId() {
-       
-        when(messageRepository.findByChatIdAndId(1, 1)).thenReturn(Optional.of(message));
-        Message result = messageService.findByChatIdAndId(1, 1);
-
-        assertThat(result).isEqualTo(message);
-        verify(messageRepository).findByChatIdAndId(1, 1);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenFindByChatIdAndIdNotFound() {
-       
-        when(messageRepository.findByChatIdAndId(1, 99)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> messageService.findByChatIdAndId(1, 99));
+    void shouldDeleteMessage(){
+        Integer id = 1;
+        Message messageToDelete = this.messageService.findMessage(id);
+        assertEquals(id, messageToDelete.getId());
+        this.messageService.deleteMessage(id);
+        assertThrows(ResourceNotFoundException.class, ()-> this.messageService.findMessage(id));
     }
 }

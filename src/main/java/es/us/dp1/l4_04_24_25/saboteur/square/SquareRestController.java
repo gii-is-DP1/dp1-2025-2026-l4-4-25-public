@@ -2,14 +2,12 @@ package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,22 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException;
-import es.us.dp1.l4_04_24_25.saboteur.player.Player;
-import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
-import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import es.us.dp1.l4_04_24_25.saboteur.card.Card;
-import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-
 
 @RestController
 @RequestMapping("/api/v1/squares")
@@ -50,20 +39,13 @@ public class SquareRestController {
     private final SquareService squareService;
     private final BoardService boardService;
     private final ObjectMapper objectMapper;
-    private final CardService cardService;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final ActivePlayerService activePlayerService;
-    private final PlayerService playerService;
+
 
     @Autowired
-    public SquareRestController(SquareService squareService, BoardService boardService, ObjectMapper objectMapper, CardService cardService, SimpMessagingTemplate messagingTemplate, ActivePlayerService activePlayerService, PlayerService playerService) {
+    public SquareRestController(SquareService squareService, BoardService boardService, ObjectMapper objectMapper) {
         this.squareService = squareService;
         this.boardService = boardService;
         this.objectMapper = objectMapper;
-        this.cardService = cardService;
-        this.messagingTemplate = messagingTemplate;
-        this.activePlayerService = activePlayerService;
-        this.playerService = playerService;
     }
 
     @GetMapping
@@ -123,60 +105,9 @@ public class SquareRestController {
                 square.setBoard(board);
             }
         }
-
-        /*if(updates.containsKey("card")){
-            Integer cardId = (Integer)updates.get("card");
-            Card card = cardService.findCard(cardId);
-            square.setCard(card);
-            square.setOccupation(true);
-        }*/
-        if(updates.containsKey("card")) {
-            Object cardIdObj = updates.get("card");
-            if(cardIdObj != null) {
-                Integer cardId = (Integer) cardIdObj;
-                Card card = cardService.findCard(cardId);
-                square.setCard(card);
-                square.setOccupation(true);
-                
-                // Si la carta es de tipo Tunnel, incrementar builtPaths del jugador actual
-                if(card instanceof Tunnel) {
-                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                    if(auth != null) {
-                        String username = auth.getName();
-                        if(activePlayerService.existsActivePlayer(username)) {
-                            ActivePlayer activePlayer = activePlayerService.findByUsernameInOngoingGame(username);
-                            Player player = playerService.findPlayer(activePlayer.getId());
-                            player.setBuiltPaths(player.getBuiltPaths() + 1);
-                            playerService.savePlayer(player);
-                        }
-                    }
-                }
-            } else {
-                // Carta eliminada - verificar si era un Tunnel para incrementar destroyedPaths
-                Card previousCard = square.getCard();
-                if(previousCard != null && previousCard instanceof Tunnel) {
-                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                    if(auth != null) {
-                        String username = auth.getName();
-                        if(activePlayerService.existsActivePlayer(username)) {
-                            ActivePlayer activePlayer = activePlayerService.findByUsernameInOngoingGame(username);
-                            Player player = playerService.findPlayer(activePlayer.getId());
-                            player.setDestroyedPaths(player.getDestroyedPaths() + 1);
-                            playerService.savePlayer(player);
-                        }
-                    }
-                }
-                square.setCard(null);
-                square.setOccupation(false);
-            }
-            updates.remove("card"); 
-        }
         Square squarePatched = objectMapper.updateValue(square, updates);
 
         squareService.saveSquare(squarePatched);
-        squareService.handleSquarePatched(squarePatched);
-        
-    
         return new ResponseEntity<>(squarePatched,HttpStatus.OK);
     }
 
@@ -207,16 +138,6 @@ public class SquareRestController {
         @RequestParam Integer coordinateX, 
         @RequestParam Integer coordinateY) {
         Square res = squareService.findByCoordinates(coordinateX, coordinateY);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-
-    @GetMapping("byBoardAndCoordinates")
-    public ResponseEntity<Square> findByBoardAndCoordinates(
-        @RequestParam Integer boardId,
-        @RequestParam Integer coordinateX, 
-        @RequestParam Integer coordinateY) {
-            Board board = boardService.findBoard(boardId);
-        Square res = squareService.findByBoardIdAndCoordinates(board, coordinateX, coordinateY);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

@@ -182,5 +182,16 @@ public ResponseEntity<User> create(@RequestBody @Valid User user)
 		} else
 			throw new AccessDeniedException("You can't delete yourself!");
 	}
-
+/* 
+	@DeleteMapping(value = "{username}")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<MessageResponse> deleteByUsername(@PathVariable("username") String username) {
+		RestPreconditions.checkNotNull(userService.findByUsername(username), "User", "USERNAME", username);
+		User user = userService.findByUsername(username);
+		if (userService.findCurrentUser().getId() != user.getId()) {
+			userService.deleteUser(user.getId());
+			return new ResponseEntity<>(new MessageResponse("User deleted!"), HttpStatus.OK);
+		} else
+			throw new AccessDeniedException("You can't delete yourself!");
+	} */
 }

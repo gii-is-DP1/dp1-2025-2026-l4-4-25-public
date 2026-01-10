@@ -1,7 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
-import java.util.List;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -38,25 +36,6 @@ public class GameService {
         return gameRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public Iterable<Game> findAllByActivePlayerId(Integer activePlayerId) {
-        return gameRepository.findAllByActivePlayerId(activePlayerId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Game> findGamesByPlayerUsername(String username) {
-        List<Game> allGames = (List<Game>) gameRepository.findAll();
-        return allGames.stream()
-            .filter(game -> {
-                boolean isCreator = game.getCreator() != null && game.getCreator().getUsername().equals(username);
-                boolean isActivePlayer = game.getActivePlayers() != null && 
-                    game.getActivePlayers().stream()
-                        .anyMatch(ap -> ap.getUsername().equals(username));
-                return isCreator || isActivePlayer;
-            })
-            .toList();
-    }
-
     @Transactional
     public Game updateGame(@Valid Game game, Integer idToUpdate){
         Game toUpdate = findGame(idToUpdate);
@@ -73,13 +52,14 @@ public class GameService {
     }
 
     @Transactional(readOnly = true)
-    public List<Game> findByCreator(String creatorUsername) {
-        List<Game> games = gameRepository.findByCreatorUsername(creatorUsername);
-        if (games.isEmpty()) {
-            throw new ResourceNotFoundException("Game", "creator username", creatorUsername);
-        }
-        return games;
-}
+    public Game findByLink(String link) {
+        return gameRepository.findByLink(link).orElseThrow(()-> new ResourceNotFoundException("Game","link",link));
+    }
+
+    @Transactional(readOnly = true)
+    public Game findByCreator(String creatorUsername) {
+        return gameRepository.findByCreatorUsername(creatorUsername).orElseThrow(()-> new ResourceNotFoundException("Game","creator username",creatorUsername));
+    }
 
     /* 
     @Transactional(readOnly = true)
@@ -95,6 +75,10 @@ public class GameService {
     @Transactional(readOnly = true)
     public Iterable<Game> findAllPrivateGames() {
         return gameRepository.findAllPrivateGames();
+    }
+
+    public boolean existsByLink(String link) {
+        return gameRepository.existsByLink(link);
     }
     
 }

@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,71 +115,5 @@ class ActivePlayerServiceTests {
         List<ActivePlayer> dark = (List<ActivePlayer>) this.activePlayerService.findByCandleState(false);
         assertTrue(dark.size() >= 1);
         assertFalse(dark.get(0).isCandleState());
-    }
-
-    @Test
-    void shouldFindByUsername() {
-        ActivePlayer ap = this.activePlayerService.findByUsername(TEST_AP_USERNAME);
-        assertNotNull(ap);
-        assertEquals(TEST_AP_USERNAME, ap.getUsername());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenFindingByNonExistingUsername() {
-        assertThrows(ResourceNotFoundException.class, () -> this.activePlayerService.findByUsername("nonexistentuser"));
-    }
-
-    @Test
-    void shouldFindActivePlayersByCartState() {
-        
-        List<ActivePlayer> brokenCart = (List<ActivePlayer>) this.activePlayerService.findByCartState(false);
-        assertFalse(brokenCart.isEmpty());
-    }
-
-    @Test
-    @Transactional
-    void shouldSaveActivePlayer() {
-        ActivePlayer newAp = new ActivePlayer();
-        newAp.setUsername("NewActivePlayer");
-        newAp.setName("Test Name");
-        newAp.setPassword("pass");
-        newAp.setEmail("test@mail.com");
-        newAp.setBirthDate("2000-01-01");
-        newAp.setImage("img.png");
-        
-        Authorities auth = authService.findByAuthority("PLAYER");
-        newAp.setAuthority(auth);
-        
-        ActivePlayer saved = this.activePlayerService.saveActivePlayer(newAp);
-        assertNotNull(saved.getId());
-        assertEquals("NewActivePlayer", saved.getUsername());
-    }
-
-    @Test
-    @Transactional
-    void shouldPatchActivePlayerDeck() {
-        
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("deck", 2);
-
-        ActivePlayer patched = this.activePlayerService.patchActivePlayer(TEST_AP_ID_CARLOS, updates);
-        
-        assertNotNull(patched.getDeck());
-        assertEquals(2, patched.getDeck().getId());
-    }
-    
-    @Test
-    @Transactional
-    void shouldPatchActivePlayerWithoutDeck() {
-        
-        ActivePlayer ap = this.activePlayerService.findActivePlayer(TEST_AP_ID_CARLOS);
-        Integer originalDeckId = ap.getDeck().getId();
-        
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("goldNugget", 10); 
-
-        ActivePlayer patched = this.activePlayerService.patchActivePlayer(TEST_AP_ID_CARLOS, updates);
-        
-        assertEquals(originalDeckId, patched.getDeck().getId());
     }
 }

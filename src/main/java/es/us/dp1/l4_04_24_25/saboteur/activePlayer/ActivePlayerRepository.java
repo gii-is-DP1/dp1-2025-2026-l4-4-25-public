@@ -1,15 +1,13 @@
 package es.us.dp1.l4_04_24_25.saboteur.activePlayer;
 
-import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
 
-public interface ActivePlayerRepository extends JpaRepository<ActivePlayer, Integer> {
+public interface ActivePlayerRepository extends CrudRepository<ActivePlayer, Integer> {
 
     Optional<ActivePlayer> findByUsername(String username);
-    
-    List<ActivePlayer> findAllByUsername(String username);
 
     //Iterable<ActivePlayer> findByGameId(Integer gameId);
 

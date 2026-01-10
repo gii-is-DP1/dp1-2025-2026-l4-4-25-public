@@ -5,9 +5,6 @@ import java.time.Duration;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerDeserializer;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.baseEntities.BaseEntity;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardDeserializer;
@@ -15,9 +12,6 @@ import es.us.dp1.l4_04_24_25.saboteur.board.BoardSerializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.Game;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.game.GameSerializer;
-import es.us.dp1.l4_04_24_25.saboteur.log.Log;
-import es.us.dp1.l4_04_24_25.saboteur.log.LogDeserializer;
-import es.us.dp1.l4_04_24_25.saboteur.log.LogSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -45,17 +39,16 @@ public class Round extends BaseEntity{
     @Column(name = "left_cards", nullable = false)
     private Integer leftCards;
 
-    @Column(name = "winner_rol")
-    private Boolean winnerRol = null;
+    @Column(name = "winner_rol", nullable = false)
+    private boolean winnerRol;
 
-    private Integer turn = 0;
+    private Integer turn = 1;
 
     @JsonSerialize(using = GameSerializer.class)
     @JsonDeserialize(using = GameDeserializer.class)
     //Relacion n rondas pertenecen a 1 partida
     @ManyToOne
     @JoinColumn(name = "game_id")
-    @com.fasterxml.jackson.annotation.JsonIgnore 
     private Game game;
 
     // Relacion 1 ronda tiene 1 tablero (Lado Inverso)
@@ -66,20 +59,8 @@ public class Round extends BaseEntity{
     @JoinColumn(name = "board_id")
     private Board board;
 
-    @OneToOne
-    @JsonDeserialize(using = ActivePlayerDeserializer.class)
-    @JsonSerialize(using = ActivePlayerSerializer.class)
-    @JoinColumn(name = "active_player_id")
-    private ActivePlayer playerTurn;
-
     @Min(1)
     @Max(3)
     @Column(name = "round_number", nullable = false)
     private Integer roundNumber; // Limitación de rondas a maximo 3
-
-    @OneToOne
-    @JoinColumn(name = "log_id")
-    @JsonSerialize(using=LogSerializer.class)
-    @JsonDeserialize(using=LogDeserializer.class)
-    private Log log;
 }

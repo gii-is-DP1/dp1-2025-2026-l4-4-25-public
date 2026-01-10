@@ -1,7 +1,6 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +41,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+//@EqualsAndHashCode(of = "id")
 @Table(name = "Game")
 public class Game extends BaseEntity{
 
@@ -53,6 +53,9 @@ public class Game extends BaseEntity{
     @Column(name = "game_status", nullable = false)
     private gameStatus gameStatus = Enum.valueOf(gameStatus.class, "CREATED");
 
+    @Column(unique = true, nullable = false)
+    private String link;
+
     @Column(nullable = false)
     private boolean isPrivate = true;
 
@@ -61,12 +64,6 @@ public class Game extends BaseEntity{
     @Column(nullable = false)
 
     private Integer maxPlayers = 3;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "start_time")
-    private LocalDateTime startTime;
 
     /* 
     // Relacion varias partidas son gestionadas por varios administradores

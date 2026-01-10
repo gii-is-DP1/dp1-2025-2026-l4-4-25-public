@@ -72,13 +72,11 @@ public class SecurityConfiguration {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/developers").permitAll()
                 .requestMatchers("/api/v1/plan").permitAll()
-                .requestMatchers("/resources/**").permitAll()
 
                 // API restringida para administradores
                 .requestMatchers("/api/v1/users/").hasAuthority(ADMIN)
                 .requestMatchers("/api/v1/users/**").permitAll() // Cualquier usuario puede consultar datos de otros usuarios
-                // WebSocket
-                .requestMatchers("/ws/**").permitAll()
+
                 // El resto denegado
                 .anyRequest().authenticated()
             )
