@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue; 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -33,54 +33,54 @@ class UserServiceTests {
     private AuthoritiesService authService;
 
     @Test
-    @WithMockUser(username = "Carlosbox2k", authorities = {"PLAYER"}) 
+    @WithMockUser(username = "player1", authorities = { "PLAYER" })
     void shouldFindCurrentUser() {
         User user = this.userService.findCurrentUser();
-        assertEquals("Carlosbox2k", user.getUsername());
+        assertEquals("player1", user.getUsername());
     }
-    
+
     @Test
     @WithMockUser(username = "prueba")
     void shouldNotFindCorrectCurrentUser() {
         assertThrows(ResourceNotFoundException.class, () -> this.userService.findCurrentUser());
     }
-    
+
     @Test
     void shouldNotFindAuthenticated() {
         assertThrows(ResourceNotFoundException.class, () -> this.userService.findCurrentUser());
     }
-    
+
     @Test
     void shouldFindAllUsers() {
         List<UserDTO> users = (List<UserDTO>) this.userService.findAll();
-        assertEquals(8, users.size());
+        assertEquals(4, users.size()); // admin1, player1, player2, player3
     }
-    
+
     @Test
     void shouldFindUsersByUsername() {
-        UserDTO user = this.userService.findByUsernameDTO("Carlosbox2k");
-        assertEquals("Carlosbox2k", user.getUsername());
+        UserDTO user = this.userService.findByUsernameDTO("player1");
+        assertEquals("player1", user.getUsername());
     }
-    
+
     @Test
     void shouldNotFindUsersByUsername() {
         assertThrows(ResourceNotFoundException.class, () -> this.userService.findByUsernameDTO("Ollama"));
     }
-    
+
     @Test
     void shouldFindUsersByAuthority() {
         List<UserDTO> owners = (List<UserDTO>) this.userService.findAllByAuthority("PLAYER");
-        assertEquals(7, owners.size());
+        assertEquals(3, owners.size()); // player1, player2, player3
         List<UserDTO> admins = (List<UserDTO>) this.userService.findAllByAuthority("ADMIN");
         assertEquals(1, admins.size());
     }
 
     @Test
     void shouldFindSingleUser() {
-        User user = this.userService.findUser(4);
-        assertEquals("Carlosbox2k", user.getUsername());
+        User user = this.userService.findUser(6);
+        assertEquals("player1", user.getUsername());
     }
-    
+
     @Test
     void shouldNotFindSingleUserWithBadID() {
         assertThrows(ResourceNotFoundException.class, () -> this.userService.findUser(100));
@@ -88,7 +88,7 @@ class UserServiceTests {
 
     @Test
     void shouldExistUser() {
-        assertEquals(true, this.userService.existsUser("mantecaoHacker"));
+        assertEquals(true, this.userService.existsUser("player1"));
     }
 
     @Test
@@ -100,7 +100,7 @@ class UserServiceTests {
     @Transactional
     void shouldUpdateUser() {
         int idToUpdate = 1;
-        String newName="Change";
+        String newName = "Change";
         User user = this.userService.findUser(idToUpdate);
         user.setUsername(newName);
         userService.updateUser(user, idToUpdate);
@@ -112,7 +112,7 @@ class UserServiceTests {
     @Transactional
     void shouldUpdateUserToBeLikeTheBegining() {
         int idToUpdate = 1;
-        String newName="Bedilia Estrada";
+        String newName = "Bedilia Estrada";
         User user = this.userService.findUser(idToUpdate);
         user.setUsername(newName);
         userService.updateUser(user, idToUpdate);
@@ -138,10 +138,10 @@ class UserServiceTests {
         user.setAuthority(authService.findByAuthority("ADMIN"));
 
         User savedUser = this.userService.saveUser(user);
-        
+
         assertNotNull(savedUser.getId());
         assertNotEquals(0, savedUser.getId().longValue());
-       
+
         assertEquals(authService.findByAuthority("ADMIN").getAuthority(), user.getAuthority().getAuthority());
 
         int finalCount = ((List<UserDTO>) this.userService.findAll()).size();
@@ -154,13 +154,13 @@ class UserServiceTests {
         int idToUpdate = 1;
         User userToUpdate = this.userService.findUser(idToUpdate);
         String oldPassword = userToUpdate.getPassword();
-        
+
         User inputUser = new User();
         BeanUtils.copyProperties(userToUpdate, inputUser);
         inputUser.setPassword("newSuperSecretPassword");
-        
+
         User updatedUser = userService.updateUser(inputUser, idToUpdate);
-        
+
         assertNotEquals(oldPassword, updatedUser.getPassword());
     }
 
@@ -170,13 +170,13 @@ class UserServiceTests {
         int idToUpdate = 1;
         User originalUser = this.userService.findUser(idToUpdate);
         String oldPassword = originalUser.getPassword();
-    
+
         User inputUser = new User();
         BeanUtils.copyProperties(originalUser, inputUser);
-        inputUser.setPassword(""); 
-        
+        inputUser.setPassword("");
+
         User updatedUser = userService.updateUser(inputUser, idToUpdate);
-        
+
         assertEquals(oldPassword, updatedUser.getPassword());
     }
 
@@ -185,15 +185,15 @@ class UserServiceTests {
     void shouldUpdateUserAuthority() {
         int idToUpdate = 1;
         User userToUpdate = this.userService.findUser(idToUpdate);
-        
+
         User inputUser = new User();
         BeanUtils.copyProperties(userToUpdate, inputUser);
 
         Authorities adminAuth = authService.findByAuthority("ADMIN");
         inputUser.setAuthority(adminAuth);
-        
+
         User updatedUser = userService.updateUser(inputUser, idToUpdate);
-        
+
         assertEquals("ADMIN", updatedUser.getAuthority().getAuthority());
     }
 
@@ -210,7 +210,7 @@ class UserServiceTests {
         adminUser.setAuthority(authService.findByAuthority("ADMIN"));
 
         User saved = userService.saveUser(adminUser);
-      
+
         assertNotNull(saved.getId());
         assertEquals("ADMIN", saved.getAuthority().getAuthority());
     }
@@ -225,11 +225,11 @@ class UserServiceTests {
         playerUser.setBirthDate("2000-01-01");
         playerUser.setEmail("player@test.com");
         playerUser.setImage("img.png");
-        
+
         playerUser.setAuthority(authService.findByAuthority("PLAYER"));
 
         User saved = userService.saveUser(playerUser);
-        
+
         assertNotNull(saved.getId());
         assertEquals("PLAYER", saved.getAuthority().getAuthority());
     }
@@ -237,7 +237,7 @@ class UserServiceTests {
     @Test
     @Transactional
     void shouldDeleteUser() {
-        int id = 5; 
+        int id = 8; // player3
         assertNotNull(userService.findUser(id));
         userService.deleteUser(id);
         assertThrows(ResourceNotFoundException.class, () -> userService.findUser(id));
@@ -251,9 +251,9 @@ class UserServiceTests {
 
     @Test
     void shouldFindUserDTOById() {
-        UserDTO dto = userService.findUserDTO(4); // Carlosbox2k
+        UserDTO dto = userService.findUserDTO(6); // player1
         assertNotNull(dto);
-        assertEquals("Carlosbox2k", dto.getUsername());
+        assertEquals("player1", dto.getUsername());
         assertEquals("PLAYER", dto.getAuthority());
     }
 
@@ -267,10 +267,10 @@ class UserServiceTests {
         User user = new User();
         user.setUsername("FutureUser");
         user.setPassword("password");
-        
-        user.setBirthDate(LocalDate.now().plusDays(1).toString()); 
+
+        user.setBirthDate(LocalDate.now().plusDays(1).toString());
         user.setAuthority(authService.findByAuthority("PLAYER"));
-        
+
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.saveUser(user);
         });
@@ -282,8 +282,8 @@ class UserServiceTests {
         User user = new User();
         user.setUsername("BadFormatUser");
         user.setPassword("password");
-     
-        user.setBirthDate("12/12/2025"); 
+
+        user.setBirthDate("12/12/2025");
         user.setAuthority(authService.findByAuthority("PLAYER"));
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -291,18 +291,18 @@ class UserServiceTests {
         });
         assertEquals("Invalid birth date format. Expected yyyy-MM-dd", exception.getMessage());
     }
-    
+
     @Test
     @Transactional
     void shouldThrowExceptionForFutureBirthDateInUpdate() {
         int idToUpdate = 1;
         User userToUpdate = userService.findUser(idToUpdate);
-        
+
         User inputUser = new User();
         BeanUtils.copyProperties(userToUpdate, inputUser);
-        
+
         inputUser.setBirthDate(LocalDate.now().plusDays(1).toString());
-        
+
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.updateUser(inputUser, idToUpdate);
         });
@@ -314,12 +314,12 @@ class UserServiceTests {
     void shouldThrowExceptionForInvalidBirthDateFormatInUpdate() {
         int idToUpdate = 1;
         User userToUpdate = userService.findUser(idToUpdate);
-        
+
         User inputUser = new User();
         BeanUtils.copyProperties(userToUpdate, inputUser);
- 
+
         inputUser.setBirthDate("bad-date-format");
-        
+
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.updateUser(inputUser, idToUpdate);
         });

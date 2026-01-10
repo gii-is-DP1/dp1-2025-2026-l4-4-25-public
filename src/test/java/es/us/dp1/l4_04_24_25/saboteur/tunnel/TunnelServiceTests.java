@@ -67,7 +67,6 @@ class TunnelServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> this.tunnelService.findTunnel(id));
     }
 
-
     @Test
     void shouldFindAllTunnels() {
         Iterable<Tunnel> tunnels = tunnelService.findAll();
@@ -101,7 +100,7 @@ class TunnelServiceTests {
 
     @Test
     void shouldFindBySpecificDirection() {
-        
+
         List<Tunnel> tunnels = tunnelService.findByDerecha(true);
         assertNotNull(tunnels);
         assertTrue(tunnels.stream().allMatch(Tunnel::isDerecha));
@@ -109,12 +108,12 @@ class TunnelServiceTests {
 
     @Test
     void shouldFindByAllFourDirections() {
-        
+
         List<Tunnel> tunnels = tunnelService.findByArribaAndAbajoAndDerechaAndIzquierda(true, true, true, true);
         assertFalse(tunnels.isEmpty());
         assertTrue(tunnels.stream().anyMatch(t -> t.getId() == 34));
     }
-    
+
     @Test
     void shouldFindByThreeDirections() {
         List<Tunnel> tunnels = tunnelService.findByArribaAndAbajoAndDerecha(true, true, true);
@@ -127,5 +126,69 @@ class TunnelServiceTests {
         List<Tunnel> tunnels = tunnelService.findByArribaAndIzquierda(true, true);
         assertFalse(tunnels.isEmpty());
         assertTrue(tunnels.stream().allMatch(t -> t.isArriba() && t.isIzquierda()));
+    }
+
+    @Test
+    void shouldFindByArriba() {
+        List<Tunnel> tunnels = tunnelService.findByArriba(true);
+        assertNotNull(tunnels);
+        assertTrue(tunnels.stream().allMatch(Tunnel::isArriba));
+    }
+
+    @Test
+    void shouldFindByAbajo() {
+        List<Tunnel> tunnels = tunnelService.findByAbajo(true);
+        assertNotNull(tunnels);
+        assertTrue(tunnels.stream().allMatch(Tunnel::isAbajo));
+    }
+
+    @Test
+    void shouldFindByIzquierda() {
+        List<Tunnel> tunnels = tunnelService.findByIzquierda(true);
+        assertNotNull(tunnels);
+        assertTrue(tunnels.stream().allMatch(Tunnel::isIzquierda));
+    }
+
+    @Test
+    void shouldFindByArribaAndDerecha() {
+        List<Tunnel> tunnels = tunnelService.findByArribaAndDerecha(true, true);
+        assertFalse(tunnels.isEmpty());
+        assertTrue(tunnels.stream().allMatch(t -> t.isArriba() && t.isDerecha()));
+    }
+
+    @Test
+    void shouldFindByAbajoAndDerecha() {
+        List<Tunnel> tunnels = tunnelService.findByAbajoAndDerecha(true, true);
+        assertNotNull(tunnels);
+    }
+
+    @Test
+    void shouldFindByAbajoAndIzquierda() {
+        List<Tunnel> tunnels = tunnelService.findByAbajoAndIzquierda(true, true);
+        assertNotNull(tunnels);
+    }
+
+    @Test
+    void shouldFindByDerechaAndIzquierda() {
+        List<Tunnel> tunnels = tunnelService.findByDerechaAndIzquierda(true, true);
+        assertNotNull(tunnels);
+    }
+
+    @Test
+    void shouldFindByArribaAndAbajoAndIzquierda() {
+        List<Tunnel> tunnels = tunnelService.findByArribaAndAbajoAndIzquierda(true, true, true);
+        assertNotNull(tunnels);
+    }
+
+    @Test
+    void shouldFindByArribaAndDerechaAndIzquierda() {
+        List<Tunnel> tunnels = tunnelService.findByArribaAndDerechaAndIzquierda(true, true, true);
+        assertNotNull(tunnels);
+    }
+
+    @Test
+    void shouldFindByAbajoAndDerechaAndIzquierda() {
+        List<Tunnel> tunnels = tunnelService.findByAbajoAndDerechaAndIzquierda(true, true, true);
+        assertNotNull(tunnels);
     }
 }
