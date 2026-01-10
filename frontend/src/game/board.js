@@ -41,8 +41,13 @@ const timeturn = 10;
 const getSavedRoundData = () => {
   const savedData = sessionStorage.getItem('newRoundData');
   if (savedData) {
+    const parsed = JSON.parse(savedData);
+    const nextRoundId = parsed?.round?.id;
+    if (nextRoundId !== undefined && nextRoundId !== null) {
+      sessionStorage.setItem('forceRolesReassignmentRoundId', String(nextRoundId));
+    }
     sessionStorage.removeItem('newRoundData');
-    return JSON.parse(savedData);
+    return parsed;
   }
   // Try to recover from general session storage (reload fix)
   const recoveredData = sessionStorage.getItem('savedGameData');
@@ -388,6 +393,11 @@ export default function Board() {
         forceRolesReassignment.current = true;
         console.log('🎭 Mark to reassign roles in new round');
       }
+
+      // Evitar mostrar roles de la ronda anterior mientras llegan los nuevos
+      lastPublishedRoles.current = [];
+      setPlayerRol([]);
+
       playersOutOfCardsLogged.current.clear();
       hasPatchedInitialLeftCards.current = false;
       console.log('🔄 hasPatchedInitialLeftCards reset to false');
@@ -914,6 +924,29 @@ export default function Board() {
 const handleWsNewRound = (message) => {
   const { newRound, boardId } = message;
   console.log('🔄 WS NEW_ROUND received:', message);
+
+  // Guardar firma de roles de la ronda anterior para detectar si el backend aún devuelve roles antiguos
+  try {
+    const prevFromPublished = (lastPublishedRoles?.current && Array.isArray(lastPublishedRoles.current) && lastPublishedRoles.current.length > 0)
+      ? lastPublishedRoles.current
+          .map(p => ({ u: p.username, r: p.role === 'SABOTEUR' ? 1 : 0 }))
+      : null;
+
+    const prevFromActivePlayers = (Array.isArray(activePlayers) ? activePlayers : [])
+      .filter(p => typeof p?.rol === 'boolean')
+      .map(p => ({ u: p.username, r: p.rol === true ? 1 : 0 }));
+
+    const base = (prevFromPublished && prevFromPublished.length > 0) ? prevFromPublished : prevFromActivePlayers;
+
+    const prevSig = base
+      .sort((a, b) => String(a.u).localeCompare(String(b.u)))
+      .map(x => `${x.u}:${x.r}`)
+      .join('|');
+
+    sessionStorage.setItem('previousRoundRolesSignature', prevSig);
+  } catch (e) {
+    console.warn('Could not store previous round roles signature', e);
+  }
   
   // Limpiar sessionStorage anterior para evitar conflictos
   sessionStorage.removeItem('savedGameData');
@@ -924,6 +957,11 @@ const handleWsNewRound = (message) => {
     round: newRound,
     isSpectator: isSpectator
   }));
+
+  // Marcar que en esta ronda hay que reasignar roles (sobrevive al reload)
+  if (newRound?.id !== undefined && newRound?.id !== null) {
+    sessionStorage.setItem('forceRolesReassignmentRoundId', String(newRound.id));
+  }
   
   // Navegar y forzar reload para reiniciar todo el estado
   const targetBoardId = boardId || newRound?.board;
@@ -1420,11 +1458,40 @@ const activateCollapseMode = (card, cardIndex) => {
         // La navegación real se hace en handleWsNewRound cuando llegue el mensaje
         // Pero por si acaso el WS no llega, navegamos directamente
         if (newRound && newRound.board) {
+          // Guardar firma de roles de la ronda anterior para detectar si el backend aún devuelve roles antiguos
+          try {
+            const prevFromPublished = (lastPublishedRoles?.current && Array.isArray(lastPublishedRoles.current) && lastPublishedRoles.current.length > 0)
+              ? lastPublishedRoles.current
+                  .map(p => ({ u: p.username, r: p.role === 'SABOTEUR' ? 1 : 0 }))
+              : null;
+
+            const prevFromActivePlayers = (Array.isArray(activePlayers) ? activePlayers : [])
+              .filter(p => typeof p?.rol === 'boolean')
+              .map(p => ({ u: p.username, r: p.rol === true ? 1 : 0 }));
+
+            const base = (prevFromPublished && prevFromPublished.length > 0) ? prevFromPublished : prevFromActivePlayers;
+
+            const prevSig = base
+              .sort((a, b) => String(a.u).localeCompare(String(b.u)))
+              .map(x => `${x.u}:${x.r}`)
+              .join('|');
+
+            sessionStorage.setItem('previousRoundRolesSignature', prevSig);
+          } catch (e) {
+            console.warn('Could not store previous round roles signature', e);
+          }
+
           sessionStorage.setItem('newRoundData', JSON.stringify({
             game: game,
             round: newRound,
             isSpectator: isSpectator
           }));
+
+          // Marcar que en esta ronda hay que reasignar roles (sobrevive al reload)
+          if (newRound?.id !== undefined && newRound?.id !== null) {
+            sessionStorage.setItem('forceRolesReassignmentRoundId', String(newRound.id));
+          }
+
           window.location.href = `/board/${newRound.board}`;
         }
         
@@ -1779,6 +1846,37 @@ const activateCollapseMode = (card, cardIndex) => {
     setPlayerTools(initialTools);
     let cancelled = false;
 
+    const getOrderedUsernames = () => {
+      // Prefer the already-computed playerOrder
+      if (Array.isArray(playerOrder) && playerOrder.length > 0) {
+        return playerOrder.map(p => p?.username).filter(Boolean);
+      }
+
+      // Otherwise, compute the same ordering playerOrder uses: by birthDate asc (oldest first)
+      if (Array.isArray(activePlayers) && activePlayers.length > 0) {
+        return [...activePlayers]
+          .sort((a, b) => {
+            const da = a?.birthDate ? new Date(a.birthDate).getTime() : Number.POSITIVE_INFINITY;
+            const db = b?.birthDate ? new Date(b.birthDate).getTime() : Number.POSITIVE_INFINITY;
+            if (da !== db) return da - db;
+            return (a?.id ?? 0) - (b?.id ?? 0);
+          })
+          .map(p => p?.username)
+          .filter(Boolean);
+      }
+
+      return [];
+    };
+
+    const getFirstPlayerUsername = () => {
+      const ordered = getOrderedUsernames();
+      return ordered.length > 0 ? ordered[0] : null;
+    };
+
+    const firstPlayerUsername = getFirstPlayerUsername();
+    const isRoleAssigner =
+      !!firstPlayerUsername && !!loggedInUser?.username && firstPlayerUsername === loggedInUser.username;
+
     const buildRolesFromBackend = () =>
       activePlayers
         .filter(player => typeof player.rol === 'boolean')
@@ -1796,6 +1894,53 @@ const activateCollapseMode = (card, cardIndex) => {
       const a = sortByUser(prev);
       const b = sortByUser(next);
       return a.every((item, idx) => item.username === b[idx].username && item.role === b[idx].role);
+    };
+
+    const rolesSignature = (rolesList) =>
+      (Array.isArray(rolesList) ? rolesList : [])
+        .map(r => ({ u: r.username, v: r.role === 'SABOTEUR' ? 1 : 0 }))
+        .sort((a, b) => String(a.u).localeCompare(String(b.u)))
+        .map(x => `${x.u}:${x.v}`)
+        .join('|');
+
+    const fnv1a32 = (str) => {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i += 1) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return h >>> 0;
+    };
+
+    const mulberry32 = (seed) => {
+      let t = seed >>> 0;
+      return () => {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    };
+
+    const assignRolesDeterministic = (players, seedStr) => {
+      const list = Array.isArray(players) ? players : [];
+      const n = list.length;
+      const numSaboteur = calculateSaboteurCount(n);
+      const ordered = [...list].sort((a, b) => String(a.username).localeCompare(String(b.username)));
+      const rng = mulberry32(fnv1a32(String(seedStr ?? '')));
+
+      // Deterministic Fisher–Yates
+      for (let i = ordered.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rng() * (i + 1));
+        [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+      }
+
+      return ordered.map((p, i) => ({
+        username: p.username,
+        role: i < numSaboteur ? 'SABOTEUR' : 'MINER',
+        roleImg: i < numSaboteur ? saboteurRol : minerRol,
+        roleName: i < numSaboteur ? 'SABOTEUR' : 'MINER'
+      }));
     };
 
     const publishRoles = (rolesList) => {
@@ -1830,6 +1975,10 @@ const activateCollapseMode = (card, cardIndex) => {
     };
 
     const syncRoles = async () => {
+      const sessionForceRoundId = sessionStorage.getItem('forceRolesReassignmentRoundId');
+      const shouldForceFromSession =
+        sessionForceRoundId && round?.id && String(sessionForceRoundId) === String(round.id);
+
       const expectedSaboteurs = calculateSaboteurCount(activePlayers.length);
       const backendRoles = buildRolesFromBackend();
       const saboteursAlready = backendRoles.filter(r => r.role === 'SABOTEUR').length;
@@ -1838,12 +1987,85 @@ const activateCollapseMode = (card, cardIndex) => {
         saboteursAlready === expectedSaboteurs;
 
       // Si se fuerza la reasignación (nueva ronda), siempre reasignar roles
-      if (forceRolesReassignment.current) {
+      if (shouldForceFromSession || forceRolesReassignment.current) {
         console.log('🎭 Forcing role reassignment for new round');
         forceRolesReassignment.current = false;
-        const rolesAssigned = assignRolesGame(activePlayers);
+
+        // Evitar condiciones de carrera: solo el primer jugador asigna y persiste
+        if (isSpectator) {
+          publishRoles(backendRoles);
+          return;
+        }
+
+        if (!isRoleAssigner) {
+          // Esperar a que el primer jugador persista roles.
+          // Ojo: el backend puede devolver roles "completos" pero aún ser los de la ronda anterior.
+          // Para evitar quedarnos con roles antiguos, hacemos polling unas pocas veces.
+          const pollKey = round?.id ? `forceRolesReassignmentPolls_${round.id}` : 'forceRolesReassignmentPolls';
+          const polls = Number(sessionStorage.getItem(pollKey) || '0');
+          const nextPolls = polls + 1;
+          sessionStorage.setItem(pollKey, String(nextPolls));
+
+          const prevSig = sessionStorage.getItem('previousRoundRolesSignature');
+          const currSig = rolesSignature(backendRoles);
+          const looksLikeStillPrevious = !!prevSig && currSig === prevSig;
+
+          // Fallback seguro: si tras varios polls seguimos viendo exactamente la firma anterior,
+          // dejamos que un único "segundo jugador" haga la asignación/persistencia.
+          const ordered = getOrderedUsernames();
+          const takeoverUsername = ordered.length > 1 ? ordered[1] : null;
+          const canTakeOver =
+            !!takeoverUsername && !!loggedInUser?.username && takeoverUsername === loggedInUser.username;
+
+          if (canTakeOver && looksLikeStillPrevious && nextPolls >= 15) {
+            console.warn('🎭 Role reassignment takeover by fallback player:', takeoverUsername);
+            const baseSeed = `round:${round?.id ?? 'unknown'}:takeover`;
+            let rolesAssigned = assignRolesDeterministic(activePlayers, baseSeed);
+            if (prevSig) {
+              let attempts = 0;
+              while (attempts < 8 && rolesSignature(rolesAssigned) === prevSig) {
+                attempts += 1;
+                rolesAssigned = assignRolesDeterministic(activePlayers, `${baseSeed}:retry:${attempts}`);
+              }
+            }
+            publishRoles(rolesAssigned);
+            await persistRoles(rolesAssigned);
+            sessionStorage.removeItem('forceRolesReassignmentRoundId');
+            sessionStorage.removeItem(pollKey);
+            sessionStorage.removeItem('previousRoundRolesSignature');
+            return;
+          }
+
+          if (rolesComplete && nextPolls >= 2 && !looksLikeStillPrevious) {
+            sessionStorage.removeItem('forceRolesReassignmentRoundId');
+            sessionStorage.removeItem(pollKey);
+            sessionStorage.removeItem('previousRoundRolesSignature');
+            publishRoles(backendRoles);
+            return;
+          }
+
+          setTimeout(() => {
+            loadActivePlayers();
+          }, 400);
+          return;
+        }
+
+        // Primer jugador: reasigna y persiste (determinista por ronda para evitar intermitencia)
+        const prevSig = sessionStorage.getItem('previousRoundRolesSignature');
+        const baseSeed = `round:${round?.id ?? 'unknown'}`;
+        let rolesAssigned = assignRolesDeterministic(activePlayers, baseSeed);
+        if (prevSig) {
+          // Si por casualidad coincide con la ronda anterior, variar la semilla de forma determinista
+          let attempts = 0;
+          while (attempts < 8 && rolesSignature(rolesAssigned) === prevSig) {
+            attempts += 1;
+            rolesAssigned = assignRolesDeterministic(activePlayers, `${baseSeed}:retry:${attempts}`);
+          }
+        }
         publishRoles(rolesAssigned);
         await persistRoles(rolesAssigned);
+        sessionStorage.removeItem('forceRolesReassignmentRoundId');
+        sessionStorage.removeItem('previousRoundRolesSignature');
         return;
       }
 
@@ -1852,7 +2074,20 @@ const activateCollapseMode = (card, cardIndex) => {
         return;
       }
 
-      const rolesAssigned = assignRolesGame(activePlayers);
+      // Si faltan roles, solo el creador los asigna/persiste para evitar carreras
+      if (isSpectator) {
+        publishRoles(backendRoles);
+        return;
+      }
+
+      if (!isRoleAssigner) {
+        setTimeout(() => {
+          loadActivePlayers();
+        }, 400);
+        return;
+      }
+
+      const rolesAssigned = assignRolesDeterministic(activePlayers, `round:${round?.id ?? 'unknown'}:missingRoles`);
       publishRoles(rolesAssigned);
       await persistRoles(rolesAssigned);
     };
@@ -1860,7 +2095,7 @@ const activateCollapseMode = (card, cardIndex) => {
     syncRoles();
 
     return () => { cancelled = true; };
-  }, [activePlayers]);
+  }, [activePlayers, playerOrder, loggedInUser?.username, round?.id, isSpectator]);
 
   useEffect(() => {
     if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
@@ -2207,6 +2442,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
       <PlayerRole 
         playerRol={playerRol} 
+        activePlayers={activePlayers}
         loggedInUser={loggedInUser} 
         isSpectator={isSpectator} 
       />
