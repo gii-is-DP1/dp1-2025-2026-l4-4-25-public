@@ -34,7 +34,15 @@ const useAdminGames = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const sortedGames = data.sort((a, b) => b.id - a.id);
+        const normalized = (Array.isArray(data) ? data : []).map((g) => ({
+          ...g,
+          creator: typeof g?.creator === 'object' ? g?.creator?.username : g?.creator,
+          winner: g?.winner?.username ?? g?.winner,
+          private: typeof g?.private === 'boolean' ? g.private : g?.isPrivate,
+          gameStatus: g?.gameStatus ?? g?.status,
+        }));
+
+        const sortedGames = normalized.sort((a, b) => b.id - a.id);
         setAllGames(sortedGames);
         console.log("All games loaded:", sortedGames);
       } else {
@@ -68,8 +76,7 @@ const useAdminGames = () => {
 
     if (filters.creator) {
       const searchTerm = filters.creator.toLowerCase();
-      filtered = filtered.filter((g) => 
-        g.creator?.toLowerCase().includes(searchTerm))}
+      filtered = filtered.filter((g) => g.creator?.toLowerCase().includes(searchTerm))}
     if (filters.participant) {
       const searchTerm = filters.participant.toLowerCase();
       filtered = filtered.filter((g) => {
@@ -80,9 +87,7 @@ const useAdminGames = () => {
         return isCreator || isActivePlayer})}
     if (filters.winner) {
       const searchTerm = filters.winner.toLowerCase();
-      filtered = filtered.filter((g) => {
-        const winnerUsername = g.winner?.username || '';
-        return winnerUsername.toLowerCase().includes(searchTerm)})}
+      filtered = filtered.filter((g) => g.winner?.toLowerCase().includes(searchTerm))}
     if (filters.privacy) {
       const isPrivate = filters.privacy === "private";
       filtered = filtered.filter((g) => g.private === isPrivate)}
