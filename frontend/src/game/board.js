@@ -66,7 +66,10 @@ const getSavedRoundData = () => {
     if (nextRoundId !== undefined && nextRoundId !== null) {
       sessionStorage.setItem('forceRolesReassignmentRoundId', String(nextRoundId));
     }
-    sessionStorage.removeItem('newRoundData');
+    // IMPORTANT: do not remove `newRoundData` here. Keep it available so
+    // initialization/verification logic can detect that a round transition
+    // is in progress. It will be cleared by `verify()` once membership is
+    // confirmed to avoid races that send players to the lobby incorrectly.
     return parsed;
   }
   // Try to recover from general session storage (reload fix)
@@ -210,7 +213,9 @@ export default function Board() {
 
       // If we detect a transition (newRoundData, saved game, or navigation state),
       // give the client a longer window to resolve races before denying access.
-      const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state);
+      // Also consider `savedRoundData` (loaded from sessionStorage during init)
+      // as a transition hint because `newRoundData` is consumed during init.
+      const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state || savedRoundData);
       const localMaxAttempts = transitionHint ? 150 : maxAttempts; // ~30s when transitionHint
       const localDelayMs = delayMs;
 
@@ -221,7 +226,7 @@ export default function Board() {
           // If we still couldn't resolve data, but there's a pending newRoundData
           // or location.state (fresh navigation), keep waiting a bit longer instead
           // of denying immediately. This avoids races during round transitions.
-          if (sessionStorage.getItem('newRoundData') || location?.state) {
+          if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
             console.log('🔁 Delaying deny: newRoundData or location.state present, continuing verify');
             attempts = 0; // reset attempts and keep waiting
             setTimeout(verify, delayMs);
@@ -246,8 +251,8 @@ export default function Board() {
         if (attempts >= localMaxAttempts) {
           // If activePlayers isn't populated yet but we have a newRoundData or
           // came here via location.state, prefer to keep waiting instead of denying.
-          if (sessionStorage.getItem('newRoundData') || location?.state) {
-            console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state present');
+          if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
+            console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state/savedRoundData present');
             attempts = 0;
             setTimeout(verify, delayMs);
             return;
@@ -293,6 +298,17 @@ export default function Board() {
         }
         deny();
         return;
+      }
+
+      // Membership confirmed client-side: clear the temporary newRoundData
+      // so subsequent checks don't lose the transition hint prematurely.
+      try {
+        if (sessionStorage.getItem('newRoundData')) {
+          sessionStorage.removeItem('newRoundData');
+          console.log('🧹 Cleared newRoundData after membership confirmation');
+        }
+      } catch (e) {
+        console.warn('Could not clear newRoundData from sessionStorage:', e);
       }
 
       const candidateBoardId = candidateRound?.board?.id ?? candidateRound?.board;
