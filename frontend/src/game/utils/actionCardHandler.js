@@ -58,7 +58,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         });
       }
 
-      addLog(`⛏️ ${targetUsername}'s pickaxe has been broken!`);
+      await addLog(`⛏️ ${loggedInUser.username} broke ${targetUsername}'s pickaxe!`);
       break;
 
     case 'DESTROY_LAMP':
@@ -78,7 +78,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         });
       }
 
-      addLog(`🔦 ${targetUsername}'s candle has been broken!`);
+      await addLog(`🔦 ${loggedInUser.username} broke ${targetUsername}'s candle!`);
       break;
 
     case 'DESTROY_CART':
@@ -98,7 +98,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         });
       }
 
-      addLog(`🪨 ${targetUsername}'s wagon has been broken!`);
+      await addLog(`🪨 ${loggedInUser.username} broke ${targetUsername}'s wagon!`);
       break;
 
     case 'REPAIR_PICKAXE':
@@ -118,7 +118,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         });
       }
 
-      addLog(`⛏️ ${targetUsername}'s pickaxe has been repaired!`);
+      await addLog(`⛏️ ${loggedInUser.username} repaired ${targetUsername}'s pickaxe!`);
       break;
 
     case 'REPAIR_LAMP':
@@ -138,7 +138,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         });
       }
 
-      addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
+      await addLog(`🔦 ${loggedInUser.username} repaired ${targetUsername}'s candle!`);
       break;
 
     case 'REPAIR_CART':
@@ -158,7 +158,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         });
       }
 
-      addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
+      await addLog(`🪨 ${loggedInUser.username} repaired ${targetUsername}'s wagon!`);
       break;
 
     case 'REPAIR_PICKAXE_LAMP':
@@ -180,7 +180,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
           });
         }
 
-        addLog(`⛏️ ${targetUsername}'s pickaxe has been repaired!`);
+        await addLog(`⛏️ ${loggedInUser.username} repaired ${targetUsername}'s pickaxe!`);
       } else if (selectedTool === 'candle') {
         if (currentTools.candle) {
           toast.warning("Cannot repair a candle that is already working!");
@@ -198,7 +198,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
           });
         }
 
-        addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
+        await addLog(`🔦 ${loggedInUser.username} repaired ${targetUsername}'s candle!`);
       } else {
         toast.warning("Please select a tool to repair!");
         return false; 
@@ -224,7 +224,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
           });
         }
 
-        addLog(`⛏️ ${targetUsername}'s pickaxe has been repaired!`);
+        await addLog(`⛏️ ${loggedInUser.username} repaired ${targetUsername}'s pickaxe!`);
       } else if (selectedTool === 'wagon') {
         if (currentTools.wagon) {
           toast.warning("Cannot repair a wagon that is already working!");
@@ -242,7 +242,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
           });
         }
 
-        addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
+        await addLog(`🪨 ${loggedInUser.username} repaired ${targetUsername}'s wagon!`);
       } else {
         toast.warning("Please select a tool to repair!");
         return false; 
@@ -268,7 +268,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
           });
         }
 
-        addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
+        await addLog(`🪨 ${loggedInUser.username} repaired ${targetUsername}'s wagon!`);
       } else if (selectedTool === 'candle') {
         if (currentTools.candle) {
           toast.warning("Cannot repair a candle that is already working!");
@@ -286,7 +286,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
           });
         }
 
-        addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
+        await addLog(`🔦 ${loggedInUser.username} repaired ${targetUsername}'s candle!`);
       } else {
         toast.warning("Please select a tool to repair!");
         return false; 

@@ -754,13 +754,12 @@ export default function Board() {
       
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
-      const sameAsLast =
-        lastPlacedLog.current &&
-        lastPlacedLog.current.row === row &&
-        lastPlacedLog.current.col === col &&
-        now - lastPlacedLog.current.ts < 1500;
-
+      /*
+      const sameAsLast = ... (Removed to ensure logging always fires)
       if (sameAsLast) return;
+      */
+      
+      // We update the ref but do not block execution
       lastPlacedLog.current = { player: actor, row, col, ts: now };
 
       setBoardCells(prev => {
