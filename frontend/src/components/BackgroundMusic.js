@@ -1,57 +1,106 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import './BackgroundMusic.css';
 
-const BackgroundMusic = () => {
+const DEFAULT_VIDEO_ID = 'f--e5fca2Jg';
 
-  const DEFAULT_VIDEO_ID = 'f--e5fca2Jg';
+const BackgroundMusic = () => {
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(30);
   const [showControls, setShowControls] = useState(false);
   const [player, setPlayer] = useState(null);
-  const [currentVideoId, setCurrentVideoId] = useState(DEFAULT_VIDEO_ID);
   const [inputVideoId, setInputVideoId] = useState('');
   const playerRef = useRef(null);
+  const lastPlayableVideoIdRef = useRef(DEFAULT_VIDEO_ID);
+  const pendingVideoIdRef = useRef(null);
 
   useEffect(() => {
+    const initPlayer = () => {
+      const ytPlayer = new window.YT.Player('youtube-player', {
+        height: '0',
+        width: '0',
+        videoId: DEFAULT_VIDEO_ID,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          loop: 1,
+          playlist: DEFAULT_VIDEO_ID,
+          playsinline: 1,
+          enablejsapi: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: (event) => {
+            playerRef.current = event.target;
+            lastPlayableVideoIdRef.current = DEFAULT_VIDEO_ID;
+            event.target.setVolume(30);
+            event.target.playVideo();
+            setIsPlaying(true);
+            setPlayer(event.target);
+          },
+          onStateChange: (event) => {
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              setIsPlaying(true);
+              if (pendingVideoIdRef.current) {
+                lastPlayableVideoIdRef.current = pendingVideoIdRef.current;
+                pendingVideoIdRef.current = null;
+              }
+            } else if (event.data === window.YT.PlayerState.PAUSED) {
+              setIsPlaying(false);
+            }
+          },
+          onError: (event) => {
+            // 2: invalid parameter, 5: HTML5 error, 100/101/150: not found or embedding disabled
+            setIsPlaying(false);
+            const code = event?.data;
+            if (code === 101 || code === 150) {
+              toast.error('This video cannot be embedded. Try another YouTube link.');
+            } else if (code === 100) {
+              toast.error('Video not found. Check the ID/URL.');
+            } else {
+              toast.error('Could not play that YouTube video.');
+            }
+
+            // Fallback: keep music going by returning to last playable video
+            pendingVideoIdRef.current = null;
+            const fallbackId = lastPlayableVideoIdRef.current;
+            if (fallbackId && playerRef.current?.loadVideoById) {
+              try {
+                playerRef.current.loadVideoById({ videoId: fallbackId, startSeconds: 0 });
+                playerRef.current.playVideo();
+              } catch (e) {
+                // ignore
+              }
+            }
+          }
+        },
+      });
+      playerRef.current = ytPlayer;
+    };
+
+    if (window.YT && window.YT.Player) {
+      initPlayer();
+      return () => {
+        if (playerRef.current?.destroy) {
+          playerRef.current.destroy();
+        }
+      };
+    }
+
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-    window.onYouTubeIframeAPIReady = () => {
-      const ytPlayer = new window.YT.Player('youtube-player', {
-        height: '0',
-        width: '0',
-        videoId: currentVideoId,
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          loop: 1,
-          playlist: currentVideoId, 
-          playsinline: 1,
-          enablejsapi: 1,
-        },
-        events: {
-          onReady: (event) => {
-            event.target.setVolume(30);
-            event.target.playVideo();
-            setIsPlaying(true);
-            setPlayer(event.target)},
-          onStateChange: (event) => {
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              setIsPlaying(true);
-            } else if (event.data === window.YT.PlayerState.PAUSED) {
-              setIsPlaying(false);
-            }
-          },
-        },
-      });
-    };
+    window.onYouTubeIframeAPIReady = () => initPlayer();
 
     return () => {
-      if (player) {
-        player.destroy()}}}, []);
+      if (playerRef.current?.destroy) {
+        playerRef.current.destroy();
+      }
+    };
+  }, []);
 
   const togglePlay = () => {
     if (player) {
@@ -72,27 +121,38 @@ const BackgroundMusic = () => {
   };
 
   const changeVideo = () => {
-    if (player && inputVideoId.trim()) {
-      const videoId = extractVideoId(inputVideoId.trim());
-      player.loadVideoById({
-        videoId: videoId,
-        startSeconds: 0,
-      });
-      player.setLoop(true);
-      setCurrentVideoId(videoId);
-      setIsPlaying(true);
-      console.log('🎵 Cambiando a video:', videoId);
+    const raw = inputVideoId.trim();
+    if (!player || !raw) return;
+
+    const videoId = extractVideoId(raw);
+    if (!videoId) {
+      toast.error('Paste a YouTube video URL or ID (11 chars).');
+      return;
     }
+
+    pendingVideoIdRef.current = videoId;
+    player.loadVideoById({ videoId, startSeconds: 0 });
+    player.setLoop(true);
+    player.playVideo();
+    setIsPlaying(true);
   };
 
   const extractVideoId = (input) => {
     if (input.length === 11 && !input.includes('/') && !input.includes('=')) {
       return input}
+
+    // If it's a URL but not YouTube, don't try to treat it as an ID
+    if (input.includes('://') && !input.includes('youtube.com') && !input.includes('youtu.be')) {
+      return null;
+    }
     
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
       /youtube\.com\/embed\/([^&\n?#]+)/,
-      /youtube\.com\/v\/([^&\n?#]+)/];
+      /youtube\.com\/v\/([^&\n?#]+)/,
+      /youtube\.com\/shorts\/([^&\n?#]+)/,
+      /youtube\.com\/live\/([^&\n?#]+)/
+    ];
     
     for (const pattern of patterns) {
       const match = input.match(pattern);
@@ -100,7 +160,7 @@ const BackgroundMusic = () => {
         return match[1]}
     }
     
-    return input;
+    return input.length === 11 ? input : null;
   };
 
   return (
@@ -171,7 +231,7 @@ const BackgroundMusic = () => {
           </div>
 
           <div className="music-info">
-            <small>💡 Paste the full YouTube ID or URL and press Enter or ✅</small>
+            <small>💡 Only YouTube links/IDs work (some videos block embedding)</small>
           </div>
         </div>
       )}
