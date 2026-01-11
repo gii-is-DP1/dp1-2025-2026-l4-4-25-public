@@ -5,7 +5,7 @@
 **Grupo/Equipo: L4-4** <!-- p.ej., L4-03 Equipo 33 -->  
 **Nombre del proyecto: Saboteur** <!-- p. ej. Petris -->  
 **Repositorio: https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25** <!-- URL del repo -->  
-**Integrantes (máx. 6):** 
+**Integrantes :** 
 Marcos Ángel Ayala Blanco marayabla@alum.us.es,
 Luis Calderón Carmona luicalcar@alum.us.es,
 Alejandro Caro Pérez alecarper@alum.us.es,
@@ -23,21 +23,27 @@ Este documento describe el plan de pruebas para el proyecto juego de mesa **Sabo
 
 El alcance de este plan de pruebas incluye:
 
-Pruebas unitarias:
+**Pruebas unitarias**:
 
-Pruebas de controladores (Controllers): Verificación aislada de la capa web, seguridad y códigos de respuesta HTTP simulando las dependencias (Mocks).
+Backend (Controladores): Verificación aislada de la capa web, seguridad y códigos de respuesta HTTP (REST) simulando las dependencias mediante Mocks.
 
-Pruebas de integración:
+Frontend (Componentes y Hooks): Verificación del renderizado correcto de la interfaz de usuario, estado de los componentes React y lógica de los hooks personalizados.
 
-Pruebas de servicios (Services) y repositorios: Verificación del correcto funcionamiento de la lógica de negocio y las transacciones con la base de datos dentro del contexto de Spring
+**Pruebas de integración**:
+
+Backend (Servicios y Repositorios): Verificación de la lógica de negocio, reglas del juego Saboteur y transacciones con la base de datos H2.
+
+Comunicación en Tiempo Real: Validación de la integración de WebSockets (STOMP) para la sincronización del tablero y el chat entre jugadores.
 ## 3. Estrategia de Pruebas
 
 ### 3.1 Tipos de Pruebas
 
 #### 3.1.1 Pruebas Unitarias
-Estas pruebas verifican el funcionamiento aislado de componentes individuales, centrándose principalmente en la capa de Controladores. Se utiliza la anotación @WebMvcTest junto con Mocks (Mockito) para validar los endpoints HTTP, la serialización JSON y las entradas de datos sin cargar el contexto completo de Spring ni depender de la base de datos.
+Backend: Se centran en la capa de Controladores. Se utiliza @WebMvcTest junto con Mockito para validar endpoints, serialización JSON y control de acceso (JWT) sin cargar el contexto completo.
 
-### 3.1.2 Pruebas de Integración
+Frontend: Se centran en componentes individuales utilizando Jest y React Testing Library. Validan que la UI reaccione correctamente a las interacciones del usuario (clicks, formularios) y que los datos se muestren según las props recibidas.
+
+### 3.1.2 Pruebas de Integración (Backend)
 Estas pruebas evalúan la interacción correcta entre las capas del sistema, abarcando específicamente los Servicios y Repositorios. Mediante la anotación @SpringBootTest, se carga el contexto de la aplicación para validar el flujo real de datos y las reglas de negocio contra una base de datos en memoria (H2), asegurando la correcta persistencia y ejecución de transacciones.
 
 
@@ -92,6 +98,8 @@ https://gii-is-DP1.github.io/dp1-2025-2026-l4-4-25/deliverables/D3/coverage/).
 | Gestión de Mazos | [DeckServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/deck/DeckServiceTests.java) | Valida la lógica de barajado, reparto de cartas y gestión de pilas de descarte. | Implementada | Integración (Sociable) |
 | HU-01 Crear Partida | [GameRestControllerTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/game/GameRestControllerTests.java) | Verifica endpoints de gestión de partidas (lobby), filtros (públicas/privadas), y manejo de errores (404). | Implementada | Unitaria (Solitaria) |
 | HU-01 Crear Partida | [GameServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/game/GameServiceTests.java) | Valida el ciclo de vida de la partida, reglas de negocio (**máx 3 rondas**, máx jugadores) y lógica de unión. | Implementada | Integración (Sociable) |
+| HU-44 Juego en tiempo real | [WebSocketGameControllerTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/game/WebSocketGameControllerTests.java) | Verifica la correcta recepción y envío de mensajes de juego a través del protocolo STOMP/WebSockets.| Implementada | Integración (Sociable) |
+| Lógica de Fin de Juego | [GameFinishedEventTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/game/GameFinishedEventTests.java) | Valida que los eventos de finalización de partida se disparen y procesen correctamente para cerrar sesiones.| Implementada | Unitaria (Solitaria) |
 | Historial de Partida | [LogRestControllerTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/log/LogRestControllerTests.java) | Verifica los endpoints para consultar el historial de acciones o logs del juego. | Implementada | Unitaria (Solitaria) |
 | Historial de Partida | [LogServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/log/LogServiceTests.java) | Valida la persistencia de eventos del juego para auditoría o historial. | Implementada | Integración (Sociable) |
 | HU-44 Chat en partida | [MessageRestControllerTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/message/MessageRestControllerTests.java) | Verifica el envío de mensajes en el chat y su correcta asociación al emisor. | Implementada | Unitaria (Solitaria) |
@@ -111,6 +119,22 @@ https://gii-is-DP1.github.io/dp1-2025-2026-l4-4-25/deliverables/D3/coverage/).
 | HU-29 Gestión de Usuarios | [AuthoritiesServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/user/AuthoritiesServiceTests.java) | Verifica la gestión de permisos y roles de usuario (ADMIN, PLAYER). | Implementada | Integración (Sociable) |
 | HU-29 Gestión de Usuarios | [UserControllerTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/user/UserControllerTests.java) | Verifica CRUD de usuarios, validaciones de unicidad (email/username) y seguridad en endpoints de administración. | Implementada | Unitaria (Solitaria) |
 | HU-29 Gestión de Usuarios | [UserServiceTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/user/UserServiceTests.java) | Valida lógica de registro, actualización de contraseñas y búsqueda de usuarios por criterios. | Implementada | Integración (Sociable) |
+| Seguridad JWT | [JwtUtilsTests](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/src/test/java/es/us/dp1/l4_04_24_25/saboteur/configuration/jwt/JwtUtilsTests.java) | Comprueba la correcta generación, parseo y validación de tokens JWT para la autenticación de usuarios. | Implementada | Unitaria (Solitaria) |
+| Gestión de Tablero | [BoardTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/game/Board.test.js)| Comprueba que el componente Board renderiza correctamente la rejilla de juego y las cartas en sus posiciones iniciales. | Implementada | Interfaz (Jest) |
+| HU-29 Gestión de Usuarios | [UserListAdminTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/admin/users/UserListAdmin.test.js)| Verifica que el administrador pueda visualizar la lista completa de usuarios y acceder a las acciones de edición y borrado. | Implementada | Interfaz (Jest) |
+| HU-03 Login de usuario | [LoginTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/auth/login/Login.test.js)| Valida que el formulario de inicio de sesión capture correctamente las credenciales y redirija al usuario tras autenticarse.| Implementada | Interfaz (Jest) |
+| HU-24 Registro de Jugador | [RegisterTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/auth/register/Register.test.js)| Verifica que el proceso de registro recoja los datos del nuevo jugador y gestione correctamente los errores de validación.| Implementada | Interfaz (Jest) |
+| HU-01 Gestión de Lobbies | [LobbyTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/Lobby.test.js)| Asegura que la sala de espera muestre a todos los jugadores conectados y permita al creador iniciar la partida. | Implementada | Interfaz (Jest)|
+| HU-34 Visualización de Logros | [AchievementsTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/profiles/Achievements.test.js)| Comprueba que la lista de logros se cargue correctamente y muestre los iconos correspondientes a los éxitos del jugador. | Implementada | Interfaz (Jest) |
+| HU-04 Edición de Perfil | [EditProfileTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/profiles/EditProfile.test.js)| Valida que los cambios realizados en el formulario de edición de perfil se persistan y se reflejen en la interfaz. | Implementada | Interfaz (Jest)|
+| Visualización de Perfil | [ProfileTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/profiles/Profile.test.js)| Verifica que la vista de perfil muestre la información personal del usuario, su avatar y sus estadísticas globales de juego. | Implementada | Interfaz (Jest) |
+| HU-01 Creación de Partida | [CreateGameTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/games/CreateGame.test.js)| Verifica que el formulario de creación de partida permita configurar el nombre, privacidad y número máximo de jugadores. | Implementada | Interfaz (Jest) |
+| Listado de Partidas | [ListGamesTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/games/ListGames.test.js)| Valida que se listen todas las partidas activas y que los filtros de búsqueda funcionen para encontrar salas específicas. | Implementada | Interfaz (Jest) |
+| Navegación de la App | [AppNavbarTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/AppNavbar.test.js)| Comprueba que la barra de navegación muestre los enlaces adecuados dependiendo de si el usuario está autenticado y su rol (Admin/Player). | Implementada | Interfaz (Jest) |
+| HU-35 Ranking Global | [RankingTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/lobbies/ranking/Ranking.test.js)| Comprueba que el ranking global muestre la tabla de jugadores ordenada por victorias y puntuación correctamente. | Implementada | Interfaz (Jest) |
+| Gestión Admin de Partidas | [AdminGamesTestjs](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main/frontend/src/admin/games/AdminGames.test.js)| Asegura que el administrador pueda ver el estado de todas las partidas en curso y realizar acciones de moderación como expulsar o finalizar forzosamente. | Implementada | Interfaz (Jest) |
+
+
 ## 6. Criterios de Aceptación
 
 - Todas las pruebas unitarias deben pasar con éxito antes de la entrega final del proyecto.

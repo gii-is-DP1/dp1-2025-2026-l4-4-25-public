@@ -72,7 +72,7 @@ const FiltersPanel = ({
         className="filter-clear-btn"
         onClick={onClearFilters}
       >
-        Limpiar filtros
+        Clean filters
       </button>
     </div>
   );

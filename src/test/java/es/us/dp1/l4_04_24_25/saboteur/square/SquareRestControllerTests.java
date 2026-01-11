@@ -43,7 +43,10 @@ import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
 import es.us.dp1.l4_04_24_25.saboteur.configuration.SecurityConfiguration;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
+import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
+import org.springframework.beans.BeanUtils; // Ensure BeanUtils is available if needed
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -51,9 +54,7 @@ import io.qameta.allure.Owner;
 @Epic("Board's squares")
 @Feature("Squares Controller Tests")
 @Owner("DP1-tutors")
-@WebMvcTest(controllers = SquareRestController.class,
-    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebSecurityConfigurer.class),
-    excludeAutoConfiguration = SecurityConfiguration.class)
+@WebMvcTest(controllers = SquareRestController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebSecurityConfigurer.class), excludeAutoConfiguration = SecurityConfiguration.class)
 class SquareRestControllerTests {
 
     private static final int TEST_SQUARE_ID = 100;
@@ -153,7 +154,7 @@ class SquareRestControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.coordinateX", is(5)));
     }
-    
+
     @Test
     @WithMockUser("admin")
     void shouldFindByBoardAndCoordinates() throws Exception {
@@ -191,7 +192,8 @@ class SquareRestControllerTests {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(square)))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException));
+                .andExpect(result -> assertTrue(result
+                        .getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException));
     }
 
     @Test
@@ -207,11 +209,10 @@ class SquareRestControllerTests {
                 .andExpect(status().isOk());
     }
 
-
     @Test
     @WithMockUser("admin")
     void shouldPatchSquareCoordinatesWithDuplicateCheck() throws Exception {
-       
+
         Map<String, Object> updates = new HashMap<>();
         updates.put("coordinateX", 2);
         updates.put("coordinateY", 2);
@@ -223,10 +224,10 @@ class SquareRestControllerTests {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updates)))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException));
+                .andExpect(result -> assertTrue(result
+                        .getResolvedException() instanceof es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException));
     }
 
-    
     @Test
     @WithMockUser("admin")
     void shouldPatchSquareAndPlaceCardAndNotifyWebSocket() throws Exception {
@@ -235,9 +236,9 @@ class SquareRestControllerTests {
         updates.put("coordinateX", 5);
         updates.put("coordinateY", 5);
 
-        Card card = new Card(); 
+        Card card = new Card();
         card.setId(10);
-        
+
         when(squareService.findSquare(TEST_SQUARE_ID)).thenReturn(square);
         when(cardService.findCard(10)).thenReturn(card);
         when(squareService.existsByCoordinateXAndCoordinateY(5, 5)).thenReturn(false);
@@ -250,9 +251,9 @@ class SquareRestControllerTests {
                 .andExpect(status().isOk());
 
         verify(squareService).saveSquare(any(Square.class));
-       
+
     }
-    
+
     @Test
     @WithMockUser("admin")
     void shouldDeleteSquare() throws Exception {
@@ -262,7 +263,38 @@ class SquareRestControllerTests {
         mockMvc.perform(delete(BASE_URL + "/{id}", TEST_SQUARE_ID)
                 .with(csrf()))
                 .andExpect(status().isOk());
-        
+
         verify(squareService).deleteSquare(TEST_SQUARE_ID);
     }
+
+    @Test
+    @WithMockUser(username = "admin")
+    void shouldPatchSquareAddTunnel() throws Exception {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("card", 50);
+
+        when(squareService.findSquare(TEST_SQUARE_ID)).thenReturn(square);
+
+        Tunnel tunnel = new Tunnel();
+        tunnel.setId(50);
+        when(cardService.findCard(50)).thenReturn(tunnel);
+
+        when(activePlayerService.existsActivePlayer(any())).thenReturn(true);
+        es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer ap = new es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer();
+        ap.setId(10);
+        when(activePlayerService.findByUsernameInOngoingGame(any())).thenReturn(ap);
+
+        es.us.dp1.l4_04_24_25.saboteur.player.Player p = new es.us.dp1.l4_04_24_25.saboteur.player.Player();
+        p.setBuiltPaths(0);
+        when(playerService.findPlayer(10)).thenReturn(p);
+
+        mockMvc.perform(patch(BASE_URL + "/{id}", TEST_SQUARE_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updates)))
+                .andExpect(status().isOk());
+
+        verify(playerService).savePlayer(any());
+    }
+
 }

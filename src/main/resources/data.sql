@@ -1,85 +1,53 @@
--- One admin user, named admin1 with passwor 4dm1n and authority admin
+-- Usuario admin por defecto (contraseña: 4dm1n)
 INSERT INTO authorities(id,authority) VALUES (1,'ADMIN');
-INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (1,'admin1','Bedilia Estrada','1990-05-12','2017-01-15','$2a$10$nMmTWAhPTqXqLDJTag3prumFrAJpsYtroxf0ojesFYq0k4PmcbWUS','https://example.com/img/bedilia.png','bedilia@saboteur.es',1);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (1,'admin1','Bedilia Estrada','1990-05-12','2017-01-15','$2a$10$nMmTWAhPTqXqLDJTag3prumFrAJpsYtroxf0ojesFYq0k4PmcbWUS','/static/media/4.338216836f4a64d1ff3b.jpeg','bedilia@saboteur.es',1);
 
--- Ten player users, named player1 with passwor 0wn3r
+-- Jugadores (Players) por defecto (contraseña: saboteur123)
 INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
-INSERT INTO appusers(id,username,name,birthDate,joined, password,image,email,authority) VALUES (4,'Carlosbox2k','Carlos Borrego Ortiz','2005-02-04','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/carlos.png', 'carlos@saboteur.es', 2);
-INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (5,'mantecaoHacker','Marcos Ángel Ayala Blanco','2005-03-12','2017-01-15','$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e','https://example.com/img/marcos.png', 'marcos@saboteur.es', 2); -- Probar Null en la imagen para probar que funciona el defaultProfile en los usuarios por defecto
 
---Datos para probar Ranking (5 jugadores ficticios)
-
-INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
-VALUES (11, 'MineroPro', 'Minero Profesional', '1995-05-05', '2023-01-01 10:00:00', 
-        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
-        'https://api.dicebear.com/7.x/adventurer/svg?seed=Minero', 'minero@saboteur.es', 2);
-
-INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
-VALUES (11, 50, 45, 120, 200, 10, false, 5, 5);
-
-
-
-INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
-VALUES (12, 'SaboteadorX', 'Saboteador Experto', '1998-08-20', '2023-02-15 14:30:00', 
-        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
-        'https://api.dicebear.com/7.x/adventurer/svg?seed=Sabo', 'sabo@saboteur.es', 2);
-
-INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
-VALUES (12, 40, 20, 50, 100, 50, false, 10, 2);
-
-
-
-INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
-VALUES (13, 'PicoRoto', 'Novato del Pico', '2000-12-12', '2024-01-01 09:00:00', 
-        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
-        'https://api.dicebear.com/7.x/adventurer/svg?seed=Pico', 'pico@saboteur.es', 2);
-
-INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
-VALUES (13, 10, 2, 5, 20, 2, false, 1, 0);
-
-
-INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
-VALUES (14, 'Exploradora_99', 'Dora la Exploradora', '1999-09-09', '2024-03-10 16:20:00', 
-        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
-        'https://api.dicebear.com/7.x/adventurer/svg?seed=Explora', 'explora@saboteur.es', 2);
-
-INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
-VALUES (14, 12, 8, 15, 45, 2, false, 3, 1);
-
-
-INSERT INTO appusers(id, username, name, birthDate, joined, password, image, email, authority) 
-VALUES (15, 'PepitaHunter', 'Cazador de Oro', '2001-01-01', '2024-05-01 12:00:00', 
-        '$2a$10$DaS6KIEfF5CRTFrxIoGc7emY3BpZZ0.fVjwA3NiJ.BjpGNmocaS3e', 
-        'https://api.dicebear.com/7.x/adventurer/svg?seed=Hunter', 'hunter@saboteur.es', 2);
-
-INSERT INTO player(id, played_games, won_games, acquired_gold_nuggets, built_paths, destroyed_paths, is_watcher, people_damaged, people_repaired) 
-VALUES (15, 5, 2, 5, 10, 1, false, 0, 0);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (6,'player1','Player Number one','2005-03-12','2017-01-15','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player1@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (7,'player2','Player Number two','2005-03-12','2011-09-11','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player2@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (8,'player3','Player Number three','2005-03-12','1999-02-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player3@saboteur.es', 2); 
 
 
 
 INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
+INSERT INTO chat (id) VALUES (3);
 
 -- Jugadores por defecto
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (4, 100, 10, 0, 0, 0, false, 5, 3);
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (5, 0, 0, 0, 0, 0, false, 5, 3);
+
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (6, 2, 1, 3, 12, 7, false, 5, 3);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (7, 2, 1, 4, 11, 10, false, 2, 2);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (8, 2, 0, 5, 13, 3, false, 0, 1);
+
 
 --Requests por defecto
-
 --INSERT INTO request(id, status, sender_id, receiver_id) VALUES (1, 'PENDING', 4, 5);
 
 INSERT INTO deck (id) VALUES (1);
 INSERT INTO deck (id) VALUES (2);
-
-INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 1,  0, 4, false, true);
-INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 2,  0, 5, false, true);
+INSERT INTO deck (id) VALUES (3);
 
 
-INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 4);
-INSERT INTO message (id, chat_id, content, active_player_id) values ( 2, 2, 'Welcome to the game!', 4);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 1,  0, 6, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 2,  0, 7, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 3,  0, 8, false, true);
 
-INSERT INTO game(chat_id, game_status, id, is_private, max_players, time_seconds, creator_id) values (1, 'CREATED', 1, false, 3, 0, 4);
 
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 6);
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 2, 2, 'Welcome to the game!', 7);
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 3, 3, 'Welcome to the game!', 8);
+
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, winner_id, time_seconds, creator_id) values (1, 'FINISHED', 1, false, 3, 6, 2000, 6);
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, winner_id, time_seconds, creator_id) values (2, 'FINISHED', 2, false, 3, 7, 3500, 7);
+
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (6,1);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (7,1);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (8,1);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (6,2);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (7,2);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (8,2);
 
 INSERT INTO board (id, base, height, objective_cards_order) VALUES (1, 11, 9, 'gold,coal_1,coal_2');
 INSERT INTO board (id, base, height, objective_cards_order) VALUES (2, 11, 9, 'coal_2,gold,coal_1');
@@ -115,38 +83,39 @@ VALUES (108, 9, 6, TRUE, 1, 2, NULL, NULL);
 
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (200, 1, 10, 'VICTORY_BADGE', 'VICTORIES', 'Gana 10 partidas para demostrar tu dominio del juego.', 'Constructor Maestro');
+VALUES (200, 1, 1, '/images/achievement-images/played-games.png', 'GAMES_PLAYED', 'Play your first game to earn this achievement.', 'Beginner Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (201, 1, 30, 'VETERAN_BADGE', 'GAMES_PLAYED', 'Juega 30 partidas para convertirte en un minero veterano.', 'Minero Veterano');
+VALUES (201, 1, 30, '/images/achievement-images/played-games.png', 'GAMES_PLAYED', 'Play 30 games to become a veteran miner.', 'Veteran Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (202, 1, 40, 'BUILDER_BADGE', 'BUILDED_PATHS', 'Construye 40 túneles para demostrar tu habilidad arquitectónica.', 'Arquitecto de Túneles');
+VALUES (202, 1, 40, '/images/achievement-images/built-paths.png', 'BUILT_PATHS', 'Build 40 tunnels to demonstrate your architectural skill.', 'Tunnel Architect');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (203, 1, 60, 'GOLD_HUNTER_BADGE', 'GOLD_NUGGETS', 'Recolecta 60 pepitas de oro para ser el mejor cazador de tesoros.', 'Cazador de Oro');
+VALUES (203, 1, 60, '/images/achievement-images/gold-nuggets.png', 'GOLD_NUGGETS', 'Collect 60 gold nuggets to become the best treasure hunter.', 'Gold Hunter');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (204, 1, 20, 'SABOTEUR_BADGE', 'DESTROYED_PATHS', 'Destruye 20 túneles para perfeccionar tu arte del sabotaje.', 'Saboteador Experto');
+VALUES (204, 1, 20, '/images/achievement-images/destroyed-paths.png', 'DESTROYED_PATHS', 'Destroy 20 tunnels to perfect your sabotage skills.', 'Expert Saboteur');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (205, 1, 5, 'MECHANIC_BADGE', 'TOOLS_REPAIRED', 'Repara 5 herramientas para ayudar a tus compañeros mineros.', 'Mecánico de la Mina');
+VALUES (205, 1, 5, '/images/achievement-images/repaired-tools.png', 'TOOLS_REPAIRED', 'Repair 5 tools to help your fellow miners.', 'Mine Helper');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (206, 1, 50, 'PROFESSIONAL_BADGE', 'VICTORIES', 'Gana 50 partidas para alcanzar el nivel de minero profesional.', 'Profesional de la Mina');
+VALUES (206, 1, 50, '/images/achievement-images/victories.png', 'VICTORIES', 'Win 50 games to reach professional miner level.', 'Professional Miner');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (207, 1, 100, 'LEGEND_BADGE', 'GAMES_PLAYED', 'Juega 100 partidas para convertirte en una leyenda viviente.', 'Leyenda de las Cavernas');
+VALUES (207, 1, 100, '/images/achievement-images/played-games.png', 'GAMES_PLAYED', 'Play 100 games to become a living legend.', 'Cave Legend');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (208, 1, 10, 'TROUBLEMAKER_BADGE', 'TOOLS_DAMAGED', 'Daña 10 herramientas para sembrar el caos en la mina.', 'Maestro del Caos');
+VALUES (208, 1, 10, '/images/achievement-images/destroyed-tools.png', 'TOOLS_DAMAGED', 'Damage 10 tools to sow chaos in the mine.', 'Chaos Master');
 
 INSERT INTO achievements (id, creator_id, threshold, badge_image, metric, description, tittle)
-VALUES (209, 1, 100, 'MASTER_BUILDER_BADGE', 'BUILDED_PATHS', 'Construye 100 túneles para convertirte en el maestro constructor definitivo.', 'Gran Arquitecto');
-
+VALUES (209, 1, 100, '/images/achievement-images/built-paths.png', 'BUILT_PATHS', 'Build 100 tunnels to become the ultimate master builder.', 'Master Architect');
 
 -- Logros para jugador
-INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 4);
+INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 6);
+INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 7);
+INSERT INTO accquired_achievements(achievement_id, player_id) VALUES (200, 8);
 
 
 

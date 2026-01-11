@@ -140,6 +140,44 @@ Checklist de cumplimiento de uso ético de la IA (Sprint 3)
 - [x] Citas / Atribuciones incluidas cuando corresponde (en la tabla original aparecen enlaces a las mismas).
 - [x] No se compartieron datos personales/sensibles con herramientas externas.
 
+### 💻 Sprint 4 — Resumen de uso de IA
+Usos registrados: 8
+
+**Ámbitos principales:**
+
+Depuración / Diagnóstico de Sincronización: Resolución de problemas críticos en WebSockets (mismatch de IDs de partida en los topics) y persistencia del estado del mazo (deckCount) tras recarga de página (F5).
+
+Diseño Técnico y Backend: Refactorización de la lógica de búsqueda de jugadores activos mediante consultas JPA filtrando por partidas en estado ONGOING.
+
+Frontend — UI y Refactorización: Creación del panel de gestión de partidas para el administrador (filtros y estilos unificados) y refactorización estética del Ranking mediante layouts de CSS Grid.
+
+Branding y Experiencia de Usuario (UX): Generación de secuencias de inicio personalizadas, incluyendo banners ASCII en consola y lógica de carga en Java/JS.
+
+**Valor aportado:**
+
+Garantía de robustez en la comunicación en tiempo real (evitando que los mensajes de una partida afecten a otra), mejora de la integridad de los datos ante acciones del usuario como refrescar el navegador, y unificación visual definitiva de los componentes administrativos y de estadísticas.
+
+**Riesgos relevantes y mitigaciones:**
+
+Riesgos: Desincronización de WebSockets por persistencia de datos históricos en el backend e inconsistencias visuales en el ranking al manejar múltiples métricas. Errores de codificación (encoding) en los banners ASCII de inicio.
+
+Mitigaciones: Implementación de filtrados estrictos por estado de partida y marcas de tiempo (_ts) en mensajes de socket para forzar re-renderizados en React. Uso de herramientas de desarrollador (DevTools) y encapsulamiento de estilos CSS para evitar conflictos globales.
+
+**Lecciones aprendidas:**
+La IA ha sido vital para diagnosticar errores de flujo complejos (como el envío de mensajes a topics de partidas anteriores). Hemos aprendido que el backend debe ser la única "fuente de verdad" incluso para contadores temporales y que la limpieza de suscripciones en el frontend es crítica para el rendimiento. También se destaca la importancia de optimizar las consultas JPA para ignorar datos históricos de jugadores que participan en múltiples partidas.
+
+Checklist de cumplimiento de uso ético de la IA del sprint 4:
+
+- [x] Toda interacción significativa está en el Registro Detallado con enlace a conversación.
+
+- [x] No se usó IA para narrativa (o hay autorización documentada).
+
+- [x] Toda pieza aceptada fue comprendida y verificada por humanos (tests/revisión).
+
+- [x] Citas/Atribuciones incluidas cuando corresponde.
+
+- [x] Se usó la IA sin dar datos personales/sensibles que pudieran quedar expuestos a herramientas externas.
+
 ## Registro detallado de uso de AI por Sprint
 ### Sprint 1 registro detallado de uso de IA por sprint
 
@@ -183,7 +221,17 @@ Checklist de cumplimiento de uso ético de la IA (Sprint 3)
 
 | # | Fecha y hora | Sprint | Integrante(s) | **Herramienta & versión** | **Acceso** | **Enlace a conversación / Prompt** | **Finalidad** | **Artefactos afectados** | **Verificación humana** | **Riesgos & mitigaciones** | **Resultado** |
 |---:|--------------|:-----:|---------------|----------------------------|------------|------------------------------------|---------------|---------------------------|--------------------------|-----------------------------|---------------|
-| 4.1 | <!-- 04/09/2025 18:40 --> | 4 | <!-- Nombre --> | <!-- p.ej., ChatGPT (GPT-5, OpenAI, 2025) --> | <!-- web/plugin/integración --> | <!-- URL al chat o prompt resumido --> | <!-- idea / código / depuración / pruebas / documentación técnica* --> | <!-- ficheros, issue, PR, commit --> | <!-- pruebas, revisión por pares, reasoning propio --> | <!-- plagio, licencias, datos personales; mitigación --> | <!-- aceptado / rechazado / aceptado con cambios parciales --> |
+| 4.1 | 31/12/2025 17:00 | 4 | Alejandro | Copilot PRO | Plugin VS | "Creame la visualización del código sobre el panel para visualizar y gestionar las partidas..." | Diseño técnico y UI | AdminGames.js, AdminGamesUnified.css | Verificación visual y funcional de filtros.| Estilo inconsistente. Mitigado adaptando CSS previo.| Aceptado con cambios parciales |
+| 4.2 | 02/01/2026 11:30 | 4 | Alejandro | Copilot / ChatGPT | Web/Plugin | "El tema del mazo de las cartas se resetea al recargar la pagina... deckcount no guarda el estado" | Depuración y Lógica | board.js, Round.java, gameUtils.js | Pruebas de recarga de página (F5) en partida.| Cálculos erróneos según num. jugadores. Mitigado con lógica de validación en el init.| Aceptado|
+| 4.3 | 05/01/2026 14:15 | 4 | Marcos y Alejandro | Copilot / Gemini 2.5 Pro | Web/Plugin | "En la segunda partida el deck count de cada jugador se queda en 6 y no decrementa... WS Message received on /topic/game/151/deck pero la partida es 153" | Depuración de WebSockets | useWebSocket.js, DeckRestController.java, ActivePlayerService.java | Inspección de consola de desarrollador y logs de backend.| Mensajes a canales antiguos. Mitigado filtrando por partidas ONGOING.| Aceptado|
+| 4.4 | 07/01/2026 18:00 | 4 | Alejandro | ChatGPT (GPT-5) | Web| "Genera un banner ASCII artístico con el nombre del proyecto y diseña la lógica en Java para una clase StartupSequence que limpie la consola y simule una secuencia de carga antes de iniciar el backend." | Branding / UX | banner.txt, startup.js, StartupSequence.java | Comprobación visual en los logs de arranque.|Errores de compilación en Java por sintaxis incorrecta en la secuencia de inicio o problemas de codificación (encoding) en el banner ASCII.| Aceptado|
+| 4.5 | 04/01/2026 19:30 | 4 | Diego | ChatGPT | Web| "Las métricas de los jugadores aparecen amontonadas en una sola columna. Ayúdame a refactorizar el componente Ranking.js para separar las estadísticas"| UI / Refactor|Ranking.js, Ranking.css|Corrección y mejora del estilo del Ranking de jugadores |Riesgos: Conflictos de selectores CSS globales que afecten a otras tablas del proyecto. Mitigaciones: Uso de prefijos específicos y encapsulamiento de estilos para el componente Ranking.| Aceptado|
+| 4.6 | 04/01/2026 19:30 | 4 | Lorenzo | Perplexity AI (Pro, 2026) | Web| (https://www.perplexity.ai/search/estoy-haciendo-un-juego-y-quie-_oq80zzwRwakWSItJvndgw)| Depuración / Diseño técnico|ActivePlayerService.java y GameRepository.java|Revisión de código por pares y pruebas funcionales iniciando dos partidas consecutivas con el mismo usuario.|Riesgos: Conflictos de selectores CSS globales que afecten a otras tablas del proyecto. Mitigaciones: Uso de prefijos específicos y encapsulamiento de estilos para el componente Ranking.| Aceptado|
+| 4.7 | 10/01/2026 19:30 | 4 | Alejandro | Gemini Pro | Web| (https://gemini.google.com/share/d6f45bed2817)| UI / Ambientación|BackgroundMusic.js, SaboteurCursor.js|"Componentes de música (YouTube API) y cursor interactivo con partículas de oro."|Riesgos: Carga de scripts externos. Mitigación: Uso de useEffect y refs para limpieza.|Aceptado|
+| 4.8 | 08/01/2026 10:30 | 4 | Marcos y Diego | Gemini Pro | Web| (https://gemini.google.com/share/09ae3d328ee8)| Aprendizaje para Generación de pruebas Frontend / Diseño técnico|Ranking.test.js, Lobby.test.js|Ejecución de la suite mediante npm test y validación manual de las aserciones de UI.|Riesgos: Creación de tests superficiales que solo validen el renderizado. Mitigaciones: Estudio detallado de la lógica de simulación de eventos|Aceptado|
+
+
+    
 
 ## Conclusiones finales sobre el uso de la IA en el proyecto
 La reflexión principal que obtenemos sobre el uso de la IA en el proyecto es que puede a llegar a ser una herramienta realmente útil a la hora de desarrollar la aplicación. Su uso ha sido muy relevante principalmente en la explicación de código, análisis de errores y ayuda a la resolución de estos. También ha jugado un papel muy importante en la generación de _assets_ visuales del proyecto (imágenes de background, avatares predefinidos, logos...) y en los estilos CSS, ya que hemos observado que la IA resolvió esta parte del proyecto de forma bastante rápida y eficiente (aunque existieron ocasiones en las que tuvimos que iterar varias veces para obtener código CSS adecuado, aunque estos casos fueron mínimos). En términos de backend, también ha sido de gran ayuda para la generación de algunos tests, aunque la mayoría han tenido que ser modificados, pero nos han ayudado a entender mejor su funcionalidad. 

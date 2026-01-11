@@ -1,22 +1,5 @@
 import { toast } from 'react-toastify';
 
-/**
- * Maneja el uso de cartas de acción sobre un jugador objetivo
- * @param {Object} card - La carta de acción a usar
- * @param {Object} targetPlayer - El jugador objetivo
- * @param {number} cardIndex - Índice de la carta en la mano
- * @param {Object} context - Contexto del juego con funciones y estados
- * @param {boolean} context.isSpectator - Si el usuario es espectador
- * @param {Object} context.loggedInUser - Usuario logueado
- * @param {string} context.currentPlayer - Nombre del jugador actual
- * @param {Object} context.playerTools - Estado de herramientas de todos los jugadores
- * @param {Function} context.setPlayerTools - Función para actualizar herramientas
- * @param {Function} context.addLog - Función para agregar mensajes al log
- * @param {Function} context.addPrivateLog - Función para agregar mensajes privados
- * @param {Function} context.nextTurn - Función para pasar al siguiente turno
- * @param {Function} context.setDeckCount - Función para actualizar contador del mazo
- * @param {string} context.selectedTool - Herramienta seleccionada para cartas de reparación doble
- */
 export const handleActionCard = async (card, targetPlayer, cardIndex, context) => {
   const {
     isSpectator,
@@ -35,12 +18,12 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
 
   if (isSpectator) {
     addPrivateLog("ℹ️ Spectators cannot use action cards", "warning");
-    return;
+    return false; 
   }
 
   if (loggedInUser.username !== currentPlayer) {
     toast.warning("It's not your turn!");
-    return;
+    return false; 
   }
   
   const effectValue = card.effectValue;
@@ -57,19 +40,17 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     return activePlayers.find(p => p.username === username);
   };
 
-  // Procesar efecto según effect_value
   switch (effectValue) {
     case 'DESTROY_PICKAXE':
       if (!currentTools.pickaxe) {
         toast.warning("Cannot break a pickaxe that is already broken!");
-        return;
+        return false; 
       }
       setPlayerTools(prev => ({
         ...prev,
         [targetUsername]: { ...prev[targetUsername], pickaxe: false }
       }));
 
-      // Buscar el ActivePlayer y hacer patch
       const targetActivePlayer = findActivePlayer(targetUsername);
       if (targetActivePlayer && patchActivePlayer) {
         await patchActivePlayer(targetActivePlayer.id, {
@@ -83,7 +64,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     case 'DESTROY_LAMP':
       if (!currentTools.candle) {
         toast.warning("Cannot break a candle that is already broken!");
-        return;
+        return false; 
       }
       setPlayerTools(prev => ({
         ...prev,
@@ -103,7 +84,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     case 'DESTROY_CART':
       if (!currentTools.wagon) {
         toast.warning("Cannot break a wagon that is already broken!");
-        return;
+        return false; 
       }
       setPlayerTools(prev => ({
         ...prev,
@@ -123,7 +104,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     case 'REPAIR_PICKAXE':
       if (currentTools.pickaxe) {
         toast.warning("Cannot repair a pickaxe that is already working!");
-        return;
+        return false; 
       }
       setPlayerTools(prev => ({
         ...prev,
@@ -143,7 +124,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     case 'REPAIR_LAMP':
       if (currentTools.candle) {
         toast.warning("Cannot repair a candle that is already working!");
-        return;
+        return false; 
       }
       setPlayerTools(prev => ({
         ...prev,
@@ -163,7 +144,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
     case 'REPAIR_CART':
       if (currentTools.wagon) {
         toast.warning("Cannot repair a wagon that is already working!");
-        return;
+        return false; 
       }
       setPlayerTools(prev => ({
         ...prev,
@@ -185,7 +166,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       if (selectedTool === 'pickaxe') {
         if (currentTools.pickaxe) {
           toast.warning("Cannot repair a pickaxe that is already working!");
-          return;
+          return false; 
         }
         setPlayerTools(prev => ({
           ...prev,
@@ -203,7 +184,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       } else if (selectedTool === 'candle') {
         if (currentTools.candle) {
           toast.warning("Cannot repair a candle that is already working!");
-          return;
+          return false; 
         }
         setPlayerTools(prev => ({
           ...prev,
@@ -220,7 +201,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
       } else {
         toast.warning("Please select a tool to repair!");
-        return;
+        return false; 
       }
       break;
 
@@ -229,7 +210,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       if (selectedTool === 'pickaxe') {
         if (currentTools.pickaxe) {
           toast.warning("Cannot repair a pickaxe that is already working!");
-          return;
+          return false; 
         }
         setPlayerTools(prev => ({
           ...prev,
@@ -247,7 +228,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       } else if (selectedTool === 'wagon') {
         if (currentTools.wagon) {
           toast.warning("Cannot repair a wagon that is already working!");
-          return;
+          return false; 
         }
         setPlayerTools(prev => ({
           ...prev,
@@ -264,7 +245,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         addLog(`🪨 ${targetUsername}'s wagon has been repaired!`);
       } else {
         toast.warning("Please select a tool to repair!");
-        return;
+        return false; 
       }
       break;
 
@@ -273,7 +254,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       if (selectedTool === 'wagon') {
         if (currentTools.wagon) {
           toast.warning("Cannot repair a wagon that is already working!");
-          return;
+          return false; 
         }
         setPlayerTools(prev => ({
           ...prev,
@@ -291,7 +272,7 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       } else if (selectedTool === 'candle') {
         if (currentTools.candle) {
           toast.warning("Cannot repair a candle that is already working!");
-          return;
+          return false; 
         }
         setPlayerTools(prev => ({
           ...prev,
@@ -308,14 +289,14 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
         addLog(`🔦 ${targetUsername}'s candle has been repaired!`);
       } else {
         toast.warning("Please select a tool to repair!");
-        return;
+        return false; 
       }
       break;
 
     default:
       console.warn('Unknown effect_value:', effectValue);
       toast.warning('Unknown card effect');
-      return;
+      return false; 
   }
 
   if (window.removeCardAndDraw) {
@@ -324,4 +305,5 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
 
   setDeckCount(prev => Math.max(0, prev - 1));
   nextTurn();
+  return true; 
 };

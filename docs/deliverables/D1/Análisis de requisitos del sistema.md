@@ -342,13 +342,13 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 | La interfaz de usuario muestra dentro de la sección “Amigos en partida” las partidas que están jugando cada uno de nuestros amigos conectados. Nos permitirá saber si las partidas ya están empezadas (“En curso”) o si aún podemos solicitar la unión (“Solicitar unirse”). Este último caso es el que nos interesa para esta historia de usuario, pues observamos que existe un botón (“SOLICITAR UNIRSE”) que, al ser pulsado, se enviará una solicitud al jugador correspondiente.|
 
 
-### HU-43 (ISSUE#89): 👁MODO ESPECTADOR: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/89))
+### HU-42 (ISSUE#89): 👁MODO ESPECTADOR: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/89))
 | "Como jugador, quiero que el sistema tenga un modo espectador para ver las partidas de otros jugadores sin jugar, siempre y cuando la partida ya haya comenzado y sea amigo de uno de los jugadores de la misma. "
 |----| 
 |![Acceda al MockUp HD-43](D1_images/HU-43.png)|
 |En este caso, la interfaz de usuario permitirá al espectador observar la partida, pero con diferencias notables respecto a los jugadores que participan en ella: La interfaz no hará visible para el espectador los mazos del resto de jugadores, hará que pueda observar el chat pero no escribir en él y, obviamente, no le permitirá interactuar de ninguna forma en la partida (solo visionarla). Esto ocurrirá cuando la partida esté empezada *(ONGOING)* y seas amigo de un jugador que esté dentro de la misma. Se implementará la opción de solicitar entrar como espectador, que tiene que ser aprobada por el creador de la partida. |
 
-### HU-44 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90))
+### HU-43 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90))
 | "Como jugador, quiero que el sistema tenga un chat entre los jugadores de la partida durante la misma para poder comentar en él con los demás jugadores suposiciones sobre quién puede/n ser el/los saboteador/es, jugadas colaborativas, etc." 
 |----| 
 |![Acceda al MockUp HD-44](D1_images/HU-44.png)|

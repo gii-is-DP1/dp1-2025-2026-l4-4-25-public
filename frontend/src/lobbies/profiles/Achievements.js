@@ -8,7 +8,6 @@ import TopButtons from './components/TopButtons';
 import AchievementsList from './components/AchievementsList';
 
 import '../../App.css';
-//import '../../static/css/lobbies/profile.css';
 import '../../static/css/lobbies/achievements.css';
 
 export default function Achievements() {

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import tokenService from '../services/token.service.js';
 
 // Componentes
@@ -38,12 +38,41 @@ import useWebSocket from "../hooks/useWebSocket";
 const jwt = tokenService.getLocalAccessToken();
 const timeturn = 10;
 
-// Obtener datos iniciales fuera del componente para evitar problemas con re-renders
+// Función para detectar si la página se cargó por un refresh (F5)
+const detectPageRefresh = () => {
+  // Método 1: Performance Navigation API (más confiable)
+  const navEntries = performance.getEntriesByType('navigation');
+  if (navEntries.length > 0) {
+    const navType = navEntries[0].type;
+    // 'reload' = F5/refresh, 'navigate' = navegación normal, 'back_forward' = botón atrás/adelante
+    return navType === 'reload';
+  }
+  // Método 2: Fallback para navegadores antiguos
+  if (performance.navigation) {
+    return performance.navigation.type === 1; // 1 = TYPE_RELOAD
+  }
+  return false;
+};
+
+// Nota: la detección de "refresh"/"newRoundData" se realiza
+// dinámicamente dentro del efecto de inicialización para evitar
+// valores persistentes entre navegaciones sin recarga completa.
+
 const getSavedRoundData = () => {
   const savedData = sessionStorage.getItem('newRoundData');
   if (savedData) {
+    const parsed = JSON.parse(savedData);
+    const nextRoundId = parsed?.round?.id;
+    if (nextRoundId !== undefined && nextRoundId !== null) {
+      sessionStorage.setItem('forceRolesReassignmentRoundId', String(nextRoundId));
+    }
     sessionStorage.removeItem('newRoundData');
-    return JSON.parse(savedData);
+    return parsed;
+  }
+  // Try to recover from general session storage (reload fix)
+  const recoveredData = sessionStorage.getItem('savedGameData');
+  if (recoveredData) {
+      return JSON.parse(recoveredData);
   }
   return null;
 };
@@ -51,54 +80,66 @@ const getSavedRoundData = () => {
 const savedRoundData = getSavedRoundData();
 
 export default function Board() {
+  const { boardId: urlBoardId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const loggedInUser = tokenService.getUser();
 
-  // Limpiar todos los toasts al montar y desmontar el componente
+  const hasDeniedIllegalAccess = useRef(false);
+
   useEffect(() => {
-    // Limpiar toasts existentes al entrar al tablero
     toast.dismiss();
-    
-    // Cleanup: limpiar todos los toasts al salir del componente
     return () => {
       toast.dismiss();
     };
   }, []);
 
-// Limpiar sessionStorage si hay location.state (nueva partida)
   if (location.state) {
     sessionStorage.removeItem('newRoundData');
   }
 
   // Dar prioridad a location.state sobre savedRoundData
-  const initialState = location.state ? {
-    game: location.state.game,
-    round: location.state.round || null,
-    isSpectator: location.state.isSpectator || false
-  } : savedRoundData || {
+  // CHECK: If savedRoundData exists but belongs to a DIFFERENT board, ignore it to prevent "stuck in previous round"
+  let loadedState = null;
+  
+  if (location.state) {
+    loadedState = {
+      game: location.state.game,
+      round: location.state.round || null,
+      isSpectator: location.state.isSpectator || false
+    };
+  } else if (savedRoundData) {
+      // Validate Board ID if possible
+      const savedBoardId = savedRoundData.round?.board?.id || savedRoundData.round?.board;
+      if (urlBoardId && savedBoardId && String(savedBoardId) !== String(urlBoardId)) {
+          console.warn(`⚠️ State mismatch detected! URL Board: ${urlBoardId}, Saved Board: ${savedBoardId}. Discarding saved state.`);
+          loadedState = null; // Force fetch
+      } else {
+          loadedState = savedRoundData;
+      }
+  }
+
+  const initialState = loadedState || {
     game: null,
     round: null,
     isSpectator: false
   };
 
+  // El cálculo de si saltar la sincronización se hace en el efecto
+  // `initializeGame` para evitar valores stale entre navegaciones.
+
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
-  const [CardPorPlayer, setCardPorPlayer] = useState(0);
+
   const [playerCardsCount, setPlayerCardsCount] = useState({});
   const [deckCount, setDeckCount] = useState(0);
   const [game, setGame] = useState(initialState.game);
-  console.log('🎮 Game loaded:', game);
-/*
-  // Guardar game en sessionStorage para persistir al recargar
-  useEffect(() => {
-    if (game) {
-      sessionStorage.setItem('game', JSON.stringify(game));
-    }
-  }, [game]);
-  */
   const [message, setMessage] = useState([]);
 
+  // Estado para sincronización de jugadores - esperar a que todos carguen
+  // Se inicializa en 'true' y el efecto `initializeGame` decidirá
+  // si debe saltarse la sincronización en ese momento.
+  const [waitingForPlayers, setWaitingForPlayers] = useState(true);
 
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
@@ -109,29 +150,261 @@ export default function Board() {
   const [playerOrder, setPlayerOrder] = useState([]);
   const [playerRol, setPlayerRol] = useState([]);
   const [privateLog, setPrivateLog] = useState([]);
-    //  ESTADOS DE LAS HERRAMIENTAS, DICCIONARIO {username:{candle:true,wagon:true,pickaxe:true}}
   const [playerTools, setPlayerTools] = useState({});
-  //round del navigate
   const [round, setRound] = useState(initialState.round);
   const [roundEnded, setRoundEnded] = useState(false); 
+
+  // Si un usuario loggueado intenta acceder a /board/:boardId a través de la URL sin ser parte de la partida, se le redirige a /lobby mostrando un toast.
+  useEffect(() => {
+    if (!jwt || !loggedInUser?.username || !urlBoardId) {
+      return;
+    }
+    if (hasDeniedIllegalAccess.current) {
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+    const delayMs = 200;
+
+    const readSavedGameData = () => {
+      try {
+        const raw = sessionStorage.getItem('savedGameData');
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const extractUsernames = (list) => {
+      if (!Array.isArray(list)) return [];
+      return list
+        .map(p => p?.username || p?.user?.username || (typeof p === 'string' ? p : null))
+        .filter(Boolean);
+    };
+
+    const extractBoardIdsFromRounds = (rounds) => {
+      if (!Array.isArray(rounds)) return [];
+      return rounds
+        .map(r => r?.board?.id ?? r?.board)
+        .filter(v => v !== null && v !== undefined)
+        .map(String);
+    };
+
+    const deny = () => {
+      if (hasDeniedIllegalAccess.current) return;
+      hasDeniedIllegalAccess.current = true;
+      sessionStorage.removeItem('savedGameData');
+      sessionStorage.removeItem('newRoundData');
+      navigate('/lobby', { replace: true });
+      
+    };
+
+    const verify = async () => {
+      if (cancelled) return;
+
+      const saved = readSavedGameData();
+      const candidateGame = location?.state?.game || game || saved?.game;
+      const candidateRound = location?.state?.round || round || saved?.round;
+
+      // If we detect a transition (newRoundData, saved game, or navigation state),
+      // give the client a longer window to resolve races before denying access.
+      const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state);
+      const localMaxAttempts = transitionHint ? 150 : maxAttempts; // ~30s when transitionHint
+      const localDelayMs = delayMs;
+
+      // Wait until we have enough info to validate.
+      if (!candidateGame || !candidateRound) {
+        attempts += 1;
+        if (attempts >= localMaxAttempts) {
+          // If we still couldn't resolve data, but there's a pending newRoundData
+          // or location.state (fresh navigation), keep waiting a bit longer instead
+          // of denying immediately. This avoids races during round transitions.
+          if (sessionStorage.getItem('newRoundData') || location?.state) {
+            console.log('🔁 Delaying deny: newRoundData or location.state present, continuing verify');
+            attempts = 0; // reset attempts and keep waiting
+            setTimeout(verify, delayMs);
+            return;
+          }
+          // If no hint of a transition, fail closed.
+          deny();
+          return;
+        }
+        setTimeout(verify, delayMs);
+        return;
+      }
+
+      const allowedUsernames = new Set([
+        ...extractUsernames(candidateGame.activePlayers),
+        ...extractUsernames(candidateGame.watchers)
+      ].map(String));
+
+      // If activePlayers isn't ready yet, retry briefly (race during game start).
+      if (allowedUsernames.size === 0) {
+        attempts += 1;
+        if (attempts >= localMaxAttempts) {
+          // If activePlayers isn't populated yet but we have a newRoundData or
+          // came here via location.state, prefer to keep waiting instead of denying.
+          if (sessionStorage.getItem('newRoundData') || location?.state) {
+            console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state present');
+            attempts = 0;
+            setTimeout(verify, delayMs);
+            return;
+          }
+          deny();
+          return;
+        }
+        setTimeout(verify, delayMs);
+        return;
+      }
+
+      if (!allowedUsernames.has(String(loggedInUser.username))) {
+        // Possible race: client-side game data is stale. Verify against server before denying.
+        const gameId = candidateGame?.id;
+        if (gameId) {
+          try {
+            const res = await fetch(`/api/v1/games/${gameId}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+            });
+            if (res.ok) {
+              const freshGame = await res.json();
+              const freshAllowed = new Set([
+                ...(Array.isArray(freshGame.activePlayers) ? freshGame.activePlayers : []),
+                ...(Array.isArray(freshGame.watchers) ? freshGame.watchers : [])
+              ].map(String));
+              if (freshAllowed.has(String(loggedInUser.username))) {
+                console.log('✅ verify: membership confirmed by server, not denying access');
+                return; // allow
+              }
+            }
+          } catch (err) {
+            console.warn('Error fetching fresh game data during verify:', err);
+            // fallthrough to deny below if we cannot confirm
+          }
+        }
+        // If we cannot confirm membership on server, check if we're in a transition
+        // and allow a bit more time before final deny.
+        if (transitionHint && attempts < localMaxAttempts) {
+          console.log('🔁 verify: transition hinted, delaying final deny');
+          setTimeout(verify, localDelayMs);
+          return;
+        }
+        deny();
+        return;
+      }
+
+      const candidateBoardId = candidateRound?.board?.id ?? candidateRound?.board;
+      if (candidateBoardId && String(candidateBoardId) !== String(urlBoardId)) {
+        // If we're not on the round's board, let the existing mismatch logic handle it.
+        return;
+      }
+
+      const boardIds = new Set([
+        ...extractBoardIdsFromRounds(candidateGame.rounds),
+        String(candidateBoardId ?? '')
+      ].filter(Boolean));
+
+      // If we can map the game -> rounds -> board, ensure the requested board belongs to that game.
+      if (boardIds.size > 0 && !boardIds.has(String(urlBoardId))) {
+        deny();
+      }
+    };
+
+    verify();
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedInUser?.username, navigate, urlBoardId, location?.state, game, round]);
+
+  const [roundEndData, setRoundEndData] = useState(null);
+  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
+  const [gameEndData, setGameEndData] = useState(null);
+  const [gameEndCountdown, setGameEndCountdown] = useState(10);
+
+  // EFFECT: Fetch Game/Round data if missing (e.g. reload on new round URL without state)
+  // Moved here to avoid ReferenceError: round is not defined
+  useEffect(() => {
+      const fetchMissingData = async () => {
+          if ((!game || !round || (round.board?.id && String(round.board.id) !== String(urlBoardId))) && urlBoardId) {
+                  console.log(`🔄 Fetching Round data for Board ID: ${urlBoardId}...`);
+                  try {
+                      setIsLoading(true);
+                      const res = await fetch(`/api/v1/rounds/byBoardId?boardId=${urlBoardId}`, {
+                          headers: { "Authorization": `Bearer ${jwt}` }
+                      });
+                      if (res.ok) {
+                          const fetchedRound = await res.json();
+                          console.log('✅ Fetched Round:', fetchedRound);
+                          setRound(fetchedRound);
+                          if (fetchedRound.game) {
+                              setGame(fetchedRound.game);
+                          }
+                      } else {
+                          console.error('❌ Failed to fetch round by board ID');
+                          toast.error('Failed to load game data');
+                      }
+                  } catch (err) {
+                      console.error('Network error fetching round:', err);
+                  } finally {
+                      setIsLoading(false);
+                  }
+          }
+      };
+
+      fetchMissingData();
+  }, [urlBoardId, game, round]); 
+
+  // Save game state to sessionStorage to persist on reload.
+  // Once the game has ended we stop persisting to avoid redirect loops
+  // (the App-level StrictInGameRedirect uses savedGameData presence as "in game").
+  useEffect(() => {
+    if (gameEndData) {
+      return;
+    }
+    if (hasDeniedIllegalAccess.current) {
+      return;
+    }
+    if (game && round) {
+      const stateToSave = {
+        game: game,
+        round: round,
+        isSpectator: isSpectator
+      };
+      sessionStorage.setItem('savedGameData', JSON.stringify(stateToSave));
+    }
+  }, [game, round, isSpectator, gameEndData]);
   // Estados del tablero
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
   const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
-  
-  // El orden de las cartas objetivo se lee del servidor (board.objectiveCardsOrder)
-  // para que todos los jugadores vean las mismas cartas en las mismas posiciones
   const [objectiveCards, setObjectiveCards] = useState({});
-  
+  // Estado para cartas objetivo permanentemente reveladas (persiste en sessionStorage)
+  const [permanentlyRevealedGoals, setPermanentlyRevealedGoals] = useState(() => {
+    // Inicializar desde sessionStorage si existe
+    const savedKey = round?.id ? `revealedGoals_${round.id}` : null;
+    if (savedKey) {
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return {};
+        }
+      }
+    }
+    return {};
+  });
   const [revealedObjective, setRevealedObjective] = useState(null);
-  const [showRoleNotification, setShowRoleNotification] = useState(false);
-  const [myRole, setMyRole] = useState(null);
+
   const [destroyingCell, setDestroyingCell] = useState(null); 
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingSteps, setLoadingSteps] = useState([{label: 'Loading Game Data', completed:false}, 
     {label: 'Loading Players', completed:false}, {label: 'Loading Board', completed:false}, {label: 'Loading Cards', completed:false}, 
-    {label: 'Loading Chat', completed:false}, {label: 'Assigning Rols', completed:false}, {label: 'Initializing Game State', completed:false}]);
+    {label: 'Loading Chat', completed:false}, {label: 'Assigning Rols', completed:false}, {label: 'Initializing Game State', completed:false},
+    {label: 'Waiting for all players to join the game', completed:false}]);
 
   const updateLoadingStep = (stepIndex, completed = true) => {
     setLoadingSteps(prev => {
@@ -142,17 +415,19 @@ export default function Board() {
       setLoadingProgress(progress);
       return up})}; 
 
-  // Estado para el modal de fin de ronda
-  const [roundEndData, setRoundEndData] = useState(null);
-  const [roundEndCountdown, setRoundEndCountdown] = useState(10);
-  
-  // Estado para el modal de fin de partida
-  const [gameEndData, setGameEndData] = useState(null);
-  const [gameEndCountdown, setGameEndCountdown] = useState(10);
-  
-  // Estado para solicitudes de espectador (solo para creador)
   const [spectatorRequests, setSpectatorRequests] = useState([]);
-  const isCreator = game?.creator === loggedInUser?.username;
+  const creatorUsername = game?.creator?.username || game?.creator;
+  const isCreator = creatorUsername === loggedInUser?.username;
+
+  const handleExitSpectatorMode = () => {
+    if (!isSpectator) return;
+
+    toast.dismiss();
+    sessionStorage.removeItem('newRoundData');
+
+    const returnTo = location?.state?.returnTo;
+    navigate(returnTo || '/ListGames');
+  };
 
   const [boardCells, setBoardCells] = useState(() => {
     const initialBoard = Array.from({ length: BOARD_ROWS }, () =>
@@ -173,12 +448,13 @@ export default function Board() {
   const lastCollapseLog = useRef(0);
   const seenPrivateMessages = useRef(new Set());
   const lastPublishedRoles = useRef([]);
-  const roleNotificationShown = useRef(false);
+
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
   const isTurnChanging = useRef(false);
   const isNavigatingToNewRound = useRef(false);
+  const hasTriggeredGameEnd = useRef(false);
   const ROUND_STATE = {
     ACTIVE: 'ACTIVE',
     ENDING: 'ENDING',
@@ -189,28 +465,50 @@ export default function Board() {
   const forceRolesReassignment = useRef(false);
   const playersOutOfCardsLogged = useRef(new Set());
 
-
-  // Resetear roundEndedRef cuando cambia el round.id (nueva ronda)
   useEffect(() => {
     console.log('🔄 useEffect round.id check - round?.id:', round?.id, 'lastRoundId.current:', lastRoundId.current);
     if (round?.id && round.id !== lastRoundId.current) {
-      console.log('🔄 Nueva ronda detectada, reseteando roundEndedRef. Anterior:', lastRoundId.current, 'Nueva:', round.id);
       roundEndedRef.current = ROUND_STATE.ACTIVE;
-      // Forzar reasignación de roles en la nueva ronda
       if (lastRoundId.current !== null) {
         forceRolesReassignment.current = true;
-        console.log('🎭 Marcado para reasignar roles en nueva ronda');
+        console.log('🎭 Mark to reassign roles in new round');
       }
 
+      // Evitar mostrar roles de la ronda anterior mientras llegan los nuevos
+      lastPublishedRoles.current = [];
+      setPlayerRol([]);
+
       playersOutOfCardsLogged.current.clear();
-      // Reiniciar hasPatchedInitialLeftCards para que se recalcule el playerCardsCount en la nueva ronda
       hasPatchedInitialLeftCards.current = false;
-      console.log('🔄 hasPatchedInitialLeftCards reiniciado a false');
-      
-      // Actualizar lastRoundId DESPUÉS de hacer los resets
+      console.log('🔄 hasPatchedInitialLeftCards reset to false');
       lastRoundId.current = round.id;
+      
+      // Cargar cartas reveladas desde sessionStorage para esta ronda
+      const savedKey = `revealedGoals_${round.id}`;
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setPermanentlyRevealedGoals(parsed);
+          console.log('📋 Loaded revealed goals from sessionStorage:', parsed);
+        } catch (e) {
+          console.error('Error parsing revealed goals from sessionStorage:', e);
+          setPermanentlyRevealedGoals({});
+        }
+      } else {
+        setPermanentlyRevealedGoals({});
+      }
     }
   }, [round?.id]);
+
+  // Persistir cartas reveladas en sessionStorage cuando cambien
+  useEffect(() => {
+    if (round?.id && Object.keys(permanentlyRevealedGoals).length > 0) {
+      const savedKey = `revealedGoals_${round.id}`;
+      sessionStorage.setItem(savedKey, JSON.stringify(permanentlyRevealedGoals));
+      console.log('💾 Saved revealed goals to sessionStorage:', permanentlyRevealedGoals);
+    }
+  }, [permanentlyRevealedGoals, round?.id]);
 
   const lastTurnToast = useRef({username: null, ts: 0}); 
   const lastTimeoutToastTs = useRef(0);
@@ -244,15 +542,13 @@ export default function Board() {
     patchActivePlayer,
     patchRound,
     postRound,
+    getRoundById,
     notifyRoundEnd
   } = useGameData(game);
 
   
     const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
-    //console.log("Rotated Cards:", rotatedOnly);
     const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
-    //console.log("Non-Rotated Cards:", nonRotatedOnly);
-    
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
@@ -260,50 +556,39 @@ export default function Board() {
     console.log('- deckTopic:', deckTopic);
     const deckMessage = useWebSocket(deckTopic);
     
-    console.log('-WebSocket states:', {
-      boardMessage: boardMessage ? 'connected' : 'null',
-      gameMessage: gameMessage ? 'connected' : 'null', 
-      deckMessage: deckMessage ? 'connected' : 'null'
-    });
+    console.log('-WebSocket states:', { boardMessage: boardMessage ? 'connected' : 'null', gameMessage: gameMessage ? 'connected' : 'null',  deckMessage: deckMessage ? 'connected' : 'null'});
 
     useEffect(() => {
       if(!boardMessage) return;
-
       const {action} = boardMessage;
 
       switch(action){
         case "CARD_PLACED":
           handleWsCardPlaced(boardMessage);
-
-          // Manejar múltiples objetivos revelados (goalReveals es una lista)
           if (boardMessage.goalReveals && Array.isArray(boardMessage.goalReveals)) {
             boardMessage.goalReveals.forEach(goal => {
               handleWsGoalRevealed(goal);
               
               if (goal.goalType === 'gold') {
-                console.log('🏆 Oro revelado → bloqueando turno inmediatamente');
+                console.log('🏆 Gold revealed → blocking turn immediately');
                 roundEndedRef.current = ROUND_STATE.ENDING;
                 setRoundEnded(true);
               }
             });
           } 
-          // Fallback para compatibilidad con el campo singular
           else if (boardMessage.goalReveal) {
             handleWsGoalRevealed(boardMessage.goalReveal);
 
             if (boardMessage.goalReveal.goalType === 'gold'){
-              console.log('🏆 Oro revelado → bloqueando turno inmediatamente');
+              console.log('🏆 Gold revealed → blocking turn immediately');
               roundEndedRef.current = ROUND_STATE.ENDING;
               setRoundEnded(true);
             }
           }
-
           break;
-
         case "CARD_DESTROYED":
           handleWsCardDestroyed(boardMessage);
           break;
-        
         default:
           console.warn("WS action unrecognized:", action);
       }
@@ -334,33 +619,34 @@ export default function Board() {
       case "ROUND_END":
         handleWsRoundEnd(gameMessage);
         break;
-        
-      case "GAME_FINISHED": // Por si implementamos esto luego
-        // handleGameFinished(gameMessage);
-        break;
 
+      case "ALL_PLAYERS_READY":
+        console.log('✅ ALL_PLAYERS_READY WS payload:', gameMessage);
+        console.log('✅ Todos los jugadores están listos! - clearing wait state');
+        setWaitingForPlayers(false);
+        setIsLoading(false);
+        break;
+      
       default:
         break;
     }
     },[gameMessage])
     
-    // Usar ref para trackear el último mensaje procesado
     const lastProcessedDeckTs = useRef(null);
-    
-    // Procesar deckMessage cuando cambie
+
     if (deckMessage && deckMessage._ts !== lastProcessedDeckTs.current) {
+      console.log('📦 deckMessage received:', deckMessage, 'previousPlayerCardsCount:', playerCardsCount);
       lastProcessedDeckTs.current = deckMessage._ts;
-      
+
       if (deckMessage.action === "DECK_COUNT") {
         const { username, leftCards } = deckMessage;
-        // Usar setTimeout para evitar actualizar estado durante render
         setTimeout(() => {
+          console.log('📊 Applying DECK_COUNT update', { username, leftCards });
           setPlayerCardsCount(prev => ({
             ...prev,
             [username]: leftCards
           }));
-          
-          // Log cuando un jugador se queda sin cartas
+
           if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
             playersOutOfCardsLogged.current.add(username);
             addLog(`🃏 ${username} has run out of cards!`, 'warning');
@@ -369,22 +655,18 @@ export default function Board() {
       }
     }
     
-    // Verificar fin de ronda cuando cambian los conteos de cartas de jugadores
     useEffect(() => {
       const totalCards = Object.values(playerCardsCount).reduce((sum, count) => sum + count, 0);
-      console.log('🔍 playerCardsCount cambió:', playerCardsCount, 'totalCards:', totalCards);
+      console.log('🔍 playerCardsCount changed:', playerCardsCount, 'totalCards:', totalCards);
       if (totalCards === 0 && roundEndedRef.current === ROUND_STATE.ACTIVE) {
-        console.log('🔍 Llamando checkForRoundEnd porque totalCards === 0');
+        console.log('🔍 Calling checkForRoundEnd because totalCards === 0');
         checkForRoundEnd();
       }
     }, [playerCardsCount]);
     
-    // Depuración usuarios duplicados
-    
     useEffect(() => {
     }, [playerOrder]);
-   
-    // Polling para solicitudes de espectador (solo para creador)
+
     useEffect(() => {
       if (!isCreator || !game?.chat) return;
       
@@ -416,23 +698,17 @@ export default function Board() {
       };
     }, [isCreator, game?.chat, jwt]);
     
-    //Modularizar estas funciones
     const handleWsCardPlaced =  async ({row, col, card, player, squareId})=>{
-      console.log('📥 WebSocket CARD_PLACED recibido:', { row, col, card, player, squareId });
-      
-      // El backend puede enviar solo el ID o un objeto parcial de la carta
-      // Necesitamos buscar la carta completa en ListCards para obtener todas las propiedades
+      console.log('📥 WebSocket CARD_PLACED received:', { row, col, card, player, squareId });
       let fullCard = card;
       const cardId = typeof card === 'number' ? card : card?.id;
       
       if (cardId && Array.isArray(ListCards)) {
         const foundCard = ListCards.find(c => c.id === cardId);
         if (foundCard) {
-          // Combinar las propiedades de la carta encontrada con las del WebSocket
           fullCard = {
             ...foundCard,
-            ...card, // Por si el WS trae datos adicionales como rotacion
-            // Asegurar que las propiedades de conexión vienen de la carta completa
+            ...card, 
             arriba: foundCard.arriba,
             abajo: foundCard.abajo,
             izquierda: foundCard.izquierda,
@@ -440,13 +716,13 @@ export default function Board() {
             centro: foundCard.centro,
             image: foundCard.image
           };
-          console.log('✅ Carta encontrada en ListCards:', fullCard);
+          console.log('✅ Card found in ListCards:', fullCard);
         } else {
-          console.warn('⚠️ Carta no encontrada en ListCards, usando datos del WS');
+          console.warn('⚠️ Card not found in ListCards, using WS data');
         }
       }
       
-      console.log('📥 Propiedades finales de la carta:', {
+      console.log('📥 Final card properties:', {
         id: fullCard?.id,
         image: fullCard?.image,
         arriba: fullCard?.arriba,
@@ -477,7 +753,6 @@ export default function Board() {
           placedAt: Date.now(),
           occupied: true,
           squareId: squareId,
-          // Asegurar explícitamente las propiedades de conexión
           arriba: fullCard?.arriba,
           abajo: fullCard?.abajo,
           izquierda: fullCard?.izquierda,
@@ -491,36 +766,35 @@ export default function Board() {
 
     const handleWsCardDestroyed = ({ row, col, player }) => {
 
-      // 1. Activar animación visual
       setDestroyingCell({ row, col });
-
-      // 2. Después de la animación, eliminar la carta visualmente
       setTimeout(() => {
         setBoardCells(prev => {
           const next = prev.map(r => r.slice());
           next[row][col] = null;
-          return next;
-        });
-
-        // limpiar estado visual
+          return next});
         setDestroyingCell(null);
-
       }, 800); 
     };
 
   const handleWsGoalRevealed = async ({ row, col, goalType }) => {
-    console.log(`🎯 Recibido GOAL_REVEALED en (${row}, ${col}) tipo: ${goalType}`);
+    console.log(`🎯 Received GOAL_REVEALED at (${row}, ${col}) type: ${goalType}`);
     const normalized = goalType; 
+    const positionKey = `[${row}][${col}]`;
+    
+    // Guardar en permanentlyRevealedGoals para persistir en sessionStorage
+    setPermanentlyRevealedGoals(prev => ({
+      ...prev,
+      [positionKey]: goalType.toLowerCase()
+    }));
+    
     setBoardCells(prev => {
-      // Hacemos una copia profunda del tablero para no mutar el estado directamente
       const next = prev.map(r => r.slice());
       
-      // Verificamos que la celda exista
       if (next[row] && next[row][col]) {
         next[row][col] = {
-          ...next[row][col], // Mantenemos propiedades existentes (type, owner, etc.)
-          revealed: true,    // MARCA CLAVE: Revelado permanente
-          cardType: goalType.toLowerCase() // Guardamos qué carta es (gold, carbon_1, etc.)
+          ...next[row][col], 
+          revealed: true, 
+          cardType: goalType.toLowerCase() 
         };
       }
       return next;
@@ -528,14 +802,12 @@ export default function Board() {
 
     setObjectiveCards(prev => ({
       ...prev, 
-      [`[${row}][${col}]`]: normalized
+      [positionKey]: normalized
     }));
     
     addLog(`A goal card has been revealed at (${row}, ${col})!`, "action");
-    // Antes aquí había un checkForRoundEnd()
-    // Si es oro, terminar la ronda inmediatamente
     if (goalType.toLowerCase() === 'gold') {
-      console.log("🏆 ORO DETECTADO. Terminando ronda inmediatamente...");
+      console.log("🏆 GOLD DETECTED. Ending round immediately...");
       const mockResult = {
         ended: true,
         reason: 'GOLD_REACHED',
@@ -548,13 +820,42 @@ export default function Board() {
   
   
     // Handlers para solicitudes de espectador
+    const deleteMessagesByIds = async (ids) => {
+      const safeIds = (ids || []).filter(id => id !== null && id !== undefined);
+      if (safeIds.length === 0) return;
+
+      const results = await Promise.all(
+        safeIds.map((id) =>
+          fetch(`/api/v1/messages/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          })
+        )
+      );
+
+      const failed = results.filter(r => !r.ok);
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} message(s)`);
+      }
+    };
+
     const handleAcceptSpectatorRequest = async (username) => {
       try {
         toast.success(`${username} accepted as spectator`);
+
+        const reqIds = (spectatorRequests || [])
+          .filter(s => s.username === username)
+          .map(s => s.messageId)
+          .filter(id => id !== null && id !== undefined);
+        const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
         
         // Enviar mensaje de aceptación
         const acceptMessage = {
-          content: `SPECTATOR_ACCEPTED:${username}:${game.id}`,
+          content: requestId !== null
+            ? `SPECTATOR_ACCEPTED:${username}:${game.id}:${requestId}`
+            : `SPECTATOR_ACCEPTED:${username}:${game.id}`,
           activePlayer: loggedInUser.username,
           chat: game.chat
         };
@@ -568,21 +869,11 @@ export default function Board() {
           body: JSON.stringify(acceptMessage),
         });
 
-        // Eliminar mensajes de solicitud
         const msgsToDelete = spectatorRequests
           .filter(s => s.username === username)
           .map(s => s.messageId);
-        
-        if (msgsToDelete.length > 0) {
-          await fetch('/api/v1/messages/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${jwt}`,
-            },
-            body: JSON.stringify(msgsToDelete),
-          });
-        }
+
+        await deleteMessagesByIds(msgsToDelete);
         
         setSpectatorRequests(prev => prev.filter(p => p.username !== username));
         
@@ -594,9 +885,17 @@ export default function Board() {
 
     const handleDenySpectatorRequest = async (username) => {
       try {
+        const reqIds = (spectatorRequests || [])
+          .filter(s => s.username === username)
+          .map(s => s.messageId)
+          .filter(id => id !== null && id !== undefined);
+        const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
+
         // Enviar mensaje de rechazo
         const denyMessage = {
-          content: `SPECTATOR_DENIED:${username}:${game.id}`,
+          content: requestId !== null
+            ? `SPECTATOR_DENIED:${username}:${game.id}:${requestId}`
+            : `SPECTATOR_DENIED:${username}:${game.id}`,
           activePlayer: loggedInUser.username,
           chat: game.chat
         };
@@ -610,21 +909,11 @@ export default function Board() {
           body: JSON.stringify(denyMessage),
         });
 
-        // Eliminar mensajes de solicitud
         const msgsToDelete = spectatorRequests
           .filter(s => s.username === username)
           .map(s => s.messageId);
-        
-        if (msgsToDelete.length > 0) {
-          await fetch('/api/v1/messages/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${jwt}`,
-            },
-            body: JSON.stringify(msgsToDelete),
-          });
-        }
+
+        await deleteMessagesByIds(msgsToDelete);
         
         toast.info(`${username} spectator request denied`);
         setSpectatorRequests(prev => prev.filter(p => p.username !== username));
@@ -642,12 +931,16 @@ export default function Board() {
       if (adminAction.action === "FORCE_FINISH") {
         toast.error(`⚠️ Admin has deleted this game. Reason: ${adminAction.reason}`);
         setTimeout(() => {
+          sessionStorage.removeItem('savedGameData');
+          sessionStorage.removeItem('newRoundData');
           navigate('/lobby')}, 3000);
 
       } else if (adminAction.action === "PLAYER_EXPELLED") {
         if (adminAction.affectedPlayer === currentUser) {
           toast.error(`🚫 You have been expelled from this game. Reason: ${adminAction.reason}`);
           setTimeout(() => {
+            sessionStorage.removeItem('savedGameData');
+            sessionStorage.removeItem('newRoundData');
             navigate('/lobby')}, 3000);
         } else {
           toast.warning(`⚠️ Player ${adminAction.affectedPlayer} has been expelled by admin. Reason: ${adminAction.reason}`);
@@ -657,7 +950,7 @@ export default function Board() {
 
     const handleWsTurnChanged = async (message) =>{
       if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
-        console.log('⛔ TURN_CHANGED ignorado: ronda terminada');
+        console.log('⛔ TURN_CHANGED ignored: round ended');
         return;
       }
       const payload = message.newTurnIndex !== undefined ? message : JSON.parse(message.body || "{}");
@@ -676,13 +969,12 @@ export default function Board() {
       }
 
       if (playerOrder && playerOrder.length > 0) {
-      // Aseguramos que el índice sea válido usando el módulo
         const safeIndex = newTurnIndex % playerOrder.length;
         const nextPlayerObj = playerOrder[safeIndex];
 
         if (nextPlayerObj) {
           const nextUsername = nextPlayerObj.username;
-          const nextClass = `player${safeIndex + 1}`; // Clase CSS para el color
+          const nextClass = `player${safeIndex + 1}`; 
 
           setCurrentPlayer(nextUsername);
         
@@ -701,9 +993,6 @@ export default function Board() {
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             }
           }
-          /*if (roundEndedRef.current === ROUND_STATE.ENDING) {
-            await checkForRoundEnd(); 
-          }*/
         }
       }
     }; 
@@ -721,46 +1010,65 @@ export default function Board() {
     };
     
     // Handler para cuando se crea una nueva ronda - todos los jugadores navegan al nuevo board
-    const handleWsNewRound = (message) => {
-      const { newRound, boardId } = message;
-      console.log('🔄 WS NEW_ROUND recibido:', message);
-      
-      if (isNavigatingToNewRound.current) {
-        console.log('Ya navegando a nueva ronda, ignorando mensaje duplicado');
-        return;
-      }
-      
-      isNavigatingToNewRound.current = true;
-      
-      // Guardar datos en sessionStorage para recuperarlos después del reload
-      sessionStorage.setItem('newRoundData', JSON.stringify({
-        game: game,
-        round: newRound,
-        isSpectator: isSpectator
-      }));
-      
-      // Navegar y forzar reload para reiniciar todo el estado
-      const targetBoardId = boardId || newRound?.board;
-      console.log('Navegando a board:', targetBoardId);
-      window.location.href = `/board/${targetBoardId}`;
-    };
+const handleWsNewRound = (message) => {
+  const { newRound, boardId } = message;
+  console.log('🔄 WS NEW_ROUND received:', message);
+
+  // Guardar firma de roles de la ronda anterior para detectar si el backend aún devuelve roles antiguos
+  try {
+    const prevFromPublished = (lastPublishedRoles?.current && Array.isArray(lastPublishedRoles.current) && lastPublishedRoles.current.length > 0)
+      ? lastPublishedRoles.current
+          .map(p => ({ u: p.username, r: p.role === 'SABOTEUR' ? 1 : 0 }))
+      : null;
+
+    const prevFromActivePlayers = (Array.isArray(activePlayers) ? activePlayers : [])
+      .filter(p => typeof p?.rol === 'boolean')
+      .map(p => ({ u: p.username, r: p.rol === true ? 1 : 0 }));
+
+    const base = (prevFromPublished && prevFromPublished.length > 0) ? prevFromPublished : prevFromActivePlayers;
+
+    const prevSig = base
+      .sort((a, b) => String(a.u).localeCompare(String(b.u)))
+      .map(x => `${x.u}:${x.r}`)
+      .join('|');
+
+    sessionStorage.setItem('previousRoundRolesSignature', prevSig);
+  } catch (e) {
+    console.warn('Could not store previous round roles signature', e);
+  }
+  
+  // Limpiar sessionStorage anterior para evitar conflictos
+  sessionStorage.removeItem('savedGameData');
+  
+  // Guardar datos en sessionStorage para recuperarlos después del reload
+  sessionStorage.setItem('newRoundData', JSON.stringify({
+    game: game,
+    round: newRound,
+    isSpectator: isSpectator
+  }));
+
+  // Marcar que en esta ronda hay que reasignar roles (sobrevive al reload)
+  if (newRound?.id !== undefined && newRound?.id !== null) {
+    sessionStorage.setItem('forceRolesReassignmentRoundId', String(newRound.id));
+  }
+  
+  // Navegar y forzar reload para reiniciar todo el estado
+  const targetBoardId = boardId || newRound?.board;
+  console.log('Navigating to board:', targetBoardId);
+  window.location.href = `/board/${targetBoardId}`;
+};
     
-    // Handler para cuando termina la ronda - mostrar modal con datos sincronizados
     const handleWsRoundEnd = (message) => {
       const { winnerTeam, reason, goldDistribution, playerRoles, roundId } = message;
-      console.log('🏆 WS ROUND_END recibido:', message, 'round.id actual:', round?.id);
-      
-      // Ignorar mensajes de rondas anteriores
+      console.log('🏆 WS ROUND_END received:', message, 'current round.id:', round?.id);
+
       if (roundId && round?.id && roundId !== round.id) {
-        console.log('🏆 Ignorando ROUND_END de ronda diferente:', roundId, '!=', round.id);
+        console.log('🏆 Ignoring ROUND_END from different round:', roundId, '!=', round.id);
         return;
       }
-      
-      // Marcar la ronda como terminada
       roundEndedRef.current = ROUND_STATE.ENDED;
       setRoundEnded(true);
       
-      // Resetear el flag de navegación
       isNavigatingToNewRound.current = false;
       const roundResult = {
         winnerTeam,
@@ -769,16 +1077,9 @@ export default function Board() {
         playerRoles
       };
       
-      // Mostrar el modal con los datos recibidos del primer jugador
       setRoundEndData(roundResult);
       setRoundEndCountdown(10);
-
-      /*if (round?.roundNumber === 3) {
-        handleLastRoundEnd(roundResult);
-      }*/
     };
-    
-    // HASTA AQUÍ LAS FUNCIONES A MODULARIZAR (LAS QUE USA EL USEFFECT DEL WEBSOCKET)
     
     const handleCardDrop = async (row, col, card, cardIndex, squareId) => {
     if (processingAction.current) return;
@@ -802,7 +1103,6 @@ export default function Board() {
         return;
       }
       
-      // Verificar si el jugador tiene alguna herramienta rota
       const currentPlayerTools = playerTools[loggedInUser.username];
       if (currentPlayerTools) {
         const hasBrokenTool = !currentPlayerTools.pickaxe || !currentPlayerTools.candle || !currentPlayerTools.wagon;
@@ -814,7 +1114,6 @@ export default function Board() {
       
       setCont(timeturn);
 
-      // If squareId is not provided, fetch it by coordinates
       let actualSquareId = squareId;
       if (!actualSquareId) {
         const square = await getSquareByCoordinates(boardId, col, row);
@@ -831,21 +1130,6 @@ export default function Board() {
         card: card?.id || card,
       });
 
-      /*
-      setBoardCells(prev => {
-        const next = prev.map(r => r.slice());
-        next[row][col] = {
-          ...prev[row][col],
-          ...card,
-          type: 'tunnel',
-          owner: loggedInUser?.username || 'unknown',
-          placedAt: Date.now(),
-          occupied: true,
-          squareId: actualSquareId,
-        };
-        return next;
-      });
-    */
       if (window.removeCardAndDraw) {
         window.removeCardAndDraw(cardIndex);
       }
@@ -853,29 +1137,22 @@ export default function Board() {
       setDeckCount(newDeckCount);
       setCollapseMode({ active: false, card: null, cardIndex: null });
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
-      
-      //await checkForRoundEnd();
 
       if (roundEndedRef.current === ROUND_STATE.ACTIVE) {
         nextTurn({newDeckCount: newDeckCount});
       }
-      // nextTurn({newDeckCount: newDeckCount});
-      
-      // Evaluar fin de ronda después de colocar carta (puede que se haya encontrado el oro)
-      //checkForRoundEnd(); //Evaluar el checkForRoundEnd() solo en webSocket
     } finally {
       processingAction.current = false;
     }
   };
 
-const handleActionCard = (card, targetPlayer, cardIndex, selectedTool = null) => {
+const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = null) => {
   if (processingAction.current) return;
   if (roundEndedRef.current === ROUND_STATE.ENDED) return;
   processingAction.current = true;
   try {
-    setCont(timeturn);
     setCollapseMode({ active: false, card: null, cardIndex: null });
-    handleActionCardUtil(card, targetPlayer, cardIndex, {
+    const success = await handleActionCardUtil(card, targetPlayer, cardIndex, {
       isSpectator,
       loggedInUser,
       currentPlayer,
@@ -889,6 +1166,9 @@ const handleActionCard = (card, targetPlayer, cardIndex, selectedTool = null) =>
       patchActivePlayer,
       selectedTool,
     });
+    if (success) {
+      setCont(timeturn);
+    }
   } finally {
     processingAction.current = false;
   }
@@ -904,7 +1184,7 @@ const handleActionCard = (card, targetPlayer, cardIndex, selectedTool = null) =>
       setCont(timeturn);
 
       const objectiveCardType = objectiveCards[objectivePosition];
-      setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); // Solo para el jugador que usa la carta
+      setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); 
       toast.info(`🔍 Revealing objective... Look at the board!`);
       setTimeout(() => {
         setRevealedObjective(null);
@@ -968,14 +1248,14 @@ const activateCollapseMode = (card, cardIndex) => {
         card: null,
       });
     } else {
-      console.error(`❌ ERROR CRÍTICO: Intentando destruir celda [${row},${col}] pero no tiene squareId. La petición al servidor se ha cancelado.`);
-      toast.error("Error de sincronización: No se pudo destruir la carta en el servidor.");
-      return; // Detenemos la ejecución para que no se borre visualmente si falló el server
+      console.error(`❌ ERROR: If you want to destroy the cell [${row},${col}] but no have squareId. The server request CANCELLED.`);
+      toast.error("Error of sincronizitation: Cannot destroy the card on the server.");
+      return; 
     }
 
     setBoardCells(prev => {
       const next = prev.map(r => r.slice());
-      next[row][col] = null; // eliminar carta localmente
+      next[row][col] = null; 
       return next;
     });
 
@@ -1009,13 +1289,9 @@ const activateCollapseMode = (card, cardIndex) => {
       delete window.activateCollapseMode;
     };
   }, []);
-
-  // Funciones de logs
   const addLog = (msg, type = "info") => {
     appendAndPersistLog(msg, type);
   };
-
-  // Private log deshabilitado
   const addPrivateLog = () => {};
 
   const addColoredLog = (playerIndex, playerName, action) => {
@@ -1023,12 +1299,9 @@ const activateCollapseMode = (card, cardIndex) => {
     addLog(`${coloredName} ${action}`, "action");
   };
 
-  // Función para cambiar de turno--->Ahora llama al PATCH de Round para modificar el atributo turno
-  
-
   const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
     if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
-    console.log('⛔ nextTurn bloqueado: ronda terminada');
+    console.log('⛔ nextTurn blocked: round ended');
     return false;
     }
     if (isTurnChanging.current && !force) return false;
@@ -1037,17 +1310,14 @@ const activateCollapseMode = (card, cardIndex) => {
     isTurnChanging.current = true;
     setTimeout(() => { isTurnChanging.current = false; }, 1000);
 
-    // Desactivar modo collapse al cambiar de turno
     setCollapseMode({ active: false, card: null, cardIndex: null });
 
     const currentTurnIndex = round?.turn || 0; 
-
     const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
 
     try{
       if(round && round.id){
         const patchBody = {turn: nextIndex};
-        //Mapear el newDeckCount al atributo de backend leftCards
         if(newDeckCount !== null){
           patchBody.leftCards = newDeckCount; 
         }
@@ -1055,31 +1325,27 @@ const activateCollapseMode = (card, cardIndex) => {
         patchRound(round.id, patchBody);
 
       }else{
-        console.error("No hay ID de ronda disponible");
+        console.error("No round ID available");
       }
-      //Ahora no hacemos el setCurrentPlayer aquí, esperamos a que el webSocket lo diga
       return true; 
     } catch(error){
       console.error("Error passing turn:", error);
-      toast.error("Error al pasar turno.");
+      toast.error("Error passing turn.");
       isTurnChanging.current = false;
       return false;
     }
   };
 
-  // Función para evaluar si la ronda ha terminado (Actualmente no la estamos usando)
   const checkForRoundEnd = async () => {
     console.log('🔍 checkForRoundEnd called. roundEndedRef:', roundEndedRef.current, 'deck:', deck?.id, 'deckCount:', deckCount);
     
-    // No verificar si ya terminó la ronda (usar ref para evitar problemas de closure)
     if (roundEndedRef.current === ROUND_STATE.ENDED) {
-      console.log('🔍 checkForRoundEnd: ronda ya terminada, saliendo');
+      console.log('🔍 checkForRoundEnd: round already ended, exiting');
       return;
     }
     
-    // No verificar fin de ronda si aún no hay deck creado (evita errores al inicio)
     if (!deck || !deck.id) {
-      console.log('🔍 checkForRoundEnd: deck no disponible, saliendo');
+      console.log('🔍 checkForRoundEnd: deck not available, exiting');
       return;
     }
     
@@ -1087,9 +1353,8 @@ const activateCollapseMode = (card, cardIndex) => {
     console.log('🔍 checkForRoundEnd result:', roundEndResult);
     
     if (roundEndResult.ended) {
-      roundEndedRef.current = ROUND_STATE.ENDED; // Marcar que la ronda terminó
+      roundEndedRef.current = ROUND_STATE.ENDED; 
       setRoundEnded(true);
-      // 🔑 FORZAR revelación visual del oro si aún no está revelado
       if (roundEndResult.reason === 'GOLD_REACHED' && roundEndResult.goldPosition) {
         const [r, c] = roundEndResult.goldPosition
           .replace('[', '')
@@ -1113,25 +1378,18 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Funcion para manejar el final de la última ronda
   const handleLastRoundEnd = async (result) => {
-    console.log('🏁 Final de la última ronda - Preparando fin de partida...');
+    console.log('Final of last round - Preparing game end...');
     
-    // Esperar un momento para que se actualicen las pepitas
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Recargar activePlayers para obtener las pepitas finales
     await loadActivePlayers();
     
-    // Obtener el ranking final basado en goldNugget
     const playerRankings = roundEndData?.goldDistribution?.map(p => ({
       username: p.username,
       totalNuggets: p.totalNuggets || 0
     })) || [];
     
     console.log('📊 Player rankings:', playerRankings);
-
-    // Determinar el ganador (jugador con más pepitas)
     const sortedRankings = [...playerRankings].sort((a, b) => b.totalNuggets - a.totalNuggets);
     const winnerUsername = sortedRankings.length > 0 ? sortedRankings[0].username : null;
     console.log('👑 Winner:', winnerUsername);
@@ -1158,20 +1416,29 @@ const activateCollapseMode = (card, cardIndex) => {
         console.error('❌ Error processing game statistics and achievements:', error);
       }
     }
-    
-    // Mostrar modal de fin de partida
+  
     setGameEndData({ playerRankings });
     setGameEndCountdown(10);
   };
 
-  // Función para manejar el final de ronda
   const handleRoundEnd = async (result) => {
     const { reason, winnerTeam, goldPosition } = result;
     
     // Verificar si soy el primer jugador (responsable de calcular y enviar datos)
-    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    let firstPlayerUsername = null;
+    if (playerOrder.length > 0) {
+        firstPlayerUsername = playerOrder[0]?.username;
+    } else if (activePlayers.length > 0) {
+        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
+        firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
+    }
+
+    const isFirstPlayer = firstPlayerUsername && loggedInUser?.username && firstPlayerUsername === loggedInUser?.username;
+    const shouldExecuteLogic = isFirstPlayer || result.forcedByCreator;
+
+    console.log(`🤖 handleRoundEnd Check: isFirstPlayer=${isFirstPlayer}, forced=${result.forcedByCreator} -> Executing=${shouldExecuteLogic}`);
     
-    // Mostrar mensaje de final de ronda
     if (reason === 'GOLD_REACHED') {
       addLog(`🏆 Round ended! The ${winnerTeam} found the gold at ${goldPosition}!`, 'success');
       
@@ -1182,37 +1449,26 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
     }
 
-    // Solo el primer jugador calcula y envía los datos del fin de ronda
-    if (isFirstPlayer) {
-      console.log('Soy el primer jugador, calculando distribución de oro...');
-      console.log('activePlayers con roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
+    // Solo el primer jugador (o el creador si forzó el fin) calcula y envía los datos
+    if (shouldExecuteLogic) {
+      console.log('I am responsible (FirstPlayer or Creator), calculating gold distribution...');
+      console.log('activePlayers with roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
       
       // Distribuir pepitas de oro y obtener la distribución para el modal
       const winnerRol = winnerTeam === 'MINERS' ? false : true;
       const goldDistribution = await distributeGold(activePlayers, winnerRol);
-
-           // Recargar activePlayers para actualizar goldNugget en la UI
-      console.log('♻️ Recargando activePlayers después de distribuir oro...');
       await loadActivePlayers();
       
-      // Preparar datos de roles para el modal (p.rol es booleano: true = SABOTEUR, false = MINER)
       const playerRolesData = activePlayers.map(p => ({
         username: p.user?.username || p.username,
-        rol: p.rol === true ? 'SABOTEUR' : 'MINER'
-      }));
+        rol: p.rol === true ? 'SABOTEUR' : 'MINER'}));
       
-      console.log('playerRolesData preparado:', playerRolesData);
-      
-      // Resetear el flag de navegación para esta nueva ronda
+      console.log('playerRolesData ready:', playerRolesData);
       isNavigatingToNewRound.current = false;
-      
-      // Esperar 2 segundos para que los jugadores vean el oro revelado
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Actualizar el estado del round en el backend
       await patchRound(round.id, { winnerRol: winnerRol });
-      
-      // Notificar a todos los jugadores via WebSocket
+
       const result = await notifyRoundEnd(round.id, {
         winnerTeam,
         reason,
@@ -1221,23 +1477,13 @@ const activateCollapseMode = (card, cardIndex) => {
       });
       
       if (!result) {
-        // Fallback: mostrar modal localmente si falla el WS
         setRoundEndData({ winnerTeam, reason, goldDistribution, playerRoles: playerRolesData });
         setRoundEndCountdown(10);
       }
-    } else {
-      console.log('No soy el primer jugador, esperando datos del fin de ronda via WebSocket...');
-      // Los demás jugadores esperan el mensaje ROUND_END del WebSocket
     }
     
-    // Si es la ronda 3, manejar el final del juego
-    /*if (round.roundNumber === 3) {
-      handleLastRoundEnd(result);
-      return;
-    }*/
   };
 
-  // Efect para manejar el countdown y la navegación a la nueva ronda
   useEffect(() => {
     if (!roundEndData) return;
     
@@ -1252,63 +1498,102 @@ const activateCollapseMode = (card, cardIndex) => {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [roundEndData]); // Solo depende de roundEndData, no del countdown
+  }, [roundEndData]);
 
-  // Efecto separado para navegar cuando el countdown llega a 0
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
 
-    const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
+    // Determinar robustamente quién es el primer jugador
+    let firstPlayerUsername = null;
+    if (playerOrder.length > 0) {
+        firstPlayerUsername = playerOrder[0]?.username;
+    } else if (activePlayers.length > 0) {
+        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
+        firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
+    }
+
+    const isFirstPlayer = firstPlayerUsername && loggedInUser?.username && firstPlayerUsername === loggedInUser?.username;
+    console.log(`🔄 Navigation Check: isFirstPlayer=${isFirstPlayer}`);
     
     const isLastRound = round?.roundNumber === 3;
 
     if (isLastRound) {
+      if (hasTriggeredGameEnd.current) return;
+      hasTriggeredGameEnd.current = true;
       handleLastRoundEnd(roundEndData);
       return;
     }
+
     // Solo el primer jugador crea la nueva ronda
     // Los demás esperarán el mensaje WebSocket NEW_ROUND
     if (!isFirstPlayer) {
-      console.log('🔄 No soy el primer jugador, esperando mensaje WebSocket NEW_ROUND...');
+      console.log('🔄 Not the first player, waiting for WebSocket NEW_ROUND message...');
       return; // Los demás jugadores esperan el WebSocket
     }
     
-    // Evitar crear la ronda múltiples veces
     if (isNavigatingToNewRound.current) return;
     isNavigatingToNewRound.current = true;
     
     const createNewRound = async () => {
       try {
-        // Resetear herramientas de todos los jugadores antes de crear la nueva ronda
         console.log('🔧 Resetting tools for all players...');
         await resetToolsForNewRound(activePlayers);
         
         const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
-        console.log('✅ Nueva ronda creada:', newRound);
+        console.log('✅ New round created:', newRound);
         
         // El backend enviará el WebSocket NEW_ROUND a todos los jugadores
         // La navegación real se hace en handleWsNewRound cuando llegue el mensaje
         // Pero por si acaso el WS no llega, navegamos directamente
         if (newRound && newRound.board) {
+          // Guardar firma de roles de la ronda anterior para detectar si el backend aún devuelve roles antiguos
+          try {
+            const prevFromPublished = (lastPublishedRoles?.current && Array.isArray(lastPublishedRoles.current) && lastPublishedRoles.current.length > 0)
+              ? lastPublishedRoles.current
+                  .map(p => ({ u: p.username, r: p.role === 'SABOTEUR' ? 1 : 0 }))
+              : null;
+
+            const prevFromActivePlayers = (Array.isArray(activePlayers) ? activePlayers : [])
+              .filter(p => typeof p?.rol === 'boolean')
+              .map(p => ({ u: p.username, r: p.rol === true ? 1 : 0 }));
+
+            const base = (prevFromPublished && prevFromPublished.length > 0) ? prevFromPublished : prevFromActivePlayers;
+
+            const prevSig = base
+              .sort((a, b) => String(a.u).localeCompare(String(b.u)))
+              .map(x => `${x.u}:${x.r}`)
+              .join('|');
+
+            sessionStorage.setItem('previousRoundRolesSignature', prevSig);
+          } catch (e) {
+            console.warn('Could not store previous round roles signature', e);
+          }
+
           sessionStorage.setItem('newRoundData', JSON.stringify({
             game: game,
             round: newRound,
             isSpectator: isSpectator
           }));
+
+          // Marcar que en esta ronda hay que reasignar roles (sobrevive al reload)
+          if (newRound?.id !== undefined && newRound?.id !== null) {
+            sessionStorage.setItem('forceRolesReassignmentRoundId', String(newRound.id));
+          }
+
           window.location.href = `/board/${newRound.board}`;
         }
         
       } catch (error) {
-        console.error('❌ Error al crear nueva ronda:', error);
+        console.error('❌ Error creating new round:', error);
         toast.error('Error creating new round');
         isNavigatingToNewRound.current = false;
       }
     };
     
     createNewRound();
-  }, [roundEndCountdown, roundEndData]);
+  }, [roundEndCountdown, roundEndData, activePlayers, playerOrder, loggedInUser, round, game]);
 
-  // Efecto para manejar el countdown de fin de partida
   useEffect(() => {
     if (!gameEndData) return;
     
@@ -1325,17 +1610,15 @@ const activateCollapseMode = (card, cardIndex) => {
     return () => clearInterval(interval);
   }, [gameEndData]);
 
-  // Efecto para navegar al lobby cuando termina el countdown de fin de partida
   useEffect(() => {
     if (!gameEndData || gameEndCountdown > 0) return;
     
     console.log('🏁 Game finished, returning to lobby...');
-    // Limpiar datos residuales de sessionStorage
+    sessionStorage.removeItem('savedGameData');
     sessionStorage.removeItem('newRoundData');
     navigate('/lobby');
   }, [gameEndCountdown, gameEndData, navigate]);
 
-  // Función para descartar carta
   const handleDiscard = () => {
     if (processingAction.current) return;
     if (roundEndedRef.current === ROUND_STATE.ENDED) return;
@@ -1343,10 +1626,8 @@ const activateCollapseMode = (card, cardIndex) => {
     try {
       if (isSpectator) {
         toast.info("🔍 Spectators cannot discard cards");
-        //addPrivateLog("ℹ️ Spectators cannot discard cards", "warning");
         return;
       }
-
       const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
       if (loggedInUser.username !== currentPlayer) {
         toast.warning("It's not your turn!");
@@ -1363,8 +1644,6 @@ const activateCollapseMode = (card, cardIndex) => {
           `🎴 Discarded a card and take one. ${newDeckCount} cards left in the deck.`);
         toast.success('Card discarded successfully!');
         
-        // Evaluar fin de ronda después de descartar (puede que se hayan acabado las cartas)
-        //checkForRoundEnd();
       } else {
         toast.warning("Please select a card to discard (right-click in the card)");}
     } finally {
@@ -1372,15 +1651,12 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Función auxiliar para cuando se acaba el tiempo
   const handleTurnTimeOut = () => {
     if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
       console.log("Timeout ignored: round has ended.");
       return; 
     }
-    // Evitamos llamar varias veces si ya se está procesando
     if (processingAction.current) return;
-    // Evitamos toasts repetidos por timeout que puedan dispararse varias veces
     const now = Date.now();
       if ((now - lastTimeoutToastTs.current) > 3000) {
         toast.error("⌛ Time's up! Passing turn...");
@@ -1388,13 +1664,11 @@ const activateCollapseMode = (card, cardIndex) => {
       }
     nextTurn({ force: true });
   };
-//Para debuggear el fin de ronda
-  // Handler para forzar revelar el oro y terminar la ronda (solo creator)
+
   const handleForceEndRound = async () => {
     if (!isCreator) {
       toast.error('Only the game creator can force end the round');
-      return;
-    }
+      return}
 
     if (processingAction.current) return;
     processingAction.current = true;
@@ -1402,10 +1676,8 @@ const activateCollapseMode = (card, cardIndex) => {
     try {
       if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
         toast.info('Round already ending or ended');
-        return;
-      }
+        return}
 
-      // Buscar posición del oro en objectiveCards; si no exista, escoger la primera
       const objectivePositions = [ '[2][9]', '[4][9]', '[6][9]' ];
       let goldPosKey = objectivePositions.find(k => objectiveCards[k] === 'gold');
       if (!goldPosKey) {
@@ -1437,7 +1709,8 @@ const activateCollapseMode = (card, cardIndex) => {
         ended: true,
         reason: 'GOLD_REACHED',
         winnerTeam: 'MINERS',
-        goldPosition: `[${r}][${c}]`
+        goldPosition: `[${r}][${c}]`,
+        forcedByCreator: true
       };
 
       await handleRoundEnd(mockResult);
@@ -1445,8 +1718,6 @@ const activateCollapseMode = (card, cardIndex) => {
       processingAction.current = false;
     }
   };
-
-  // Función para enviar mensajes
   const postMessage = async (content, activePlayerUsername, chatId) => {
     try {
       const response = await fetch(`/api/v1/messages`, {
@@ -1493,7 +1764,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
     if (!isSpectator && !loggedActivePlayer) {
       toast.error('Cannot identify your active player');
-      console.error('ActivePlayer no disponible para el usuario:', loggedInUser.username);
+      console.error('ActivePlayer not available for user:', loggedInUser.username);
       return;
     }
 
@@ -1501,7 +1772,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
     if (!activePlayerUsername) {
       toast.error('Cannot identify your username');
-      console.error('Username no encontrado. isSpectator:', isSpectator, 'loggedActivePlayer:', loggedActivePlayer);
+      console.error('Username not found. isSpectator:', isSpectator, 'loggedActivePlayer:', loggedActivePlayer);
       return;
     }
 
@@ -1509,7 +1780,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
     if (!chatId) {
       toast.error('Cannot identify the game chat');
-      console.error('Chat ID no encontrado. chat state:', chat, 'game:', game);
+      console.error('Chat ID not found. chat state:', chat, 'game:', game);
       return;
     }
 
@@ -1535,7 +1806,6 @@ const activateCollapseMode = (card, cardIndex) => {
       patchLog(logId, { round: roundId, messages: nextMessages });
     }
   };
-
 
   useEffect(() => {
     const initializeGame = async () => {
@@ -1568,11 +1838,66 @@ const activateCollapseMode = (card, cardIndex) => {
 
         if (isSpectator) {
           addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
-          toast.info('Spectator mode activated✅');}
-
-        setTimeout(() => {
+          toast.info('Spectator mode activated✅');
+          // Espectadores no esperan sincronización
+          setWaitingForPlayers(false);
           setIsLoading(false);
-        }, 500);
+        } else {
+          // Recalcular condiciones en tiempo de ejecución para decidir si
+          // saltamos la sincronización de jugadores o no.
+          const isRefreshNow = detectPageRefresh();
+          const newRoundRaw = sessionStorage.getItem('newRoundData');
+          const savedGameRaw = sessionStorage.getItem('savedGameData');
+          const hasNewRoundSession = newRoundRaw !== null;
+          const hasSavedGameSession = savedGameRaw !== null;
+
+          const shouldSkipPlayerSyncLocal = hasNewRoundSession || (isRefreshNow && hasSavedGameSession);
+
+          console.log('🔎 Player sync decision:', {
+            isRefreshNow,
+            hasNewRoundSession,
+            hasSavedGameSession,
+            newRoundRawPreview: hasNewRoundSession ? (newRoundRaw ? newRoundRaw.substring(0, 300) : '<empty>') : null,
+            savedGameRawPreview: hasSavedGameSession ? (savedGameRaw ? savedGameRaw.substring(0, 300) : '<empty>') : null,
+            locationStatePresent: !!location?.state,
+            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId')
+          });
+
+          if (shouldSkipPlayerSyncLocal) {
+            console.log('🔄 Skipping player sync (refresh or round transition) - local decision', { isRefreshNow, hasNewRoundSession, hasSavedGameSession });
+            setWaitingForPlayers(false);
+            setIsLoading(false);
+          } else {
+            // Entrada fresca a una nueva partida - notificar al servidor que este jugador está listo
+            console.log('🎮 Fresh game entry - waiting for player sync');
+            updateLoadingStep(7); // Marcar que estamos esperando jugadores
+            try {
+              const res = await fetch('/api/v1/rounds/playerReady', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${jwt}`,
+                },
+                body: JSON.stringify({
+                  roundId: round?.id,
+                  username: loggedInUser?.username
+                }),
+              });
+              let bodyTxt = null;
+              try {
+                bodyTxt = await res.text();
+              } catch (e) {
+                bodyTxt = '<unreadable response body>';
+              }
+              console.log('📤 Notificado al servidor: jugador listo', { ok: res.ok, status: res.status, body: bodyTxt });
+            } catch (err) {
+              console.error('Error notificando playerReady:', err);
+              // Si falla, salir del loading de todas formas para no bloquear
+              setWaitingForPlayers(false);
+              setIsLoading(false);
+            }
+          }
+        }
       } catch (error) {
         console.error('Error initializing game:', error);
         toast.error('Error loading game data');
@@ -1644,7 +1969,7 @@ const activateCollapseMode = (card, cardIndex) => {
           setGame(completeGame);
         }
       } catch (error) {
-        console.error('Error al cargar el game completo:', error);
+        console.error('Error loading complete game:', error);
       }
     };
 
@@ -1662,8 +1987,50 @@ const activateCollapseMode = (card, cardIndex) => {
         pickaxe: player.pickaxeState ?? true
       };
     });
-    setPlayerTools(initialTools);
+    // Initialize tools only for usernames that don't have an entry yet.
+    // This avoids overwriting runtime updates coming from TOOLS_CHANGED WS messages
+    // while still ensuring new players get default tool states.
+    setPlayerTools(prev => {
+      const next = { ...(prev || {}) };
+      Object.keys(initialTools).forEach(username => {
+        if (!(username in next)) {
+          next[username] = initialTools[username];
+        }
+      });
+      return next;
+    });
     let cancelled = false;
+
+    const getOrderedUsernames = () => {
+      // Prefer the already-computed playerOrder
+      if (Array.isArray(playerOrder) && playerOrder.length > 0) {
+        return playerOrder.map(p => p?.username).filter(Boolean);
+      }
+
+      // Otherwise, compute the same ordering playerOrder uses: by birthDate asc (oldest first)
+      if (Array.isArray(activePlayers) && activePlayers.length > 0) {
+        return [...activePlayers]
+          .sort((a, b) => {
+            const da = a?.birthDate ? new Date(a.birthDate).getTime() : Number.POSITIVE_INFINITY;
+            const db = b?.birthDate ? new Date(b.birthDate).getTime() : Number.POSITIVE_INFINITY;
+            if (da !== db) return da - db;
+            return (a?.id ?? 0) - (b?.id ?? 0);
+          })
+          .map(p => p?.username)
+          .filter(Boolean);
+      }
+
+      return [];
+    };
+
+    const getFirstPlayerUsername = () => {
+      const ordered = getOrderedUsernames();
+      return ordered.length > 0 ? ordered[0] : null;
+    };
+
+    const firstPlayerUsername = getFirstPlayerUsername();
+    const isRoleAssigner =
+      !!firstPlayerUsername && !!loggedInUser?.username && firstPlayerUsername === loggedInUser.username;
 
     const buildRolesFromBackend = () =>
       activePlayers
@@ -1684,6 +2051,53 @@ const activateCollapseMode = (card, cardIndex) => {
       return a.every((item, idx) => item.username === b[idx].username && item.role === b[idx].role);
     };
 
+    const rolesSignature = (rolesList) =>
+      (Array.isArray(rolesList) ? rolesList : [])
+        .map(r => ({ u: r.username, v: r.role === 'SABOTEUR' ? 1 : 0 }))
+        .sort((a, b) => String(a.u).localeCompare(String(b.u)))
+        .map(x => `${x.u}:${x.v}`)
+        .join('|');
+
+    const fnv1a32 = (str) => {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i += 1) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return h >>> 0;
+    };
+
+    const mulberry32 = (seed) => {
+      let t = seed >>> 0;
+      return () => {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    };
+
+    const assignRolesDeterministic = (players, seedStr) => {
+      const list = Array.isArray(players) ? players : [];
+      const n = list.length;
+      const numSaboteur = calculateSaboteurCount(n);
+      const ordered = [...list].sort((a, b) => String(a.username).localeCompare(String(b.username)));
+      const rng = mulberry32(fnv1a32(String(seedStr ?? '')));
+
+      // Deterministic Fisher–Yates
+      for (let i = ordered.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rng() * (i + 1));
+        [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+      }
+
+      return ordered.map((p, i) => ({
+        username: p.username,
+        role: i < numSaboteur ? 'SABOTEUR' : 'MINER',
+        roleImg: i < numSaboteur ? saboteurRol : minerRol,
+        roleName: i < numSaboteur ? 'SABOTEUR' : 'MINER'
+      }));
+    };
+
     const publishRoles = (rolesList) => {
       if (cancelled) return;
       if (sameRoles(lastPublishedRoles.current, rolesList)) return;
@@ -1692,16 +2106,7 @@ const activateCollapseMode = (card, cardIndex) => {
       setPlayerRol(rolesList);
       if (isSpectator) return;
 
-      // Solo mostrar notificación si no se ha mostrado antes
-      if (!roleNotificationShown.current) {
-        const currentPlayerRole = rolesList.find(p => p.username === loggedInUser.username);
-        if (currentPlayerRole) {
-          roleNotificationShown.current = true;
-          setMyRole(currentPlayerRole);
-          setShowRoleNotification(true);
-          setTimeout(() => setShowRoleNotification(false), 5000);
-        }
-      }
+
     };
 
     const persistRoles = async (rolesList) => {
@@ -1719,12 +2124,16 @@ const activateCollapseMode = (card, cardIndex) => {
         await Promise.all(updates);
         await loadActivePlayers();
       } catch (err) {
-        console.error('Error al persistir roles:', err);
-        toast.error('Error al guardar los roles asignados');
+        console.error('Error persisting roles:', err);
+        toast.error('Error saving assigned roles');
       }
     };
 
     const syncRoles = async () => {
+      const sessionForceRoundId = sessionStorage.getItem('forceRolesReassignmentRoundId');
+      const shouldForceFromSession =
+        sessionForceRoundId && round?.id && String(sessionForceRoundId) === String(round.id);
+
       const expectedSaboteurs = calculateSaboteurCount(activePlayers.length);
       const backendRoles = buildRolesFromBackend();
       const saboteursAlready = backendRoles.filter(r => r.role === 'SABOTEUR').length;
@@ -1733,12 +2142,85 @@ const activateCollapseMode = (card, cardIndex) => {
         saboteursAlready === expectedSaboteurs;
 
       // Si se fuerza la reasignación (nueva ronda), siempre reasignar roles
-      if (forceRolesReassignment.current) {
-        console.log('🎭 Forzando reasignación de roles para nueva ronda');
+      if (shouldForceFromSession || forceRolesReassignment.current) {
+        console.log('🎭 Forcing role reassignment for new round');
         forceRolesReassignment.current = false;
-        const rolesAssigned = assignRolesGame(activePlayers);
+
+        // Evitar condiciones de carrera: solo el primer jugador asigna y persiste
+        if (isSpectator) {
+          publishRoles(backendRoles);
+          return;
+        }
+
+        if (!isRoleAssigner) {
+          // Esperar a que el primer jugador persista roles.
+          // Ojo: el backend puede devolver roles "completos" pero aún ser los de la ronda anterior.
+          // Para evitar quedarnos con roles antiguos, hacemos polling unas pocas veces.
+          const pollKey = round?.id ? `forceRolesReassignmentPolls_${round.id}` : 'forceRolesReassignmentPolls';
+          const polls = Number(sessionStorage.getItem(pollKey) || '0');
+          const nextPolls = polls + 1;
+          sessionStorage.setItem(pollKey, String(nextPolls));
+
+          const prevSig = sessionStorage.getItem('previousRoundRolesSignature');
+          const currSig = rolesSignature(backendRoles);
+          const looksLikeStillPrevious = !!prevSig && currSig === prevSig;
+
+          // Fallback seguro: si tras varios polls seguimos viendo exactamente la firma anterior,
+          // dejamos que un único "segundo jugador" haga la asignación/persistencia.
+          const ordered = getOrderedUsernames();
+          const takeoverUsername = ordered.length > 1 ? ordered[1] : null;
+          const canTakeOver =
+            !!takeoverUsername && !!loggedInUser?.username && takeoverUsername === loggedInUser.username;
+
+          if (canTakeOver && looksLikeStillPrevious && nextPolls >= 15) {
+            console.warn('🎭 Role reassignment takeover by fallback player:', takeoverUsername);
+            const baseSeed = `round:${round?.id ?? 'unknown'}:takeover`;
+            let rolesAssigned = assignRolesDeterministic(activePlayers, baseSeed);
+            if (prevSig) {
+              let attempts = 0;
+              while (attempts < 8 && rolesSignature(rolesAssigned) === prevSig) {
+                attempts += 1;
+                rolesAssigned = assignRolesDeterministic(activePlayers, `${baseSeed}:retry:${attempts}`);
+              }
+            }
+            publishRoles(rolesAssigned);
+            await persistRoles(rolesAssigned);
+            sessionStorage.removeItem('forceRolesReassignmentRoundId');
+            sessionStorage.removeItem(pollKey);
+            sessionStorage.removeItem('previousRoundRolesSignature');
+            return;
+          }
+
+          if (rolesComplete && nextPolls >= 2 && !looksLikeStillPrevious) {
+            sessionStorage.removeItem('forceRolesReassignmentRoundId');
+            sessionStorage.removeItem(pollKey);
+            sessionStorage.removeItem('previousRoundRolesSignature');
+            publishRoles(backendRoles);
+            return;
+          }
+
+          setTimeout(() => {
+            loadActivePlayers();
+          }, 400);
+          return;
+        }
+
+        // Primer jugador: reasigna y persiste (determinista por ronda para evitar intermitencia)
+        const prevSig = sessionStorage.getItem('previousRoundRolesSignature');
+        const baseSeed = `round:${round?.id ?? 'unknown'}`;
+        let rolesAssigned = assignRolesDeterministic(activePlayers, baseSeed);
+        if (prevSig) {
+          // Si por casualidad coincide con la ronda anterior, variar la semilla de forma determinista
+          let attempts = 0;
+          while (attempts < 8 && rolesSignature(rolesAssigned) === prevSig) {
+            attempts += 1;
+            rolesAssigned = assignRolesDeterministic(activePlayers, `${baseSeed}:retry:${attempts}`);
+          }
+        }
         publishRoles(rolesAssigned);
         await persistRoles(rolesAssigned);
+        sessionStorage.removeItem('forceRolesReassignmentRoundId');
+        sessionStorage.removeItem('previousRoundRolesSignature');
         return;
       }
 
@@ -1747,7 +2229,20 @@ const activateCollapseMode = (card, cardIndex) => {
         return;
       }
 
-      const rolesAssigned = assignRolesGame(activePlayers);
+      // Si faltan roles, solo el creador los asigna/persiste para evitar carreras
+      if (isSpectator) {
+        publishRoles(backendRoles);
+        return;
+      }
+
+      if (!isRoleAssigner) {
+        setTimeout(() => {
+          loadActivePlayers();
+        }, 400);
+        return;
+      }
+
+      const rolesAssigned = assignRolesDeterministic(activePlayers, `round:${round?.id ?? 'unknown'}:missingRoles`);
       publishRoles(rolesAssigned);
       await persistRoles(rolesAssigned);
     };
@@ -1755,30 +2250,41 @@ const activateCollapseMode = (card, cardIndex) => {
     syncRoles();
 
     return () => { cancelled = true; };
-  }, [activePlayers]);
+  }, [activePlayers, playerOrder, loggedInUser?.username, round?.id, isSpectator]);
 
   useEffect(() => {
-    if(!currentPlayer || playerOrder.length === 0 || roundEnded) return;
+    if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
-    if(loggedInUser.username !== currentPlayer){
+    // No iniciar timer hasta que todos los jugadores estén listos
+    if (waitingForPlayers) return;
+
+    const isMyTurn = !isSpectator && loggedInUser.username === currentPlayer;
+
+    // Only decrement timer if it's the current player's turn
+    if (!isMyTurn) {
+      // For other players, keep the timer frozen at timeturn
+      console.log('⏸ Timer frozen for non-current player', { currentPlayer, myUsername: loggedInUser.username, waitingForPlayers, cont });
       setCont(timeturn);
-      return; 
+      return;
     }
 
+    console.log('▶️ Starting timer interval', { currentPlayer, myUsername: loggedInUser.username, waitingForPlayers });
     const time = setInterval(() => {
       setCont((prevCont) => {
         if (prevCont <= 1) {
-          // El tiempo se ha acabado -> Forzamos cambio de turno
           clearInterval(time);
-          handleTurnTimeOut(); 
+          handleTurnTimeOut();
           return 0;
         }
         return prevCont - 1;
       });
     }, 1000);
 
-    return () => clearInterval(time);
-  }, [currentPlayer, loggedInUser.username, playerOrder, roundEnded]);
+    return () => {
+      clearInterval(time);
+      console.log('⏹ Clearing timer interval', { currentPlayer, myUsername: loggedInUser.username });
+    };
+  }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator, waitingForPlayers]);
 
   useEffect(() => {
     if (roundEnded) {
@@ -1787,31 +2293,60 @@ const activateCollapseMode = (card, cardIndex) => {
   }, [roundEnded]);
 
   useEffect(() => {
-    console.log('🔍 useEffect playerCardsCount init - activePlayers:', activePlayers.length, 'round?.id:', round?.id, 'hasPatchedInitialLeftCards:', hasPatchedInitialLeftCards.current);
-    if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
-      const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
-      const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
-      setDeckCount(initialDeck);
-      setCardPorPlayer(cardsPerPlayer);
-      const initialCounts = {};
-      activePlayers.forEach(p => {
-        if (!p) return; 
-        const name = p.username || p;
-        if (name) {
-          initialCounts[name] = cardsPerPlayer;
+    const initializeLeftCards = async () => {
+      if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
+        const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+        
+        // Hacer fetch fresco del round desde el backend
+        console.log('🃏 Fetching fresh round data for round:', round.id);
+        const freshRound = await getRoundById(round.id);
+        const backendLeftCards = freshRound?.leftCards;
+        const backendTurn = freshRound?.turn;
+        
+        console.log('🃏 Backend Round Data:', { backendLeftCards, backendTurn });
+
+        if (backendLeftCards !== undefined && backendLeftCards !== null && backendLeftCards >= 0) {
+            console.log('🃏 Using backend leftCards:', backendLeftCards);
+            
+            const expectedInitialDeck = 70 - (activePlayers.length * calculateCardsPerPlayer(activePlayers.length));
+            const isFirstTurn = backendTurn === 0 || backendTurn === null || backendTurn === undefined;
+
+            if (isFirstTurn && backendLeftCards !== expectedInitialDeck) {
+                 console.warn(`🃏 Initial deck mismatch! Backend: ${backendLeftCards}, Expected: ${expectedInitialDeck}. Auto-correcting...`);
+                 setDeckCount(expectedInitialDeck);
+                 patchRound(round.id, { leftCards: expectedInitialDeck });
+            } else {
+                 setDeckCount(backendLeftCards);
+            }
+        } else {
+             // Fallback only if backend data is missing
+             console.log("🃏 calculating initial deck locally")
+             const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
+             const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
+             setDeckCount(initialDeck);
+             patchRound(round.id, { leftCards: initialDeck });
         }
-      });
-      console.log('📦 Inicializando playerCardsCount:', initialCounts);
-      setPlayerCardsCount(initialCounts);
-      // Hacer patch al round con el leftCards calculado para sincronizar con backend
-      hasPatchedInitialLeftCards.current = true;
-      patchRound(round.id, { leftCards: initialDeck });
-      console.log(`📦 Initial leftCards patched to round: ${initialDeck} (70 - ${activePlayers.length} players * ${cardsPerPlayer} cards)`);
-    }
+
+        // ... rest of the logic
+        const initialCounts = {};
+        activePlayers.forEach(p => {
+          if (!p) return; 
+          const name = p.username || p;
+          if (name) {
+             // We don't have per-player card counts from backend round yet? 
+             // We'll trust the WebSocket updates for specific counts, 
+             // or initialize securely if needed. For now, rely on deckMessage.
+            initialCounts[name] = cardsPerPlayer;
+          }
+        });
+        setPlayerCardsCount(initialCounts);
+        hasPatchedInitialLeftCards.current = true;
+      }
+    };
+    
+    initializeLeftCards();
   }, [activePlayers, round?.id]);
 
-  // useEffect utilizado para depurar y ver que los Squares se están cargando bien
-  // /api/v1/squares
   useEffect(() => {
   const fetchSquares = async () => {
     try {
@@ -1827,7 +2362,7 @@ const activateCollapseMode = (card, cardIndex) => {
         const response = await squaresResponse.json();
         console.log("Squares:", response);
       } else {
-        toast.error("Error al intentar obtener los Squares");
+        toast.error("Error trying to fetch Squares");
       }
     } catch (error) {
       console.error( error);
@@ -1837,8 +2372,6 @@ const activateCollapseMode = (card, cardIndex) => {
 
   }, []);
 
-  
-  //asociar el board con los squares usando getBoard para asegurar busy
   useEffect(() => {
     if (!round || !round.board || !squaresById) return;
 
@@ -1851,17 +2384,15 @@ const activateCollapseMode = (card, cardIndex) => {
       
       if (Array.isArray(round.board.busy) && round.board.busy.length > 0) {
         busyIds = round.board.busy;
-        // Necesitamos obtener el board completo para leer objectiveCardsOrder
         boardData = await getBoard(boardId);
       } else {
         boardData = await getBoard(boardId);
         busyIds = (boardData?.busy || []).map(sq => sq.id ?? sq);
       }
 
-      // Leer el orden de las cartas objetivo del servidor
       if (boardData?.objectiveCardsOrder) {
         const order = boardData.objectiveCardsOrder.split(',');
-        console.log('🎲 BOARD DEBUG - objectiveCardsOrder from server:', order);
+        console.log('- BOARD DEBUG - objectiveCardsOrder from server:', order);
         
         const mapping = {
           '[2][9]': order[0],
@@ -1870,7 +2401,7 @@ const activateCollapseMode = (card, cardIndex) => {
         };
         
         setObjectiveCards(mapping);
-        console.log('🃏 OBJECTIVE CARDS - Final mapping:', mapping);
+        console.log('- OBJECTIVE CARDS - Final mapping:', mapping);
       }
 
       const baseBoard = Array.from({ length: BOARD_ROWS }, () =>
@@ -1892,15 +2423,13 @@ const activateCollapseMode = (card, cardIndex) => {
             const existing = baseBoard[row][col];
             const isSpecial = existing && (existing.type === 'start' || existing.type === 'objective');
             if (isSpecial) {
-              return; //Las cartas objetivo y de inicio no se sobreescriben
+              return; 
             }
 
             const cardFromBackend = sq.card;
             if (!cardFromBackend) {
-              return; // Se deja la celda como null si no hay carta,
-            }
-            
-            // Buscar la carta completa en ListCards para obtener todas las propiedades
+              return}
+      
             const cardId = typeof cardFromBackend === 'number' ? cardFromBackend : cardFromBackend?.id;
             let fullCard = cardFromBackend;
             
@@ -1909,7 +2438,7 @@ const activateCollapseMode = (card, cardIndex) => {
               if (foundCard) {
                 fullCard = {
                   ...foundCard,
-                  ...cardFromBackend, // Mantener datos adicionales del backend (rotacion, etc)
+                  ...cardFromBackend, 
                   arriba: foundCard.arriba,
                   abajo: foundCard.abajo,
                   izquierda: foundCard.izquierda,
@@ -1928,7 +2457,6 @@ const activateCollapseMode = (card, cardIndex) => {
               type: sq.type || fullCard?.type || (fullCard ? 'tunnel' : undefined),
               image: fullCard?.image,
               rotacion: fullCard?.rotacion ?? sq.rotacion,
-              // Copiar explícitamente las propiedades de conexión
               arriba: fullCard?.arriba,
               abajo: fullCard?.abajo,
               izquierda: fullCard?.izquierda,
@@ -1938,31 +2466,54 @@ const activateCollapseMode = (card, cardIndex) => {
           }
         })
       );
-
+      
+      // Restaurar cartas objetivo reveladas desde sessionStorage
+      const savedKey = `revealedGoals_${round.id}`;
+      const saved = sessionStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const revealedGoals = JSON.parse(saved);
+          console.log('🔄 Restoring revealed goals from sessionStorage:', revealedGoals);
+          
+          Object.entries(revealedGoals).forEach(([posKey, cardType]) => {
+            // Parsear la clave de posición "[row][col]" 
+            const match = posKey.match(/\[(\d+)\]\[(\d+)\]/);
+            if (match) {
+              const row = parseInt(match[1], 10);
+              const col = parseInt(match[2], 10);
+              if (baseBoard[row] && baseBoard[row][col]) {
+                baseBoard[row][col] = {
+                  ...baseBoard[row][col],
+                  revealed: true,
+                  cardType: cardType
+                };
+                console.log(`✅ Restored revealed goal at [${row}][${col}] = ${cardType}`);
+              }
+            }
+          });
+        } catch (e) {
+          console.error('Error restoring revealed goals:', e);
+        }
+      }
+      
       setBoardCells(baseBoard);
-      // No hacer patch del board.busy aquí - los squares ya están asociados al board desde el backend
     };
 
     loadBoard();
   }, [round?.id, ListCards]);
-
-  // ELIMINADO: Este useEffect estaba causando que se borraran los squares del board
-  // porque hacía PATCH con solo los squares ocupados, sobrescribiendo la lista completa
 
   useEffect(() => {
   const fetchChatMessages = async () => {
     const chatId = chat?.id ?? chat ?? game?.chat?.id ?? game?.chatId;
     
     if (!chatId) {
-      return;
-    }
+      return}
 
     try {
       const messages = await getmessagebychatId(chatId);
       
       if (Array.isArray(messages)) {
         const formattedMessages = messages.map(msg => {
-          // Extraer username de diferentes estructuras posibles
           let author = 'Unknown';
           
           if (msg.activePlayer?.player?.user?.username) {
@@ -1988,13 +2539,8 @@ const activateCollapseMode = (card, cardIndex) => {
     }
   };
 
-  // Fetch inicial
   fetchChatMessages();
-
-  // Polling cada 1 segundo
   const pollInterval = setInterval(fetchChatMessages, 1000);
-
-  // Cleanup al desmontar
   return () => clearInterval(pollInterval);
 }, [chat, game]); 
 
@@ -2005,20 +2551,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
   return (
     <div className="board-container">
-      {showRoleNotification && myRole && (
-        <div className="role-notification-overlay">
-          <div className="role-notification-card">
-            <h2 className="role-notification-title">YOUR ROLE:</h2>
-            <img 
-              src={myRole.roleImg} 
-              alt={myRole.roleName} 
-              className="role-notification-image"
-            />
-            <p className="role-notification-name">{myRole.roleName}</p>
-          </div>
-        </div>)}
 
-      {/* Panel de solicitudes de espectador (solo para creador) */}
       {isCreator && spectatorRequests.length > 0 && (
         <SpectatorRequestsInGame
           spectatorRequests={spectatorRequests}
@@ -2027,7 +2560,6 @@ const activateCollapseMode = (card, cardIndex) => {
         />
       )}
 
-      {/* Modal de fin de ronda */}
       {roundEndData && !gameEndData && (
         <RoundEndModal
           winnerTeam={roundEndData.winnerTeam}
@@ -2038,8 +2570,7 @@ const activateCollapseMode = (card, cardIndex) => {
           roundNumber={round.roundNumber}
         />
       )}
-
-      {/* Modal de fin de partida */}
+      
       {gameEndData && (
         <GameEnd
           playerRankings={gameEndData.playerRankings}
@@ -2074,10 +2605,11 @@ const activateCollapseMode = (card, cardIndex) => {
         deck={deck}
       />
       
-      <SpectatorIndicator isSpectator={isSpectator} />
+      <SpectatorIndicator isSpectator={isSpectator} onExit={handleExitSpectatorMode} />
 
       <PlayerRole 
         playerRol={playerRol} 
+        activePlayers={activePlayers}
         loggedInUser={loggedInUser} 
         isSpectator={isSpectator} 
       />
@@ -2091,6 +2623,7 @@ const activateCollapseMode = (card, cardIndex) => {
         isSpectator={isSpectator}
         isCreator={isCreator}
         handleForceEndRound={handleForceEndRound}
+        isMyTurn={loggedInUser?.username === currentPlayer}
       />
 
       <GameBoard

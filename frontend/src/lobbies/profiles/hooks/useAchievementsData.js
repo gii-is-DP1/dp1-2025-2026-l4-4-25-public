@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import tokenService from '../../../services/token.service';
 
-/**
- * Custom hook para manejar datos de achievements y perfil
- */
 const useAchievementsData = () => {
   const [achievements, setAchievements] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -13,14 +10,11 @@ const useAchievementsData = () => {
 
   const jwt = tokenService.getLocalAccessToken();
 
-  // Fetch del perfil del usuario (Player para obtener achievements)
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const user = tokenService.getUser();
         if (!user?.username) throw new Error("Username not found");
-
-        // Usar el endpoint de players para obtener accquiredAchievements
         const response = await fetch(`/api/v1/players/byUsername?username=${user.username}`, {
           method: "GET",
           headers: {
@@ -32,7 +26,6 @@ const useAchievementsData = () => {
         if (!response.ok) throw new Error("Could not fetch profile");
 
         const data = await response.json();
-      //  console.log("Player profile data:", data);
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -44,7 +37,6 @@ const useAchievementsData = () => {
     fetchProfile();
   }, [jwt]);
 
-  // Verificar si el usuario es admin
   useEffect(() => {
     try {
       const payload = JSON.parse(atob(jwt.split('.')[1]));
@@ -55,15 +47,12 @@ const useAchievementsData = () => {
     }
   }, [jwt]);
 
-  // Fetch de los achievements y el perfil del jugador
   useEffect(() => {
     const fetchAchievements = async () => {
       if (!profile) return;
       
       try {
         setLoading(true);
-        
-        // Obtener todos los logros existentes
         const allAchievementsResponse = await fetch('/api/v1/achievements', {
           headers: { Authorization: `Bearer ${jwt}` },
         });
@@ -71,20 +60,14 @@ const useAchievementsData = () => {
         if (!allAchievementsResponse.ok) throw new Error("Failed to fetch achievements");
         
         const allAchievements = await allAchievementsResponse.json();
-        
-        // Obtener los logros obtenidos por el jugador
         const playerAchievements = profile.accquiredAchievements || [];
         const playerAchievementIds = playerAchievements.map(ach => ach.id);
         
-       // console.log("Todos los logros:", allAchievements);
-       // console.log("Logros del jugador:", playerAchievements);
-       // console.log("IDs de logros del jugador:", playerAchievementIds);
+        console.log("All achievements:", allAchievements);
+        console.log("Player achievements:", playerAchievements);
+        console.log("Player achievement IDs:", playerAchievementIds);
         
-        // Función para obtener el valor actual según la métrica
         const getCurrentValue = (metric) => {
-        //  console.log("Evaluating metric:", metric);
-         // console.log("Profile data:", profile);
-          
           let value;
           switch (metric) {
             case 'GAMES_PLAYED':
@@ -93,7 +76,7 @@ const useAchievementsData = () => {
             case 'VICTORIES':
               value = profile?.wonGames ?? 0;
               break;
-            case 'BUILDED_PATHS':
+            case 'BUILT_PATHS':
               value = profile?.builtPaths ?? 0;
               break;
             case 'DESTROYED_PATHS':
@@ -112,15 +95,14 @@ const useAchievementsData = () => {
               value = 0;
           }
           
-        //  console.log(`Metric ${metric} has value:`, value);
+        console.log(`Metric ${metric} has value:`, value);
           return value;
         };
 
-        // Marcar cada logro como obtenido o bloqueado y agregar el progreso
         const achievementsWithStatus = allAchievements.map(ach => {
           const currentValue = getCurrentValue(ach.metric);
           const progress = `${currentValue}/${ach.threshold || 0}`;
-        //  console.log(`Achievement ${ach.tittle}: ${progress}`);
+          console.log(`Achievement ${ach.tittle}: ${progress}`);
           
           return {
             ...ach,
@@ -130,14 +112,13 @@ const useAchievementsData = () => {
           };
         });
         
-        // Ordenar: primero los obtenidos, luego los bloqueados
         achievementsWithStatus.sort((a, b) => {
           if (a.unlocked && !b.unlocked) return -1;
           if (!a.unlocked && b.unlocked) return 1;
           return 0;
         });
         
-        //console.log("Logros con estado: ", achievementsWithStatus);
+        console.log("Achievements with status: ", achievementsWithStatus);
         setAchievements(achievementsWithStatus);
         setError(null);
       } catch (error) {

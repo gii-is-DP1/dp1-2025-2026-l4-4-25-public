@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, matchPath, useLocation } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { ErrorBoundary } from "react-error-boundary";
 import AppNavbar from "./AppNavbar";
@@ -28,18 +28,54 @@ import Stats from "./lobbies/profiles/Stats";
 import GameInvitationListener from "./components/GameInvitationListener";
 import Ranking from "./lobbies/ranking/Ranking";
 import ReadMe from "./lobbies/ReadMe";
+import BackgroundMusic from "./components/BackgroundMusic";
+import SaboteurCursor from "./components/SaboteurCursor";
+
+function StrictInGameRedirect({ jwt, children }) {
+  const location = useLocation();
+
+  if (!jwt) {
+    return children;
+  }
+
+  let savedGameData = null;
+  try {
+    const raw = sessionStorage.getItem('savedGameData');
+    savedGameData = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    savedGameData = null;
+  }
+
+  const activeBoardId = savedGameData?.round?.board?.id ?? savedGameData?.round?.board;
+
+  if (!activeBoardId) {
+    return children;
+  }
+
+  const boardMatch = matchPath('/board/:boardId', location.pathname);
+  if (boardMatch) {
+    const currentBoardId = boardMatch.params?.boardId;
+    if (currentBoardId && String(currentBoardId) !== String(activeBoardId)) {
+      return <Navigate to={`/board/${activeBoardId}`} replace />;
+    }
+    return children;
+  }
+
+  return <Navigate to={`/board/${activeBoardId}`} replace />;
+}
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
     <div role="alert">
-      <p>Algo fue mal:</p>
+      <p>Something went wrong:</p>
       <pre>{error.message}</pre>
-      <button onClick={resetErrorBoundary}>Intentar de nuevo</button>
+      <button onClick={resetErrorBoundary}>Try Again</button>
     </div>
   );
 }
 
 function App() {
+  const location = useLocation();
   const jwt = tokenService.getLocalAccessToken();
   let roles = []
   if (jwt) {
@@ -49,6 +85,7 @@ function App() {
   function getRolesFromJWT(jwt) {
     return jwt_decode(jwt).authorities;
   }
+
 
   let adminRoutes = <></>;
   let ownerRoutes = <></>;
@@ -91,7 +128,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/CreateGame/:id" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
         <Route path="/CreateGame" element={<PrivateRoute><CreateGame /></PrivateRoute>} />
-        <Route path="/board/:id" element={<PrivateRoute><Board/></PrivateRoute>} />
+        <Route path="/board/:boardId" element={<PrivateRoute><Board/></PrivateRoute>} />
         <Route path="/ListGames" element={<PrivateRoute><ListGames /></PrivateRoute>} />
         <Route path="/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
       </>
@@ -101,8 +138,11 @@ function App() {
   return (
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
+        <SaboteurCursor />
+        
         <AppNavbar />
         {jwt && <GameInvitationListener />}
+        <BackgroundMusic />
         <ToastContainer 
           position="top-right" 
           autoClose={2500} 
@@ -115,15 +155,17 @@ function App() {
           pauseOnHover={false}
           limit={3}
         />
-        <Routes>
-          <Route path="/" exact={true} element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          {userRoutes}
-          {adminRoutes}
-          {ownerRoutes}
-          {vetRoutes}
-        </Routes>
+        <StrictInGameRedirect jwt={jwt}>
+          <Routes>
+            <Route path="/" exact={true} element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            {userRoutes}
+            {adminRoutes}
+            {ownerRoutes}
+            {vetRoutes}
+          </Routes>
+        </StrictInGameRedirect>
       </ErrorBoundary>
     </div>
   );

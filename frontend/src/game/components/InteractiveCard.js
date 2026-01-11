@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../utils/cardUtils';
 
 // Función para verificar si es una carta de reparación doble
@@ -44,15 +44,40 @@ export default function InteractiveCard({
   onToggleSelect,
   rotation = 0,
   onToggleRotation,
-  allCards = [], // Array de todas las cartas disponibles para buscar la pareja rotada
-  onCardReplaced = null // Callback para actualizar el deck cuando se usa una carta rotada
+  allCards = [],
+  onCardReplaced = null 
 }) {
   const [showPlayerMenu, setShowPlayerMenu] = useState(false);
   const [showObjectiveMenu, setShowObjectiveMenu] = useState(false);
   const [showToolMenu, setShowToolMenu] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
-  // LAS CARTAS DE TUNELES SON LAS UNICAS Q SE ARRATRAN
+
+  useEffect(() => {
+    if (!isMyTurn) {
+      setShowPlayerMenu(false);
+      setShowObjectiveMenu(false);
+      setShowToolMenu(false);
+      setSelectedPlayer(null);
+    }
+  }, [isMyTurn]);
+
+  useEffect(() => {
+    if (!isSelected) {
+      setShowPlayerMenu(false);
+      setShowObjectiveMenu(false);
+      setShowToolMenu(false);
+      setSelectedPlayer(null);
+    }
+  }, [isSelected]);
+
+  useEffect(() => {
+    setShowPlayerMenu(false);
+    setShowObjectiveMenu(false);
+    setShowToolMenu(false);
+    setSelectedPlayer(null);
+  }, [card.id]);
+
   const handleDragStart = (e) => {
     if (isTunnelCard(card) && isMyTurn) {
       e.dataTransfer.effectAllowed = 'move';
@@ -112,7 +137,7 @@ export default function InteractiveCard({
       onMapCardUse(card, position, index);}
     setShowObjectiveMenu(false);};
 
-  const handleContextMenu = (e) => { // Para descartar las cartas (menu)
+  const handleContextMenu = (e) => { 
     e.preventDefault();
     if (isMyTurn && onToggleSelect) {
       onToggleSelect(index); }};
@@ -122,7 +147,6 @@ export default function InteractiveCard({
       e.preventDefault();
       onToggleSelect(index);}};
 
-  // LA ROTACION LO HACEMOS CON DOBLE CLIC (180º)
   const handleDoubleClick = (e) => {
     if (isTunnelCard(card) && isMyTurn && onToggleRotation) {
       e.preventDefault();

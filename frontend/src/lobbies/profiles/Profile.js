@@ -5,6 +5,24 @@ import { Link } from 'react-router-dom';
 import tokenService from '../../services/token.service.js';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 import useAchievementsData from './hooks/useAchievementsData.js';
+import getAchievementBadgeImage from '../../util/getAchievementBadgeImage.js';
+
+
+const metricToBadgeNumber = {
+    'BUILT_PATHS': 1,
+    'DESTROYED_PATHS': 2,
+    'TOOLS_DAMAGED': 3,
+    'GOLD_NUGGETS': 4,
+    'GAMES_PLAYED': 5,
+    'TOOLS_REPAIRED': 6,
+    'VICTORIES': 7
+};
+
+const getAchievementImage = (achievement) => {
+    if (achievement.badgeImage) return achievement.badgeImage;
+    const badgeNumber = metricToBadgeNumber[achievement.metric];
+    return getAchievementBadgeImage(badgeNumber);
+};
 
 
 const jwt = tokenService.getLocalAccessToken();
@@ -39,15 +57,14 @@ export default function Profile() {
                         Authorization: `Bearer ${jwt}`,
                     },
                 });
-                // Comprobar que la respuesta es válida
+                // 
                 if(!response.ok){
                     throw new Error("Could not fetch profile. User might not exist");
                 }
                 const data = await response.json();
                 setProfile(data);
                 console.log(data);
-                //setOriginalUsername(data.username);
-                //setOriginalPassword(data.password);
+
 
             } catch(error){
                 console.error("Error fetching profile:", error);
@@ -68,7 +85,6 @@ export default function Profile() {
             console.error(error);}}
     }, []);
 
-    // Si los datos aún no han llegado, muestra esto y no continúes.
     if (!profile) {
         return <div>Loading profile...</div>;
     }
@@ -136,7 +152,18 @@ export default function Profile() {
                                         key={ach.id} 
                                         className={`achievement-card ${ach.unlocked ? 'unlocked' : 'locked'}`}>
                                         <div className="achievement-icon">
-                                            {ach.unlocked?'🏆':'🔒'}
+                                            {ach.unlocked ? (
+                                                <img 
+                                                    src={getAchievementImage(ach)} 
+                                                    alt={ach.tittle}
+                                                    style={{ 
+                                                        width: '55px', 
+                                                        height: '55px',
+                                                        borderRadius: '50%',
+                                                        objectFit: 'cover'
+                                                    }}
+                                                />
+                                            ) : '🔒'}
                                         </div>
                                         <div className="achievement-details">
                                             <h4>{ach.tittle}</h4>
