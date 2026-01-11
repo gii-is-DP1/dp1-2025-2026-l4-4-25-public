@@ -459,6 +459,7 @@ export default function Board() {
   const hasPatchedBoardBusy = useRef(false);
   const hasPatchedInitialLeftCards = useRef(false);
   const lastLoggedTurn = useRef(null);
+  const lastSkippedTurn = useRef({ roundId: null, turnIndex: null });
   const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
   const lastObjectiveHideLog = useRef(0);
   const lastCollapseLog = useRef(0);
@@ -532,7 +533,6 @@ export default function Board() {
   const lastTurnToast = useRef({username: null, ts: 0}); 
   const lastTimeoutToastTs = useRef(0);
   const lastReceivedTurnKey = useRef({ key: null, ts: 0 });
-
 
   // Hook personalizado para cargar datos del juego
   const {
@@ -1006,6 +1006,7 @@ export default function Board() {
             lastLoggedTurn.current = nextUsername;
           }
 
+          // Si es MI turno - mostrar toast
           if (nextUsername === loggedInUser.username) {
             const now2 = Date.now(); 
             const last = lastTurnToast.current;
@@ -1013,6 +1014,7 @@ export default function Board() {
               toast.info("🎲 It's your turn! 🎲");
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             }
+            // El auto-skip se maneja en el useEffect separado que observa playerCardsCount
           }
         }
       }
@@ -1340,7 +1342,38 @@ const activateCollapseMode = (card, cardIndex) => {
     setCollapseMode({ active: false, card: null, cardIndex: null });
 
     const currentTurnIndex = round?.turn || 0; 
-    const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
+    let nextIndex = (currentTurnIndex + 1) % playerOrder.length;
+    
+    // Auto-skip jugadores sin cartas
+    let skippedPlayers = 0;
+    const maxSkips = playerOrder.length;
+    
+    while (skippedPlayers < maxSkips) {
+      const nextPlayer = playerOrder[nextIndex];
+      const nextPlayerCards = playerCardsCount[nextPlayer?.username];
+      
+      // Verificar si TODOS tienen 0 cartas
+      const allPlayersCards = playerOrder.map(p => playerCardsCount[p.username] || 0);
+      const totalCards = allPlayersCards.reduce((sum, count) => sum + count, 0);
+      
+      if (totalCards === 0) {
+        // Todos sin cartas, dejar que termine la ronda naturalmente
+        break;
+      }
+      
+      if (nextPlayerCards === 0) {
+        // Este jugador no tiene cartas, saltar al siguiente
+        const playerIndex = nextIndex;
+        const playerClass = `player${playerIndex + 1}`;
+        addLog(`<span class="${playerClass}">${nextPlayer.username}</span> has no cards, skipping turn`, "info");
+        
+        nextIndex = (nextIndex + 1) % playerOrder.length;
+        skippedPlayers++;
+      } else {
+        // Este jugador tiene cartas, usar este índice
+        break;
+      }
+    } 
 
     try{
       if(round && round.id){
