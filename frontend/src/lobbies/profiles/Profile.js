@@ -168,9 +168,11 @@ export default function Profile() {
                                         <div className="achievement-details">
                                             <h4>{ach.tittle}</h4>
                                             <p className="achievement-description">{ach.description}</p>
-                                            <div className="achievement-progress">
-                                                <span>{ach.progress}</span>
-                                            </div>
+                                            {!ach.unlocked && (
+                                                <div className="achievement-progress">
+                                                    <span>{ach.progress}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
