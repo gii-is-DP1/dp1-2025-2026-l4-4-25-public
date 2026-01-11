@@ -202,13 +202,16 @@ public class RoundRestController {
         RestPreconditions.checkNotNull(round, "Round", "ID", roundId);
 
         Integer gameId = round.getGame().getId();
-        int expectedPlayers = round.getGame().getMaxPlayers();
+        // Usar el número REAL de jugadores activos, no el máximo permitido
+        int expectedPlayers = round.getGame().getActivePlayers().size();
 
         // Añadir jugador al set de listos
         readyPlayersByRound.computeIfAbsent(roundId, k -> new HashSet<>()).add(username);
         Set<String> readyPlayers = readyPlayersByRound.get(roundId);
 
         log.info(">>> Player {} ready for round {}. Ready: {}/{}", username, roundId, readyPlayers.size(), expectedPlayers);
+        log.info(">>> Active players for game {}: {}", gameId, round.getGame().getActivePlayers());
+        log.info(">>> Ready players set for round {}: {}", roundId, readyPlayers);
 
         Map<String, Object> response = new HashMap<>();
         response.put("readyCount", readyPlayers.size());

@@ -54,7 +54,9 @@ const detectPageRefresh = () => {
   return false;
 };
 
-const isBrowserRefresh = detectPageRefresh();
+// Nota: la detección de "refresh"/"newRoundData" se realiza
+// dinámicamente dentro del efecto de inicialización para evitar
+// valores persistentes entre navegaciones sin recarga completa.
 
 const getSavedRoundData = () => {
   const savedData = sessionStorage.getItem('newRoundData');
@@ -123,9 +125,8 @@ export default function Board() {
     isSpectator: false
   };
 
-  // Detectar si es un refresh de página usando la Performance API del navegador
-  // Esto es 100% confiable: si el usuario presionó F5 o el botón de refresh
-  const isPageRefresh = isBrowserRefresh;
+  // El cálculo de si saltar la sincronización se hace en el efecto
+  // `initializeGame` para evitar valores stale entre navegaciones.
 
   // Estados principales
   const [isSpectator] = useState(initialState.isSpectator);
@@ -136,8 +137,9 @@ export default function Board() {
   const [message, setMessage] = useState([]);
 
   // Estado para sincronización de jugadores - esperar a que todos carguen
-  // Si es refresh de página, no esperamos (el jugador ya estaba en partida)
-  const [waitingForPlayers, setWaitingForPlayers] = useState(!isPageRefresh);
+  // Se inicializa en 'true' y el efecto `initializeGame` decidirá
+  // si debe saltarse la sincronización en ese momento.
+  const [waitingForPlayers, setWaitingForPlayers] = useState(true);
 
   const [newMessage, setNewMessage] = useState('');
   const [numRound, setNumRound] = useState(initialState.round?.roundNumber || '1');
@@ -199,18 +201,33 @@ export default function Board() {
       
     };
 
-    const verify = () => {
+    const verify = async () => {
       if (cancelled) return;
 
       const saved = readSavedGameData();
       const candidateGame = location?.state?.game || game || saved?.game;
       const candidateRound = location?.state?.round || round || saved?.round;
 
+      // If we detect a transition (newRoundData, saved game, or navigation state),
+      // give the client a longer window to resolve races before denying access.
+      const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state);
+      const localMaxAttempts = transitionHint ? 150 : maxAttempts; // ~30s when transitionHint
+      const localDelayMs = delayMs;
+
       // Wait until we have enough info to validate.
       if (!candidateGame || !candidateRound) {
         attempts += 1;
-        if (attempts >= maxAttempts) {
-          // If we still couldn't resolve data, fail closed.
+        if (attempts >= localMaxAttempts) {
+          // If we still couldn't resolve data, but there's a pending newRoundData
+          // or location.state (fresh navigation), keep waiting a bit longer instead
+          // of denying immediately. This avoids races during round transitions.
+          if (sessionStorage.getItem('newRoundData') || location?.state) {
+            console.log('🔁 Delaying deny: newRoundData or location.state present, continuing verify');
+            attempts = 0; // reset attempts and keep waiting
+            setTimeout(verify, delayMs);
+            return;
+          }
+          // If no hint of a transition, fail closed.
           deny();
           return;
         }
@@ -226,7 +243,15 @@ export default function Board() {
       // If activePlayers isn't ready yet, retry briefly (race during game start).
       if (allowedUsernames.size === 0) {
         attempts += 1;
-        if (attempts >= maxAttempts) {
+        if (attempts >= localMaxAttempts) {
+          // If activePlayers isn't populated yet but we have a newRoundData or
+          // came here via location.state, prefer to keep waiting instead of denying.
+          if (sessionStorage.getItem('newRoundData') || location?.state) {
+            console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state present');
+            attempts = 0;
+            setTimeout(verify, delayMs);
+            return;
+          }
           deny();
           return;
         }
@@ -235,6 +260,37 @@ export default function Board() {
       }
 
       if (!allowedUsernames.has(String(loggedInUser.username))) {
+        // Possible race: client-side game data is stale. Verify against server before denying.
+        const gameId = candidateGame?.id;
+        if (gameId) {
+          try {
+            const res = await fetch(`/api/v1/games/${gameId}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+            });
+            if (res.ok) {
+              const freshGame = await res.json();
+              const freshAllowed = new Set([
+                ...(Array.isArray(freshGame.activePlayers) ? freshGame.activePlayers : []),
+                ...(Array.isArray(freshGame.watchers) ? freshGame.watchers : [])
+              ].map(String));
+              if (freshAllowed.has(String(loggedInUser.username))) {
+                console.log('✅ verify: membership confirmed by server, not denying access');
+                return; // allow
+              }
+            }
+          } catch (err) {
+            console.warn('Error fetching fresh game data during verify:', err);
+            // fallthrough to deny below if we cannot confirm
+          }
+        }
+        // If we cannot confirm membership on server, check if we're in a transition
+        // and allow a bit more time before final deny.
+        if (transitionHint && attempts < localMaxAttempts) {
+          console.log('🔁 verify: transition hinted, delaying final deny');
+          setTimeout(verify, localDelayMs);
+          return;
+        }
         deny();
         return;
       }
@@ -565,7 +621,8 @@ export default function Board() {
         break;
 
       case "ALL_PLAYERS_READY":
-        console.log('✅ Todos los jugadores están listos!');
+        console.log('✅ ALL_PLAYERS_READY WS payload:', gameMessage);
+        console.log('✅ Todos los jugadores están listos! - clearing wait state');
         setWaitingForPlayers(false);
         setIsLoading(false);
         break;
@@ -578,16 +635,18 @@ export default function Board() {
     const lastProcessedDeckTs = useRef(null);
 
     if (deckMessage && deckMessage._ts !== lastProcessedDeckTs.current) {
+      console.log('📦 deckMessage received:', deckMessage, 'previousPlayerCardsCount:', playerCardsCount);
       lastProcessedDeckTs.current = deckMessage._ts;
-      
+
       if (deckMessage.action === "DECK_COUNT") {
         const { username, leftCards } = deckMessage;
         setTimeout(() => {
+          console.log('📊 Applying DECK_COUNT update', { username, leftCards });
           setPlayerCardsCount(prev => ({
             ...prev,
             [username]: leftCards
           }));
-          
+
           if (leftCards === 0 && !playersOutOfCardsLogged.current.has(username)) {
             playersOutOfCardsLogged.current.add(username);
             addLog(`🃏 ${username} has run out of cards!`, 'warning');
@@ -1783,32 +1842,60 @@ const activateCollapseMode = (card, cardIndex) => {
           // Espectadores no esperan sincronización
           setWaitingForPlayers(false);
           setIsLoading(false);
-        } else if (isPageRefresh) {
-          // Si es refresh, el jugador ya estaba en partida - no esperamos sincronización
-          console.log('🔄 Page refresh detected - skipping player sync');
-          setWaitingForPlayers(false);
-          setIsLoading(false);
         } else {
-          // Notificar al servidor que este jugador está listo
-          updateLoadingStep(7); // Marcar que estamos esperando jugadores
-          try {
-            await fetch('/api/v1/rounds/playerReady', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${jwt}`,
-              },
-              body: JSON.stringify({
-                roundId: round?.id,
-                username: loggedInUser?.username
-              }),
-            });
-            console.log('📤 Notificado al servidor: jugador listo');
-          } catch (err) {
-            console.error('Error notificando playerReady:', err);
-            // Si falla, salir del loading de todas formas para no bloquear
+          // Recalcular condiciones en tiempo de ejecución para decidir si
+          // saltamos la sincronización de jugadores o no.
+          const isRefreshNow = detectPageRefresh();
+          const newRoundRaw = sessionStorage.getItem('newRoundData');
+          const savedGameRaw = sessionStorage.getItem('savedGameData');
+          const hasNewRoundSession = newRoundRaw !== null;
+          const hasSavedGameSession = savedGameRaw !== null;
+
+          const shouldSkipPlayerSyncLocal = hasNewRoundSession || (isRefreshNow && hasSavedGameSession);
+
+          console.log('🔎 Player sync decision:', {
+            isRefreshNow,
+            hasNewRoundSession,
+            hasSavedGameSession,
+            newRoundRawPreview: hasNewRoundSession ? (newRoundRaw ? newRoundRaw.substring(0, 300) : '<empty>') : null,
+            savedGameRawPreview: hasSavedGameSession ? (savedGameRaw ? savedGameRaw.substring(0, 300) : '<empty>') : null,
+            locationStatePresent: !!location?.state,
+            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId')
+          });
+
+          if (shouldSkipPlayerSyncLocal) {
+            console.log('🔄 Skipping player sync (refresh or round transition) - local decision', { isRefreshNow, hasNewRoundSession, hasSavedGameSession });
             setWaitingForPlayers(false);
             setIsLoading(false);
+          } else {
+            // Entrada fresca a una nueva partida - notificar al servidor que este jugador está listo
+            console.log('🎮 Fresh game entry - waiting for player sync');
+            updateLoadingStep(7); // Marcar que estamos esperando jugadores
+            try {
+              const res = await fetch('/api/v1/rounds/playerReady', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${jwt}`,
+                },
+                body: JSON.stringify({
+                  roundId: round?.id,
+                  username: loggedInUser?.username
+                }),
+              });
+              let bodyTxt = null;
+              try {
+                bodyTxt = await res.text();
+              } catch (e) {
+                bodyTxt = '<unreadable response body>';
+              }
+              console.log('📤 Notificado al servidor: jugador listo', { ok: res.ok, status: res.status, body: bodyTxt });
+            } catch (err) {
+              console.error('Error notificando playerReady:', err);
+              // Si falla, salir del loading de todas formas para no bloquear
+              setWaitingForPlayers(false);
+              setIsLoading(false);
+            }
           }
         }
       } catch (error) {
@@ -1900,7 +1987,18 @@ const activateCollapseMode = (card, cardIndex) => {
         pickaxe: player.pickaxeState ?? true
       };
     });
-    setPlayerTools(initialTools);
+    // Initialize tools only for usernames that don't have an entry yet.
+    // This avoids overwriting runtime updates coming from TOOLS_CHANGED WS messages
+    // while still ensuring new players get default tool states.
+    setPlayerTools(prev => {
+      const next = { ...(prev || {}) };
+      Object.keys(initialTools).forEach(username => {
+        if (!(username in next)) {
+          next[username] = initialTools[username];
+        }
+      });
+      return next;
+    });
     let cancelled = false;
 
     const getOrderedUsernames = () => {
@@ -2165,10 +2263,12 @@ const activateCollapseMode = (card, cardIndex) => {
     // Only decrement timer if it's the current player's turn
     if (!isMyTurn) {
       // For other players, keep the timer frozen at timeturn
+      console.log('⏸ Timer frozen for non-current player', { currentPlayer, myUsername: loggedInUser.username, waitingForPlayers, cont });
       setCont(timeturn);
       return;
     }
 
+    console.log('▶️ Starting timer interval', { currentPlayer, myUsername: loggedInUser.username, waitingForPlayers });
     const time = setInterval(() => {
       setCont((prevCont) => {
         if (prevCont <= 1) {
@@ -2180,7 +2280,10 @@ const activateCollapseMode = (card, cardIndex) => {
       });
     }, 1000);
 
-    return () => clearInterval(time);
+    return () => {
+      clearInterval(time);
+      console.log('⏹ Clearing timer interval', { currentPlayer, myUsername: loggedInUser.username });
+    };
   }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator, waitingForPlayers]);
 
   useEffect(() => {
