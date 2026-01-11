@@ -1936,16 +1936,45 @@ const activateCollapseMode = (card, cardIndex) => {
           const hasNewRoundSession = newRoundRaw !== null;
           const hasSavedGameSession = savedGameRaw !== null;
 
-          const shouldSkipPlayerSyncLocal = hasNewRoundSession || (isRefreshNow && hasSavedGameSession);
+          // Only skip player sync when the sessionStorage entries actually
+          // correspond to this board/round. Otherwise stale data from previous
+          // games can cause asymmetry between browsers.
+          let shouldSkipPlayerSyncLocal = false;
+          let parsedNewRound = null;
+          let parsedSavedGame = null;
+          if (hasNewRoundSession) {
+            try {
+              parsedNewRound = JSON.parse(newRoundRaw);
+              const newRoundBoardId = parsedNewRound?.round?.board?.id ?? parsedNewRound?.round?.board;
+              if (newRoundBoardId && String(newRoundBoardId) === String(urlBoardId)) {
+                shouldSkipPlayerSyncLocal = true;
+              }
+            } catch (e) {
+              console.warn('Could not parse newRoundData:', e);
+            }
+          }
+
+          if (!shouldSkipPlayerSyncLocal && isRefreshNow && hasSavedGameSession) {
+            try {
+              parsedSavedGame = JSON.parse(savedGameRaw);
+              const savedBoardId = parsedSavedGame?.round?.board?.id ?? parsedSavedGame?.round?.board;
+              if (savedBoardId && String(savedBoardId) === String(urlBoardId)) {
+                shouldSkipPlayerSyncLocal = true;
+              }
+            } catch (e) {
+              console.warn('Could not parse savedGameData:', e);
+            }
+          }
 
           console.log('🔎 Player sync decision:', {
             isRefreshNow,
             hasNewRoundSession,
             hasSavedGameSession,
-            newRoundRawPreview: hasNewRoundSession ? (newRoundRaw ? newRoundRaw.substring(0, 300) : '<empty>') : null,
-            savedGameRawPreview: hasSavedGameSession ? (savedGameRaw ? savedGameRaw.substring(0, 300) : '<empty>') : null,
+            parsedNewRoundPreview: parsedNewRound ? (JSON.stringify(parsedNewRound).substring(0,300)) : null,
+            parsedSavedGamePreview: parsedSavedGame ? (JSON.stringify(parsedSavedGame).substring(0,300)) : null,
             locationStatePresent: !!location?.state,
-            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId')
+            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId'),
+            shouldSkipPlayerSyncLocal
           });
 
           if (shouldSkipPlayerSyncLocal) {
