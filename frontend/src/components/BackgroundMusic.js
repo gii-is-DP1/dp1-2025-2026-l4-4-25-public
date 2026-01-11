@@ -14,6 +14,7 @@ const BackgroundMusic = () => {
   const playerRef = useRef(null);
   const lastPlayableVideoIdRef = useRef(DEFAULT_VIDEO_ID);
   const pendingVideoIdRef = useRef(null);
+  const loopVideoIdRef = useRef(DEFAULT_VIDEO_ID);
 
   useEffect(() => {
     const initPlayer = () => {
@@ -34,6 +35,7 @@ const BackgroundMusic = () => {
           onReady: (event) => {
             playerRef.current = event.target;
             lastPlayableVideoIdRef.current = DEFAULT_VIDEO_ID;
+            loopVideoIdRef.current = DEFAULT_VIDEO_ID;
             event.target.setVolume(30);
             event.target.playVideo();
             setIsPlaying(true);
@@ -44,7 +46,14 @@ const BackgroundMusic = () => {
               setIsPlaying(true);
               if (pendingVideoIdRef.current) {
                 lastPlayableVideoIdRef.current = pendingVideoIdRef.current;
+                loopVideoIdRef.current = pendingVideoIdRef.current;
                 pendingVideoIdRef.current = null;
+              }
+            } else if (event.data === window.YT.PlayerState.ENDED) {
+              const loopId = loopVideoIdRef.current;
+              if (loopId && event?.target?.seekTo && event?.target?.playVideo) {
+                event.target.seekTo(0, true);
+                event.target.playVideo();
               }
             } else if (event.data === window.YT.PlayerState.PAUSED) {
               setIsPlaying(false);
@@ -69,6 +78,7 @@ const BackgroundMusic = () => {
               try {
                 playerRef.current.loadVideoById({ videoId: fallbackId, startSeconds: 0 });
                 playerRef.current.playVideo();
+                loopVideoIdRef.current = fallbackId;
               } catch (e) {
                 // ignore
               }
@@ -132,7 +142,6 @@ const BackgroundMusic = () => {
 
     pendingVideoIdRef.current = videoId;
     player.loadVideoById({ videoId, startSeconds: 0 });
-    player.setLoop(true);
     player.playVideo();
     setIsPlaying(true);
   };
