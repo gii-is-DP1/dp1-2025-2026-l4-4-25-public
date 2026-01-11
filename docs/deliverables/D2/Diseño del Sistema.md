@@ -3,7 +3,7 @@
 **Curso académico:** 2025/2026 
 **Grupo/Equipo:** L4-4  
 **Nombre del proyecto:** Saboteur 
-**Versión:** v3.2 *(24-11-2025)*
+**Versión:** v4.1 *(12-01-2026)* 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** 
 
@@ -206,7 +206,8 @@ Al pulsar el botón **[JoinGameButton]** en el lobby, se navegará a la pantalla
           $\color{purple}{\textsf{- Información de la partida :}}$ Información acerca del creador, privacidad, jugadores, etc.
           $\color{purple}{\textsf{- Botón JOIN :}}$ Botón dentro del componente para unirse a una partida (si es pública)
           $\color{purple}{\textsf{- Botón REQUEST JOIN :}}$ Botón dentro del componente para solicitar unirse a una partida al creador (si es privada)
-          $\color{purple}{\textsf{- Botón SPECTATE :}}$ Botón dentro del componente para espectear una partida (si ya ha empezado)
+          $\color{purple}{\textsf{- Botón SPECTATE :}}$ Botón dentro del componente para espectear una partida (si ya ha empezado y todos son amigos del usuario)
+          $\color{purple}{\textsf{- Botón REQUEST SPECTATE :}}$ Botón dentro del componente para solicitar espectear una partida (si ya ha empezado y no todos son amigos del usuario)
           $\color{purple}{\textsf{- Botón GAME IS FULL :}}$ Botón dentro del componente que nos indica que la partida no está comenzada pero no se pueden unir más jugadores (máximo de jugadores alcanzados)
       - $\color{red}{\textsf{[ListGamesHeader] – Componente para refrescar la pantalla del listado de partidas y para volver al lobby}}$    
       - $\color{orange}{\textsf{[FiltersPanel] – Panel de filtros del listado de partidas.}}$
