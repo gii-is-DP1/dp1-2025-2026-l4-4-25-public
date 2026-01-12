@@ -66,7 +66,10 @@ const getSavedRoundData = () => {
     if (nextRoundId !== undefined && nextRoundId !== null) {
       sessionStorage.setItem('forceRolesReassignmentRoundId', String(nextRoundId));
     }
-    sessionStorage.removeItem('newRoundData');
+    // IMPORTANT: do not remove `newRoundData` here. Keep it available so
+    // initialization/verification logic can detect that a round transition
+    // is in progress. It will be cleared by `verify()` once membership is
+    // confirmed to avoid races that send players to the lobby incorrectly.
     return parsed;
   }
   // Try to recover from general session storage (reload fix)
@@ -210,7 +213,9 @@ export default function Board() {
 
       // If we detect a transition (newRoundData, saved game, or navigation state),
       // give the client a longer window to resolve races before denying access.
-      const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state);
+      // Also consider `savedRoundData` (loaded from sessionStorage during init)
+      // as a transition hint because `newRoundData` is consumed during init.
+      const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state || savedRoundData);
       const localMaxAttempts = transitionHint ? 150 : maxAttempts; // ~30s when transitionHint
       const localDelayMs = delayMs;
 
@@ -221,7 +226,7 @@ export default function Board() {
           // If we still couldn't resolve data, but there's a pending newRoundData
           // or location.state (fresh navigation), keep waiting a bit longer instead
           // of denying immediately. This avoids races during round transitions.
-          if (sessionStorage.getItem('newRoundData') || location?.state) {
+          if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
             console.log('🔁 Delaying deny: newRoundData or location.state present, continuing verify');
             attempts = 0; // reset attempts and keep waiting
             setTimeout(verify, delayMs);
@@ -246,8 +251,8 @@ export default function Board() {
         if (attempts >= localMaxAttempts) {
           // If activePlayers isn't populated yet but we have a newRoundData or
           // came here via location.state, prefer to keep waiting instead of denying.
-          if (sessionStorage.getItem('newRoundData') || location?.state) {
-            console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state present');
+          if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
+            console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state/savedRoundData present');
             attempts = 0;
             setTimeout(verify, delayMs);
             return;
@@ -293,6 +298,17 @@ export default function Board() {
         }
         deny();
         return;
+      }
+
+      // Membership confirmed client-side: clear the temporary newRoundData
+      // so subsequent checks don't lose the transition hint prematurely.
+      try {
+        if (sessionStorage.getItem('newRoundData')) {
+          sessionStorage.removeItem('newRoundData');
+          console.log('🧹 Cleared newRoundData after membership confirmation');
+        }
+      } catch (e) {
+        console.warn('Could not clear newRoundData from sessionStorage:', e);
       }
 
       const candidateBoardId = candidateRound?.board?.id ?? candidateRound?.board;
@@ -443,11 +459,14 @@ export default function Board() {
   const hasPatchedBoardBusy = useRef(false);
   const hasPatchedInitialLeftCards = useRef(false);
   const lastLoggedTurn = useRef(null);
+  const lastSkippedTurn = useRef({ roundId: null, turnIndex: null });
   const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
   const lastObjectiveHideLog = useRef(0);
   const lastCollapseLog = useRef(0);
   const seenPrivateMessages = useRef(new Set());
   const lastPublishedRoles = useRef([]);
+  const lastSyncedLogMessages = useRef([]);
+  const syncLogFromServerRef = useRef(null);
 
 
   const boardGridRef = useRef(null);
@@ -481,6 +500,7 @@ export default function Board() {
       playersOutOfCardsLogged.current.clear();
       hasPatchedInitialLeftCards.current = false;
       console.log('🔄 hasPatchedInitialLeftCards reset to false');
+      lastSyncedLogMessages.current = [];
       lastRoundId.current = round.id;
       
       // Cargar cartas reveladas desde sessionStorage para esta ronda
@@ -513,7 +533,6 @@ export default function Board() {
   const lastTurnToast = useRef({username: null, ts: 0}); 
   const lastTimeoutToastTs = useRef(0);
   const lastReceivedTurnKey = useRef({ key: null, ts: 0 });
-
 
   // Hook personalizado para cargar datos del juego
   const {
@@ -735,13 +754,12 @@ export default function Board() {
       
       const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
-      const sameAsLast =
-        lastPlacedLog.current &&
-        lastPlacedLog.current.row === row &&
-        lastPlacedLog.current.col === col &&
-        now - lastPlacedLog.current.ts < 1500;
-
+      /*
+      const sameAsLast = ... (Removed to ensure logging always fires)
       if (sameAsLast) return;
+      */
+      
+      // We update the ref but do not block execution
       lastPlacedLog.current = { player: actor, row, col, ts: now };
 
       setBoardCells(prev => {
@@ -761,7 +779,8 @@ export default function Board() {
         };
         return next;
       });
-      addLog(`<b>${actor}</b> placed a card at (${row}, ${col})`, "action");
+      // NO añadir log aquí - el jugador que colocó la carta ya lo hizo
+      // Este WebSocket solo sincroniza el estado visual del tablero
     }
 
     const handleWsCardDestroyed = ({ row, col, player }) => {
@@ -980,11 +999,14 @@ export default function Board() {
         
           setCont(timeturn);
 
-          if (lastLoggedTurn.current !== nextUsername) {
-            addLog(`Turn of <span class="${nextClass}">${nextUsername}</span>`, "turn");
+          // Solo el primer jugador en el orden añade el log de turno para evitar duplicados
+          const isFirstPlayer = playerOrder[0]?.username === loggedInUser.username;
+          if (lastLoggedTurn.current !== nextUsername && isFirstPlayer) {
+            await addLog(`Turn of <span class="${nextClass}">${nextUsername}</span>`, "turn");
             lastLoggedTurn.current = nextUsername;
           }
 
+          // Si es MI turno - mostrar toast
           if (nextUsername === loggedInUser.username) {
             const now2 = Date.now(); 
             const last = lastTurnToast.current;
@@ -992,6 +1014,7 @@ export default function Board() {
               toast.info("🎲 It's your turn! 🎲");
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             }
+            // El auto-skip se maneja en el useEffect separado que observa playerCardsCount
           }
         }
       }
@@ -1136,6 +1159,15 @@ const handleWsNewRound = (message) => {
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
       setCollapseMode({ active: false, card: null, cardIndex: null });
+      
+      // Añadir log de la acción antes de cambiar turno
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      await addColoredLog(
+        currentIndex,
+        currentPlayer,
+        `🃏 Placed a card at (${row}, ${col})`
+      );
+      
       toast.success(`Card placed in (${row}, ${col})! ${deckCount > 1 ? 'Drew new card.' : 'No more cards in deck.'}`);
 
       if (roundEndedRef.current === ROUND_STATE.ACTIVE) {
@@ -1174,25 +1206,25 @@ const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = nu
   }
 };
 
-  const handleMapCard = (card, objectivePosition, cardIndex) => {
+  const handleMapCard = async (card, objectivePosition, cardIndex) => {
     if (processingAction.current) return;
     processingAction.current = true;
     try {
       if (isSpectator) {
-        addPrivateLog("ℹ️ Spectators cannot use this", "warning");
+        await addPrivateLog("ℹ️ Spectators cannot use this", "warning");
         return;}
       setCont(timeturn);
 
       const objectiveCardType = objectiveCards[objectivePosition];
       setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); 
       toast.info(`🔍 Revealing objective... Look at the board!`);
+      
+      // Añadir log inmediatamente para todos los jugadores
+      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
+      await addColoredLog(currentIndex, currentPlayer, `🗺️ Used a map card to reveal objective at ${objectivePosition}`);
+      
       setTimeout(() => {
         setRevealedObjective(null);
-        const now = Date.now();
-        if (now - lastObjectiveHideLog.current > 2000) {
-          addPrivateLog('🔍 Objective card hidden again', 'info');
-          lastObjectiveHideLog.current = now;
-        }
       }, 5000);
 
       if (window.removeCardAndDraw) {
@@ -1201,8 +1233,6 @@ const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = nu
       setCollapseMode({ active: false, card: null, cardIndex: null });
       const newDeckCount = Math.max(0, deckCount - 1);
       setDeckCount(newDeckCount);
-      const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-      addColoredLog(currentIndex,currentPlayer,`🗺️ Used a map card to reveal an objective`);
       
       nextTurn({newDeckCount: newDeckCount});
     } finally {
@@ -1213,11 +1243,6 @@ const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = nu
 const activateCollapseMode = (card, cardIndex) => {
     setCollapseMode({ active: true, card, cardIndex });
     toast.info('💣Click on a tunnel card to destroy it');
-    const now = Date.now();
-    if (now - lastCollapseLog.current > 2000) {
-      addPrivateLog('💣Click on a tunnel card in the board to destroy it', 'info');
-      lastCollapseLog.current = now;
-    }
   };
 
   const handleCellClick = async (row, col) => {
@@ -1267,7 +1292,7 @@ const activateCollapseMode = (card, cardIndex) => {
     setDeckCount(newDeckCount);
 
     const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
-    addColoredLog(
+    await addColoredLog(
       currentIndex,
       playerOrder[currentIndex].username,
       `💣 Destroyed a tunnel card at [${row},${col}]. ${newDeckCount} cards left in the deck.`
@@ -1276,6 +1301,7 @@ const activateCollapseMode = (card, cardIndex) => {
     toast.success('Tunnel card destroyed!');
     setCollapseMode({ active: false, card: null, cardIndex: null });
     setDestroyingCell(null);
+    
     nextTurn({newDeckCount: newDeckCount});
   } finally {
     processingAction.current = false;
@@ -1289,14 +1315,17 @@ const activateCollapseMode = (card, cardIndex) => {
       delete window.activateCollapseMode;
     };
   }, []);
-  const addLog = (msg, type = "info") => {
-    appendAndPersistLog(msg, type);
+  const addLog = async (msg, type = "info") => {
+    await appendAndPersistLog(msg, type);
   };
-  const addPrivateLog = () => {};
+  const addPrivateLog = async (msg, type = "info") => {
+    // Los logs privados ahora también se sincronizan para consistencia
+    await appendAndPersistLog(msg, type);
+  };
 
-  const addColoredLog = (playerIndex, playerName, action) => {
+  const addColoredLog = async (playerIndex, playerName, action) => {
     const coloredName = `<span class="player${playerIndex + 1}">${playerName}</span>`;
-    addLog(`${coloredName} ${action}`, "action");
+    await addLog(`${coloredName} ${action}`, "action");
   };
 
   const nextTurn = ({ force = false, newDeckCount = null } = {}) => {
@@ -1313,7 +1342,38 @@ const activateCollapseMode = (card, cardIndex) => {
     setCollapseMode({ active: false, card: null, cardIndex: null });
 
     const currentTurnIndex = round?.turn || 0; 
-    const nextIndex = (currentTurnIndex + 1)% playerOrder.length; 
+    let nextIndex = (currentTurnIndex + 1) % playerOrder.length;
+    
+    // Auto-skip jugadores sin cartas
+    let skippedPlayers = 0;
+    const maxSkips = playerOrder.length;
+    
+    while (skippedPlayers < maxSkips) {
+      const nextPlayer = playerOrder[nextIndex];
+      const nextPlayerCards = playerCardsCount[nextPlayer?.username];
+      
+      // Verificar si TODOS tienen 0 cartas
+      const allPlayersCards = playerOrder.map(p => playerCardsCount[p.username] || 0);
+      const totalCards = allPlayersCards.reduce((sum, count) => sum + count, 0);
+      
+      if (totalCards === 0) {
+        // Todos sin cartas, dejar que termine la ronda naturalmente
+        break;
+      }
+      
+      if (nextPlayerCards === 0) {
+        // Este jugador no tiene cartas, saltar al siguiente
+        const playerIndex = nextIndex;
+        const playerClass = `player${playerIndex + 1}`;
+        addLog(`<span class="${playerClass}">${nextPlayer.username}</span> has no cards, skipping turn`, "info");
+        
+        nextIndex = (nextIndex + 1) % playerOrder.length;
+        skippedPlayers++;
+      } else {
+        // Este jugador tiene cartas, usar este índice
+        break;
+      }
+    } 
 
     try{
       if(round && round.id){
@@ -1619,7 +1679,7 @@ const activateCollapseMode = (card, cardIndex) => {
     navigate('/lobby');
   }, [gameEndCountdown, gameEndData, navigate]);
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
     if (processingAction.current) return;
     if (roundEndedRef.current === ROUND_STATE.ENDED) return;
     processingAction.current = true;
@@ -1637,13 +1697,14 @@ const activateCollapseMode = (card, cardIndex) => {
         const newDeckCount = Math.max(0, deckCount - 1);
         setDeckCount(newDeckCount);
         setCollapseMode({ active: false, card: null, cardIndex: null });
-        nextTurn({newDeckCount: newDeckCount});
-        addColoredLog(
+        
+        await addColoredLog(
           currentIndex,
           playerOrder[currentIndex].username,
           `🎴 Discarded a card and take one. ${newDeckCount} cards left in the deck.`);
         toast.success('Card discarded successfully!');
         
+        nextTurn({newDeckCount: newDeckCount});
       } else {
         toast.warning("Please select a card to discard (right-click in the card)");}
     } finally {
@@ -1790,20 +1851,44 @@ const activateCollapseMode = (card, cardIndex) => {
   };
 
   const appendAndPersistLog = async (msg, type = "info") => {
-    setGameLog(prev => [...prev, { msg, type }]);
-
     const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
     const roundId = typeof round?.id === 'number' ? round.id : round?.round?.id;
 
-    const nextMessages = [...(logData?.messages || []), msg];
+    if (!logId || !roundId) {
+      console.warn('Cannot persist log: missing logId or roundId');
+      return;
+    }
 
-    if (logId && roundId) {
+    try {
+      // Obtener el estado MÁS RECIENTE del servidor primero
+      const currentLog = await getLog(logId);
+      const serverMessages = currentLog?.messages || [];
+      
+      // Añadir el nuevo mensaje a los mensajes del servidor
+      const nextMessages = [...serverMessages, msg];
+      
+      // Persistir en el servidor
+      await patchLog(logId, { round: roundId, messages: nextMessages });
+      
+      // Actualizar referencias
+      lastSyncedLogMessages.current = nextMessages;
+      
+      // Actualizar UI inmediatamente con el resultado confirmado
+      const serverLog = nextMessages.map((m, idx) => ({ 
+        msg: m, 
+        type: 'info',
+        timestamp: Date.now() - (nextMessages.length - idx) * 10
+      }));
+      setGameLog(serverLog);
+      
       setLogData(prev => ({
         ...(prev || {}),
         id: logId,
         messages: nextMessages
       }));
-      patchLog(logId, { round: roundId, messages: nextMessages });
+      
+    } catch (error) {
+      console.error('Error persisting log:', error);
     }
   };
 
@@ -1851,16 +1936,45 @@ const activateCollapseMode = (card, cardIndex) => {
           const hasNewRoundSession = newRoundRaw !== null;
           const hasSavedGameSession = savedGameRaw !== null;
 
-          const shouldSkipPlayerSyncLocal = hasNewRoundSession || (isRefreshNow && hasSavedGameSession);
+          // Only skip player sync when the sessionStorage entries actually
+          // correspond to this board/round. Otherwise stale data from previous
+          // games can cause asymmetry between browsers.
+          let shouldSkipPlayerSyncLocal = false;
+          let parsedNewRound = null;
+          let parsedSavedGame = null;
+          if (hasNewRoundSession) {
+            try {
+              parsedNewRound = JSON.parse(newRoundRaw);
+              const newRoundBoardId = parsedNewRound?.round?.board?.id ?? parsedNewRound?.round?.board;
+              if (newRoundBoardId && String(newRoundBoardId) === String(urlBoardId)) {
+                shouldSkipPlayerSyncLocal = true;
+              }
+            } catch (e) {
+              console.warn('Could not parse newRoundData:', e);
+            }
+          }
+
+          if (!shouldSkipPlayerSyncLocal && isRefreshNow && hasSavedGameSession) {
+            try {
+              parsedSavedGame = JSON.parse(savedGameRaw);
+              const savedBoardId = parsedSavedGame?.round?.board?.id ?? parsedSavedGame?.round?.board;
+              if (savedBoardId && String(savedBoardId) === String(urlBoardId)) {
+                shouldSkipPlayerSyncLocal = true;
+              }
+            } catch (e) {
+              console.warn('Could not parse savedGameData:', e);
+            }
+          }
 
           console.log('🔎 Player sync decision:', {
             isRefreshNow,
             hasNewRoundSession,
             hasSavedGameSession,
-            newRoundRawPreview: hasNewRoundSession ? (newRoundRaw ? newRoundRaw.substring(0, 300) : '<empty>') : null,
-            savedGameRawPreview: hasSavedGameSession ? (savedGameRaw ? savedGameRaw.substring(0, 300) : '<empty>') : null,
+            parsedNewRoundPreview: parsedNewRound ? (JSON.stringify(parsedNewRound).substring(0,300)) : null,
+            parsedSavedGamePreview: parsedSavedGame ? (JSON.stringify(parsedSavedGame).substring(0,300)) : null,
             locationStatePresent: !!location?.state,
-            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId')
+            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId'),
+            shouldSkipPlayerSyncLocal
           });
 
           if (shouldSkipPlayerSyncLocal) {
@@ -1909,20 +2023,61 @@ const activateCollapseMode = (card, cardIndex) => {
   }, []);
 
   useEffect(() => {
-    const fetchLogForRound = async () => {
-      const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
-      if (!logId) return;
+    const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
+    if (!logId) return;
 
-      const log = await getLog(logId);
-      if (log) {
-        setLogData(log);
-        const mapped = (log.messages || []).map(m => ({ msg: m, type: "info" }));
-        setGameLog(mapped);
+    let cancelled = false;
+
+    const syncLogFromServer = async () => {
+      if (cancelled) return;
+      
+      try {
+        const log = await getLog(logId);
+        if (cancelled || !log) return;
+
+        if (log.messages && Array.isArray(log.messages)) {
+          const serverMessages = log.messages;
+          const currentMessages = lastSyncedLogMessages.current;
+          
+          // Comparar si los mensajes son realmente diferentes
+          const isDifferent = serverMessages.length !== currentMessages.length ||
+            JSON.stringify(serverMessages) !== JSON.stringify(currentMessages);
+          
+          if (!isDifferent) {
+            return;
+          }
+          
+          // Actualizar con los mensajes del servidor (siempre confiar en el servidor)
+          const serverLog = serverMessages.map((msg, idx) => ({ 
+            msg, 
+            type: 'info',
+            timestamp: Date.now() - (serverMessages.length - idx) * 10
+          }));
+          
+          setGameLog(serverLog);
+          lastSyncedLogMessages.current = [...serverMessages];
+          setLogData(log);
+        }
+      } catch (error) {
+        console.error('Error syncing log:', error);
       }
     };
 
-    fetchLogForRound();
-  }, [round]);
+    // Exponer la función para que appendAndPersistLog pueda llamarla
+    syncLogFromServerRef.current = syncLogFromServer;
+
+    // Sincronización inicial
+    syncLogFromServer();
+
+    // Polling cada 1 segundo para sincronización más rápida
+    const syncInterval = setInterval(syncLogFromServer, 1000);
+
+    return () => {
+      cancelled = true;
+      syncLogFromServerRef.current = null;
+      clearInterval(syncInterval);
+    };
+  }, [round?.log, round?.id]);
 
   useEffect(() => {
     if (activePlayers.length > 1) {

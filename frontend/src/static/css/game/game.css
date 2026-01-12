@@ -14,7 +14,8 @@
 
 .logo-container {
   position: absolute;
-  top: 10px;
+  /* ajustar para que no entre en el letrero de ronda */
+  top: 60px;
   left: 10px;
 }
 
@@ -191,6 +192,7 @@
   position: absolute;
   top: 370px;
   left: 45px;
+  z-index: 9001;
   background: #dabb40;
   border: 2px solid #c0af11;
   border-radius: 8px;
@@ -377,11 +379,8 @@
   position: fixed;
   left: 24px;
   bottom: 110px;
-  bottom: calc(110px + constant(safe-area-inset-bottom));
-  bottom: calc(110px + env(safe-area-inset-bottom));
   width: min(340px, calc(100vw - 48px));
   height: clamp(180px, 28vh, 320px);
-  height: clamp(180px, 28dvh, 320px);
   box-sizing: border-box;
   color: rgb(255, 255, 255);
   background: rgba(85, 85, 85, 0.7);
@@ -432,10 +431,7 @@
 @media (max-height: 720px) {
   .chat-box {
     bottom: 90px;
-    bottom: calc(90px + constant(safe-area-inset-bottom));
-    bottom: calc(90px + env(safe-area-inset-bottom));
     height: clamp(160px, 26vh, 280px);
-    height: clamp(160px, 26dvh, 280px);
   }
 }
 
@@ -1509,3 +1505,5 @@
     opacity: 1;
   }
 }
+
+/* Removed CSS variables for chat positioning per revert request */
