@@ -30,8 +30,15 @@ export const applyFilters = (games, filters, onlyFriend, friendsList) => {
     filtered = filtered.filter(
       (g) =>
         g.creator?.username?.toLowerCase().includes(term) ||
-        g.id?.toString().includes(term));}
-  if (onlyFriend && friendsList.length > 0) {
+        g.id?.toString().includes(term)
+    );
+  }
+
+  if (onlyFriend) {
+    if (friendsList.length === 0) {
+      return [];
+    }
+    
     const friendUsernames = friendsList.map((f) => 
       typeof f === 'string' ? f.toLowerCase() : f.username?.toLowerCase()
     ).filter(Boolean);

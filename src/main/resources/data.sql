@@ -5,22 +5,27 @@ INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,auth
 -- Jugadores (Players) por defecto (contraseña: saboteur123)
 INSERT INTO authorities(id,authority) VALUES (2,'PLAYER');
 
-INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (6,'player1','Player Number one','2005-03-12','2017-01-15','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player1@saboteur.es', 2); 
-INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (7,'player2','Player Number two','2005-03-12','2011-09-11','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player2@saboteur.es', 2); 
-INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (8,'player3','Player Number three','2005-03-12','1999-02-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player3@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (6,'player1','Player Number one','2005-04-12','2017-01-15','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player1@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (7,'player2','Player Number two','2005-01-12','2011-09-11','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player2@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (8,'player3','Player Number three','2007-03-12','1999-02-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player3@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (9,'player4','Player Number four','2004-01-11','2011-09-11','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player4@saboteur.es', 2); 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (10,'player5','Player Number five','2006-02-10','1999-02-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player5@saboteur.es', 2);
 
 
 
 INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
 INSERT INTO chat (id) VALUES (3);
+INSERT INTO chat (id) VALUES (4);
+INSERT INTO chat (id) VALUES (5);
 
 -- Jugadores por defecto
 
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (6, 2, 1, 3, 12, 7, false, 5, 3);
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (7, 2, 1, 4, 11, 10, false, 2, 2);
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (8, 2, 0, 5, 13, 3, false, 0, 1);
-
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (9, 1, 0, 5, 13, 2, false, 0, 1);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (10, 2, 0, 4, 10, 3, false, 0, 1);
 
 --Requests por defecto
 --INSERT INTO request(id, status, sender_id, receiver_id) VALUES (1, 'PENDING', 4, 5);
@@ -28,19 +33,24 @@ INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, ac
 INSERT INTO deck (id) VALUES (1);
 INSERT INTO deck (id) VALUES (2);
 INSERT INTO deck (id) VALUES (3);
+INSERT INTO deck (id) VALUES (4);
+INSERT INTO deck (id) VALUES (5);
 
 
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 1,  0, 6, false, true);
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 2,  0, 7, false, true);
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 3,  0, 8, false, true);
-
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 4,  0, 9, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 5,  0, 10, false, true);
 
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 6);
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 2, 2, 'Welcome to the game!', 7);
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 3, 3, 'Welcome to the game!', 8);
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 4, 4, 'Welcome to the game!', 9);
+INSERT INTO message (id, chat_id, content, active_player_id) values ( 5, 5, 'Welcome to the game!', 10);
 
 INSERT INTO game(chat_id, game_status, id, is_private, max_players, winner_id, time_seconds, creator_id) values (1, 'FINISHED', 1, false, 3, 6, 2000, 6);
-INSERT INTO game(chat_id, game_status, id, is_private, max_players, winner_id, time_seconds, creator_id) values (2, 'FINISHED', 2, false, 3, 7, 3500, 7);
+INSERT INTO game(chat_id, game_status, id, is_private, max_players, winner_id, time_seconds, creator_id) values (2, 'FINISHED', 2, false, 5, 7, 3500, 7);
 
 INSERT INTO game_active_players(active_player_id, game_id) VALUES (6,1);
 INSERT INTO game_active_players(active_player_id, game_id) VALUES (7,1);
@@ -48,6 +58,8 @@ INSERT INTO game_active_players(active_player_id, game_id) VALUES (8,1);
 INSERT INTO game_active_players(active_player_id, game_id) VALUES (6,2);
 INSERT INTO game_active_players(active_player_id, game_id) VALUES (7,2);
 INSERT INTO game_active_players(active_player_id, game_id) VALUES (8,2);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (9,2);
+INSERT INTO game_active_players(active_player_id, game_id) VALUES (10,2);
 
 INSERT INTO board (id, base, height, objective_cards_order) VALUES (1, 11, 9, 'gold,coal_1,coal_2');
 INSERT INTO board (id, base, height, objective_cards_order) VALUES (2, 11, 9, 'coal_2,gold,coal_1');
