@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -80,40 +79,10 @@ public class User extends BaseEntity {
 		}
 		return cond;
 	}
-/* 
-	//RELACION CON USUARIOS
-    @ManyToMany
-    @JoinTable(
-        name = "admin_user",
-        joinColumns = @JoinColumn(name = "admin_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private List<User> users = new ArrayList<>();
-*/
+
     //RELACION -> ADMIN CREA LGORO
     @JsonSerialize(contentUsing = AchievementSerializer.class)
     @JsonDeserialize(contentUsing = AchievementDeserializer.class)
     @OneToMany (mappedBy = "creator", cascade = CascadeType.ALL) //CASCADE ES PARA QUE CUALQIUER ACCIÓN SOBRE EL PADRE (EL ADMIN) SE APLIQUE TAMBIEN SOBRE SU HIJO (LOGRO)
     private List<Achievement> createdAchievements = new ArrayList<>();
-
-    /* 
-    //RELACION -> ADMIN EDITA LOGRO
-    @ManyToMany
-    @JoinTable(
-        name = "adminAchievement",
-        joinColumns = @JoinColumn(name = "admin_id"),
-        inverseJoinColumns = @JoinColumn(name = "achievement_id")
-    )
-    private List<Achievement> managedAchievements = new ArrayList<>();
-
-
-    //RELACION -> ADMIN GESTIONA PARTIDA
-    @ManyToMany
-    @JoinTable(
-        name = "adminGame",
-        joinColumns = @JoinColumn(name = "admin_id"),
-        inverseJoinColumns = @JoinColumn(name = "game_id")
-    )
-    private List<Game> managedGames = new ArrayList<>();
-*/
 }

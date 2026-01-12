@@ -13,11 +13,7 @@ public interface GameRepository extends CrudRepository<Game, Integer> {
     Optional<Game> findById(Integer id);
 
     List<Game> findByCreatorUsername(String creatorUsername);
-/* 
-   // Buscar todas las partidas gestionadas por un administrador específico
-    @Query("SELECT g FROM Game g JOIN g.admins a WHERE a.username = :adminUsername")
-    Iterable<Game> findAllByAdminUsername(String adminUsername);
-*/
+
     // Buscar todas las partidas que no son privadas
     @Query("SELECT g FROM Game g WHERE g.isPrivate = false")
     Iterable<Game> findAllPublicGames();

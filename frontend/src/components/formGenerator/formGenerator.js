@@ -38,6 +38,12 @@ const FormGenerator = forwardRef((props, ref) => {
 
         return isValid;
       },
+      setFieldErrors: (fieldName, errors) => {
+        const idx = props.inputs.findIndex(i => i.name === fieldName);
+        if (idx >= 0 && formInputs.current[idx] && formInputs.current[idx].setErrors) {
+          formInputs.current[idx].setErrors(Array.isArray(errors) ? errors : [errors]);
+        }
+      },
       updateForm: () => {
         if (Object.keys(formValues).length === 0) {
           let newFormValues = {};

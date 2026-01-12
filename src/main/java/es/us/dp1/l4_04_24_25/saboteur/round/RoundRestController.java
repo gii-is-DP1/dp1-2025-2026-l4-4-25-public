@@ -232,16 +232,4 @@ public class RoundRestController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-    /*
-     * @PostMapping("/initialize/{gameId}")
-     * public ResponseEntity<Round> initializeRound(@PathVariable Integer gameId) {
-     * Game game = gameService.findGame(gameId);
-     * 
-     * // Suponemos que siempre se crea la primera ronda (por ahora)
-     * Round round = roundService.initializeRound(game, 1);
-     * 
-     * return ResponseEntity.ok(round);
-     * }
-     */
 }

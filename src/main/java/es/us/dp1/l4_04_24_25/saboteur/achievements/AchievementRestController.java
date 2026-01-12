@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,15 +100,6 @@ public class AchievementRestController {
         }
         return new ResponseEntity<>(savedAchievement, HttpStatus.CREATED);
     }
-
-/* 
-    @PutMapping(value = "{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Achievement> update(@PathVariable("id") Integer id, @RequestBody @Valid Achievement achievement){
-        RestPreconditions.checkNotNull(achievementService.findAchievement(id), "Achievement", "ID", id);
-        return new ResponseEntity<>(achievementService.updateAchievement(achievement, id), HttpStatus.OK);
-    }
-    */
 
     @PutMapping("/{id}")
 	public ResponseEntity<Void> update(@RequestBody @Valid Achievement newAchievement, BindingResult br, @PathVariable("id") int id) {

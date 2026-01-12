@@ -92,14 +92,6 @@ class ActivePlayerRestController {
         res = (List<ActivePlayer>) activePlayerService.findByRol(rol);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    /* 
-    @GetMapping("byGameId")
-    public ResponseEntity<List<ActivePlayer>> findByGameId(@RequestParam Integer gameId){
-        List<ActivePlayer> res;
-        res = (List<ActivePlayer>) activePlayerService.findByGameId(gameId);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-    */
 
     @GetMapping("byUsername")
     public ResponseEntity<ActivePlayer> findByUsername(@RequestParam String username){
@@ -131,17 +123,8 @@ class ActivePlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    /*
-    @GetMapping("winnerByGameId")
-    public ResponseEntity<ActivePlayer> findWinnerByGameId(@RequestParam Integer gameId){
-        ActivePlayer res;
-        res = activePlayerService.findWinnerByGameId(gameId);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-    */
 
-
-@PostMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ActivePlayer> createPlayer(@RequestBody @Valid Player activePlayer)
     throws DataAccessException, DuplicatedPlayerException, DuplicatedUserException, DuplicatedActivePlayerException {

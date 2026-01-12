@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Alert } from "reactstrap";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FormGenerator from "../../components/formGenerator/formGenerator";
 import tokenService from "../../services/token.service";
 import WelcomeScreen from "../../components/WelcomeScreen";
@@ -38,8 +38,9 @@ export default function Login() {
       });            
   }
 
+  const navigate = useNavigate();
   const handleWelcomeComplete = () => {
-    window.location.href = "/lobby";
+    navigate('/lobby');
   };
 
   if (showWelcome) {

@@ -1,0 +1,52 @@
+{
+  "tracks": [
+    {
+      "file": "cave_themeb4.ogg",
+      "title": "cave themeb4",
+      "default": false,
+      "author": null,
+      "source": null,
+      "credit": null
+    },
+    {
+      "file": "dungeon_ambient_1.ogg",
+      "title": "Dungeon Ambient 1",
+      "default": false,
+      "author": null,
+      "source": null,
+      "credit": null
+    },
+    {
+      "file": "exploration_song.mp3",
+      "title": "exploration song",
+      "default": false,
+      "author": null,
+      "source": null,
+      "credit": null
+    },
+    {
+      "file": "Exploring_a_cave.mp3",
+      "title": "Exploring a cave",
+      "default": false,
+      "author": null,
+      "source": null,
+      "credit": null
+    },
+    {
+      "file": "Kingdom_Hearts_HD_2.5_ReMIX_Remastered_OST_The_Other_Promise.mp3",
+      "title": "Kingdom Hearts HD 2.5 ReMIX Remastered OST The Other Promise",
+      "default": false,
+      "author": null,
+      "source": null,
+      "credit": null
+    },
+    {
+      "file": "song21.mp3",
+      "title": "Mysterious Ambience (song21)",
+      "default": true,
+      "author": "Pixelsphere",
+      "source": "OpenGameArt.org",
+      "credit": "\"Mysterious Ambience (song21)\" by Pixelsphere (OpenGameArt.org)"
+    }
+  ]
+}
