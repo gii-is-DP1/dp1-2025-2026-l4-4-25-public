@@ -281,7 +281,6 @@ export const resetToolsForNewRound = async (players) => {
       }
       
       const currentGoldNuggets = currentPlayerData.goldNugget || 0;
-      const currentRol = currentPlayerData.rol !== undefined ? currentPlayerData.rol : false;
       
       console.log(`🔧 Resetting tools for ${currentPlayerData.username || currentPlayerData.user?.username} - Current gold from backend: ${currentGoldNuggets}`);
       

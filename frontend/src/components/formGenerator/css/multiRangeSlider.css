@@ -58,7 +58,7 @@
   right: 0;
 }
 
-/* Removing the default appearance */
+/* Quitando la apariencia predeterminada */
 .thumb,
 .thumb::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -84,7 +84,7 @@
   right: 0;
 }
 
-/* For Chrome browsers */
+/* Para navegadores Chrome */
 .thumb::-webkit-slider-thumb {
   background-color: #f1f5f7;
   border: none;
@@ -98,7 +98,7 @@
   position: relative;
 }
 
-/* For Firefox browsers */
+/* Para navegadores Firefox */
 .thumb::-moz-range-thumb {
   background-color: #f1f5f7;
   border: none;

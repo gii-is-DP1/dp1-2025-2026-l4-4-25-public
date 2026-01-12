@@ -6,7 +6,6 @@ import "../../static/css/admin/adminPage.css";
 import "../../static/css/auth/authPage.css";
 import "../../static/css/auth/authButton.css";
 import getErrorModal from "../../util/getErrorModal";
-import getIdFromUrl from "../../util/getIdFromUrl";
 import useFetchData from "../../util/useFetchData";
 import useFetchState from "../../util/useFetchState";
 import getIconImage from "../../util/getIconImage";

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 
 const formatGameTime = (timeString) => {
   if (!timeString) return "N/A";

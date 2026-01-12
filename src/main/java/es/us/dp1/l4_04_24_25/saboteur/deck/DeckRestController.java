@@ -97,8 +97,6 @@ public class DeckRestController {
     return new ResponseEntity<>(savedDeck, HttpStatus.CREATED);
     }
 
-    //Revisar el PATCH
-
     
     @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)

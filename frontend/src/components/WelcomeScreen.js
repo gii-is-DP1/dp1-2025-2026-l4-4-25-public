@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../static/css/components/welcomeScreen.css';
-import minerRol from '../game/cards-images/roles/minerRol.png';
-import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 import audioBackground from './audiobackground.mp3';
 
 export default function WelcomeScreen({ username, onComplete }) {

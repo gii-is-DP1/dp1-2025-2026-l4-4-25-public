@@ -32,10 +32,6 @@ public class SignupRequest {
 	@NotNull
 	private String birthDate;
 		
-	
-	//Owner
-	
-	//private String telephone;
 
 
 }

@@ -103,7 +103,6 @@ export const isSpectatorRequestAccepted = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
-  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
@@ -118,7 +117,6 @@ export const isSpectatorRequestDenied = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
-  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
