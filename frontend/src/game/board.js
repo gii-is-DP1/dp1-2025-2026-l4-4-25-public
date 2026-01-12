@@ -572,10 +572,10 @@ export default function Board() {
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
     const deckTopic = game?.id ? `/topic/game/${game.id}/deck` : null;
-    console.log('- deckTopic:', deckTopic);
+    //console.log('- deckTopic:', deckTopic);
     const deckMessage = useWebSocket(deckTopic);
     
-    console.log('-WebSocket states:', { boardMessage: boardMessage ? 'connected' : 'null', gameMessage: gameMessage ? 'connected' : 'null',  deckMessage: deckMessage ? 'connected' : 'null'});
+    //console.log('-WebSocket states:', { boardMessage: boardMessage ? 'connected' : 'null', gameMessage: gameMessage ? 'connected' : 'null',  deckMessage: deckMessage ? 'connected' : 'null'});
 
     useEffect(() => {
       if(!boardMessage) return;

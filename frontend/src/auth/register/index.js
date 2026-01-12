@@ -47,8 +47,26 @@ export default function Register() {
           return response.json();
         } else {
           return response.json().then(data => {
-            alert(data.message || "Registration failed");
-            throw new Error(data.message);
+            const raw = data.message || "Registration failed";
+            // Map common DB/constraint messages to a friendly English message
+            const isUniqueViolation = /unique|constraint|duplicate|23505|unique index|primary key violation|violación de indice|clave primaria/i.test(raw);
+            const friendly = isUniqueViolation
+              ? "This email is already registered. Try logging in or use a different email."
+              : (data.message || "Registration failed. Please try again.");
+
+            try {
+              if (registerFormRef.current && registerFormRef.current.setFieldErrors) {
+                registerFormRef.current.setFieldErrors('email', friendly);
+                const emailInput = document.querySelector('input[name="email"], select[name="email"], textarea[name="email"]');
+                if (emailInput && typeof emailInput.focus === 'function') emailInput.focus();
+              } else {
+                alert(friendly);
+              }
+            } catch (e) {
+              console.error('Error setting field error:', e);
+              alert(friendly);
+            }
+            throw new Error(friendly);
           });
         }
       })
