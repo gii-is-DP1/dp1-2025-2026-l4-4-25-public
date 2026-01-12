@@ -123,17 +123,8 @@ class ActivePlayerRestController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    /*
-    @GetMapping("winnerByGameId")
-    public ResponseEntity<ActivePlayer> findWinnerByGameId(@RequestParam Integer gameId){
-        ActivePlayer res;
-        res = activePlayerService.findWinnerByGameId(gameId);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-    */
 
-
-@PostMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ActivePlayer> createPlayer(@RequestBody @Valid Player activePlayer)
     throws DataAccessException, DuplicatedPlayerException, DuplicatedUserException, DuplicatedActivePlayerException {
