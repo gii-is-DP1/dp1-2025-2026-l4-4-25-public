@@ -192,7 +192,7 @@ describe('Login Component', () => {
       const completeButton = screen.getByTestId('complete-welcome');
       fireEvent.click(completeButton);
       
-      expect(window.location.href).toBe('/lobby');
+      expect(mockNavigate).toHaveBeenCalledWith('/lobby');
     });
   });
 
