@@ -900,6 +900,14 @@
   transform: scale(1.05);
 }
 
+/* Drag preview used by pointer-based dragging */
+.card-drag-preview img {
+  width: 64px;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+
 .board-cell.destroyable {
   background-color: rgba(255, 102, 0, 0.2);
   border-color: #ff6600;

@@ -10,6 +10,17 @@ body, * {
   transition: transform 0.1s ease;
 }
 
+.saboteur-cursor.dragging {
+  opacity: 0.95;
+  transform: translate(-50%, -50%) scale(1.02);
+  transition: transform 0.06s ease;
+}
+
+.saboteur-cursor.keep-visible {
+  display: block !important;
+  opacity: 1 !important;
+}
+
 .pickaxe {
   font-size: 32px;
   filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.8))
