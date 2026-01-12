@@ -92,14 +92,6 @@ class ActivePlayerRestController {
         res = (List<ActivePlayer>) activePlayerService.findByRol(rol);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
-    /* 
-    @GetMapping("byGameId")
-    public ResponseEntity<List<ActivePlayer>> findByGameId(@RequestParam Integer gameId){
-        List<ActivePlayer> res;
-        res = (List<ActivePlayer>) activePlayerService.findByGameId(gameId);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-    */
 
     @GetMapping("byUsername")
     public ResponseEntity<ActivePlayer> findByUsername(@RequestParam String username){

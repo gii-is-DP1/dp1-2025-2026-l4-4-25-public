@@ -9,9 +9,6 @@ import lombok.Getter;
 @Getter
 public class DeniedPasswordChangeException extends RuntimeException {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -1461835347378078102L;
 
 	public DeniedPasswordChangeException() {
