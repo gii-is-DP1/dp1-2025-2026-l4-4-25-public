@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, ButtonGroup, Table } from "reactstrap";
 import tokenService from "../../services/token.service";
 import "../../static/css/admin/adminPage.css";
@@ -13,6 +13,7 @@ const jwt = tokenService.getLocalAccessToken();
 const loggedInUser = tokenService.getUser(); 
 
 export default function UserListAdmin() {
+  const navigate = useNavigate();
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
   const [users, setUsers] = useFetchState(
@@ -25,6 +26,37 @@ export default function UserListAdmin() {
   const [alerts, setAlerts] = useState([]);
   const [showActiveGameModal, setShowActiveGameModal] = useState(false);
   const [userInActiveGame, setUserInActiveGame] = useState(null);
+  const [modalAction, setModalAction] = useState("delete"); // "delete" o "edit"
+
+  async function handleEdit(user) {
+    try {
+      const response = await fetch(`/api/v1/users/${user.id}/inActiveGame`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${jwt}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.ok) {
+        const isInActiveGame = await response.json();
+        if (isInActiveGame) {
+          setUserInActiveGame(user);
+          setModalAction("edit");
+          setShowActiveGameModal(true);
+          return;
+        }
+      }
+      
+      // Si no está en una partida activa, navegar al formulario de edición
+      navigate(`/users/${user.id}`);
+    } catch (error) {
+      console.error("Error checking user game status:", error);
+      setMessage("Error checking user status. Please try again.");
+      setVisible(true);
+    }
+  }
 
   async function handleDelete(user) {
     try {
@@ -41,6 +73,7 @@ export default function UserListAdmin() {
         const isInActiveGame = await response.json();
         if (isInActiveGame) {
           setUserInActiveGame(user);
+          setModalAction("delete");
           setShowActiveGameModal(true);
           return;
         }
@@ -64,11 +97,15 @@ export default function UserListAdmin() {
   const ActiveGameModal = () => {
     if (!showActiveGameModal || !userInActiveGame) return null;
     
+    const actionText = modalAction === "edit" ? "Edit" : "Delete";
+    const actionTextLower = modalAction === "edit" ? "edited" : "deleted";
+    const actionVerb = modalAction === "edit" ? "edit" : "delete";
+    
     return (
       <div className="modal-overlay" onClick={() => setShowActiveGameModal(false)}>
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
-            <h2>⚠️ Cannot Delete User ⚠️</h2>
+            <h2>⚠️ Cannot {actionText} User ⚠️</h2>
             <button className="modal-close-btn" onClick={() => setShowActiveGameModal(false)}>✕</button>
           </div>
           
@@ -79,11 +116,11 @@ export default function UserListAdmin() {
             </div>
 
             <div className="modal-warning">
-              <p>🚫 This user cannot be deleted because they are currently participating in an active game with status CREATED or ONGOING.</p>
+              <p>🚫 This user cannot be {actionTextLower} because they are currently participating in an active game with status CREATED or ONGOING.</p>
             </div>
 
             <div className="modal-info">
-              <p>Please wait until the game is finished or ask the user to leave the game before attempting to delete their account.</p>
+              <p>Please wait until the game is finished or ask the user to leave the game before attempting to {actionVerb} their account.</p>
             </div>
           </div>
 
@@ -139,8 +176,7 @@ export default function UserListAdmin() {
               size="sm"
               color="primary"
               aria-label={"edit-" + user.id}
-              tag={Link}
-              to={"/users/" + user.id}
+              onClick={() => handleEdit(user)}
               className="action-btn action-edit"
             >
               ✏️ Edit

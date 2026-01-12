@@ -39,7 +39,7 @@ export default function UserEditAdmin() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-  const auths = useFetchData(`/api/v1/users/authorities`, jwt); 
+  const auths = useFetchData(`/api/v1/users/authorities`, jwt);
 
   useEffect(() => {
     if (typeof user.authority === 'string' && auths.length > 0) {
