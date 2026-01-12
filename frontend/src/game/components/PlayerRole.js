@@ -11,8 +11,8 @@ export default function PlayerRole({ playerRol, activePlayers, loggedInUser, isS
     ? playerRol.find(p => p.username === username)
     : null;
 
-  // Fallback: when playerRol is stale/empty (e.g., right after a NEW_ROUND reload),
-  // derive the role from activePlayers directly.
+  // Fallback: cuando playerRol está desactualizado/vacío (p. ej., justo después de recargar NEW_ROUND),
+  // derivar el rol directamente desde activePlayers.
   const backendPlayer = Array.isArray(activePlayers) && username
     ? activePlayers.find(p => p.username === username)
     : null;

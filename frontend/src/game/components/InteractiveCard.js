@@ -78,19 +78,19 @@ export default function InteractiveCard({
     setSelectedPlayer(null);
   }, [card.id]);
 
-  // pointer-based drag to replace native DnD so custom cursor can follow the pointer
+  // arrastre basado en puntero para reemplazar DnD nativo y permitir que el cursor personalizado siga el puntero
   const previewRef = useRef(null);
   const draggingRef = useRef({ active: false, hoveredEl: null });
 
   const startPointerDrag = (e) => {
     if (!isDraggableTunnel || !isMyTurn) return;
-    // only respond to primary button
+    // responder solo al botón primario
     if (e.button && e.button !== 0) return;
     e.preventDefault();
 
     const cardIndexStr = index.toString();
 
-    // start coords to detect movement threshold (avoid creating preview on clicks/double-clicks)
+    // coordenadas iniciales para detectar umbral de movimiento (evita crear preview en clicks/doble-clicks)
     const startX = e.clientX;
     const startY = e.clientY;
     const MOVE_THRESHOLD = 8; // pixels
@@ -121,7 +121,7 @@ export default function InteractiveCard({
       const dy = ev.clientY - startY;
       const dist = Math.hypot(dx, dy);
 
-      // Only create preview when user has moved beyond threshold (prevents clicks/double-clicks triggering drag)
+      // Crear el preview solo cuando el usuario se haya movido más allá del umbral (evita que clicks/doble-clicks activen el arrastre)
       if (!previewCreated) {
         if (dist < MOVE_THRESHOLD) return;
         createPreview(ev);
@@ -131,7 +131,7 @@ export default function InteractiveCard({
       previewRef.current.style.left = `${ev.clientX + 8}px`;
       previewRef.current.style.top = `${ev.clientY + 8}px`;
 
-      // find element under pointer and dispatch enter/leave
+      // encontrar el elemento bajo el puntero y despachar enter/leave
       const under = document.elementFromPoint(ev.clientX, ev.clientY);
       const cell = under && under.closest && under.closest('.board-cell');
       if (cell !== lastHover) {
@@ -146,7 +146,7 @@ export default function InteractiveCard({
       if (previewCreated) {
         draggingRef.current.active = false;
         document.body.dispatchEvent(new CustomEvent('saboteur-dragend'));
-        // perform drop on hovered element if exists
+        // realizar el drop sobre el elemento resaltado si existe
         const target = draggingRef.current.hoveredEl;
         if (target) {
           const detail = { card: card, cardIndex: cardIndexStr };
@@ -154,7 +154,7 @@ export default function InteractiveCard({
         }
       }
 
-      // cleanup
+      // limpieza
       try { document.removeEventListener('pointermove', onPointerMove); } catch (e) {}
       try { document.removeEventListener('pointerup', endPointerDrag); } catch (e) {}
       if (previewRef.current) {

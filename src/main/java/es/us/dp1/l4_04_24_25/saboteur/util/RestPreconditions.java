@@ -11,12 +11,12 @@ public final class RestPreconditions {
     // API
 
 //    /**
-//     * Check if some value was found, otherwise throw exception.
+//     * Comprobar si se encontró algún valor, de lo contrario lanzar excepción.
 //     * 
 //     * @param expression
-//     *            has value true if found, otherwise false
+//     *            tiene valor true si se encontró, de lo contrario false
 //     * @throws MyResourceNotFoundException
-//     *             if expression is false, means value not found.
+//     *             si la expresión es false, significa que no se encontró el valor.
 //     */
 //    public static void checkFound(final boolean expression) {
 //        if (!expression) {
@@ -25,12 +25,12 @@ public final class RestPreconditions {
 //    }
 //
 //    /**
-//     * Check if some value was found, otherwise throw exception.
+//     * Comprobar si se encontró algún valor, de lo contrario lanzar excepción.
 //     * 
 //     * @param expression
-//     *            has value true if found, otherwise false
+//     *            tiene valor true si se encontró, de lo contrario false
 //     * @throws MyResourceNotFoundException
-//     *             if expression is false, means value not found.
+//     *             si la expresión es false, significa que no se encontró el valor.
 //     */
 //    public static <T> T checkFound(final T resource) {
 //        if (resource == null) {

@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import tokenService from '../services/token.service.js';
 
-// Componentes
+
 import PlayerCards from './components/PlayerCards';
 import PlayerRole from './components/PlayerRole';
 import SpectatorIndicator from './components/SpectatorIndicator';
@@ -17,8 +17,8 @@ import RoundEndModal from './components/RoundEnd';
 import GameEnd from './components/GameEnd';
 import LoadingScreen from './components/LoadingScreen';
 
-// Utilidades
-import { assignRolesGame, calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck, getRotatedCards, getNonRotatedCards } from './utils/gameUtils';
+
+import { calculateSaboteurCount, formatTime, calculateCardsPerPlayer, calculateInitialDeck } from './utils/gameUtils';
 import { handleActionCard as handleActionCardUtil } from './utils/actionCardHandler';
 import { checkRoundEnd, distributeGold, resetToolsForNewRound } from './utils/roundEndLogic';
 import { extractSpectatorRequests } from '../lobbies/games/utils/lobbyUtils';
@@ -27,37 +27,38 @@ import minerRol from './cards-images/roles/minerRol.png';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
+import useWebSocket from "../hooks/useWebSocket";
 
-// Estilos
 import '../App.css';
 import '../static/css/home/home.css';
 import '../static/css/game/game.css';
-import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
 const timeturn = 10;
 
-// Función para detectar si la página se cargó por un refresh (F5)
+const ROUND_STATE = {
+  ACTIVE: 'ACTIVE',
+  ENDING: 'ENDING',
+  ENDED: 'ENDED'
+};
+
 const detectPageRefresh = () => {
-  // Método 1: Performance Navigation API (más confiable)
   const navEntries = performance.getEntriesByType('navigation');
   if (navEntries.length > 0) {
     const navType = navEntries[0].type;
-    // 'reload' = F5/refresh, 'navigate' = navegación normal, 'back_forward' = botón atrás/adelante
     return navType === 'reload';
   }
-  // Método 2: Fallback para navegadores antiguos
   if (performance.navigation) {
-    return performance.navigation.type === 1; // 1 = TYPE_RELOAD
+    return performance.navigation.type === 1; 
   }
   return false;
 };
 
-// Nota: la detección de "refresh"/"newRoundData" se realiza
-// dinámicamente dentro del efecto de inicialización para evitar
-// valores persistentes entre navegaciones sin recarga completa.
 
+
+// --- MANEJO DE ESTADO DE LA RONDA ---
+// Recupera datos guardados para persistencia entre recargas
 const getSavedRoundData = () => {
   const savedData = sessionStorage.getItem('newRoundData');
   if (savedData) {
@@ -66,13 +67,8 @@ const getSavedRoundData = () => {
     if (nextRoundId !== undefined && nextRoundId !== null) {
       sessionStorage.setItem('forceRolesReassignmentRoundId', String(nextRoundId));
     }
-    // IMPORTANT: do not remove `newRoundData` here. Keep it available so
-    // initialization/verification logic can detect that a round transition
-    // is in progress. It will be cleared by `verify()` once membership is
-    // confirmed to avoid races that send players to the lobby incorrectly.
     return parsed;
   }
-  // Try to recover from general session storage (reload fix)
   const recoveredData = sessionStorage.getItem('savedGameData');
   if (recoveredData) {
       return JSON.parse(recoveredData);
@@ -101,8 +97,6 @@ export default function Board() {
     sessionStorage.removeItem('newRoundData');
   }
 
-  // Dar prioridad a location.state sobre savedRoundData
-  // CHECK: If savedRoundData exists but belongs to a DIFFERENT board, ignore it to prevent "stuck in previous round"
   let loadedState = null;
   
   if (location.state) {
@@ -111,8 +105,8 @@ export default function Board() {
       round: location.state.round || null,
       isSpectator: location.state.isSpectator || false
     };
-  } else if (savedRoundData) {
-      // Validate Board ID if possible
+    } else if (savedRoundData) {
+      // Validar ID del tablero si es posible
       const savedBoardId = savedRoundData.round?.board?.id || savedRoundData.round?.board;
       if (urlBoardId && savedBoardId && String(savedBoardId) !== String(urlBoardId)) {
           console.warn(`⚠️ State mismatch detected! URL Board: ${urlBoardId}, Saved Board: ${savedBoardId}. Discarding saved state.`);
@@ -128,10 +122,8 @@ export default function Board() {
     isSpectator: false
   };
 
-  // El cálculo de si saltar la sincronización se hace en el efecto
-  // `initializeGame` para evitar valores stale entre navegaciones.
 
-  // Estados principales
+
   const [isSpectator] = useState(initialState.isSpectator);
 
   const [playerCardsCount, setPlayerCardsCount] = useState({});
@@ -139,9 +131,6 @@ export default function Board() {
   const [game, setGame] = useState(initialState.game);
   const [message, setMessage] = useState([]);
 
-  // Estado para sincronización de jugadores - esperar a que todos carguen
-  // Se inicializa en 'true' y el efecto `initializeGame` decidirá
-  // si debe saltarse la sincronización en ese momento.
   const [waitingForPlayers, setWaitingForPlayers] = useState(true);
 
   const [newMessage, setNewMessage] = useState('');
@@ -149,15 +138,17 @@ export default function Board() {
   const [currentPlayer, setCurrentPlayer] = useState();
   const [cont, setCont] = useState(timeturn);
   const [gameLog, setGameLog] = useState([]);
-  const [logData, setLogData] = useState(null);
+
   const [playerOrder, setPlayerOrder] = useState([]);
   const [playerRol, setPlayerRol] = useState([]);
-  const [privateLog, setPrivateLog] = useState([]);
+
   const [playerTools, setPlayerTools] = useState({});
   const [round, setRound] = useState(initialState.round);
   const [roundEnded, setRoundEnded] = useState(false); 
 
-  // Si un usuario loggueado intenta acceder a /board/:boardId a través de la URL sin ser parte de la partida, se le redirige a /lobby mostrando un toast.
+
+  // --- EFECTOS DE INICIALIZACIÓN ---
+  // Verifica autenticación y carga datos iniciales
   useEffect(() => {
     if (!jwt || !loggedInUser?.username || !urlBoardId) {
       return;
@@ -204,6 +195,7 @@ export default function Board() {
       
     };
 
+    // Verificación de acceso y membresía del jugador
     const verify = async () => {
       if (cancelled) return;
 
@@ -211,28 +203,19 @@ export default function Board() {
       const candidateGame = location?.state?.game || game || saved?.game;
       const candidateRound = location?.state?.round || round || saved?.round;
 
-      // If we detect a transition (newRoundData, saved game, or navigation state),
-      // give the client a longer window to resolve races before denying access.
-      // Also consider `savedRoundData` (loaded from sessionStorage during init)
-      // as a transition hint because `newRoundData` is consumed during init.
       const transitionHint = !!(sessionStorage.getItem('newRoundData') || saved || location?.state || savedRoundData);
-      const localMaxAttempts = transitionHint ? 150 : maxAttempts; // ~30s when transitionHint
+      const localMaxAttempts = transitionHint ? 150 : maxAttempts;
       const localDelayMs = delayMs;
 
-      // Wait until we have enough info to validate.
       if (!candidateGame || !candidateRound) {
         attempts += 1;
         if (attempts >= localMaxAttempts) {
-          // If we still couldn't resolve data, but there's a pending newRoundData
-          // or location.state (fresh navigation), keep waiting a bit longer instead
-          // of denying immediately. This avoids races during round transitions.
           if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
             console.log('🔁 Delaying deny: newRoundData or location.state present, continuing verify');
-            attempts = 0; // reset attempts and keep waiting
+            attempts = 0;
             setTimeout(verify, delayMs);
             return;
           }
-          // If no hint of a transition, fail closed.
           deny();
           return;
         }
@@ -245,12 +228,9 @@ export default function Board() {
         ...extractUsernames(candidateGame.watchers)
       ].map(String));
 
-      // If activePlayers isn't ready yet, retry briefly (race during game start).
       if (allowedUsernames.size === 0) {
         attempts += 1;
         if (attempts >= localMaxAttempts) {
-          // If activePlayers isn't populated yet but we have a newRoundData or
-          // came here via location.state, prefer to keep waiting instead of denying.
           if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
             console.log('🔁 Delaying deny: allowedUsernames empty but newRoundData/location.state/savedRoundData present');
             attempts = 0;
@@ -265,7 +245,6 @@ export default function Board() {
       }
 
       if (!allowedUsernames.has(String(loggedInUser.username))) {
-        // Possible race: client-side game data is stale. Verify against server before denying.
         const gameId = candidateGame?.id;
         if (gameId) {
           try {
@@ -281,16 +260,13 @@ export default function Board() {
               ].map(String));
               if (freshAllowed.has(String(loggedInUser.username))) {
                 console.log('✅ verify: membership confirmed by server, not denying access');
-                return; // allow
+                return;
               }
             }
           } catch (err) {
             console.warn('Error fetching fresh game data during verify:', err);
-            // fallthrough to deny below if we cannot confirm
           }
         }
-        // If we cannot confirm membership on server, check if we're in a transition
-        // and allow a bit more time before final deny.
         if (transitionHint && attempts < localMaxAttempts) {
           console.log('🔁 verify: transition hinted, delaying final deny');
           setTimeout(verify, localDelayMs);
@@ -300,8 +276,6 @@ export default function Board() {
         return;
       }
 
-      // Membership confirmed client-side: clear the temporary newRoundData
-      // so subsequent checks don't lose the transition hint prematurely.
       try {
         if (sessionStorage.getItem('newRoundData')) {
           sessionStorage.removeItem('newRoundData');
@@ -313,7 +287,6 @@ export default function Board() {
 
       const candidateBoardId = candidateRound?.board?.id ?? candidateRound?.board;
       if (candidateBoardId && String(candidateBoardId) !== String(urlBoardId)) {
-        // If we're not on the round's board, let the existing mismatch logic handle it.
         return;
       }
 
@@ -322,7 +295,6 @@ export default function Board() {
         String(candidateBoardId ?? '')
       ].filter(Boolean));
 
-      // If we can map the game -> rounds -> board, ensure the requested board belongs to that game.
       if (boardIds.size > 0 && !boardIds.has(String(urlBoardId))) {
         deny();
       }
@@ -339,8 +311,7 @@ export default function Board() {
   const [gameEndData, setGameEndData] = useState(null);
   const [gameEndCountdown, setGameEndCountdown] = useState(10);
 
-  // EFFECT: Fetch Game/Round data if missing (e.g. reload on new round URL without state)
-  // Moved here to avoid ReferenceError: round is not defined
+
   useEffect(() => {
       const fetchMissingData = async () => {
           if ((!game || !round || (round.board?.id && String(round.board.id) !== String(urlBoardId))) && urlBoardId) {
@@ -372,9 +343,7 @@ export default function Board() {
       fetchMissingData();
   }, [urlBoardId, game, round]); 
 
-  // Save game state to sessionStorage to persist on reload.
-  // Once the game has ended we stop persisting to avoid redirect loops
-  // (the App-level StrictInGameRedirect uses savedGameData presence as "in game").
+
   useEffect(() => {
     if (gameEndData) {
       return;
@@ -390,15 +359,14 @@ export default function Board() {
       };
       sessionStorage.setItem('savedGameData', JSON.stringify(stateToSave));
     }
+
   }, [game, round, isSpectator, gameEndData]);
-  // Estados del tablero
   const BOARD_COLS = 11;
   const BOARD_ROWS = 9;
   const [collapseMode, setCollapseMode] = useState({ active: false, card: null, cardIndex: null });
+
   const [objectiveCards, setObjectiveCards] = useState({});
-  // Estado para cartas objetivo permanentemente reveladas (persiste en sessionStorage)
   const [permanentlyRevealedGoals, setPermanentlyRevealedGoals] = useState(() => {
-    // Inicializar desde sessionStorage si existe
     const savedKey = round?.id ? `revealedGoals_${round.id}` : null;
     if (savedKey) {
       const saved = sessionStorage.getItem(savedKey);
@@ -435,6 +403,7 @@ export default function Board() {
   const creatorUsername = game?.creator?.username || game?.creator;
   const isCreator = creatorUsername === loggedInUser?.username;
 
+  // Permite al espectador salir y volver a la lista de juegos
   const handleExitSpectatorMode = () => {
     if (!isSpectator) return;
 
@@ -456,34 +425,26 @@ export default function Board() {
     return initialBoard;
   });
 
-  const hasPatchedBoardBusy = useRef(false);
+
   const hasPatchedInitialLeftCards = useRef(false);
   const lastLoggedTurn = useRef(null);
-  const lastSkippedTurn = useRef({ roundId: null, turnIndex: null });
+
   const lastPlacedLog = useRef({ player: null, row: null, col: null, ts: 0 });
-  const lastObjectiveHideLog = useRef(0);
-  const lastCollapseLog = useRef(0);
-  const seenPrivateMessages = useRef(new Set());
+
   const lastPublishedRoles = useRef([]);
   const lastSyncedLogMessages = useRef([]);
-  const syncLogFromServerRef = useRef(null);
-
 
   const boardGridRef = useRef(null);
   const processingAction = useRef(false);
   const isTurnChanging = useRef(false);
   const isNavigatingToNewRound = useRef(false);
   const hasTriggeredGameEnd = useRef(false);
-  const ROUND_STATE = {
-    ACTIVE: 'ACTIVE',
-    ENDING: 'ENDING',
-    ENDED: 'ENDED'
-  };
   const roundEndedRef = useRef(ROUND_STATE.ACTIVE);
   const lastRoundId = useRef(null);
   const forceRolesReassignment = useRef(false);
   const playersOutOfCardsLogged = useRef(new Set());
 
+  // Detecta cambio de ronda (round.id) para resetear estados locales
   useEffect(() => {
     console.log('🔄 useEffect round.id check - round?.id:', round?.id, 'lastRoundId.current:', lastRoundId.current);
     if (round?.id && round.id !== lastRoundId.current) {
@@ -493,7 +454,8 @@ export default function Board() {
         console.log('🎭 Mark to reassign roles in new round');
       }
 
-      // Evitar mostrar roles de la ronda anterior mientras llegan los nuevos
+
+
       lastPublishedRoles.current = [];
       setPlayerRol([]);
 
@@ -503,7 +465,8 @@ export default function Board() {
       lastSyncedLogMessages.current = [];
       lastRoundId.current = round.id;
       
-      // Cargar cartas reveladas desde sessionStorage para esta ronda
+      
+
       const savedKey = `revealedGoals_${round.id}`;
       const saved = sessionStorage.getItem(savedKey);
       if (saved) {
@@ -521,7 +484,7 @@ export default function Board() {
     }
   }, [round?.id]);
 
-  // Persistir cartas reveladas en sessionStorage cuando cambien
+
   useEffect(() => {
     if (round?.id && Object.keys(permanentlyRevealedGoals).length > 0) {
       const savedKey = `revealedGoals_${round.id}`;
@@ -534,7 +497,8 @@ export default function Board() {
   const lastTimeoutToastTs = useRef(0);
   const lastReceivedTurnKey = useRef({ key: null, ts: 0 });
 
-  // Hook personalizado para cargar datos del juego
+
+
   const {
     ListCards,
     activePlayers,
@@ -552,7 +516,7 @@ export default function Board() {
     deck,
     squaresById,
     patchSquare,
-    pactchBoard,
+
     getBoard,
     getSquareByCoordinates,
     getLog,
@@ -566,8 +530,6 @@ export default function Board() {
   } = useGameData(game);
 
   
-    const rotatedOnly = getRotatedCards(Array.isArray(ListCards) ? ListCards : []);
-    const nonRotatedOnly = getNonRotatedCards(Array.isArray(ListCards) ? ListCards : []);
     const boardId = typeof round?.board === 'number' ? round.board : round?.board?.id;
     const boardMessage = useWebSocket(`/topic/game/${boardId}`);
     const gameMessage = useWebSocket(`/topic/game/${game?.id}`);
@@ -583,6 +545,7 @@ export default function Board() {
 
       switch(action){
         case "CARD_PLACED":
+          // Maneja evento de carta colocada recibido por WebSocket
           handleWsCardPlaced(boardMessage);
           if (boardMessage.goalReveals && Array.isArray(boardMessage.goalReveals)) {
             boardMessage.goalReveals.forEach(goal => {
@@ -611,6 +574,7 @@ export default function Board() {
         default:
           console.warn("WS action unrecognized:", action);
       }
+
     },[boardMessage]);
 
     useEffect(()=>{
@@ -624,6 +588,7 @@ export default function Board() {
       const {action} = gameMessage; 
       switch (action) {
       case "TURN_CHANGED":
+        // Maneja cambio de turno transmitido por el servidor
         handleWsTurnChanged(gameMessage);
         break;
 
@@ -649,6 +614,7 @@ export default function Board() {
       default:
         break;
     }
+
     },[gameMessage])
     
     const lastProcessedDeckTs = useRef(null);
@@ -681,6 +647,7 @@ export default function Board() {
         console.log('🔍 Calling checkForRoundEnd because totalCards === 0');
         checkForRoundEnd();
       }
+
     }, [playerCardsCount]);
     
     useEffect(() => {
@@ -715,8 +682,10 @@ export default function Board() {
         cancelled = true; 
         clearInterval(interval); 
       };
-    }, [isCreator, game?.chat, jwt]);
+    }, [isCreator, game?.chat]);
     
+    // --- MANEJO DE MENSAJES WEBSOCKET ---
+    // Procesa una carta colocada por otro jugador o uno mismo
     const handleWsCardPlaced =  async ({row, col, card, player, squareId})=>{
       console.log('📥 WebSocket CARD_PLACED received:', { row, col, card, player, squareId });
       let fullCard = card;
@@ -741,6 +710,9 @@ export default function Board() {
         }
       }
       
+
+      
+      const actor = player || currentPlayer || 'unknown';
       console.log('📥 Final card properties:', {
         id: fullCard?.id,
         image: fullCard?.image,
@@ -751,15 +723,8 @@ export default function Board() {
         centro: fullCard?.centro,
         rotacion: fullCard?.rotacion
       });
-      
-      const actor = player || currentPlayer || 'unknown';
       const now = Date.now();
-      /*
-      const sameAsLast = ... (Removed to ensure logging always fires)
-      if (sameAsLast) return;
-      */
-      
-      // We update the ref but do not block execution
+
       lastPlacedLog.current = { player: actor, row, col, ts: now };
 
       setBoardCells(prev => {
@@ -779,8 +744,7 @@ export default function Board() {
         };
         return next;
       });
-      // NO añadir log aquí - el jugador que colocó la carta ya lo hizo
-      // Este WebSocket solo sincroniza el estado visual del tablero
+      
     }
 
     const handleWsCardDestroyed = ({ row, col, player }) => {
@@ -795,12 +759,14 @@ export default function Board() {
       }, 800); 
     };
 
+  // Procesa la revelación de una carta de objetivo
   const handleWsGoalRevealed = async ({ row, col, goalType }) => {
     console.log(`🎯 Received GOAL_REVEALED at (${row}, ${col}) type: ${goalType}`);
     const normalized = goalType; 
     const positionKey = `[${row}][${col}]`;
     
-    // Guardar en permanentlyRevealedGoals para persistir en sessionStorage
+
+    
     setPermanentlyRevealedGoals(prev => ({
       ...prev,
       [positionKey]: goalType.toLowerCase()
@@ -838,7 +804,7 @@ export default function Board() {
   };
   
   
-    // Handlers para solicitudes de espectador
+
     const deleteMessagesByIds = async (ids) => {
       const safeIds = (ids || []).filter(id => id !== null && id !== undefined);
       if (safeIds.length === 0) return;
@@ -870,7 +836,8 @@ export default function Board() {
           .filter(id => id !== null && id !== undefined);
         const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
         
-        // Enviar mensaje de aceptación
+
+        
         const acceptMessage = {
           content: requestId !== null
             ? `SPECTATOR_ACCEPTED:${username}:${game.id}:${requestId}`
@@ -910,7 +877,8 @@ export default function Board() {
           .filter(id => id !== null && id !== undefined);
         const requestId = reqIds.length > 0 ? Math.max(...reqIds.map(Number).filter(Number.isFinite)) : null;
 
-        // Enviar mensaje de rechazo
+
+
         const denyMessage = {
           content: requestId !== null
             ? `SPECTATOR_DENIED:${username}:${game.id}:${requestId}`
@@ -999,14 +967,15 @@ export default function Board() {
         
           setCont(timeturn);
 
-          // Solo el primer jugador en el orden añade el log de turno para evitar duplicados
+          setCont(timeturn);
+
           const isFirstPlayer = playerOrder[0]?.username === loggedInUser.username;
           if (lastLoggedTurn.current !== nextUsername && isFirstPlayer) {
             await addLog(`Turn of <span class="${nextClass}">${nextUsername}</span>`, "turn");
             lastLoggedTurn.current = nextUsername;
+            lastLoggedTurn.current = nextUsername;
           }
 
-          // Si es MI turno - mostrar toast
           if (nextUsername === loggedInUser.username) {
             const now2 = Date.now(); 
             const last = lastTurnToast.current;
@@ -1014,7 +983,6 @@ export default function Board() {
               toast.info("🎲 It's your turn! 🎲");
               lastTurnToast.current = { username: nextUsername, ts: now2 };
             }
-            // El auto-skip se maneja en el useEffect separado que observa playerCardsCount
           }
         }
       }
@@ -1032,12 +1000,12 @@ export default function Board() {
       }));
     };
     
-    // Handler para cuando se crea una nueva ronda - todos los jugadores navegan al nuevo board
 const handleWsNewRound = (message) => {
   const { newRound, boardId } = message;
   console.log('🔄 WS NEW_ROUND received:', message);
 
-  // Guardar firma de roles de la ronda anterior para detectar si el backend aún devuelve roles antiguos
+
+
   try {
     const prevFromPublished = (lastPublishedRoles?.current && Array.isArray(lastPublishedRoles.current) && lastPublishedRoles.current.length > 0)
       ? lastPublishedRoles.current
@@ -1060,27 +1028,28 @@ const handleWsNewRound = (message) => {
     console.warn('Could not store previous round roles signature', e);
   }
   
-  // Limpiar sessionStorage anterior para evitar conflictos
+
+  
   sessionStorage.removeItem('savedGameData');
   
-  // Guardar datos en sessionStorage para recuperarlos después del reload
   sessionStorage.setItem('newRoundData', JSON.stringify({
     game: game,
     round: newRound,
     isSpectator: isSpectator
   }));
 
-  // Marcar que en esta ronda hay que reasignar roles (sobrevive al reload)
   if (newRound?.id !== undefined && newRound?.id !== null) {
     sessionStorage.setItem('forceRolesReassignmentRoundId', String(newRound.id));
   }
   
-  // Navegar y forzar reload para reiniciar todo el estado
+
+  
   const targetBoardId = boardId || newRound?.board;
   console.log('Navigating to board:', targetBoardId);
   window.location.href = `/board/${targetBoardId}`;
 };
     
+    // Maneja el fin de la ronda recibido por WebSocket
     const handleWsRoundEnd = (message) => {
       const { winnerTeam, reason, goldDistribution, playerRoles, roundId } = message;
       console.log('🏆 WS ROUND_END received:', message, 'current round.id:', round?.id);
@@ -1160,7 +1129,6 @@ const handleWsNewRound = (message) => {
       setDeckCount(newDeckCount);
       setCollapseMode({ active: false, card: null, cardIndex: null });
       
-      // Añadir log de la acción antes de cambiar turno
       const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
       await addColoredLog(
         currentIndex,
@@ -1178,6 +1146,7 @@ const handleWsNewRound = (message) => {
     }
   };
 
+// Maneja el uso de cartas de acción (herramientas, mapas, derrumbes)
 const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = null) => {
   if (processingAction.current) return;
   if (roundEndedRef.current === ROUND_STATE.ENDED) return;
@@ -1219,7 +1188,6 @@ const handleActionCard = async (card, targetPlayer, cardIndex, selectedTool = nu
       setRevealedObjective({ position: objectivePosition, cardType: objectiveCardType }); 
       toast.info(`🔍 Revealing objective... Look at the board!`);
       
-      // Añadir log inmediatamente para todos los jugadores
       const currentIndex = playerOrder.findIndex(p => p.username === currentPlayer);
       await addColoredLog(currentIndex, currentPlayer, `🗺️ Used a map card to reveal objective at ${objectivePosition}`);
       
@@ -1319,7 +1287,7 @@ const activateCollapseMode = (card, cardIndex) => {
     await appendAndPersistLog(msg, type);
   };
   const addPrivateLog = async (msg, type = "info") => {
-    // Los logs privados ahora también se sincronizan para consistencia
+
     await appendAndPersistLog(msg, type);
   };
 
@@ -1344,7 +1312,7 @@ const activateCollapseMode = (card, cardIndex) => {
     const currentTurnIndex = round?.turn || 0; 
     let nextIndex = (currentTurnIndex + 1) % playerOrder.length;
     
-    // Auto-skip jugadores sin cartas
+
     let skippedPlayers = 0;
     const maxSkips = playerOrder.length;
     
@@ -1352,7 +1320,6 @@ const activateCollapseMode = (card, cardIndex) => {
       const nextPlayer = playerOrder[nextIndex];
       const nextPlayerCards = playerCardsCount[nextPlayer?.username];
       
-      // Verificar si TODOS tienen 0 cartas
       const allPlayersCards = playerOrder.map(p => playerCardsCount[p.username] || 0);
       const totalCards = allPlayersCards.reduce((sum, count) => sum + count, 0);
       
@@ -1362,7 +1329,6 @@ const activateCollapseMode = (card, cardIndex) => {
       }
       
       if (nextPlayerCards === 0) {
-        // Este jugador no tiene cartas, saltar al siguiente
         const playerIndex = nextIndex;
         const playerClass = `player${playerIndex + 1}`;
         addLog(`<span class="${playerClass}">${nextPlayer.username}</span> has no cards, skipping turn`, "info");
@@ -1370,7 +1336,6 @@ const activateCollapseMode = (card, cardIndex) => {
         nextIndex = (nextIndex + 1) % playerOrder.length;
         skippedPlayers++;
       } else {
-        // Este jugador tiene cartas, usar este índice
         break;
       }
     } 
@@ -1454,7 +1419,7 @@ const activateCollapseMode = (card, cardIndex) => {
     const winnerUsername = sortedRankings.length > 0 ? sortedRankings[0].username : null;
     console.log('👑 Winner:', winnerUsername);
 
-    // Solo el primer jugador procesa las estadísticas y logros (para evitar duplicados)
+
     const isFirstPlayer = playerOrder.length > 0 && playerOrder[0]?.username === loggedInUser?.username;
     
     if (isFirstPlayer && winnerUsername) {
@@ -1484,12 +1449,12 @@ const activateCollapseMode = (card, cardIndex) => {
   const handleRoundEnd = async (result) => {
     const { reason, winnerTeam, goldPosition } = result;
     
-    // Verificar si soy el primer jugador (responsable de calcular y enviar datos)
+
     let firstPlayerUsername = null;
     if (playerOrder.length > 0) {
         firstPlayerUsername = playerOrder[0]?.username;
     } else if (activePlayers.length > 0) {
-        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        // Alternativa: ordenar activePlayers localmente si `playerOrder` aún no está establecido
         const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
         firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
     }
@@ -1509,12 +1474,10 @@ const activateCollapseMode = (card, cardIndex) => {
       addLog(`🏆 Round ended! No more cards. ${winnerTeam} win!`, 'success');
     }
 
-    // Solo el primer jugador (o el creador si forzó el fin) calcula y envía los datos
     if (shouldExecuteLogic) {
       console.log('I am responsible (FirstPlayer or Creator), calculating gold distribution...');
       console.log('activePlayers with roles:', activePlayers.map(p => ({ username: p.username, rol: p.rol })));
       
-      // Distribuir pepitas de oro y obtener la distribución para el modal
       const winnerRol = winnerTeam === 'MINERS' ? false : true;
       const goldDistribution = await distributeGold(activePlayers, winnerRol);
       await loadActivePlayers();
@@ -1563,12 +1526,10 @@ const activateCollapseMode = (card, cardIndex) => {
   useEffect(() => {
     if (!roundEndData || roundEndCountdown > 0) return;
 
-    // Determinar robustamente quién es el primer jugador
     let firstPlayerUsername = null;
     if (playerOrder.length > 0) {
         firstPlayerUsername = playerOrder[0]?.username;
     } else if (activePlayers.length > 0) {
-        // Fallback: sort activePlayers locally if playerOrder is not yet set
         const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
         firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
     }
@@ -1585,16 +1546,15 @@ const activateCollapseMode = (card, cardIndex) => {
       return;
     }
 
-    // Solo el primer jugador crea la nueva ronda
-    // Los demás esperarán el mensaje WebSocket NEW_ROUND
     if (!isFirstPlayer) {
       console.log('🔄 Not the first player, waiting for WebSocket NEW_ROUND message...');
-      return; // Los demás jugadores esperan el WebSocket
+      return; 
     }
     
     if (isNavigatingToNewRound.current) return;
     isNavigatingToNewRound.current = true;
     
+    // Lógica para crear una nueva ronda tras finalizar la actual
     const createNewRound = async () => {
       try {
         console.log('🔧 Resetting tools for all players...');
@@ -1603,11 +1563,7 @@ const activateCollapseMode = (card, cardIndex) => {
         const newRound = await postRound({ gameId: game.id, roundNumber: round.roundNumber + 1 });
         console.log('✅ New round created:', newRound);
         
-        // El backend enviará el WebSocket NEW_ROUND a todos los jugadores
-        // La navegación real se hace en handleWsNewRound cuando llegue el mensaje
-        // Pero por si acaso el WS no llega, navegamos directamente
         if (newRound && newRound.board) {
-          // Guardar firma de roles de la ronda anterior para detectar si el backend aún devuelve roles antiguos
           try {
             const prevFromPublished = (lastPublishedRoles?.current && Array.isArray(lastPublishedRoles.current) && lastPublishedRoles.current.length > 0)
               ? lastPublishedRoles.current
@@ -1636,7 +1592,6 @@ const activateCollapseMode = (card, cardIndex) => {
             isSpectator: isSpectator
           }));
 
-          // Marcar que en esta ronda hay que reasignar roles (sobrevive al reload)
           if (newRound?.id !== undefined && newRound?.id !== null) {
             sessionStorage.setItem('forceRolesReassignmentRoundId', String(newRound.id));
           }
@@ -1652,6 +1607,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
     
     createNewRound();
+
   }, [roundEndCountdown, roundEndData, activePlayers, playerOrder, loggedInUser, round, game]);
 
   useEffect(() => {
@@ -1745,12 +1701,10 @@ const activateCollapseMode = (card, cardIndex) => {
         goldPosKey = objectivePositions[0];
       }
 
-      // Parsear coordenadas
       const match = goldPosKey.match(/\[(\d+)\]\[(\d+)\]/);
       const r = match ? Number(match[1]) : 4;
       const c = match ? Number(match[2]) : 9;
 
-      // Revelar visualmente la carta objetivo
       setBoardCells(prev => {
         const next = prev.map(row => row.slice());
         if (next[r] && next[r][c]) {
@@ -1860,20 +1814,15 @@ const activateCollapseMode = (card, cardIndex) => {
     }
 
     try {
-      // Obtener el estado MÁS RECIENTE del servidor primero
       const currentLog = await getLog(logId);
       const serverMessages = currentLog?.messages || [];
       
-      // Añadir el nuevo mensaje a los mensajes del servidor
       const nextMessages = [...serverMessages, msg];
       
-      // Persistir en el servidor
       await patchLog(logId, { round: roundId, messages: nextMessages });
       
-      // Actualizar referencias
       lastSyncedLogMessages.current = nextMessages;
       
-      // Actualizar UI inmediatamente con el resultado confirmado
       const serverLog = nextMessages.map((m, idx) => ({ 
         msg: m, 
         type: 'info',
@@ -1881,11 +1830,7 @@ const activateCollapseMode = (card, cardIndex) => {
       }));
       setGameLog(serverLog);
       
-      setLogData(prev => ({
-        ...(prev || {}),
-        id: logId,
-        messages: nextMessages
-      }));
+
       
     } catch (error) {
       console.error('Error persisting log:', error);
@@ -1904,7 +1849,6 @@ const activateCollapseMode = (card, cardIndex) => {
         if (logId) {
           const log = await getLog(logId);
           if (log) {
-            setLogData(log);
             const mapped = (log.messages || []).map(m => ({ msg: m, type: "info" }));
             setGameLog(mapped);}}
         
@@ -1924,21 +1868,15 @@ const activateCollapseMode = (card, cardIndex) => {
         if (isSpectator) {
           addLog('📥Entering as <span style="color: #2313b6ff;">SPECTATOR</span>. Restriction applies, you can only watch de game!', 'info');
           toast.info('Spectator mode activated✅');
-          // Espectadores no esperan sincronización
           setWaitingForPlayers(false);
           setIsLoading(false);
         } else {
-          // Recalcular condiciones en tiempo de ejecución para decidir si
-          // saltamos la sincronización de jugadores o no.
           const isRefreshNow = detectPageRefresh();
           const newRoundRaw = sessionStorage.getItem('newRoundData');
           const savedGameRaw = sessionStorage.getItem('savedGameData');
           const hasNewRoundSession = newRoundRaw !== null;
           const hasSavedGameSession = savedGameRaw !== null;
 
-          // Only skip player sync when the sessionStorage entries actually
-          // correspond to this board/round. Otherwise stale data from previous
-          // games can cause asymmetry between browsers.
           let shouldSkipPlayerSyncLocal = false;
           let parsedNewRound = null;
           let parsedSavedGame = null;
@@ -1966,25 +1904,15 @@ const activateCollapseMode = (card, cardIndex) => {
             }
           }
 
-          console.log('🔎 Player sync decision:', {
-            isRefreshNow,
-            hasNewRoundSession,
-            hasSavedGameSession,
-            parsedNewRoundPreview: parsedNewRound ? (JSON.stringify(parsedNewRound).substring(0,300)) : null,
-            parsedSavedGamePreview: parsedSavedGame ? (JSON.stringify(parsedSavedGame).substring(0,300)) : null,
-            locationStatePresent: !!location?.state,
-            forceRolesReassignmentRoundId: sessionStorage.getItem('forceRolesReassignmentRoundId'),
-            shouldSkipPlayerSyncLocal
-          });
+
 
           if (shouldSkipPlayerSyncLocal) {
             console.log('🔄 Skipping player sync (refresh or round transition) - local decision', { isRefreshNow, hasNewRoundSession, hasSavedGameSession });
             setWaitingForPlayers(false);
             setIsLoading(false);
           } else {
-            // Entrada fresca a una nueva partida - notificar al servidor que este jugador está listo
             console.log('🎮 Fresh game entry - waiting for player sync');
-            updateLoadingStep(7); // Marcar que estamos esperando jugadores
+            updateLoadingStep(7); 
             try {
               const res = await fetch('/api/v1/rounds/playerReady', {
                 method: 'POST',
@@ -1997,16 +1925,9 @@ const activateCollapseMode = (card, cardIndex) => {
                   username: loggedInUser?.username
                 }),
               });
-              let bodyTxt = null;
-              try {
-                bodyTxt = await res.text();
-              } catch (e) {
-                bodyTxt = '<unreadable response body>';
-              }
-              console.log('📤 Notificado al servidor: jugador listo', { ok: res.ok, status: res.status, body: bodyTxt });
+              console.log('📤 Notificado al servidor: jugador listo', { ok: res.ok, status: res.status });
             } catch (err) {
               console.error('Error notificando playerReady:', err);
-              // Si falla, salir del loading de todas formas para no bloquear
               setWaitingForPlayers(false);
               setIsLoading(false);
             }
@@ -2020,6 +1941,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
 
     initializeGame();
+
   }, []);
 
   useEffect(() => {
@@ -2028,6 +1950,7 @@ const activateCollapseMode = (card, cardIndex) => {
 
     let cancelled = false;
 
+    // Sincroniza el log del juego con el servidor periodicamente
     const syncLogFromServer = async () => {
       if (cancelled) return;
       
@@ -2039,15 +1962,16 @@ const activateCollapseMode = (card, cardIndex) => {
           const serverMessages = log.messages;
           const currentMessages = lastSyncedLogMessages.current;
           
-          // Comparar si los mensajes son realmente diferentes
+
+          
           const isDifferent = serverMessages.length !== currentMessages.length ||
             JSON.stringify(serverMessages) !== JSON.stringify(currentMessages);
           
           if (!isDifferent) {
+            console.log('🔄 Log sync: no changes detected, skipping update');
             return;
           }
           
-          // Actualizar con los mensajes del servidor (siempre confiar en el servidor)
           const serverLog = serverMessages.map((msg, idx) => ({ 
             msg, 
             type: 'info',
@@ -2056,27 +1980,24 @@ const activateCollapseMode = (card, cardIndex) => {
           
           setGameLog(serverLog);
           lastSyncedLogMessages.current = [...serverMessages];
-          setLogData(log);
+
         }
       } catch (error) {
         console.error('Error syncing log:', error);
       }
     };
 
-    // Exponer la función para que appendAndPersistLog pueda llamarla
-    syncLogFromServerRef.current = syncLogFromServer;
 
-    // Sincronización inicial
     syncLogFromServer();
 
-    // Polling cada 1 segundo para sincronización más rápida
     const syncInterval = setInterval(syncLogFromServer, 1000);
 
     return () => {
       cancelled = true;
-      syncLogFromServerRef.current = null;
+
       clearInterval(syncInterval);
     };
+
   }, [round?.log, round?.id]);
 
   useEffect(() => {
@@ -2142,9 +2063,7 @@ const activateCollapseMode = (card, cardIndex) => {
         pickaxe: player.pickaxeState ?? true
       };
     });
-    // Initialize tools only for usernames that don't have an entry yet.
-    // This avoids overwriting runtime updates coming from TOOLS_CHANGED WS messages
-    // while still ensuring new players get default tool states.
+
     setPlayerTools(prev => {
       const next = { ...(prev || {}) };
       Object.keys(initialTools).forEach(username => {
@@ -2156,13 +2075,13 @@ const activateCollapseMode = (card, cardIndex) => {
     });
     let cancelled = false;
 
+
+
     const getOrderedUsernames = () => {
-      // Prefer the already-computed playerOrder
       if (Array.isArray(playerOrder) && playerOrder.length > 0) {
         return playerOrder.map(p => p?.username).filter(Boolean);
       }
 
-      // Otherwise, compute the same ordering playerOrder uses: by birthDate asc (oldest first)
       if (Array.isArray(activePlayers) && activePlayers.length > 0) {
         return [...activePlayers]
           .sort((a, b) => {
@@ -2239,7 +2158,8 @@ const activateCollapseMode = (card, cardIndex) => {
       const ordered = [...list].sort((a, b) => String(a.username).localeCompare(String(b.username)));
       const rng = mulberry32(fnv1a32(String(seedStr ?? '')));
 
-      // Deterministic Fisher–Yates
+
+
       for (let i = ordered.length - 1; i > 0; i -= 1) {
         const j = Math.floor(rng() * (i + 1));
         [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
@@ -2296,21 +2216,19 @@ const activateCollapseMode = (card, cardIndex) => {
         backendRoles.length === activePlayers.length &&
         saboteursAlready === expectedSaboteurs;
 
-      // Si se fuerza la reasignación (nueva ronda), siempre reasignar roles
+
+
       if (shouldForceFromSession || forceRolesReassignment.current) {
         console.log('🎭 Forcing role reassignment for new round');
         forceRolesReassignment.current = false;
 
-        // Evitar condiciones de carrera: solo el primer jugador asigna y persiste
         if (isSpectator) {
           publishRoles(backendRoles);
           return;
         }
 
         if (!isRoleAssigner) {
-          // Esperar a que el primer jugador persista roles.
-          // Ojo: el backend puede devolver roles "completos" pero aún ser los de la ronda anterior.
-          // Para evitar quedarnos con roles antiguos, hacemos polling unas pocas veces.
+          
           const pollKey = round?.id ? `forceRolesReassignmentPolls_${round.id}` : 'forceRolesReassignmentPolls';
           const polls = Number(sessionStorage.getItem(pollKey) || '0');
           const nextPolls = polls + 1;
@@ -2320,8 +2238,7 @@ const activateCollapseMode = (card, cardIndex) => {
           const currSig = rolesSignature(backendRoles);
           const looksLikeStillPrevious = !!prevSig && currSig === prevSig;
 
-          // Fallback seguro: si tras varios polls seguimos viendo exactamente la firma anterior,
-          // dejamos que un único "segundo jugador" haga la asignación/persistencia.
+          
           const ordered = getOrderedUsernames();
           const takeoverUsername = ordered.length > 1 ? ordered[1] : null;
           const canTakeOver =
@@ -2360,12 +2277,12 @@ const activateCollapseMode = (card, cardIndex) => {
           return;
         }
 
-        // Primer jugador: reasigna y persiste (determinista por ronda para evitar intermitencia)
+
+
         const prevSig = sessionStorage.getItem('previousRoundRolesSignature');
         const baseSeed = `round:${round?.id ?? 'unknown'}`;
         let rolesAssigned = assignRolesDeterministic(activePlayers, baseSeed);
         if (prevSig) {
-          // Si por casualidad coincide con la ronda anterior, variar la semilla de forma determinista
           let attempts = 0;
           while (attempts < 8 && rolesSignature(rolesAssigned) === prevSig) {
             attempts += 1;
@@ -2384,7 +2301,8 @@ const activateCollapseMode = (card, cardIndex) => {
         return;
       }
 
-      // Si faltan roles, solo el creador los asigna/persiste para evitar carreras
+
+
       if (isSpectator) {
         publishRoles(backendRoles);
         return;
@@ -2405,19 +2323,18 @@ const activateCollapseMode = (card, cardIndex) => {
     syncRoles();
 
     return () => { cancelled = true; };
+
   }, [activePlayers, playerOrder, loggedInUser?.username, round?.id, isSpectator]);
 
   useEffect(() => {
     if (!currentPlayer || playerOrder.length === 0 || roundEnded) return;
 
-    // No iniciar timer hasta que todos los jugadores estén listos
+
     if (waitingForPlayers) return;
 
     const isMyTurn = !isSpectator && loggedInUser.username === currentPlayer;
 
-    // Only decrement timer if it's the current player's turn
     if (!isMyTurn) {
-      // For other players, keep the timer frozen at timeturn
       console.log('⏸ Timer frozen for non-current player', { currentPlayer, myUsername: loggedInUser.username, waitingForPlayers, cont });
       setCont(timeturn);
       return;
@@ -2439,6 +2356,7 @@ const activateCollapseMode = (card, cardIndex) => {
       clearInterval(time);
       console.log('⏹ Clearing timer interval', { currentPlayer, myUsername: loggedInUser.username });
     };
+
   }, [currentPlayer, loggedInUser.username, playerOrder.length, roundEnded, isSpectator, waitingForPlayers]);
 
   useEffect(() => {
@@ -2452,7 +2370,6 @@ const activateCollapseMode = (card, cardIndex) => {
       if (activePlayers.length > 0 && round?.id && !hasPatchedInitialLeftCards.current) {
         const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
         
-        // Hacer fetch fresco del round desde el backend
         console.log('🃏 Fetching fresh round data for round:', round.id);
         const freshRound = await getRoundById(round.id);
         const backendLeftCards = freshRound?.leftCards;
@@ -2467,14 +2384,12 @@ const activateCollapseMode = (card, cardIndex) => {
             const isFirstTurn = backendTurn === 0 || backendTurn === null || backendTurn === undefined;
 
             if (isFirstTurn && backendLeftCards !== expectedInitialDeck) {
-                 console.warn(`🃏 Initial deck mismatch! Backend: ${backendLeftCards}, Expected: ${expectedInitialDeck}. Auto-correcting...`);
                  setDeckCount(expectedInitialDeck);
                  patchRound(round.id, { leftCards: expectedInitialDeck });
             } else {
                  setDeckCount(backendLeftCards);
             }
         } else {
-             // Fallback only if backend data is missing
              console.log("🃏 calculating initial deck locally")
              const cardsPerPlayer = calculateCardsPerPlayer(activePlayers.length);
              const initialDeck = calculateInitialDeck(activePlayers.length, cardsPerPlayer);
@@ -2482,15 +2397,12 @@ const activateCollapseMode = (card, cardIndex) => {
              patchRound(round.id, { leftCards: initialDeck });
         }
 
-        // ... rest of the logic
+
         const initialCounts = {};
         activePlayers.forEach(p => {
           if (!p) return; 
           const name = p.username || p;
           if (name) {
-             // We don't have per-player card counts from backend round yet? 
-             // We'll trust the WebSocket updates for specific counts, 
-             // or initialize securely if needed. For now, rely on deckMessage.
             initialCounts[name] = cardsPerPlayer;
           }
         });
@@ -2500,6 +2412,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
     
     initializeLeftCards();
+
   }, [activePlayers, round?.id]);
 
   useEffect(() => {
@@ -2520,7 +2433,6 @@ const activateCollapseMode = (card, cardIndex) => {
         toast.error("Error trying to fetch Squares");
       }
     } catch (error) {
-      console.error( error);
       toast.error(error.message);
     }}
     fetchSquares(); 
@@ -2530,6 +2442,7 @@ const activateCollapseMode = (card, cardIndex) => {
   useEffect(() => {
     if (!round || !round.board || !squaresById) return;
 
+    // Carga el estado inicial del tablero (cartas colocadas, objetivos)
     const loadBoard = async () => {
       const boardId = typeof round.board === 'number' ? round.board : round.board.id;
       if (!boardId) return;
@@ -2548,7 +2461,6 @@ const activateCollapseMode = (card, cardIndex) => {
       if (boardData?.objectiveCardsOrder) {
         const order = boardData.objectiveCardsOrder.split(',');
         console.log('- BOARD DEBUG - objectiveCardsOrder from server:', order);
-        
         const mapping = {
           '[2][9]': order[0],
           '[4][9]': order[1],
@@ -2622,7 +2534,7 @@ const activateCollapseMode = (card, cardIndex) => {
         })
       );
       
-      // Restaurar cartas objetivo reveladas desde sessionStorage
+
       const savedKey = `revealedGoals_${round.id}`;
       const saved = sessionStorage.getItem(savedKey);
       if (saved) {
@@ -2631,7 +2543,7 @@ const activateCollapseMode = (card, cardIndex) => {
           console.log('🔄 Restoring revealed goals from sessionStorage:', revealedGoals);
           
           Object.entries(revealedGoals).forEach(([posKey, cardType]) => {
-            // Parsear la clave de posición "[row][col]" 
+ 
             const match = posKey.match(/\[(\d+)\]\[(\d+)\]/);
             if (match) {
               const row = parseInt(match[1], 10);
@@ -2655,6 +2567,7 @@ const activateCollapseMode = (card, cardIndex) => {
     };
 
     loadBoard();
+
   }, [round?.id, ListCards]);
 
   useEffect(() => {
@@ -2697,10 +2610,11 @@ const activateCollapseMode = (card, cardIndex) => {
   fetchChatMessages();
   const pollInterval = setInterval(fetchChatMessages, 1000);
   return () => clearInterval(pollInterval);
+
 }, [chat, game]); 
 
 
-  // Render 
+  
   if (isLoading) {
     return <LoadingScreen progress={loadingProgress} loadingSteps={loadingSteps} />;}
 
@@ -2806,7 +2720,7 @@ const activateCollapseMode = (card, cardIndex) => {
         playerTools={playerTools}
       />
 
-      <GameLog gameLog={gameLog} privateLog={privateLog} />
+      <GameLog gameLog={gameLog} privateLog={[]} />
 
       <ChatBox
         message={message}
