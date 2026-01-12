@@ -2,12 +2,13 @@ package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,6 +31,8 @@ import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
+import es.us.dp1.l4_04_24_25.saboteur.card.Card;
+import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.DuplicatedSquareException;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;
@@ -37,9 +40,6 @@ import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
 import es.us.dp1.l4_04_24_25.saboteur.util.RestPreconditions;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import es.us.dp1.l4_04_24_25.saboteur.card.Card;
-import es.us.dp1.l4_04_24_25.saboteur.card.CardService;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 
 @RestController
@@ -124,12 +124,6 @@ public class SquareRestController {
             }
         }
 
-        /*if(updates.containsKey("card")){
-            Integer cardId = (Integer)updates.get("card");
-            Card card = cardService.findCard(cardId);
-            square.setCard(card);
-            square.setOccupation(true);
-        }*/
         if(updates.containsKey("card")) {
             Object cardIdObj = updates.get("card");
             if(cardIdObj != null) {
