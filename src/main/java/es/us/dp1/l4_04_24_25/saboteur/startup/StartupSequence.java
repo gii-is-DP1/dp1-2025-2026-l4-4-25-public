@@ -74,7 +74,7 @@ public class StartupSequence implements CommandLineRunner {
             System.out.println(BRIGHT_GREEN + "[ ✓ ] SYSTEM READY" + RESET);
             System.out.println();
 
-            // Final epic message
+            // Mensaje final épico
             System.out.println(BRIGHT_YELLOW + "══════════════════════════════════════════════════════════" + RESET);
             System.out.println(BRIGHT_GREEN + "         >> SABOTEUR GAME READY - PRESS START <<" + RESET);
             System.out.println(BRIGHT_YELLOW + "══════════════════════════════════════════════════════════" + RESET);

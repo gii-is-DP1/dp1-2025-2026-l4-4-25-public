@@ -25,12 +25,11 @@ import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
 public class AuthoritiesService {
 
 	private AuthoritiesRepository authoritiesRepository;
-//	private UserService userService;
 
 	@Autowired
 	public AuthoritiesService(AuthoritiesRepository authoritiesRepository) {
 		this.authoritiesRepository = authoritiesRepository;
-//		this.userService = userService;
+		
 	}
 
 	@Transactional(readOnly = true)

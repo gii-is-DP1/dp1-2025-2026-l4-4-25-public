@@ -27,11 +27,11 @@ import minerRol from './cards-images/roles/minerRol.png';
 
 // Hooks personalizados
 import { useGameData } from './hooks/useGameData';
+import useWebSocket from "../hooks/useWebSocket";
 
 import '../App.css';
 import '../static/css/home/home.css';
 import '../static/css/game/game.css';
-import useWebSocket from "../hooks/useWebSocket";
 
 
 const jwt = tokenService.getLocalAccessToken();
@@ -105,8 +105,8 @@ export default function Board() {
       round: location.state.round || null,
       isSpectator: location.state.isSpectator || false
     };
-  } else if (savedRoundData) {
-      // Validate Board ID if possible
+    } else if (savedRoundData) {
+      // Validar ID del tablero si es posible
       const savedBoardId = savedRoundData.round?.board?.id || savedRoundData.round?.board;
       if (urlBoardId && savedBoardId && String(savedBoardId) !== String(urlBoardId)) {
           console.warn(`⚠️ State mismatch detected! URL Board: ${urlBoardId}, Saved Board: ${savedBoardId}. Discarding saved state.`);
@@ -1454,7 +1454,7 @@ const activateCollapseMode = (card, cardIndex) => {
     if (playerOrder.length > 0) {
         firstPlayerUsername = playerOrder[0]?.username;
     } else if (activePlayers.length > 0) {
-        // Fallback: sort activePlayers locally if playerOrder is not yet set
+        // Alternativa: ordenar activePlayers localmente si `playerOrder` aún no está establecido
         const sorted = [...activePlayers].sort((a, b) => a.id - b.id);
         firstPlayerUsername = sorted[0]?.user?.username || sorted[0]?.username;
     }

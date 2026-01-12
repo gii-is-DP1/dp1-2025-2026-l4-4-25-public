@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import './BackgroundMusic.css';
 
-// Default YouTube video ID (used only as fallback when no local default exists)
+// ID de video predeterminado de YouTube (usado solo como fallback cuando no existe un predeterminado local)
 const DEFAULT_VIDEO_ID = 'a0PvlNn7B-0';
 
 const BackgroundMusic = () => {
@@ -50,13 +50,13 @@ const BackgroundMusic = () => {
             lastPlayableVideoIdRef.current = DEFAULT_VIDEO_ID;
             loopVideoIdRef.current = DEFAULT_VIDEO_ID;
             event.target.setVolume(30);
-            // Only autoplay YouTube if there is NO local default selected
+            // Solo poner autoplay en YouTube si NO hay un predeterminado local seleccionado
             if (selectedTrackIndex === null) {
               try {
                 event.target.playVideo();
                 setIsPlaying(true);
               } catch (e) {
-                // autoplay blocked
+                // autoplay bloqueado
                 setIsPlaying(false);
               }
             }
@@ -81,7 +81,7 @@ const BackgroundMusic = () => {
             }
           },
           onError: (event) => {
-            // 2: invalid parameter, 5: HTML5 error, 100/101/150: not found or embedding disabled
+          // 2: parámetro inválido, 5: error HTML5, 100/101/150: no encontrado o incrustación deshabilitada
             setIsPlaying(false);
             const code = event?.data;
             if (code === 101 || code === 150) {
@@ -92,7 +92,7 @@ const BackgroundMusic = () => {
               toast.error('Could not play that YouTube video.');
             }
 
-            // Fallback: keep music going by returning to last playable video
+            // Fallback: mantener la música volviendo al último video reproducible
             pendingVideoIdRef.current = null;
             const fallbackId = lastPlayableVideoIdRef.current;
             if (fallbackId && playerRef.current?.loadVideoById) {
@@ -101,7 +101,7 @@ const BackgroundMusic = () => {
                 playerRef.current.playVideo();
                 loopVideoIdRef.current = fallbackId;
               } catch (e) {
-                // ignore
+                console.log('BackgroundMusic: fallback loadVideoById failed', e);
               }
             }
             }
@@ -136,7 +136,7 @@ const BackgroundMusic = () => {
   const enableAudio = async () => {
     try { localStorage.setItem('bgm.enabled', 'true'); } catch (e) {}
     setUserEnabled(true);
-    // if we have an inputVideoId set and mode local, try to play it now
+    // si tenemos inputVideoId establecido y modo 'local', intentar reproducirlo ahora
     if (mode === 'local') {
       const raw = inputVideoId.trim();
       if (raw) {
@@ -156,7 +156,7 @@ const BackgroundMusic = () => {
           setIsPlaying(true);
           try { localStorage.setItem('bgm.selected', src); localStorage.setItem('bgm.playing', 'true'); } catch (e) {}
         } catch (e) {
-          // autoplay failed despite gesture — leave to user to press Play
+          // autoplay falló a pesar del gesto — dejar que el usuario pulse Play
           setIsPlaying(false);
         }
       }
@@ -186,7 +186,7 @@ const BackgroundMusic = () => {
   const togglePlay = () => {
     if (mode === 'local') {
       if (!audioRef.current) {
-        // No local audio created yet — treat Play as a user gesture to create+play the selected/input track
+          // Aún no se creó audio local — tratar Play como un gesto de usuario para crear+reproducir la pista seleccionada/ingresada
         changeVideo();
         return;
       }
@@ -226,10 +226,10 @@ const BackgroundMusic = () => {
     }
   };
 
-  // Load list.json from public/music/list.json to populate tracks and pick default
+  // Cargar list.json desde public/music/list.json para poblar pistas y elegir el predeterminado
   useEffect(() => {
     let cancelled = false;
-    // read persisted selection/play state (if any)
+    // leer selección/estado de reproducción persistido (si existe)
     let savedSel = null;
     let savedPlay = false;
     let savedEnabled = false;
@@ -254,7 +254,7 @@ const BackgroundMusic = () => {
           setSelectedTrackIndex(defaultIdx);
           setMode('local');
           setInputVideoId(`/music/${encodeURIComponent(t[defaultIdx].file)}`);
-          // If YouTube player already exists, pause it to avoid simultaneous playback
+          // Si el reproductor de YouTube ya existe, pausarlo para evitar reproducción simultánea
           try {
             if (playerRef.current?.pauseVideo) {
               playerRef.current.pauseVideo();
@@ -264,7 +264,7 @@ const BackgroundMusic = () => {
             // ignore
           }
         }
-        // Restore saved selection/play state if present
+        // Restaurar selección/estado de reproducción guardado si está presente
         if (savedSel) {
           const src = savedSel.startsWith('/music/') ? savedSel : `/music/${encodeURIComponent(savedSel)}`;
           setInputVideoId(src);
@@ -276,7 +276,7 @@ const BackgroundMusic = () => {
           } catch (e) {}
 
           if (savedPlay && savedEnabled) {
-            // attempt autoplay now that the user previously enabled audio; if blocked leave for user Play
+            // intentar autoplay ahora que el usuario previamente habilitó audio; si está bloqueado dejar para que el usuario pulse Play
             try {
               if (playerRef.current?.pauseVideo) playerRef.current.pauseVideo();
             } catch (e) {}
@@ -287,7 +287,7 @@ const BackgroundMusic = () => {
             const attemptSrc = src;
             audioRef.current = new Audio(attemptSrc);
             audioRef.current.loop = true;
-            // Attempt muted autoplay first (browsers usually allow muted autoplay)
+            // Intentar autoplay en silencio primero (los navegadores suelen permitir autoplay silenciado)
             audioRef.current.muted = true;
             audioRef.current.volume = Math.max(0, Math.min(1, volume / 100));
             audioRef.current.preload = 'auto';
@@ -339,7 +339,7 @@ const BackgroundMusic = () => {
         }
       } catch (e) {
         console.log('No music list found', e);
-        // Runtime fallback: attempt to detect a default file so professor only needs to run `npm start`.
+          // Fallback en tiempo de ejecución: intentar detectar un archivo predeterminado para que el profesor solo necesite ejecutar `npm start`.
         try {
           const probe = async (p) => {
             try {
@@ -365,7 +365,7 @@ const BackgroundMusic = () => {
             setSelectedTrackIndex(0);
             setMode('local');
             setInputVideoId(`/music/${encodeURIComponent(found[0].file)}`);
-            // Pause YouTube player if it's running
+            // Pausar el reproductor de YouTube si está en funcionamiento
             try {
               if (playerRef.current?.pauseVideo) {
                 playerRef.current.pauseVideo();
@@ -380,7 +380,7 @@ const BackgroundMusic = () => {
     
       return () => {
         cancelled = true;
-        // cleanup any resume listeners we attached
+        // limpiar cualquier listener de reanudación que hayamos adjuntado
         try {
           const r = resumeHandlersRef.current;
           if (r) {
@@ -404,21 +404,21 @@ const BackgroundMusic = () => {
     if (!raw) return;
 
       if (mode === 'local') {
-        // treat input as a local path or URL to an audio file
-        // If the user provided a local `/music/<file>` path from the list, ensure it's URI-encoded
+        // tratar la entrada como una ruta local o URL a un archivo de audio
+        // Si el usuario proporcionó una ruta local `/music/<file>` desde la lista, asegurarse de que esté URI-encoded
         const src = raw.startsWith('/music/') ? encodeURI(raw) : raw;
-      // stop youtube player if active
+      // detener el reproductor de YouTube si está activo
       try { if (playerRef.current?.pauseVideo) playerRef.current.pauseVideo(); } catch (e) {}
       if (audioRef.current) {
         try { audioRef.current.pause(); } catch (e) {}
         audioRef.current = null;
       }
-      // create audio element but don't assume autoplay will succeed; keep behavior tied to the user's Play action
+      // crear elemento de audio pero no asumir que el autoplay funcionará; mantener el comportamiento ligado a la acción Play del usuario
       audioRef.current = new Audio(src);
       audioRef.current.loop = true;
       audioRef.current.volume = Math.max(0, Math.min(1, volume / 100));
       audioRef.current.preload = 'auto';
-      // attempt to play; if blocked, show clear English message and leave audio ready for user-triggered play
+      // intentar reproducir; si está bloqueado, mostrar un mensaje y dejar el audio listo para que el usuario lo inicie
       audioRef.current.play().then(() => {
         console.log('BackgroundMusic: changeVideo started local src', src);
         setLocalSrc(src);
@@ -446,7 +446,7 @@ const BackgroundMusic = () => {
     setIsPlaying(true);
   };
 
-  // Cleanup local audio on unmount
+  // Limpiar audio local al desmontar el componente
   useEffect(() => {
     return () => {
       try {
@@ -459,7 +459,7 @@ const BackgroundMusic = () => {
     };
   }, []);
 
-  // Pause local audio when switching to youtube mode
+  // Pausar audio local al cambiar a modo youtube
   useEffect(() => {
     if (mode === 'youtube' && audioRef.current) {
       try { audioRef.current.pause(); } catch (e) {}
@@ -470,7 +470,7 @@ const BackgroundMusic = () => {
     if (input.length === 11 && !input.includes('/') && !input.includes('=')) {
       return input}
 
-    // If it's a URL but not YouTube, don't try to treat it as an ID
+    // Si es una URL pero no de YouTube, no intentar tratarla como un ID
     if (input.includes('://') && !input.includes('youtube.com') && !input.includes('youtu.be')) {
       return null;
     }

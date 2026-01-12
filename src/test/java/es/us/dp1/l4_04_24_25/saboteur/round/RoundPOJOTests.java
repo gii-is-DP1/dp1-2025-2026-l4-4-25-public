@@ -12,7 +12,7 @@ class RoundPOJOTests {
         r.setId(10);
         assertEquals(10, r.getId());
 
-        // Add more specific logic tests if needed based on Round complexity
-        // Assuming Round is mostly POJO here based on file size
+        // Añadir pruebas de lógica más específicas si son necesarias según la complejidad de Round
+        // Se asume que Round es principalmente un POJO aquí según el tamaño del archivo
     }
 }

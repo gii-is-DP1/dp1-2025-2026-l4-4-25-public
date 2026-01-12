@@ -13,7 +13,7 @@ function titleFromFilename(name) {
 
 try {
   const files = fs.readdirSync(musicDir).filter(f => /\.(mp3|ogg|wav|m4a|flac)$/i.test(f));
-  // Try to preserve existing metadata if present
+  // Intentar preservar los metadatos existentes si están presentes
   let existing = { tracks: [] };
   try {
     const raw = fs.readFileSync(outFile, 'utf8');
@@ -34,7 +34,7 @@ try {
     };
   });
 
-  // If no explicit default, mark first as default
+  // Si no hay un predeterminado explícito, marcar el primero como predeterminado
   if (!tracks.some(t => t.default)) {
     if (tracks[0]) tracks[0].default = true;
   }
