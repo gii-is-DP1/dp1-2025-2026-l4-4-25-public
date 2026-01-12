@@ -263,6 +263,36 @@
   transform: translateY(0);
 }
 
+/* Themed variants for the enable/reset controls inside the music header */
+.enable-button {
+  background: linear-gradient(135deg, #ffd86b 0%, #d4b24a 100%);
+  color: #2b1f00;
+  border: 2px solid rgba(212, 178, 74, 0.18);
+  box-shadow: 0 6px 18px rgba(212, 178, 74, 0.18);
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  min-width: auto;
+}
+.enable-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 178, 74, 0.28);
+}
+
+.reset-button {
+  background: transparent;
+  color: #6b4f00;
+  border: 2px dashed rgba(107, 79, 0, 0.12);
+  box-shadow: none;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.reset-button:hover {
+  background: rgba(218, 183, 80, 0.06);
+  transform: translateY(-1px);
+}
+
 .music-info {
   margin-top: 0.5rem;
   padding-top: 0.5rem;

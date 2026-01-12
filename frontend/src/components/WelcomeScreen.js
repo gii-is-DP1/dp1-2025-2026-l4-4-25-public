@@ -32,6 +32,8 @@ export default function WelcomeScreen({ username, onComplete }) {
       if (audio) {
         audio.pause();
         audio.currentTime = 0;
+        try { audio.src = ''; } catch (e) {}
+        audioRef.current = null;
       } 
       if (onComplete) {
         onComplete();
@@ -43,6 +45,8 @@ export default function WelcomeScreen({ username, onComplete }) {
       if (audio) {
         audio.pause();
         audio.currentTime = 0;
+        try { audio.src = ''; } catch (e) {}
+        audioRef.current = null;
       }
     };
   }, [onComplete]);

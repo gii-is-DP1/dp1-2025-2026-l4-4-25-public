@@ -111,6 +111,21 @@ export default function ReadMe() {
                     </div>
                 </div>
 
+                <div className="info-section">
+                    <h2 className="info-title">📺 How to Play 📺</h2>
+                    <div className="video-container" style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+                        <iframe
+                            width="560"
+                            height="315"
+                            src="https://www.youtube.com/embed/RCmJwPnkGHA"
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                </div>
+
                 <div className="info-section footer-section">
                     <p className="footer-text">
                         💻 L4 Group of Design and Testing I of Engineering of Software, US 💻

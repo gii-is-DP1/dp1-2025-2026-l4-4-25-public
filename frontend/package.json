@@ -42,7 +42,8 @@
     "source-map-loader": "^4.0.1"
   },
   "scripts": {
-    "prestart": "node scripts/startup.js",
+    "prestart": "node scripts/generate-music-list.js && node scripts/startup.js",
+    "gen-music-list": "node scripts/generate-music-list.js",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
