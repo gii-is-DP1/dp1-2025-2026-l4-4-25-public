@@ -9,11 +9,11 @@ import getErrorModal from "../../util/getErrorModal";
 import useFetchState from "../../util/useFetchState";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 
-// Helper function to get JWT dynamically (prevents stale token issues)
 const getJwt = () => tokenService.getLocalAccessToken();
-const loggedInUser = tokenService.getUser(); 
 
 export default function UserListAdmin() {
+  const loggedInUser = tokenService.getUser();
+  
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
   const [users, setUsers] = useFetchState(
