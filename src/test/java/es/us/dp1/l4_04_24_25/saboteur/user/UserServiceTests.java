@@ -53,7 +53,7 @@ class UserServiceTests {
     @Test
     void shouldFindAllUsers() {
         List<UserDTO> users = (List<UserDTO>) this.userService.findAll();
-        assertEquals(4, users.size()); // admin1, player1, player2, player3
+        assertEquals(6, users.size()); // admin1, player1, player2, player3, player4, player5
     }
 
     @Test
@@ -70,7 +70,7 @@ class UserServiceTests {
     @Test
     void shouldFindUsersByAuthority() {
         List<UserDTO> owners = (List<UserDTO>) this.userService.findAllByAuthority("PLAYER");
-        assertEquals(3, owners.size()); // player1, player2, player3
+        assertEquals(5, owners.size()); // player1, player2, player3, player4, player5
         List<UserDTO> admins = (List<UserDTO>) this.userService.findAllByAuthority("ADMIN");
         assertEquals(1, admins.size());
     }

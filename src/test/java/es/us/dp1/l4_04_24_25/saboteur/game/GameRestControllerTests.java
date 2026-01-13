@@ -168,4 +168,27 @@ class GameRestControllerTests {
 
         verify(gameService).deleteGame(1);
     }
+
+    @Test
+    @WithMockUser(username = "creator1")
+    void shouldFindGamesByCreator() throws Exception {
+        when(gameService.findByCreator("testCreator")).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/api/v1/games/byCreator")
+                .param("creatorUsername", "testCreator"))
+                .andExpect(status().isOk());
+
+        verify(gameService).findByCreator("testCreator");
+    }
+
+    @Test
+    @WithMockUser(username = "player1")
+    void shouldFindMyGames() throws Exception {
+        when(gameService.findGamesByPlayerUsername("player1")).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/api/v1/games/myGames"))
+                .andExpect(status().isOk());
+
+        verify(gameService).findGamesByPlayerUsername("player1");
+    }
 }

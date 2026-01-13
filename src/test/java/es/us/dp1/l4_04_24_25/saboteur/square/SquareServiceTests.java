@@ -251,4 +251,132 @@ class SquareServiceTests {
         square.setBoard(board);
         assertEquals(board, square.getBoard());
     }
+
+    @Test
+    void shouldGetGoalRevealsWhenTunnelConnectsToGoal() {
+
+        Board board = boardService.findBoard(1);
+        
+        Square tunnelSquare = squareService.findSquare(101);
+        
+        
+        List<Map<String, Object>> reveals = squareService.getGoalReveals(tunnelSquare);
+        
+        assertNotNull(reveals);
+    }
+
+    @Test
+    void shouldReturnNullWhenNoTunnelCard() {
+
+        Square square = squareService.findSquare(101);
+        
+        es.us.dp1.l4_04_24_25.saboteur.card.Card originalCard = square.getCard();
+        square.setCard(null);
+        
+        List<Map<String, Object>> reveals = squareService.getGoalReveals(square);
+        
+        assertNull(reveals);
+        
+        square.setCard(originalCard);
+    }
+
+    @Test
+    void shouldReturnNullWhenTunnelHasBlockedCenter() {
+        Square square = squareService.findSquare(101);
+      
+        es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel blockedTunnel = new es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel();
+        blockedTunnel.setCentro(true); 
+        blockedTunnel.setArriba(true);
+        blockedTunnel.setAbajo(true);
+        
+        es.us.dp1.l4_04_24_25.saboteur.card.Card originalCard = square.getCard();
+        square.setCard(blockedTunnel);
+        
+        List<Map<String, Object>> reveals = squareService.getGoalReveals(square);
+        
+        assertNull(reveals);
+        
+        square.setCard(originalCard);
+    }
+
+    @Test
+    void shouldCheckAllDirectionsForGoalReveals() {
+        Board board = boardService.findBoard(1);
+        
+        // Find square that might reveal goals in different directions
+        Square square = squareService.findSquare(101);
+        
+        // Create tunnel with connections in all directions
+        es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel tunnel = new es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel();
+        tunnel.setArriba(true);  
+        tunnel.setAbajo(true);   
+        tunnel.setIzquierda(true); 
+        tunnel.setDerecha(true);  
+        tunnel.setCentro(false);  
+        
+        es.us.dp1.l4_04_24_25.saboteur.card.Card originalCard = square.getCard();
+        square.setCard(tunnel);
+        
+        List<Map<String, Object>> reveals = squareService.getGoalReveals(square);
+
+        assertNotNull(reveals);
+        
+        square.setCard(originalCard);
+    }
+
+    @Test
+    void shouldHandleSquarePatchedWithCardPlaced() {
+        Square square = squareService.findSquare(101);
+        
+        es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel tunnel = new es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel();
+        tunnel.setArriba(true);
+        tunnel.setAbajo(true);
+        
+        es.us.dp1.l4_04_24_25.saboteur.card.Card originalCard = square.getCard();
+        square.setCard(tunnel);
+    
+        squareService.handleSquarePatched(square);
+    
+        assertNotNull(square.getCard());
+        
+        square.setCard(originalCard);
+    }
+
+    @Test
+    void shouldHandleSquarePatchedWithCardDestroyed() {
+        Square square = squareService.findSquare(101);
+        
+        es.us.dp1.l4_04_24_25.saboteur.card.Card originalCard = square.getCard();
+        
+        square.setCard(null);
+        
+        squareService.handleSquarePatched(square);
+        
+        assertNull(square.getCard());
+        
+        square.setCard(originalCard);
+    }
+
+    @Test
+    void shouldIncludeGoalRevealsInPatchedMessage() {
+        Board board = boardService.findBoard(1);
+        Square square = squareService.findSquare(101);
+    
+        es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel tunnel = new es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel();
+        tunnel.setArriba(true);
+        tunnel.setAbajo(true);
+        tunnel.setDerecha(true);
+        tunnel.setIzquierda(true);
+        tunnel.setCentro(false);
+        
+        es.us.dp1.l4_04_24_25.saboteur.card.Card originalCard = square.getCard();
+        square.setCard(tunnel);
+        
+
+        squareService.handleSquarePatched(square);
+        
+        assertNotNull(square.getBoard());
+        
+        square.setCard(originalCard);
+    }
 }

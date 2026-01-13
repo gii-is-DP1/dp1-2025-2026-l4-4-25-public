@@ -50,7 +50,7 @@ class ActivePlayerServiceTests {
     @Test
     void shouldFindAllActivePlayers() {
         List<ActivePlayer> players = (List<ActivePlayer>) this.activePlayerService.findAll();
-        assertEquals(3, players.size());
+        assertEquals(5, players.size());
     }
 
     @Test
