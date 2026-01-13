@@ -967,7 +967,6 @@ export default function Board() {
 
           setCurrentPlayer(nextUsername);
         
-          setCont(timeturn);
 
           setCont(timeturn);
 

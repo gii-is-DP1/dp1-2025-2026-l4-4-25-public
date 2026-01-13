@@ -51,7 +51,7 @@ class ChatServiceTests {
     @Test
     void shouldFindAllChats() {
         List<Chat> chats = (List<Chat>) this.chatService.findAll();
-        assertEquals(3, chats.size()); // 3 chats in data.sql
+        assertEquals(5, chats.size()); // 5 chats in data.sql
     }
 
     @Test
