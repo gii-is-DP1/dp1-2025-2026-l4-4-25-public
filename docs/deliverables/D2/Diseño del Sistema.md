@@ -45,6 +45,8 @@ En esta sección se ha proporcionado un diagrama UML de clases que describe el m
 
 ![DomainDiagramUML](../../diagrams/DOMAINDIAGRAM.svg)
 
+**- Nota:** Se recomienda descargar el archivo en formato SVG pulsando la imagen.
+
 
 <a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/DomainDiagramUML.iuml" 
    style="
