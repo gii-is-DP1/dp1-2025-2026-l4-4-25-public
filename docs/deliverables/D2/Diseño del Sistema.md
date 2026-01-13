@@ -43,7 +43,7 @@ El vencedor será el jugador que **más** pepitas de oro haya conseguido, que se
 
 En esta sección se ha proporcionado un diagrama UML de clases que describe el modelo de dominio de nuestra aplicación:
 
-![DomainDiagramUML](../../diagrams/DomainDiagramUML.png)
+![DomainDiagramUML](../../diagrams/DOMAINDIAGRAM.svg)
 
 
 <a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/DomainDiagramUML.iuml" 
