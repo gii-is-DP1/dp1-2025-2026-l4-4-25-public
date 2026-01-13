@@ -18,18 +18,13 @@ INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,auth
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (15,'WRG8176','Lorenzo','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'wrg8176@saboteur.es', 2);
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (16,'FQY7185','Alejandro','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'fqy7185@saboteur.es', 2);
 
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (11, 0, 0, 0, 0, 0, false, 0, 0);
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (12, 0, 0, 0, 0, 0, false, 0, 0);
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (13, 0, 0, 0, 0, 0, false, 0, 0);
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (14, 0, 0, 0, 0, 0, false, 0, 0);
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (15, 0, 0, 0, 0, 0, false, 0, 0);
-INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (16, 0, 0, 0, 0, 0, false, 0, 0);
 
 INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
 INSERT INTO chat (id) VALUES (3);
 INSERT INTO chat (id) VALUES (4);
 INSERT INTO chat (id) VALUES (5);
+
 
 -- Jugadores por defecto
 
@@ -39,6 +34,13 @@ INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, ac
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (9, 1, 0, 5, 13, 2, false, 0, 1);
 INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (10, 2, 0, 4, 10, 3, false, 0, 1);
 
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (11, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (12, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (13, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (14, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (15, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (16, 0, 0, 0, 0, 0, false, 0, 0);
+
 --Requests por defecto
 --INSERT INTO request(id, status, sender_id, receiver_id) VALUES (1, 'PENDING', 4, 5);
 
@@ -47,6 +49,12 @@ INSERT INTO deck (id) VALUES (2);
 INSERT INTO deck (id) VALUES (3);
 INSERT INTO deck (id) VALUES (4);
 INSERT INTO deck (id) VALUES (5);
+INSERT INTO deck (id) VALUES (6);
+INSERT INTO deck (id) VALUES (7);
+INSERT INTO deck (id) VALUES (8);
+INSERT INTO deck (id) VALUES (9);
+INSERT INTO deck (id) VALUES (10);
+INSERT INTO deck (id) VALUES (11);
 
 
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 1,  0, 6, false, true);
@@ -54,6 +62,12 @@ INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, 
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 3,  0, 8, false, true);
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 4,  0, 9, false, true);
 INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 5,  0, 10, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 6,  0, 11, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 7,  0, 12, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 8,  0, 13, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 9,  0, 14, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 10,  0, 15, false, true);
+INSERT INTO active_Player (candle_state, cart_state,  deck_id, gold_nugget, id, pickaxe_state, rol) values (false, false, 11,  0, 16, false, true);
 
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 1, 1, 'Welcome to the game!', 6);
 INSERT INTO message (id, chat_id, content, active_player_id) values ( 2, 2, 'Welcome to the game!', 7);
