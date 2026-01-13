@@ -48,7 +48,6 @@ export default function Register() {
         } else {
           return response.json().then(data => {
             const raw = data.message || "Registration failed";
-            // Map common DB/constraint messages to a friendly English message
             const isUniqueViolation = /unique|constraint|duplicate|23505|unique index|primary key violation|violación de indice|clave primaria/i.test(raw);
             const friendly = isUniqueViolation
               ? "This email is already registered. Try logging in or use a different email."

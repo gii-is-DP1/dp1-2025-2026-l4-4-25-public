@@ -375,7 +375,7 @@
 }
 
 .chat-box {
-  /* Fixed bottom-left across browsers (avoid cutting input) */
+  /* Arreglar bottom-left navegadores (evitar cortar input) */
   position: fixed;
   left: 24px;
   bottom: 110px;
@@ -1514,4 +1514,3 @@
   }
 }
 
-/* Removed CSS variables for chat positioning per revert request */

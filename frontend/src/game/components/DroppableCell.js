@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { canPlaceCard, validateCardPlacement } from '../utils/cardUtils';
+import { validateCardPlacement } from '../utils/cardUtils';
 import { toast } from 'react-toastify';
 
 export default function DroppableCell({ 
@@ -17,7 +17,7 @@ export default function DroppableCell({
   const [isDragOver, setIsDragOver] = useState(false); // Resalto de la celda cuando se ha arrastrado sobre la misma.
   const rootRef = useRef(null);
 
-  // Listen for custom pointer-based drag events dispatched by InteractiveCard
+  // Escuchando eventos personalizados de arrastre basados en punteros enviados por InteractiveCard
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;

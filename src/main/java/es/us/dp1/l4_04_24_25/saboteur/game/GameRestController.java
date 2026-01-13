@@ -1,6 +1,5 @@
 package es.us.dp1.l4_04_24_25.saboteur.game;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,9 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
 import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.response.MessageResponse;
-import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.chat.Chat;
-import es.us.dp1.l4_04_24_25.saboteur.deck.Deck;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.EmptyActivePlayerListException;
 import es.us.dp1.l4_04_24_25.saboteur.player.Player;
 import es.us.dp1.l4_04_24_25.saboteur.player.PlayerService;

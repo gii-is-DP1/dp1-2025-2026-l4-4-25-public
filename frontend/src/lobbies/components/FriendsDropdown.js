@@ -88,7 +88,6 @@ const FriendsDropdown = () => {
         const pendingRequests = requests.filter(req => req.status === 'PENDING');
 
         if (ContReciv>0 && pendingRequests.length>ContReciv) {
-          const newRequestsCount = pendingRequests.length-ContReciv;
           const latestRequest = pendingRequests[pendingRequests.length - 1];
           toast.info(`📬 New friend request from --> ${latestRequest.sender}!`)}
         setReceivedRequests(pendingRequests);

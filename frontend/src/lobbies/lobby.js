@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 import { createGameRequest } from './utils/lobbyHelpers';
 import useLobbyUser from './hooks/useLobbyUser';
 
-// Importar componentes modulares
 import Logo from './components/Logo';
 import TopRightButtons from './components/TopRightButtons';
 import InfoButton from './components/InfoButton';

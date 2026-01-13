@@ -162,7 +162,6 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       break;
 
     case 'REPAIR_PICKAXE_LAMP':
-      // Ahora solo repara una herramienta según la selección del jugador
       if (selectedTool === 'pickaxe') {
         if (currentTools.pickaxe) {
           toast.warning("Cannot repair a pickaxe that is already working!");
@@ -206,7 +205,6 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       break;
 
     case 'REPAIR_PICKAXE_CART':
-      // Ahora solo repara una herramienta según la selección del jugador
       if (selectedTool === 'pickaxe') {
         if (currentTools.pickaxe) {
           toast.warning("Cannot repair a pickaxe that is already working!");
@@ -250,7 +248,6 @@ export const handleActionCard = async (card, targetPlayer, cardIndex, context) =
       break;
 
     case 'REPAIR_CART_LAMP':
-      // Ahora solo repara una herramienta según la selección del jugador
       if (selectedTool === 'wagon') {
         if (currentTools.wagon) {
           toast.warning("Cannot repair a wagon that is already working!");

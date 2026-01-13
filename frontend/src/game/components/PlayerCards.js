@@ -26,8 +26,6 @@ export default function PlayerCards({
   const [hand, setHand] = useState([]);
   const [availableCards, setAvailableCards] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
-  const [hasServerDeck, setHasServerDeck] = useState(false);
-  const [deckChecked, setDeckChecked] = useState(false);
   const [cardRotations, setCardRotations] = useState({}); 
 
   const syncServerDeck = async (nextHand) => {

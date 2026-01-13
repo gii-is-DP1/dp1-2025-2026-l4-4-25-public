@@ -73,7 +73,6 @@ public class BoardRestController {
         if (board.getBusy()!=null && !board.getBusy().isEmpty()){
             for (var square: board.getBusy()){
                 square.setBoard(newBoard);
-                // squareService.saveSquare(square);
                 newBoard.getBusy().add(square);
             }
         }
@@ -81,7 +80,6 @@ public class BoardRestController {
         if (board.getRound()!=null){
             var round = board.getRound();
             round.setBoard(newBoard);
-            // roundService.saveRound(round);
             newBoard.setRound(round);
         }
 

@@ -1,7 +1,6 @@
 import React from "react";
 import useGamesHistory from './hooks/useGamesHistory';
 
-// Importar componentes modulares
 import TopButtons from './components/TopButtons';
 import GamesHistoryHeader from './components/GamesHistoryHeader';
 import GamesHistoryList from './components/GamesHistoryList';

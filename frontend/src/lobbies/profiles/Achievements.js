@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAchievementsData from './hooks/useAchievementsData';
 
-// Importar componentes modulares
 import ProfileLogo from './components/ProfileLogo';
 import TopButtons from './components/TopButtons';
 import AchievementsList from './components/AchievementsList';

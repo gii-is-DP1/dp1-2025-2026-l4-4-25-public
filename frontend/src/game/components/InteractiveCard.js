@@ -239,7 +239,6 @@ export default function InteractiveCard({
   const isClickableAction = isActionCard(card);
   const isClickableCollapse = isCollapseCard(card);
   const isClickableMap = isMapCard(card);
-  const canDrag = isDraggableTunnel && isMyTurn;
 
   let cardClass = 'interactive-card';
   let cardTitle = 'Not your turn';

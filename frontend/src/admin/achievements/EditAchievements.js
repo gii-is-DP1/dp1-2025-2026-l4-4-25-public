@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import tokenService from '../../services/token.service';
-import ProfileLogo from '../../lobbies/profiles/components/ProfileLogo';
 import BadgeImageSelector from './components/BadgeImageSelector';
 import '../../static/css/lobbies/profile.css';
 import '../../static/css/lobbies/achievements.css';

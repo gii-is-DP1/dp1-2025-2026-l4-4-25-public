@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import tokenService from '../../services/token.service';
 import { isUserAdmin, getMockFriends } from '../utils/lobbyHelpers';
@@ -8,6 +9,7 @@ const useLobbyUser = () => {
   const [player, setPlayer] = useState(null);
   const [friends, setFriends] = useState(getMockFriends());
   const jwt = tokenService.getLocalAccessToken();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPlayer = async () => {
@@ -34,6 +36,11 @@ const useLobbyUser = () => {
           setPlayer(data);
         } else {
           console.error('Response not OK:', response.status);
+          if (response.status === 401) {
+             tokenService.removeUser();
+             navigate('/login');
+             return;
+          }
           toast.error('Error fetching player information.');
         }
       } catch (error) {
@@ -47,7 +54,7 @@ const useLobbyUser = () => {
     if (!admin) {
       fetchPlayer();
     }
-  }, [jwt]);
+  }, [jwt, navigate]);
 
   return {
     isAdmin,

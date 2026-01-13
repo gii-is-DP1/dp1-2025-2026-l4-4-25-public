@@ -14,7 +14,7 @@ export default function deleteFromList(url, id, [state, setState], [alerts, setA
             },
         })
             .then((response) => {
-                if (response.status === 200 || response.status==204) {
+                if (response.status === 200 || response.status===204) {
                     if (options.date)
                         setState(state.filter((i) => i.id !== id && i.creationDate < options.date));
                     else if (options.filtered && options.setFiltered) {

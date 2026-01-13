@@ -220,23 +220,7 @@ input:checked + .slider:before {
 
 .player-card2:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(0,0,0,0.55); }
 
-/*
-.player-avatar {
-  background: transparent;
-  box-shadow: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex: 0 0 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
-  color: #222;
-  font-weight: 800;
-}
-*/
+
 /* Estilo para los nuevos avatares en la lista de jugadores */
 .player-avatar-img {
   width: 45px;
