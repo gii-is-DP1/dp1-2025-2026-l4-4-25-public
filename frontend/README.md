@@ -165,6 +165,18 @@ npm install
 npm run build
 ```
 
+## ⚠️ Potential Issues & Fixes
+
+This project includes a list of known or possible runtime issues and recommended workarounds. These are generally minor but can affect the user experience when testing multiplayer scenarios or using multiple browsers. For a Spanish version, see the repository file: [docs/POTENTIAL_ISSUES_ES.md](../docs/POTENTIAL_ISSUES_ES.md).
+
+ - **Performance** may decrease with many simultaneous browser instances and players — expect higher CPU/memory usage.
+ - If the UI shows missing cards or inconsistent state, try **refreshing** the browser; many display/sync problems recover after **reload**.
+ - Prefer **Firefox/Firefox Developer Edition** for best rendering and performance; Edge/Chrome/Opera also work but may be slightly slower.
+ - If layout elements are clipped, reduce browser **zoom** or test on a single display before multi-window testing.
+ - **Background music** can play in several browser windows at once; mute other windows or use the in-app audio controls to avoid overlapping audio.
+ - Loading screens may take longer while waiting for all players to join; **be patient** and watch each player's loading bar reach 100%.
+ - If the in-game **timer freezes** after a reload, refresh the browser of the **player who started the match** (their timer is the one that activates). If unsure who that was, refresh all browsers.
+
 ## Development Guidelines
 
 ### Code Style

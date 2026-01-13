@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FriendsDropdown from './FriendsDropdown';
 
@@ -8,12 +8,21 @@ const TopRightButtons = ({
   onToggleFriends, 
   friends 
 }) => {
+  const [readmeSeen, setReadmeSeen] = useState(true);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem('readmeSeen');
+      setReadmeSeen(!!seen);
+    } catch (e) { setReadmeSeen(true); }
+  }, []);
   return (
     <div className="top-right-lobby-buttons">
       {!isAdmin && (
         <>
-          <Link to="/ReadMe" className="readme-button-container">
-            <button className="button-logOut">📄Readme</button>
+          <Link to="/ReadMe" className={`readme-button-container ${!readmeSeen ? 'readme-highlight' : ''}`}>
+            <button className="button-logOut" onClick={() => { try { localStorage.setItem('readmeSeen', 'true'); setReadmeSeen(true); } catch (e){} }}>📄 Readme</button>
+            {!readmeSeen && <span className="orbit" aria-hidden="true"></span>}
           </Link>
           <div className="friends-dropdown-container">
             <button 

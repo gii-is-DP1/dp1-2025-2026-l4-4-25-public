@@ -185,6 +185,24 @@ npm test -a
 6. **Win Gold**: Complete your objective to earn gold nuggets
 7. **Play 3 Rounds**: The player with the most gold after 3 rounds wins!
 
+## ⚠️ Potential Issues & Fixes
+
+Below are known or potential issues that may affect gameplay, with suggested workarounds. Most are uncommon but important to be aware of for a smooth experience. A Spanish version of this guidance is available at [docs/POTENTIAL_ISSUES_ES.md](docs/POTENTIAL_ISSUES_ES.md).
+
+ - **Performance** and resource usage increase as more browsers and players are connected simultaneously.
+ - If an error occurs during a match (rare), **refresh** the page — most issues resolve after a **reload**.
+ - When using multiple browsers or screens at once, some **CSS** layouts may not adapt perfectly. For testing, prefer using a single display and, if needed, reduce browser **zoom** (Ctrl + '-') to ensure the board fits correctly.
+ - Recommended browsers: **Firefox** and **Firefox Developer Edition** (best). Edge, Chrome and Opera also work but may render slightly slower.
+ - If visual elements appear 'cut off', try reducing browser **zoom** — this is usually a compatibility/layout issue, not a game bug.
+ - The **draw pile** size is calculated based on the number of players by game rules — this is expected behavior, not a bug.
+ - On **Firefox**, disabling sidebars or toolbars can give a fuller view, but reducing **zoom** also works; the game functions correctly without disabling UI elements.
+ - If a card placed in another browser does not appear after **refreshing**, try refreshing again — the client is designed to recover on **reload**.
+- Loading screens may take longer while waiting for all players to join; **be patient** and watch each player's loading bar reach 100% (this ensures rounds render correctly for everyone).
+- If a player advances to the next screen before others, refresh all browsers to re-synchronize.
+- If the in-game **timer freezes** after a reload, refresh the browser of the **player who started the match** (their timer is the one that activates). If unsure who that was, refresh all browsers.
+ - If you change a player's **username**, log in again to avoid inconsistencies during a live match.
+ - On the **CreateGame** screen, if you see a "Connect with The server" error, refresh the page (very rare but harmless to retry).
+ - **Background music** may play simultaneously in multiple browsers — this is expected when testing with several clients; mute individual browsers or use the music controls to disable audio if needed. If **autoplay** issues occur, the music can always be toggled manually.
 
 ## 🔧 Configuration
 
