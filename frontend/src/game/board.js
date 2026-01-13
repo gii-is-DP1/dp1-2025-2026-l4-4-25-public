@@ -162,7 +162,7 @@ export default function Board() {
     let cancelled = false;
     let attempts = 0;
     const maxAttempts = 10;
-    const delayMs = 200;
+    const delayMs = 300;
 
     const readSavedGameData = () => {
       try {
@@ -190,11 +190,17 @@ export default function Board() {
 
     const deny = () => {
       if (hasDeniedIllegalAccess.current) return;
+      // Extra safety: Never deny during an active transition
+      const hasTransitionData = sessionStorage.getItem('newRoundData') || sessionStorage.getItem('savedGameData');
+      if (hasTransitionData) {
+        console.log('🛡️ deny() blocked: transition data present, not denying access');
+        return;
+      }
       hasDeniedIllegalAccess.current = true;
+      console.log('🚫 deny(): Denying access and navigating to lobby');
       sessionStorage.removeItem('savedGameData');
       sessionStorage.removeItem('newRoundData');
       navigate('/lobby', { replace: true });
-      
     };
 
     // Verificación de acceso y membresía del jugador
@@ -247,12 +253,22 @@ export default function Board() {
       }
 
       if (!allowedUsernames.has(String(loggedInUser.username))) {
+        attempts += 1;
         const gameId = candidateGame?.id;
         if (gameId) {
           try {
+            const currentJwt = getJwt();
+            if (!currentJwt) {
+              // Token not available yet, retry
+              if (attempts < localMaxAttempts) {
+                console.log('🔁 verify: JWT not available, retrying...');
+                setTimeout(verify, localDelayMs);
+                return;
+              }
+            }
             const res = await fetch(`/api/v1/games/${gameId}`, {
               method: 'GET',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getJwt()}` },
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentJwt}` },
             });
             if (res.ok) {
               const freshGame = await res.json();
@@ -264,13 +280,24 @@ export default function Board() {
                 console.log('✅ verify: membership confirmed by server, not denying access');
                 return;
               }
+            } else if (res.status === 401 && transitionHint && attempts < localMaxAttempts) {
+              // Auth error during transition, retry
+              console.log('🔁 verify: 401 during transition, retrying...');
+              setTimeout(verify, localDelayMs);
+              return;
             }
           } catch (err) {
             console.warn('Error fetching fresh game data during verify:', err);
+            // Network error during transition, retry
+            if (transitionHint && attempts < localMaxAttempts) {
+              console.log('🔁 verify: network error during transition, retrying...');
+              setTimeout(verify, localDelayMs);
+              return;
+            }
           }
         }
         if (transitionHint && attempts < localMaxAttempts) {
-          console.log('🔁 verify: transition hinted, delaying final deny');
+          console.log('🔁 verify: transition hinted, delaying final deny (attempt', attempts, ')');
           setTimeout(verify, localDelayMs);
           return;
         }
@@ -1886,8 +1913,10 @@ const activateCollapseMode = (card, cardIndex) => {
             try {
               parsedNewRound = JSON.parse(newRoundRaw);
               const newRoundBoardId = parsedNewRound?.round?.board?.id ?? parsedNewRound?.round?.board;
-              if (newRoundBoardId && String(newRoundBoardId) === String(urlBoardId)) {
+              // Skip sync if we have newRoundData (regardless of board ID match - it's a transition)
+              if (newRoundBoardId) {
                 shouldSkipPlayerSyncLocal = true;
+                console.log('🔄 newRoundData found with board:', newRoundBoardId, 'current:', urlBoardId);
               }
             } catch (e) {
               console.warn('Could not parse newRoundData:', e);
@@ -1914,7 +1943,23 @@ const activateCollapseMode = (card, cardIndex) => {
             setIsLoading(false);
           } else {
             console.log('🎮 Fresh game entry - waiting for player sync');
-            updateLoadingStep(7); 
+            updateLoadingStep(7);
+            
+            // Safety check: if round.id is not available, skip playerReady sync
+            if (!round?.id) {
+              console.warn('⚠️ round.id not available, skipping playerReady sync');
+              setWaitingForPlayers(false);
+              setIsLoading(false);
+              return;
+            }
+            
+            // Set a safety timeout to prevent indefinite waiting
+            const safetyTimeout = setTimeout(() => {
+              console.warn('⏰ Safety timeout: playerReady sync taking too long, proceeding anyway');
+              setWaitingForPlayers(false);
+              setIsLoading(false);
+            }, 30000); // 30 seconds max wait
+            
             try {
               const res = await fetch('/api/v1/rounds/playerReady', {
                 method: 'POST',
@@ -1928,8 +1973,19 @@ const activateCollapseMode = (card, cardIndex) => {
                 }),
               });
               console.log('📤 Notificado al servidor: jugador listo', { ok: res.ok, status: res.status });
+              
+              // If response indicates all players are ready, clear waiting state
+              if (res.ok) {
+                const data = await res.json();
+                if (data.readyCount >= data.expectedPlayers) {
+                  clearTimeout(safetyTimeout);
+                  setWaitingForPlayers(false);
+                  setIsLoading(false);
+                }
+              }
             } catch (err) {
               console.error('Error notificando playerReady:', err);
+              clearTimeout(safetyTimeout);
               setWaitingForPlayers(false);
               setIsLoading(false);
             }
