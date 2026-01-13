@@ -47,8 +47,10 @@ function StrictInGameRedirect({ jwt, children }) {
   }
 
   const activeBoardId = savedGameData?.round?.board?.id ?? savedGameData?.round?.board;
+  const isSpectator = savedGameData?.isSpectator === true;
 
-  if (!activeBoardId) {
+  // Los espectadores pueden navegar libremente
+  if (!activeBoardId || isSpectator) {
     return children;
   }
 
