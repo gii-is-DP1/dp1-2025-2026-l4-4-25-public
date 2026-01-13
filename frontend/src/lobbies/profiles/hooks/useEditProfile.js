@@ -83,9 +83,15 @@ const useEditProfile = () => {
       const data = await response.json();
 
       if (response.ok) {
-        tokenService.setUser(data);
-        toast.success("Profile updated successfully!");
-        navigate('/profile');
+        if (jwt.username !== data.username) {
+          tokenService.removeUser();
+          toast.info("Username updated. Please log in again.");
+          navigate('/login');
+        } else {
+          tokenService.setUser(data);
+          toast.success("Profile updated successfully!");
+          navigate('/profile');
+        }
         return true;
       } else {
         toast.warn(data.message || "Could not update profile");

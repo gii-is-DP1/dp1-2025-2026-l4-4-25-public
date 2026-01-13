@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import tokenService from '../../../services/token.service';
 
 const useAchievementsData = () => {
@@ -7,6 +8,7 @@ const useAchievementsData = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const jwt = tokenService.getLocalAccessToken();
 
@@ -23,7 +25,14 @@ const useAchievementsData = () => {
           },
         });
         
-        if (!response.ok) throw new Error("Could not fetch profile");
+        if (!response.ok) {
+          if (response.status === 401) {
+            tokenService.removeUser();
+            navigate('/login');
+            return;
+          }
+          throw new Error("Could not fetch profile");
+        }
 
         const data = await response.json();
         setProfile(data);
@@ -35,7 +44,7 @@ const useAchievementsData = () => {
     };
     
     fetchProfile();
-  }, [jwt]);
+  }, [jwt, navigate]);
 
   useEffect(() => {
     try {
