@@ -1,9 +1,20 @@
 @startuml Diagrama de diseño
 
+' Mejoras de visualización: valores moderados para evitar recortes/solapamientos
+skinparam dpi 150
+skinparam nodesep 220
+skinparam ranksep 120
+skinparam padding 20
+skinparam classCardPadding 10
 skinparam classAttributeIconSize 0
-hide emptymethods
 skinparam linetype ortho
-
+skinparam shadowing false
+skinparam ArrowColor #333333
+skinparam ArrowFontSize 12
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+skinparam defaultTextAlignment left
+'left to right direction'
 
 
 class BaseEntity {
@@ -188,37 +199,36 @@ enum Metric {
 
 User "0..*" -- "1" Authorities : authority
 
-Player "0..*" -- "0..*" Player : friends
+Player "    0..*" -- "0..*" Player : friends
 Player "0..*" -- "0..*" Achievement : accquiredAchievements
-Player "0..*" -- "0..1" Game : watchers
+Player "  0..*" -- "0..1" Game : watchers
 
-Player "1" -- "0..*" Request : sentRequests
+Player "    1" -down- "0..*" Request : sentRequests
 Player "1" -- "0..*" Request : receivedRequests
 
 ActivePlayer "1" -- "0..1" Deck : deck
 ActivePlayer "1" -- "0..*" Message : messages
-ActivePlayer "1" -- "0..*" Game : wonGames
-ActivePlayer "1" -- "0..*" Game : createdGames
+ActivePlayer "1" -up- "0..*" Game : wonGames
+ActivePlayer "1" -right- "0..*" Game : createdGames
 
 Game "1" *-- "0..3" Round : rounds
 Game "1" *-- "0..1" Chat : chat
-Game "0..*" -- "0..1" ActivePlayer : winner
-Game "0..*" -- "1" ActivePlayer : creator
-Game "0..*" -- "0..*" ActivePlayer : activePlayers
+Game "0..*" -up- "0..1" ActivePlayer : winner
+Game "0..*" -up- "1" ActivePlayer : creator
+Game "0..*" -right- "0..*" ActivePlayer : activePlayers
 
-Round "1" -- "0..1" Board : board
+Round "1" -right- "0..1" Board : board
 Round "1" -- "0..1" ActivePlayer : playerTurn
-Round "1" -- "0..1" Log : log
+Round "1" -down- "0..1" Log : log
 
 Board "1" *-- "0..*" Square : busy
 Square "0..*" -- "0..1" Card : card
 
 Chat "1" *-- "0..*" Message : messages
-Message "0..*" -- "1" ActivePlayer : activePlayer
 
 Deck "1" -- "0..*" Card : cards
 
-User "1" -- "0..*" Achievement : createdAchievements
-Achievement "0..*" -- "0..*" Player : players
+User "1" -up- "0..*" Achievement : createdAchievements
+Achievement "0..*" -left- "0..*" Player : players
 
 @enduml
