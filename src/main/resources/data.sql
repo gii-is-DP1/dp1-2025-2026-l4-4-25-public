@@ -11,7 +11,19 @@ INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,auth
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (9,'player4','Player Number four','2004-01-11','2011-09-11','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player4@saboteur.es', 2); 
 INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (10,'player5','Player Number five','2006-02-10','1999-02-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'player5@saboteur.es', 2);
 
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (11,'RHQ7780','Diego','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'rhq7780@saboteur.es', 2);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (12,'GBK4935','Marcos','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'gbk4935@saboteur.es', 2);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (13,'HKP3295','Carlos','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'hkp3295@saboteur.es', 2);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (14,'JGR9196','Luis','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'jgr9196@saboteur.es', 2);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (15,'WRG8176','Lorenzo','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'wrg8176@saboteur.es', 2);
+INSERT INTO appusers(id,username,name,birthDate,joined,password,image,email,authority) VALUES (16,'FQY7185','Alejandro','2000-01-01','2024-01-01','$2a$10$Cjufyk/WXTyC8sDPreV34eB35SR1QtEC5V8GFaRbfVsrdxdA3ynnS','/static/media/4.338216836f4a64d1ff3b.jpeg', 'fqy7185@saboteur.es', 2);
 
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (11, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (12, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (13, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (14, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (15, 0, 0, 0, 0, 0, false, 0, 0);
+INSERT INTO player(id, played_games, won_games, destroyed_paths, built_paths, acquired_Gold_Nuggets, is_Watcher, people_damaged, people_repaired ) VALUES (16, 0, 0, 0, 0, 0, false, 0, 0);
 
 INSERT INTO chat (id) VALUES (1);
 INSERT INTO chat (id) VALUES (2);
