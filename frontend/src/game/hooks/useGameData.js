@@ -3,7 +3,8 @@ import tokenService from '../../services/token.service';
 import { toast } from 'react-toastify';
 import avatar from '../../static/images/icons/1.jpeg';
 
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 
 export const useGameData = (game) => {
   const [activePlayers, setActivePlayers] = useState([]);
@@ -19,7 +20,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -76,7 +77,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -96,7 +97,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         }
       });
       const data = await response.json();
@@ -123,7 +124,7 @@ export const useGameData = (game) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify(body)
       });
@@ -147,7 +148,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
 
@@ -178,7 +179,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
 
@@ -205,7 +206,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
 
@@ -225,7 +226,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify({ cards: cardIds }),
       });
@@ -257,7 +258,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -278,7 +279,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
       });
       if (response.ok) {
@@ -300,7 +301,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       }); 
@@ -323,7 +324,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       }); 
@@ -346,7 +347,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
       }); 
       if (response.ok) {
@@ -371,7 +372,7 @@ export const useGameData = (game) => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
+            "Authorization": `Bearer ${getJwt()}`
           },
         }
       );
@@ -401,7 +402,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
       }); 
       if (response.ok) {
@@ -423,7 +424,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       }); 
@@ -446,7 +447,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -468,7 +469,7 @@ export const useGameData = (game) => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
+        Authorization: `Bearer ${getJwt()}`,
       },
       body: JSON.stringify(data),
     });
@@ -493,7 +494,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       });
@@ -516,7 +517,7 @@ export const useGameData = (game) => {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         }
       });
       if (response.ok) {
@@ -540,7 +541,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         }
       });
       if (response.ok) {
@@ -560,7 +561,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         }
       });
       if (response.ok) {
@@ -580,7 +581,7 @@ export const useGameData = (game) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify(roundEndData)
       });
@@ -604,7 +605,7 @@ export const useGameData = (game) => {
       method: "GET",
       headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
+            Authorization: `Bearer ${getJwt()}`,
           },
         });
         if (response.ok) {

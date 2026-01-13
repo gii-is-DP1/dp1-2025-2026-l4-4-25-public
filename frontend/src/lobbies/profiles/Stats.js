@@ -4,8 +4,10 @@ import tokenService from '../../services/token.service.js';
 import '../../static/css/lobbies/profile.css';
 import '../../static/css/lobby/profile/stats.css';
 
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
+
 export default function Stats() {
-  const jwt = tokenService.getLocalAccessToken();
   const [stats, setStats] = useState({
     totalMatches: 0,
     averageGameDuration: 0,
@@ -26,6 +28,9 @@ export default function Stats() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      const jwt = getJwt();
+      if (!jwt) return;
+      
       try {
         const [totalMatches,averageGameDuration,maxGameDuration,minGameDuration,averagePlayersPerGame,gamePlayersMax,gamePlayersMin,
           averageGoldNuggets,winPercentage,averageTurnsPerGame,globalAverageDuration,globalMaxDuration,globalMinDuration,globalAveragePlayers,
@@ -84,7 +89,7 @@ export default function Stats() {
       } catch (error) {
         console.error('Error fetching:', error);}};
     fetchStats();
-  }, [jwt]);
+  }, []);
 
   const formatDuration = (minutes) => {
     if (!minutes || minutes === 0) return '0m';

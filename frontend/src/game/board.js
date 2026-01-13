@@ -34,7 +34,8 @@ import '../static/css/home/home.css';
 import '../static/css/game/game.css';
 
 
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 const timeturn = 10;
 
 const ROUND_STATE = {
@@ -150,6 +151,7 @@ export default function Board() {
   // --- EFECTOS DE INICIALIZACIÓN ---
   // Verifica autenticación y carga datos iniciales
   useEffect(() => {
+    const jwt = getJwt();
     if (!jwt || !loggedInUser?.username || !urlBoardId) {
       return;
     }
@@ -250,7 +252,7 @@ export default function Board() {
           try {
             const res = await fetch(`/api/v1/games/${gameId}`, {
               method: 'GET',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getJwt()}` },
             });
             if (res.ok) {
               const freshGame = await res.json();
@@ -319,7 +321,7 @@ export default function Board() {
                   try {
                       setIsLoading(true);
                       const res = await fetch(`/api/v1/rounds/byBoardId?boardId=${urlBoardId}`, {
-                          headers: { "Authorization": `Bearer ${jwt}` }
+                          headers: { "Authorization": `Bearer ${getJwt()}` }
                       });
                       if (res.ok) {
                           const fetchedRound = await res.json();
@@ -661,7 +663,7 @@ export default function Board() {
       const fetchSpectatorRequests = async () => {
         try {
           const res = await fetch(`/api/v1/messages/byChatId?chatId=${game.chat}`, {
-            headers: { Authorization: `Bearer ${jwt}` },
+            headers: { Authorization: `Bearer ${getJwt()}` },
           });
           if (!res.ok) return;
           
@@ -814,7 +816,7 @@ export default function Board() {
           fetch(`/api/v1/messages/${id}`, {
             method: 'DELETE',
             headers: {
-              Authorization: `Bearer ${jwt}`,
+              Authorization: `Bearer ${getJwt()}`,
             },
           })
         )
@@ -850,7 +852,7 @@ export default function Board() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
+            Authorization: `Bearer ${getJwt()}`,
           },
           body: JSON.stringify(acceptMessage),
         });
@@ -891,7 +893,7 @@ export default function Board() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
+            Authorization: `Bearer ${getJwt()}`,
           },
           body: JSON.stringify(denyMessage),
         });
@@ -1429,7 +1431,7 @@ const activateCollapseMode = (card, cardIndex) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwt}`
+            'Authorization': `Bearer ${getJwt()}`
           }
         });
         if (achievementResponse.ok) {
@@ -1739,7 +1741,7 @@ const activateCollapseMode = (card, cardIndex) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify({
           content: content,
@@ -1918,7 +1920,7 @@ const activateCollapseMode = (card, cardIndex) => {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  Authorization: `Bearer ${jwt}`,
+                  Authorization: `Bearer ${getJwt()}`,
                 },
                 body: JSON.stringify({
                   roundId: round?.id,
@@ -2007,7 +2009,15 @@ const activateCollapseMode = (card, cardIndex) => {
       
       const initialTurnIndex = round?.turn || 0;
       const safeIndex = initialTurnIndex % res.length;
-      const initialPlayerUsername = res[safeIndex].username;
+      
+      // Validate that the player at safeIndex exists before accessing username
+      const playerAtIndex = res[safeIndex];
+      if (!playerAtIndex || !playerAtIndex.username) {
+        console.warn('⚠️ Player at safeIndex not found or missing username:', { safeIndex, res, initialTurnIndex });
+        return;
+      }
+      
+      const initialPlayerUsername = playerAtIndex.username;
 
       setCurrentPlayer(prev => {
         if (prev && res.find(p => p.username === prev)) {
@@ -2036,7 +2046,7 @@ const activateCollapseMode = (card, cardIndex) => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
+            Authorization: `Bearer ${getJwt()}`,
           }
         });
 
@@ -2422,7 +2432,7 @@ const activateCollapseMode = (card, cardIndex) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}`
+          "Authorization": `Bearer ${getJwt()}`
         }
       });
 

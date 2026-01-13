@@ -24,8 +24,8 @@ const getAchievementImage = (achievement) => {
     return getAchievementBadgeImage(badgeNumber);
 };
 
-
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 
 export default function Profile() {
     const [isAdmin, setisAdmin] = useState(false);
@@ -44,17 +44,17 @@ export default function Profile() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const jwt = tokenService.getUser();
-                if (!jwt || !jwt.id){
+                const user = tokenService.getUser();
+                if (!user || !user.id){
                     throw new Error("User ID not found")
                 }
                 
-                const userId = jwt.id;
+                const userId = user.id;
                 const response = await fetch(`/api/v1/users/${userId}`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`,
+                        Authorization: `Bearer ${getJwt()}`,
                     },
                 });
                 // 
@@ -76,10 +76,10 @@ export default function Profile() {
     }, []); 
 
     useEffect(() => {
-        const jwt = tokenService.getLocalAccessToken();
-        if (jwt) {
+        const token = getJwt();
+        if (token) {
         try {
-            const p=JSON.parse(atob(jwt.split('.')[1]));
+            const p=JSON.parse(atob(token.split('.')[1]));
             setisAdmin(p.authorities?.includes("ADMIN")||false);
         } catch (error) {
             console.error(error);}}

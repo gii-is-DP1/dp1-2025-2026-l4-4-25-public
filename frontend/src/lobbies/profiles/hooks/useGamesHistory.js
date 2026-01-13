@@ -8,10 +8,14 @@ const useGamesHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const jwt = tokenService.getLocalAccessToken();
+  // Get JWT dynamically to avoid stale token issues
+  const getJwt = () => tokenService.getLocalAccessToken();
 
   useEffect(() => {
     const fetchGames = async () => {
+      const jwt = getJwt();
+      if (!jwt) return;
+      
       try {
         setLoading(true);
         const response = await fetch("/api/v1/games/myGames", {
@@ -44,10 +48,8 @@ const useGamesHistory = () => {
       }
     };
 
-    if (jwt) {
-      fetchGames();
-    }
-  }, [jwt]);
+    fetchGames();
+  }, []);
 
   return {
     games: filteredGames,

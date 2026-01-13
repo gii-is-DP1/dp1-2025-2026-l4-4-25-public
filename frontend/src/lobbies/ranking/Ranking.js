@@ -4,6 +4,9 @@ import "../../static/css/lobbies/ranking.css";
 import tokenService from "../../services/token.service";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png";
 
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
+
 export default function Ranking() {
     const [players, setPlayers] = useState([]);
     const [filteredPlayers, setFilteredPlayers] = useState([]);
@@ -11,11 +14,13 @@ export default function Ranking() {
     const [metric, setMetric] = useState("wonGames"); 
     
     const user = tokenService.getUser(); 
-    const jwt = tokenService.getLocalAccessToken();
 
 
     useEffect(() => {
         const fetchPlayers = async () => {
+            const jwt = getJwt();
+            if (!jwt) return;
+            
             try {
                 
                 const response = await fetch("/api/v1/players", {
