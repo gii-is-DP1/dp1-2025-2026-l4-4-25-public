@@ -2025,11 +2025,6 @@ const activateCollapseMode = (card, cardIndex) => {
           const isDifferent = serverMessages.length !== currentMessages.length ||
             JSON.stringify(serverMessages) !== JSON.stringify(currentMessages);
           
-          if (!isDifferent) {
-            console.log('🔄 Log sync: no changes detected, skipping update');
-            return;
-          }
-          
           const serverLog = serverMessages.map((msg, idx) => ({ 
             msg, 
             type: 'info',
