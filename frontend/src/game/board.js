@@ -1740,58 +1740,6 @@ const activateCollapseMode = (card, cardIndex) => {
       }
     nextTurn({ force: true });
   };
-
-  const handleForceEndRound = async () => {
-    if (!isCreator) {
-      toast.error('Only the game creator can force end the round');
-      return}
-
-    if (processingAction.current) return;
-    processingAction.current = true;
-
-    try {
-      if (roundEndedRef.current === ROUND_STATE.ENDING || roundEndedRef.current === ROUND_STATE.ENDED) {
-        toast.info('Round already ending or ended');
-        return}
-
-      const objectivePositions = [ '[2][9]', '[4][9]', '[6][9]' ];
-      let goldPosKey = objectivePositions.find(k => objectiveCards[k] === 'gold');
-      if (!goldPosKey) {
-        goldPosKey = objectivePositions[0];
-      }
-
-      const match = goldPosKey.match(/\[(\d+)\]\[(\d+)\]/);
-      const r = match ? Number(match[1]) : 4;
-      const c = match ? Number(match[2]) : 9;
-
-      setBoardCells(prev => {
-        const next = prev.map(row => row.slice());
-        if (next[r] && next[r][c]) {
-          next[r][c] = {
-            ...next[r][c],
-            revealed: true,
-            cardType: 'gold'
-          };
-        }
-        return next;
-      });
-
-      roundEndedRef.current = ROUND_STATE.ENDING;
-      setRoundEnded(true);
-
-      const mockResult = {
-        ended: true,
-        reason: 'GOLD_REACHED',
-        winnerTeam: 'MINERS',
-        goldPosition: `[${r}][${c}]`,
-        forcedByCreator: true
-      };
-
-      await handleRoundEnd(mockResult);
-    } finally {
-      processingAction.current = false;
-    }
-  };
   const postMessage = async (content, activePlayerUsername, chatId) => {
     try {
       const response = await fetch(`/api/v1/messages`, {
@@ -2814,7 +2762,6 @@ const activateCollapseMode = (card, cardIndex) => {
         handleDiscard={handleDiscard}
         isSpectator={isSpectator}
         isCreator={isCreator}
-        handleForceEndRound={handleForceEndRound}
         isMyTurn={loggedInUser?.username === currentPlayer}
       />
 

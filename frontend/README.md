@@ -99,6 +99,18 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
+
+---
+
+> ### 🔐 SECRET TIP
+>
+> **There is a branch named `dev/skip-round-button` that implements a special testing feature:** a button available only to the game creator that reveals the gold and forces the round to end (i.e., it skips the round). This was added as a convenience to speed up testing and has proven very useful for quicker manual testing of round flows.
+>
+> This branch exists purely for testing purposes and is not merged into `main`. **This feature is intended for quick testing and has not been perfected; we are not responsible for any random errors you may encounter when using it, as forcing rounds quickly can trigger timing/load related issues in certain environments.**
+>
+> If you want to try the faster flow for debugging or QA, you may check out `dev/skip-round-button`. Otherwise, stick to the `main` branch for the stable experience.
+>
+> ---
 ### `npm run eject`
 
 **Note: this is a one-way operation. Once you `eject`, you can't go back!**
