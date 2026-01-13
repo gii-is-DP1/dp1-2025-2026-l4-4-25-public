@@ -216,7 +216,36 @@ export default function Board() {
       const localDelayMs = delayMs;
 
       if (!candidateGame || !candidateRound) {
+        // Intentar recuperar la ronda por `boardId` antes de denegar
         attempts += 1;
+        if (urlBoardId && attempts < localMaxAttempts) {
+          try {
+            console.log('🔎 verify: candidate missing, trying fetch by boardId', urlBoardId);
+            const currentJwt = getJwt();
+            if (currentJwt) {
+              const rres = await fetch(`/api/v1/rounds/byBoardId?boardId=${urlBoardId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentJwt}` }
+              });
+              if (rres.ok) {
+                const fetched = await rres.json();
+                if (fetched) {
+                  console.log('🔁 verify: fetched round by boardId, applying to state');
+                  // aplicar al estado local para evitar denegas por condición de carrera
+                  setRound(fetched);
+                  if (fetched.game) setGame(fetched.game);
+                  // guardar en sessionStorage para coordinar entre pestañas
+                  try { sessionStorage.setItem('savedGameData', JSON.stringify({ game: fetched.game, round: fetched, isSpectator: initialState.isSpectator })); } catch(e) {}
+                  setTimeout(verify, delayMs);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('verify: fetch by boardId failed; will retry', e);
+          }
+        }
+
         if (attempts >= localMaxAttempts) {
           if (sessionStorage.getItem('newRoundData') || location?.state || savedRoundData) {
             console.log('🔁 Delaying deny: newRoundData or location.state present, continuing verify');
@@ -227,6 +256,7 @@ export default function Board() {
           deny();
           return;
         }
+
         setTimeout(verify, delayMs);
         return;
       }
@@ -1872,7 +1902,26 @@ const activateCollapseMode = (card, cardIndex) => {
         updateLoadingStep(0);
         await fetchCards();
         updateLoadingStep(1);
-        await loadActivePlayers();
+        // Esperar `game` antes de sincronizar jugadores/chat para evitar errores por valores nulos
+        const waitForGame = async (timeoutMs = 5000) => {
+          const start = Date.now();
+          while (Date.now() - start < timeoutMs) {
+            if (game && (game.id || game.chat)) return true;
+            await new Promise(r => setTimeout(r, 200));
+          }
+          return false;
+        };
+
+        const hasGame = await waitForGame(5000);
+        if (!hasGame) {
+          console.warn('initializeGame: game not available after wait, proceeding but skipping some syncs');
+        }
+
+        try {
+          await loadActivePlayers();
+        } catch (e) {
+          console.warn('initializeGame: loadActivePlayers failed, continuing', e);
+        }
         updateLoadingStep(2);
         const logId = typeof round?.log === 'number' ? round.log : round?.log?.id;
         if (logId) {
@@ -1883,8 +1932,21 @@ const activateCollapseMode = (card, cardIndex) => {
         
         updateLoadingStep(3);
         updateLoadingStep(4);
-        await getChat();
-        await fetchAndSetLoggedActivePlayer();
+        try {
+          if (game?.chat || chat?.id) {
+            await getChat();
+          } else {
+            console.warn('initializeGame: skipping getChat because game.chat is not available yet');
+          }
+        } catch (e) {
+          console.warn('initializeGame: getChat failed, continuing', e);
+        }
+
+        try {
+          await fetchAndSetLoggedActivePlayer();
+        } catch (e) {
+          console.warn('initializeGame: fetchAndSetLoggedActivePlayer failed, continuing', e);
+        }
         updateLoadingStep(5);
 
         async function handlerounds() {
@@ -1913,7 +1975,7 @@ const activateCollapseMode = (card, cardIndex) => {
             try {
               parsedNewRound = JSON.parse(newRoundRaw);
               const newRoundBoardId = parsedNewRound?.round?.board?.id ?? parsedNewRound?.round?.board;
-              // Skip sync if we have newRoundData (regardless of board ID match - it's a transition)
+              // Omitir sincronización si tenemos newRoundData (independientemente de la coincidencia de ID de tablero - es una transición)
               if (newRoundBoardId) {
                 shouldSkipPlayerSyncLocal = true;
                 console.log('🔄 newRoundData found with board:', newRoundBoardId, 'current:', urlBoardId);
@@ -1945,7 +2007,7 @@ const activateCollapseMode = (card, cardIndex) => {
             console.log('🎮 Fresh game entry - waiting for player sync');
             updateLoadingStep(7);
             
-            // Safety check: if round.id is not available, skip playerReady sync
+            // Comprobación de seguridad: si round.id no está disponible, omitir la sincronización de playerReady
             if (!round?.id) {
               console.warn('⚠️ round.id not available, skipping playerReady sync');
               setWaitingForPlayers(false);
@@ -1953,12 +2015,12 @@ const activateCollapseMode = (card, cardIndex) => {
               return;
             }
             
-            // Set a safety timeout to prevent indefinite waiting
+            // Establecer un timeout de seguridad para evitar espera indefinida
             const safetyTimeout = setTimeout(() => {
               console.warn('⏰ Safety timeout: playerReady sync taking too long, proceeding anyway');
               setWaitingForPlayers(false);
               setIsLoading(false);
-            }, 30000); // 30 seconds max wait
+            }, 30000); 
             
             try {
               const res = await fetch('/api/v1/rounds/playerReady', {
@@ -1974,7 +2036,7 @@ const activateCollapseMode = (card, cardIndex) => {
               });
               console.log('📤 Notificado al servidor: jugador listo', { ok: res.ok, status: res.status });
               
-              // If response indicates all players are ready, clear waiting state
+              // Si la respuesta indica que todos los jugadores están listos, clear waiting state
               if (res.ok) {
                 const data = await res.json();
                 if (data.readyCount >= data.expectedPlayers) {
