@@ -68,11 +68,6 @@ public class Game extends BaseEntity{
     @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    /* 
-    // Relacion varias partidas son gestionadas por varios administradores
-    @ManyToMany(mappedBy = "managedGames")
-    private List<User> admins = new ArrayList<>();
-*/
     // Relación 1 partidas son observadas por n jugador
 
     @JsonSerialize(contentUsing  = PlayerSerializer.class)
