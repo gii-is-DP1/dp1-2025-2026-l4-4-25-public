@@ -113,6 +113,22 @@ For testing and development, the following users are pre-configured:
 - 2️⃣**Username**: `player2` | **Password**: `saboteur123`
 - 3️⃣**Username**: `player3` | **Password**: `saboteur123`
 
+- 4️⃣**Username**: `player4` | **Password**: `saboteur123`
+- 5️⃣**Username**: `player5` | **Password**: `saboteur123`
+
+The five accounts `player1`–`player5` are the preferred test players and come with preconfigured Achievements and Statistics to simplify testing.
+
+Additional preferred test players (no preconfigured Achievements or Statistics):
+
+- **Username**: `RHQ7780` | **Password**: `saboteur123`
+- **Username**: `GBK4935` | **Password**: `saboteur123`
+- **Username**: `HKP3295` | **Password**: `saboteur123`
+- **Username**: `JGR9196` | **Password**: `saboteur123`
+- **Username**: `WRG8176` | **Password**: `saboteur123`
+- **Username**: `FQY7185` | **Password**: `saboteur123`
+
+These additional accounts are available for playing and testing but, unlike `player1`–`player5`, they do not have pre-filled Achievements or Statistics.
+
 ## 🏗️ Project Structure
 
 ```
@@ -201,6 +217,17 @@ npm test -a
 ## ⚠️ Potential Issues & Fixes
 
 Below are known or potential issues that may affect gameplay, with suggested workarounds. Most are uncommon but important to be aware of for a smooth experience. A Spanish version of this guidance is available at [docs/POTENTIAL_ISSUES_ES.md](docs/POTENTIAL_ISSUES_ES.md).
+
+### **Top Issues & Fixes — Quick Summary**
+
+These are the most important issues you may encounter during multiplayer testing. They can occur under load but should not normally appear.
+
+- **Recommendation — Use Firefox:** Prefer Firefox or Firefox Developer Edition for best rendering and performance; other browsers (Edge, Chrome, Opera) work but may be slower.
+- **Timer freeze after refresh (Problem):** If a player's in-game timers freeze after a browser reload, **Solution:** refresh the browser of the player who started the match — their timer re-activates. If you don't know who that is, refresh all players' browsers.
+- **Loading screens are slow (Recommendation):** Be patient during loading screens when entering matches or advancing rounds — some browsers (Edge/Chrome) can be slower loading game data, and all players must reach the ready state before the match continues.
+- **Player joins too early in a second match (Problem):** If a player joins the second game before the rest and the match is out-of-sync, **Solution:** refresh all players' browsers to re-synchronize and start correctly.
+
+These items are highlighted because they are the most common/resurfacing issues during multiplayer testing. They "may" happen under stress or heavy load but are not expected in normal usage.
 
  - **Performance** and resource usage increase as more browsers and players are connected simultaneously.
  - If an error occurs during a match (rare), **refresh** the page — most issues resolve after a **reload**.

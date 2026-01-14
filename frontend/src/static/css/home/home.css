@@ -500,6 +500,57 @@
     margin: 0;
 }
 
+/* Top Issues badges (ReadMe emphasis) */
+.top-issues-badges {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+.badge-card {
+    position: relative;
+    padding: 14px 16px;
+    border-radius: 12px;
+    flex: 1 1 260px;
+    min-width: 220px;
+    background: linear-gradient(180deg, #fff9e6 0%, #f7df74 45%, #f1c40f 100%);
+    border: 1px solid rgba(161,122,0,0.28);
+    box-shadow: 0 10px 30px rgba(34,34,34,0.15), inset 0 2px 8px rgba(255,255,255,0.55);
+    color: #1a1a1a;
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.badge-card::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 36%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
+    pointer-events: none;
+}
+.badge-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 42px rgba(34,34,34,0.2), inset 0 2px 8px rgba(255,255,255,0.6);
+}
+.badge-card strong {
+    display: block;
+    color: #1b1b1b;
+    margin-bottom: 6px;
+    font-weight: 800;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+}
+.badge-text {
+    font-size: 0.98rem;
+    line-height: 1.35;
+    color: #111;
+}
+.badge-firefox { border-left: 8px solid rgba(241,196,15,0.95); }
+.badge-timer { border-left: 8px solid rgba(212,140,0,0.95); }
+.badge-loading { border-left: 8px solid rgba(194,144,0,0.95); }
+.badge-earlyjoin { border-left: 8px solid rgba(165,120,15,0.95); }
+
 .friends-dropdown-container {
     position: relative;
     display: inline-block;

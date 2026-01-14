@@ -103,7 +103,7 @@ export default function ReadMe() {
                             <strong>👤Players:</strong> 3 to 12 players
                         </div>
                         <div className="config-item">
-                            <strong>⏰Duration:</strong> Approximately 30-45 minutes per round
+                            <strong>⏰Duration:</strong> Approximately 15-25 minutes per round
                         </div>
                         <div className="config-item">
                             <strong>⌛Rounds:</strong> 3 rounds per game
@@ -131,6 +131,25 @@ export default function ReadMe() {
 
                 <div className="info-section issues-section">
                     <h2 className="info-title">⚠️ Potential Issues & Fixes</h2>
+                    <div className="top-issues-badges">
+                        <div className="badge-card badge-firefox">
+                            <strong>Top — Use Firefox</strong>
+                            <div className="badge-text">Prefer Firefox / Firefox Developer Edition for best rendering and performance. Other browsers work but may be slower.</div>
+                        </div>
+                        <div className="badge-card badge-timer">
+                            <strong>Top — Timer Freeze</strong>
+                            <div className="badge-text">If timers freeze after reload, refresh the browser of the player who started the match. If unknown, refresh all browsers.</div>
+                        </div>
+                        <div className="badge-card badge-loading">
+                            <strong>Top — Loading Patience</strong>
+                            <div className="badge-text">Loading screens may take longer; please be patient while all players load game data.</div>
+                        </div>
+                        <div className="badge-card badge-earlyjoin">
+                            <strong>Top — Early Join in 2nd Match</strong>
+                            <div className="badge-text">If a player enters the second match early and causes desync, refresh all players' browsers to re-sync.</div>
+                        </div>
+                    </div>
+
                     <div className="issues-list" style={{lineHeight:1.6}}>
                         <p>Please review the known or potential issues and recommended workarounds before playing. Spanish version available in repository at <strong>docs/POTENTIAL_ISSUES_ES.md</strong> (plain path, not a link).</p>
                         <ul>
