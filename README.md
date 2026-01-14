@@ -87,17 +87,6 @@ npm start
 
 The frontend will open automatically at [http://localhost:3000](http://localhost:3000)
 
----
-
-> ### 🔐 SECRET TIP
->
-> **There is a branch named `dev/skip-round-button` that implements a special testing feature:** a button available only to the game creator that reveals the gold and forces the round to end (i.e., it skips the round). This was added as a convenience to speed up testing and has proven very useful for quicker manual testing of round flows.
->
-> This branch exists purely for testing purposes and is not merged into `main`. **This feature is intended for quick testing and has not been perfected; we are not responsible for any random errors you may encounter when using it, as forcing rounds quickly can trigger timing/load related issues in certain environments.**
->
-> If you want to try the faster flow for debugging or QA, you may check out `dev/skip-round-button`. Otherwise, stick to the `main` branch for the stable experience.
->
----
 
 ## 🗃️ Database Configuration
 
@@ -196,6 +185,18 @@ npm test -a
 5. **Play Your Cards**: Build paths to the gold (miners) or sabotage the efforts (saboteurs)
 6. **Win Gold**: Complete your objective to earn gold nuggets
 7. **Play 3 Rounds**: The player with the most gold after 3 rounds wins!
+
+---
+
+> ### 🔐 SECRET TIP
+>
+> **There is a branch named `dev/skip-round-button` that implements a special testing feature:** a button available only to the game creator that reveals the gold and forces the round to end (i.e., it skips the round). This was added as a convenience to speed up testing and has proven very useful for quicker manual testing of round flows.
+>
+> This branch exists purely for testing purposes and is not merged into `main`. **This feature is intended for quick testing and has not been perfected; we are not responsible for any random errors you may encounter when using it, as forcing rounds quickly can trigger timing/load related issues in certain environments.**
+>
+> If you want to try the faster flow for debugging or QA, you may check out `dev/skip-round-button`. Otherwise, stick to the `main` branch for the stable experience.
+>
+---
 
 ## ⚠️ Potential Issues & Fixes
 
