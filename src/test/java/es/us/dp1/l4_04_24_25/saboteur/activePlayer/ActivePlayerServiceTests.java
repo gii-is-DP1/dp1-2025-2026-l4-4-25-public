@@ -50,7 +50,7 @@ class ActivePlayerServiceTests {
     @Test
     void shouldFindAllActivePlayers() {
         List<ActivePlayer> players = (List<ActivePlayer>) this.activePlayerService.findAll();
-        assertEquals(5, players.size());
+        assertEquals(11, players.size());
     }
 
     @Test
@@ -183,12 +183,14 @@ class ActivePlayerServiceTests {
 
     @Test
     void shouldFindByUsernameInOngoingGame() {
-        // Test para encontrar un active player por su username en la partida en curso (ongoing game)
+        // Test para encontrar un active player por su username en la partida en curso
+        // (ongoing game)
         try {
             ActivePlayer ap = activePlayerService.findByUsernameInOngoingGame("player1");
             assertNotNull(ap);
         } catch (ResourceNotFoundException ex) {
-            // Esperado si no existe ningún jugador con ese nombre de usuario en la partida en curso
+            // Esperado si no existe ningún jugador con ese nombre de usuario en la partida
+            // en curso
         }
     }
 
