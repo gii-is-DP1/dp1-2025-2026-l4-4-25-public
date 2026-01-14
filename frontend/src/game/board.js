@@ -36,7 +36,7 @@ import '../static/css/game/game.css';
 
 // Helper function to get JWT dynamically (prevents stale token issues)
 const getJwt = () => tokenService.getLocalAccessToken();
-const timeturn = 10;
+const timeturn = 45;
 
 const ROUND_STATE = {
   ACTIVE: 'ACTIVE',
