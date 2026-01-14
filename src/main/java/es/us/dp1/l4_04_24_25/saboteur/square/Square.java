@@ -10,8 +10,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -23,7 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardDeserializer;
 import es.us.dp1.l4_04_24_25.saboteur.card.CardSerializer;
-import com.fasterxml.jackson.annotation.JsonIgnore; 
 
 @Table(name="squares")
 @Entity

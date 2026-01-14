@@ -2,7 +2,6 @@ import React from 'react';
 import DroppableCell from './DroppableCell';
 import startCardImage from '../../static/images/start.png';
 import objetivecardreverse from '../../static/images/objetive_card_reverse.png';
-import { useState } from 'react';
 
 export default function GameBoard({ 
   boardCells, 

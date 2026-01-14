@@ -114,7 +114,6 @@ public class UserService {
 		case "admin":
 			role = authoritiesService.findByAuthority("ADMIN");
 			activePlayer.setAuthority(role);
-			//activePlayerService.saveActivePlayer(activePlayer);
 			break;
 		default:
 			role = authoritiesService.findByAuthority("PLAYER");

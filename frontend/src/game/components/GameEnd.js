@@ -2,7 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import tokenService from '../../services/token.service';
 
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 
 export default function GameEndModal({ 
   playerRankings,
@@ -70,7 +71,7 @@ export default function GameEndModal({
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -89,7 +90,7 @@ export default function GameEndModal({
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       });
@@ -109,7 +110,7 @@ export default function GameEndModal({
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       });

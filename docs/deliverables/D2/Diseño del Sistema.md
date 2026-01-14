@@ -3,7 +3,7 @@
 **Curso académico:** 2025/2026 
 **Grupo/Equipo:** L4-4  
 **Nombre del proyecto:** Saboteur 
-**Versión:** v3.2 *(24-11-2025)*
+**Versión:** v4.1 *(12-01-2026)* 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** 
 
@@ -43,7 +43,13 @@ El vencedor será el jugador que **más** pepitas de oro haya conseguido, que se
 
 En esta sección se ha proporcionado un diagrama UML de clases que describe el modelo de dominio de nuestra aplicación:
 
-![DomainDiagramUML](../../diagrams/DomainDiagramUML.png)
+![DomainDiagramUML](../../diagrams/DOMAINDIAGRAM.svg)
+
+[Ver diagrama en PlantText (renderizado)](https://www.planttext.com?text=VLVDSjis4BxpAJ3g8JEPIHevqmjFeIL6KIjB6f9safC78c49DWam06Z7wVIXEds4l5WN84W2b1aTJ63nxIzs5-iFKc6Xcgf4IugF0bSO5GGLL9AV__8WU8Mko3qNM6hg8vKDBkaFdDEV_x4GFUAI2o9HnGiYSC4bgh70Y3nIa8a4oRbGHFukUObhN57259U1VA1CmofKr1JD_tZdK1W8agH65nSkLM3seAbpZrhZeg3iY3nYNc8f5rWKUtiwFpkDb1Bqq2YopZbBwG-2N4X96L7FDK5W-eax1_843ZvfaNUubCGvYOJWJmiEeK2_lJU_yU57pfJHDByOM_EBezxG0UDQMf0xt9Gg8zzLLD8Zgo2yg2HtAdYb_oB5aQ37auAxX9jGbBDNGH0OoUWIIn8pHTKp-Zj0Y1OXMZD5ZaG4_tIOBQv8OK6WWx3YZ8y194GfcCcEcj5oNaiYfbWQEFFOHb8GEb28_18hbtRFuLh0o0tFSQdFCbeHeDUWxecBme7I2XzTLb9XMhf6jZP63Lole8f2-awOYYta-PnxN-9dnqVZi6QfDRrOWKDoY2X2JvoTqI3HbU20tcDryauE3ItL6HNdtnguo6B5osBR78z4USSruNL9bbXxNvmV9AJ6cjizeV8pLlc9Y10TE2y9Pavu864UoSXDkzME2buEN0WTUwCyrJH_mDz9ginb3kWSiw9yYIpKYDZRav1l3GHiwggWXwa6uc5XgTbgRiAQogSQ_3xUBjVR5QoY_JxPtSHBM2Rnd_4YWwNEPAjNNzkKKaLrtYuRWNLnwIW0EBMMhFgrYVHUqCUHknN-tWRKkyTS4C0LaJfFTjEeCwFKF-hy77GQ-nP976N6izrsjMlT_RZUhjDFhOysihnXnQzSJ6jeB9wVkhte7kldE6MCY4JdnMNlese4Sq52AzisrK4dtLd7sV3Zb25GF18o6pHkg5G3ooK7EwQO3h1rjP-8xeSkXH_kYSbquyvE5DgkSR6dtnei9hCWvz1_A8Ex-EBTOq_-wYdCywOsSNHJGJyueTMJmTfK52upGrxPLN_D0wxDvIZx19_LBjh09ysY91ioml8Qu6gtqScmY9BBtVPsFYmldDwz-4KykoeR3FURRH-nh85SA7inHcRRDHIC3hxlMC0ZXptA0Tzpbm2tGlAJXw4_e1iIKNZ4719Ly8bknjcvFVhbQSz2yzorQ_retDr1NjpWiW7luc7JfqnaQ9ug4_11Yb6GnFjedS1Y6QTPilkgQ_4cJh9FoUwpERw9uTOwPaUHmtsxNo_-Yhx40s6XhxZVRQAh_Q31GNSK2--s5kyB7ydig3vMOyRgikljDjvulhGnNvByuUL4SfBjX2TQUY_cgYtywUg3qjBjwMm8YV8J9O_4J4MJtKsfqfqLu4tE1QtRX1W64bmSoNeqLgWJ3BudUFRSwgu87ESX6As__RsssxO6ewiulTrleg-cCT-i5zakMSSfh2-lrvliLbTpEiGtNlOKNRwts-lLAixqDjljDkdjChgALaPKkszlohvXPYoPlNlxzlKClNc3PlEPD_Q4muGJ1FPjdo7u3Hpjofw5w4vG7SSUF0QwCGVfkHrP7B9q57dSO9jvQqFqr0ubqhS9pj_0_CrwNTr44289Skrk43ztxHgmq4W8jFkYnmVUfEEmmSgaS0XPaJzCma1wbw9X_qgzW6xg7j_vQOV25y1cRX_ZxMJGyWI6gC6lhI7lP_Of3zjNLfv3O6ag3cJ1nvxRM-ZiqpdYsXFQX_q5z3dKcCX7MD-P4GTsjk1Lwy4u1h1jttdTR-7hmgQiDfEuo63-SD531i5EZniXAlan25hnRgp0LFlkWz96FWTsDnjdxQ8rBDTs1IQy8p4lf4TWCilF8aUEx4ftb3X-UNMJebjSBgApL4zhvwLSTo7_01KD__t_3m00)
+
+[Descargar PDF del diagrama (DomainDiagram.pdf)](../../diagrams/DomainDiagram.pdf)
+
+**- Nota:** Se recomienda descargar el archivo en formato SVG pulsando la imagen para poder visualizarlo mejor usando el zoom (Ctrl + '+' y Ctrl + '-') y el desplazamiento del navegador. Además, se adjunta un enlace que redirige a la página que nos renderizó el diagrama a partir del código UML y un archivo PDF del propio diagrama por si ocurrieran problemas con la visualización del archivo SVG. 
 
 
 <a href="https://github.com/gii-is-DP1/dp1-2026-l4-4-25/main/docs/diagrams/DomainDiagramUML.iuml" 
@@ -206,7 +212,8 @@ Al pulsar el botón **[JoinGameButton]** en el lobby, se navegará a la pantalla
           $\color{purple}{\textsf{- Información de la partida :}}$ Información acerca del creador, privacidad, jugadores, etc.
           $\color{purple}{\textsf{- Botón JOIN :}}$ Botón dentro del componente para unirse a una partida (si es pública)
           $\color{purple}{\textsf{- Botón REQUEST JOIN :}}$ Botón dentro del componente para solicitar unirse a una partida al creador (si es privada)
-          $\color{purple}{\textsf{- Botón SPECTATE :}}$ Botón dentro del componente para espectear una partida (si ya ha empezado)
+          $\color{purple}{\textsf{- Botón SPECTATE :}}$ Botón dentro del componente para espectear una partida (si ya ha empezado y todos son amigos del usuario)
+          $\color{purple}{\textsf{- Botón REQUEST SPECTATE :}}$ Botón dentro del componente para solicitar espectear una partida (si ya ha empezado y no todos son amigos del usuario)
           $\color{purple}{\textsf{- Botón GAME IS FULL :}}$ Botón dentro del componente que nos indica que la partida no está comenzada pero no se pueden unir más jugadores (máximo de jugadores alcanzados)
       - $\color{red}{\textsf{[ListGamesHeader] – Componente para refrescar la pantalla del listado de partidas y para volver al lobby}}$    
       - $\color{orange}{\textsf{[FiltersPanel] – Panel de filtros del listado de partidas.}}$

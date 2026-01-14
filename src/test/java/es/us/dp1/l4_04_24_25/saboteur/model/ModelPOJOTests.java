@@ -20,6 +20,6 @@ class ModelPOJOTests {
         p.setId(1);
         assertEquals(1, p.getId());
 
-        // Test properties if any other
+        // Probar propiedades si hubiera otras
     }
 }

@@ -61,7 +61,7 @@
 }
 
 .auth-logout-button:hover {
-  background: linear-gradient(145deg, #ffcc33, #b8860b); /* más brillante */
+  background: linear-gradient(145deg, #ffcc33, #b8860b); 
   box-shadow: 0px 10px 20px rgba(255, 215, 0, 0.4);
   color: #fff8dc; 
   transform: translateY(-5px);
@@ -89,7 +89,7 @@
 }
 
 .auth-returnLogin-button:hover {
-  background-color: #ffd700; /* dorado suave al pasar el mouse */
+  background-color: #ffd700; 
   color: #fff; 
   box-shadow: 0px 10px 20px rgba(46, 229, 157, 0.2);
   transform: translateY(-5px);

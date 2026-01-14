@@ -5,9 +5,27 @@ import { Link } from 'react-router-dom';
 import tokenService from '../../services/token.service.js';
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 import useAchievementsData from './hooks/useAchievementsData.js';
+import getAchievementBadgeImage from '../../util/getAchievementBadgeImage.js';
 
 
-const jwt = tokenService.getLocalAccessToken();
+const metricToBadgeNumber = {
+    'BUILT_PATHS': 1,
+    'DESTROYED_PATHS': 2,
+    'TOOLS_DAMAGED': 3,
+    'GOLD_NUGGETS': 4,
+    'GAMES_PLAYED': 5,
+    'TOOLS_REPAIRED': 6,
+    'VICTORIES': 7
+};
+
+const getAchievementImage = (achievement) => {
+    if (achievement.badgeImage) return achievement.badgeImage;
+    const badgeNumber = metricToBadgeNumber[achievement.metric];
+    return getAchievementBadgeImage(badgeNumber);
+};
+
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 
 export default function Profile() {
     const [isAdmin, setisAdmin] = useState(false);
@@ -26,17 +44,17 @@ export default function Profile() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const jwt = tokenService.getUser();
-                if (!jwt || !jwt.id){
+                const user = tokenService.getUser();
+                if (!user || !user.id){
                     throw new Error("User ID not found")
                 }
                 
-                const userId = jwt.id;
+                const userId = user.id;
                 const response = await fetch(`/api/v1/users/${userId}`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`,
+                        Authorization: `Bearer ${getJwt()}`,
                     },
                 });
                 // 
@@ -58,10 +76,10 @@ export default function Profile() {
     }, []); 
 
     useEffect(() => {
-        const jwt = tokenService.getLocalAccessToken();
-        if (jwt) {
+        const token = getJwt();
+        if (token) {
         try {
-            const p=JSON.parse(atob(jwt.split('.')[1]));
+            const p=JSON.parse(atob(token.split('.')[1]));
             setisAdmin(p.authorities?.includes("ADMIN")||false);
         } catch (error) {
             console.error(error);}}
@@ -134,14 +152,27 @@ export default function Profile() {
                                         key={ach.id} 
                                         className={`achievement-card ${ach.unlocked ? 'unlocked' : 'locked'}`}>
                                         <div className="achievement-icon">
-                                            {ach.unlocked?'🏆':'🔒'}
+                                            {ach.unlocked ? (
+                                                <img 
+                                                    src={getAchievementImage(ach)} 
+                                                    alt={ach.tittle}
+                                                    style={{ 
+                                                        width: '55px', 
+                                                        height: '55px',
+                                                        borderRadius: '50%',
+                                                        objectFit: 'cover'
+                                                    }}
+                                                />
+                                            ) : '🔒'}
                                         </div>
                                         <div className="achievement-details">
                                             <h4>{ach.tittle}</h4>
                                             <p className="achievement-description">{ach.description}</p>
-                                            <div className="achievement-progress">
-                                                <span>{ach.progress}</span>
-                                            </div>
+                                            {!ach.unlocked && (
+                                                <div className="achievement-progress">
+                                                    <span>{ach.progress}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

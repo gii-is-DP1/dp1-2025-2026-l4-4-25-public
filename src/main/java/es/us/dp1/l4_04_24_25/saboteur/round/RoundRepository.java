@@ -3,9 +3,7 @@ package es.us.dp1.l4_04_24_25.saboteur.round;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 
 public interface RoundRepository extends CrudRepository<Round, Integer> {
 

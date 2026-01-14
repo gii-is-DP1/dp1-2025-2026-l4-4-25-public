@@ -1,147 +1,158 @@
 @startuml Diagrama de diseño
 
+' Mejoras de visualización: valores moderados para evitar recortes/solapamientos
+skinparam dpi 150
+skinparam nodesep 220
+skinparam ranksep 120
+skinparam padding 20
+skinparam classCardPadding 10
 skinparam classAttributeIconSize 0
-hide emptymethods
 skinparam linetype ortho
+skinparam shadowing false
+skinparam ArrowColor #333333
+skinparam ArrowFontSize 12
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+skinparam defaultTextAlignment left
+'left to right direction'
+
 
 class BaseEntity {
   id: Integer
 }
 
 class NamedEntity extends BaseEntity {
-  name: String {Size(min=3, max=50)}
+  name: String
 }
+
 
 class User extends BaseEntity {
-  username: String {unique, NotEmpty, NotNull}
-  name: String {NotEmpty, NotNull}
-  birthDate: String {NotEmpty, NotNull}
-  joined: LocalDateTime {NotNull}
-  password: String {WRITE_ONLY, NotNull}
-  image: String {NotNull}
-  email: String {unique, NotEmpty, NotNull}
+  username: String
+  name: String
+  birthDate: String
+  joined: LocalDateTime
+  password: String
+  image: String
+  email: String
 }
-
-User "1" -- "1..*" Authorities : "authority"
-User "1" -- "0..*" Achievement : "creator"
-
-class Player extends User {
-  playedGames: Integer {NotNull}
-  wonGames: Integer {NotNull}
-  destroyedPaths: Integer {NotNull}
-  builtPaths: Integer {NotNull}
-  acquiredGoldNuggets: Integer {NotNull}
-  peopleDamaged: Integer {NotNull}
-  peopleRepaired: Integer {NotNull}
-  isWatcher: boolean {NotNull}
-}
-
-Player "0..*" -- "0..*" Player : "friends"
-Player "0..*" -- "0..*" Achievement : "accquiredAchievements"
-Player "0..*" -- "0..1" Game : "game (watcher)"
-
-class ActivePlayer extends Player {
-  rol: boolean
-  goldNugget: Integer {Max(50)}
-  pickaxeState: boolean
-  candleState: boolean
-  cartState: boolean
-}
-
-ActivePlayer "1" -- "1" Deck : "deck"
-ActivePlayer "1" -- "0..*" Message : "activePlayer"
 
 class Authorities extends BaseEntity {
   authority: String
 }
 
-class Game extends BaseEntity {
-  time: Duration {NotNull}
-  gameStatus: gameStatus {NotNull}
-  link: String {unique, NotNull}
-  isPrivate: boolean {NotNull}
-  maxPlayers: Integer {NotNull, Min(3), Max(12)}
+class Player extends User {
+  playedGames: Integer
+  wonGames: Integer
+  destroyedPaths: Integer
+  builtPaths: Integer
+  acquiredGoldNuggets: Integer
+  peopleDamaged: Integer
+  peopleRepaired: Integer
+  isWatcher: boolean
 }
 
-Game "1" *-- "0..3" Round : "rounds"
-Game "1" *-- "1" Chat : "chat"
-Game "0..*" -- "1" ActivePlayer : "winner"
-Game "0..*" -- "1" ActivePlayer : "creator"
-Game "0..*" -- "0..*" ActivePlayer : "activePlayers"
+class ActivePlayer extends Player {
+  rol: boolean
+  goldNugget: Integer
+  pickaxeState: boolean
+  candleState: boolean
+  cartState: boolean
+}
 
-enum gameStatus {
+class Request extends BaseEntity {
+  status: RequestStatus
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+
+class Game extends BaseEntity {
+  time: Duration
+  gameStatus: GameStatus
+  isPrivate: boolean
+  maxPlayers: Integer
+  createdAt: LocalDateTime
+  startTime: LocalDateTime
+}
+
+enum GameStatus {
   CREATED
   ONGOING
   FINISHED
 }
 
 class Round extends BaseEntity {
-  timeSpent: Duration {NotNull}
-  leftCards: Integer {NotNull}
-  winnerRol: boolean {NotNull}
+  timeSpent: Duration
+  leftCards: Integer
+  winnerRol: Boolean
   turn: Integer
-  roundNumber: Integer {NotNull, Min(1), Max(3)}
+  roundNumber: Integer
 }
 
-Round "1" -- "1" Board : "board"
+class Log extends BaseEntity {
+  messages: List
+}
 
 class Board extends BaseEntity {
-  base: Integer {NotNull}
-  heigth: Integer {NotNull}
+  base: Integer
+  height: Integer
+  objectiveCardsOrder: String
 }
-
-
-Board "1" *-- "0..*" Square : "busy"
 
 class Square extends BaseEntity {
-  coordinateX: Integer {Min(0), Max(11), NotNull}
-  coordinateY: Integer {Min(0), Max(9), NotNull}
-  occupation: boolean {NotNull}
-  type: type {NotNull}
+  coordinateX: Integer
+  coordinateY: Integer
+  occupation: boolean
+  type: SquareType
+  goalType: GoalType
 }
 
-enum type {
+enum SquareType {
   PATH
   GOAL
   START
 }
 
-class Chat extends BaseEntity {
+enum GoalType {
+  GOLD
+  CARBON_1
+  CARBON_2
 }
 
-Chat "1" *-- "0..*" Message : "messages"
-
-class Message extends BaseEntity {
-  content: String {NotEmpty, NotNull}
-}
 
 class Card extends BaseEntity {
-  status: boolean {NotNull}
-  image: String {NotBlank}
+  status: boolean
+  image: String
 }
 
 class Tunnel extends Card {
-  rotacion: boolean {NotNull}
-  arriba: boolean {NotNull}
-  abajo: boolean {NotNull}
-  derecha: boolean {NotNull}
-  izquierda: boolean {NotNull}
+  rotacion: boolean
+  arriba: boolean
+  abajo: boolean
+  derecha: boolean
+  izquierda: boolean
+  centro: boolean
 }
 
 class Action extends Card {
-  nameAction: nameAction {NotNull}
-  effectValue: effectValue {NotNull}
-  objectAffect: boolean {NotNull}
+  nameAction: NameAction
+  effectValue: EffectValue
+  objectAffect: boolean
 }
 
-enum nameAction {
+enum NameAction {
   REPAIR
   DESTROY
   OVERTHROW
   REVEAL
 }
 
-enum effectValue {
+enum EffectValue {
   REPAIR_PICKAXE
   REPAIR_CART
   REPAIR_LAMP
@@ -158,14 +169,66 @@ enum effectValue {
 class Deck extends BaseEntity {
 }
 
-Deck "1" -- "0..*" Card : "cards"
 
-class Achievement extends BaseEntity {
-  tittle: String {unique, NotEmpty, NotNull}
-  description: String {NotEmpty, NotNull}
-  score: Integer
-  image: String {NotEmpty, NotNull}
+class Chat extends BaseEntity {
 }
 
+class Message extends BaseEntity {
+  content: String
+}
+
+
+class Achievement extends BaseEntity {
+  tittle: String
+  description: String
+  badgeImage: String
+  threshold: Integer
+  metric: Metric
+}
+
+enum Metric {
+  GAMES_PLAYED
+  VICTORIES
+  BUILT_PATHS
+  DESTROYED_PATHS
+  GOLD_NUGGETS
+  TOOLS_DAMAGED
+  TOOLS_REPAIRED
+}
+
+
+User "0..*" -- "1" Authorities : authority
+
+Player "    0..*" -- "0..*" Player : friends
+Player "0..*" -- "0..*" Achievement : accquiredAchievements
+Player "  0..*" -- "0..1" Game : watchers
+
+Player "    1" -down- "0..*" Request : sentRequests
+Player "1" -- "0..*" Request : receivedRequests
+
+ActivePlayer "1" -- "0..1" Deck : deck
+ActivePlayer "1" -- "0..*" Message : messages
+ActivePlayer "1" -up- "0..*" Game : wonGames
+ActivePlayer "1" -right- "0..*" Game : createdGames
+
+Game "1" *-- "0..3" Round : rounds
+Game "1" *-- "0..1" Chat : chat
+Game "0..*" -up- "0..1" ActivePlayer : winner
+Game "0..*" -up- "1" ActivePlayer : creator
+Game "0..*" -right- "0..*" ActivePlayer : activePlayers
+
+Round "1" -right- "0..1" Board : board
+Round "1" -- "0..1" ActivePlayer : playerTurn
+Round "1" -down- "0..1" Log : log
+
+Board "1" *-- "0..*" Square : busy
+Square "0..*" -- "0..1" Card : card
+
+Chat "1" *-- "0..*" Message : messages
+
+Deck "1" -- "0..*" Card : cards
+
+User "1" -up- "0..*" Achievement : createdAchievements
+Achievement "0..*" -left- "0..*" Player : players
 
 @enduml

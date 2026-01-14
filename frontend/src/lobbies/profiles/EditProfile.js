@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import useEditProfile from './hooks/useEditProfile';
 
-// Importar componentes modulares
 import ProfileLogo from './components/ProfileLogo';
 import TopButtons from './components/TopButtons';
 import ProfileImageSelector from './components/ProfileImageSelector';

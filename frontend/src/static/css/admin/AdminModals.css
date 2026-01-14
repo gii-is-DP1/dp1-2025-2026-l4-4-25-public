@@ -158,6 +158,20 @@
   cursor: not-allowed;
 }
 
+/* Ensure native dropdown options remain readable on light native backgrounds
+   (some browsers render the open <select> list with a white background). */
+.modal-field select option {
+  color: #222222; /* dark text to contrast white native option backgrounds */
+  background: #ffffff; /* prefer white so selection highlight is visible */
+}
+
+/* Also enforce readable color when hovered/selected in the options list */
+.modal-field select option:checked,
+.modal-field select option:hover {
+  color: #111111;
+  background: #f0f0f0;
+}
+
 .modal-field textarea {
   resize: vertical;
   min-height: 100px;

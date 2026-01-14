@@ -87,6 +87,7 @@ npm start
 
 The frontend will open automatically at [http://localhost:3000](http://localhost:3000)
 
+
 ## 🗃️ Database Configuration
 
 The application uses an **H2 in-memory database** by default, which is automatically populated with initial data at startup.
@@ -111,6 +112,22 @@ For testing and development, the following users are pre-configured:
 - 1️⃣**Username**: `player1` | **Password**: `saboteur123`
 - 2️⃣**Username**: `player2` | **Password**: `saboteur123`
 - 3️⃣**Username**: `player3` | **Password**: `saboteur123`
+
+- 4️⃣**Username**: `player4` | **Password**: `saboteur123`
+- 5️⃣**Username**: `player5` | **Password**: `saboteur123`
+
+The five accounts `player1`–`player5` are the preferred test players and come with preconfigured Achievements and Statistics to simplify testing.
+
+Additional preferred test players (no preconfigured Achievements or Statistics):
+
+- **Username**: `RHQ7780` | **Password**: `saboteur123`
+- **Username**: `GBK4935` | **Password**: `saboteur123`
+- **Username**: `HKP3295` | **Password**: `saboteur123`
+- **Username**: `JGR9196` | **Password**: `saboteur123`
+- **Username**: `WRG8176` | **Password**: `saboteur123`
+- **Username**: `FQY7185` | **Password**: `saboteur123`
+
+These additional accounts are available for playing and testing but, unlike `player1`–`player5`, they do not have pre-filled Achievements or Statistics.
 
 ## 🏗️ Project Structure
 
@@ -185,6 +202,47 @@ npm test -a
 6. **Win Gold**: Complete your objective to earn gold nuggets
 7. **Play 3 Rounds**: The player with the most gold after 3 rounds wins!
 
+---
+
+> ### 🔐 SECRET TIP
+>
+> **There is a branch named `dev/skip-round-button` that implements a special testing feature:** a button available only to the game creator that reveals the gold and forces the round to end (i.e., it skips the round). This was added as a convenience to speed up testing and has proven very useful for quicker manual testing of round flows.
+>
+> This branch exists purely for testing purposes and is not merged into `main`. **This feature is intended for quick testing and has not been perfected; we are not responsible for any random errors you may encounter when using it, as forcing rounds quickly can trigger timing/load related issues in certain environments.**
+>
+> If you want to try the faster flow for debugging or QA, you may check out `dev/skip-round-button`. Otherwise, stick to the `main` branch for the stable experience.
+>
+---
+
+## ⚠️ Potential Issues & Fixes
+
+Below are known or potential issues that may affect gameplay, with suggested workarounds. Most are uncommon but important to be aware of for a smooth experience. A Spanish version of this guidance is available at [docs/POTENTIAL_ISSUES_ES.md](docs/POTENTIAL_ISSUES_ES.md).
+
+### **Top Issues & Fixes — Quick Summary**
+
+These are the most important issues you may encounter during multiplayer testing. They can occur under load but should not normally appear.
+
+- **Recommendation — Use Firefox:** Prefer Firefox or Firefox Developer Edition for best rendering and performance; other browsers (Edge, Chrome, Opera) work but may be slower.
+- **Timer freeze after refresh (Problem):** If a player's in-game timers freeze after a browser reload, **Solution:** refresh the browser of the player who started the match — their timer re-activates. If you don't know who that is, refresh all players' browsers.
+- **Loading screens are slow (Recommendation):** Be patient during loading screens when entering matches or advancing rounds — some browsers (Edge/Chrome) can be slower loading game data, and all players must reach the ready state before the match continues.
+- **Player joins too early in a second match (Problem):** If a player joins the second game before the rest and the match is out-of-sync, **Solution:** refresh all players' browsers to re-synchronize and start correctly.
+
+These items are highlighted because they are the most common/resurfacing issues during multiplayer testing. They "may" happen under stress or heavy load but are not expected in normal usage.
+
+ - **Performance** and resource usage increase as more browsers and players are connected simultaneously.
+ - If an error occurs during a match (rare), **refresh** the page — most issues resolve after a **reload**.
+ - When using multiple browsers or screens at once, some **CSS** layouts may not adapt perfectly. For testing, prefer using a single display and, if needed, reduce browser **zoom** (Ctrl + '-') to ensure the board fits correctly.
+ - Recommended browsers: **Firefox** and **Firefox Developer Edition** (best). Edge, Chrome and Opera also work but may render slightly slower.
+ - If visual elements appear 'cut off', try reducing browser **zoom** — this is usually a compatibility/layout issue, not a game bug.
+ - The **draw pile** size is calculated based on the number of players by game rules — this is expected behavior, not a bug.
+ - On **Firefox**, disabling sidebars or toolbars can give a fuller view, but reducing **zoom** also works; the game functions correctly without disabling UI elements.
+ - If a card placed in another browser does not appear after **refreshing**, try refreshing again — the client is designed to recover on **reload**.
+- Loading screens may take longer while waiting for all players to join; **be patient** and watch each player's loading bar reach 100% (this ensures rounds render correctly for everyone).
+- If a player advances to the next screen before others, refresh all browsers to re-synchronize.
+- If the in-game **timer freezes** after a reload, refresh the browser of the **player who started the match** (their timer is the one that activates). If unsure who that was, refresh all browsers.
+ - If you change a player's **username**, log in again to avoid inconsistencies during a live match.
+ - On the **CreateGame** screen, if you see a "Connect with The server" error, refresh the page (very rare but harmless to retry).
+ - **Background music** may play simultaneously in multiple browsers — this is expected when testing with several clients; mute individual browsers or use the music controls to disable audio if needed. If **autoplay** issues occur, the music can always be toggled manually.
 
 ## 🔧 Configuration
 

@@ -1,0 +1,309 @@
+.music-player-container {
+  position: fixed;
+  z-index: 9999;
+}
+
+.music-toggle-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #eadd66 0%, #a2954b 100%);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4),
+              0 0 20px rgba(162, 149, 75, 0.3);
+  cursor: pointer;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10000;
+  animation: pulse 2s infinite;
+}
+
+.music-toggle-button:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 6px 20px rgba(234, 214, 102, 0.6),
+              0 0 30px rgba(162, 156, 75, 0.5);
+}
+
+.music-toggle-button:active {
+  transform: scale(0.95);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(234, 221, 102, 0.4),
+                0 0 20px rgba(162, 131, 75, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(221, 234, 102, 0.6),
+                0 0 30px rgba(162, 156, 75, 0.5);
+  }
+}
+
+.music-controls-panel {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 255, 0.95) 100%);
+  border-radius: 15px;
+  padding: 1.2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
+              0 0 20px rgba(214, 234, 102, 0.3);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(232, 234, 102, 0.3);
+  min-width: 280px;
+  z-index: 9999;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.music-controls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(210, 234, 102, 0.2);
+}
+
+.music-controls-header span {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #d8c55a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.close-controls {
+  background: rgba(255, 252, 82, 0.1);
+  border: 2px solid rgba(255, 82, 82, 0.3);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: #ff5252;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.close-controls:hover {
+  background: rgba(255, 82, 82, 0.2);
+  transform: rotate(90deg);
+}
+
+.music-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.play-pause-button {
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, #e8ea66 0%, #9ca24b 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.play-pause-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(234, 225, 102, 0.5);
+}
+
+.play-pause-button:active {
+  transform: translateY(0);
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.volume-control label {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.volume-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, 
+              rgba(205, 234, 102, 0.2) 0%, 
+              rgba(234, 214, 102, 0.8) 100%);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #eac766 0%, #a28e4b 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(234, 225, 102, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 12px rgba(234, 221, 102, 0.7);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.7);
+}
+
+.volume-percentage {
+  font-weight: 600;
+  color: #5e541f;
+  font-size: 0.9rem;
+  min-width: 45px;
+  text-align: right;
+}
+
+.change-music {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.change-music label {
+  font-weight: 600;
+  color: #5e541f;
+  font-size: 0.9rem;
+}
+
+.video-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.video-input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #4a5568;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+}
+
+.video-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.video-input::placeholder {
+  color: #a0aec0;
+}
+
+.change-button {
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+  min-width: 45px;
+}
+
+.change-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.5);
+  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+}
+
+.change-button:active {
+  transform: translateY(0);
+}
+
+/* Themed variants for the enable/reset controls inside the music header */
+.enable-button {
+  background: linear-gradient(135deg, #ffd86b 0%, #d4b24a 100%);
+  color: #2b1f00;
+  border: 2px solid rgba(212, 178, 74, 0.18);
+  box-shadow: 0 6px 18px rgba(212, 178, 74, 0.18);
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  min-width: auto;
+}
+.enable-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 178, 74, 0.28);
+}
+
+.reset-button {
+  background: transparent;
+  color: #6b4f00;
+  border: 2px dashed rgba(107, 79, 0, 0.12);
+  box-shadow: none;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.reset-button:hover {
+  background: rgba(218, 183, 80, 0.06);
+  transform: translateY(-1px);
+}
+
+.music-info {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(102, 126, 234, 0.2);
+  text-align: center;
+}
+
+.music-info small {
+  color: #5e541f;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: block;
+  line-height: 1.4;
+}

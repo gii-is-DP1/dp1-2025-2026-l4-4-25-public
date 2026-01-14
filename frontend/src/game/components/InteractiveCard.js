@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { isTunnelCard, isActionCard, isCollapseCard, isMapCard } from '../utils/cardUtils';
 
 // Función para verificar si es una carta de reparación doble
@@ -78,15 +78,95 @@ export default function InteractiveCard({
     setSelectedPlayer(null);
   }, [card.id]);
 
-  const handleDragStart = (e) => {
-    if (isTunnelCard(card) && isMyTurn) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('application/json', JSON.stringify(card));
-      e.dataTransfer.setData('cardIndex', index.toString());
-      e.dataTransfer.setData('text/plain', card.id);
-    } else {
-      e.preventDefault();
-    }
+  // arrastre basado en puntero para reemplazar DnD nativo y permitir que el cursor personalizado siga el puntero
+  const previewRef = useRef(null);
+  const draggingRef = useRef({ active: false, hoveredEl: null });
+
+  const startPointerDrag = (e) => {
+    if (!isDraggableTunnel || !isMyTurn) return;
+    // responder solo al botón primario
+    if (e.button && e.button !== 0) return;
+    e.preventDefault();
+
+    const cardIndexStr = index.toString();
+
+    // coordenadas iniciales para detectar umbral de movimiento (evita crear preview en clicks/doble-clicks)
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const MOVE_THRESHOLD = 8; // pixels
+
+    let previewCreated = false;
+    let lastHover = null;
+
+    const createPreview = (ev) => {
+      const preview = document.createElement('div');
+      preview.className = 'card-drag-preview';
+      preview.style.position = 'fixed';
+      preview.style.left = `${ev.clientX}px`;
+      preview.style.top = `${ev.clientY}px`;
+      preview.style.pointerEvents = 'none';
+      preview.style.zIndex = 200000;
+      preview.innerHTML = `<img src="${card.image}" style="width:64px; height:auto; display:block; transform: rotate(${rotation}deg); box-shadow:0 8px 20px rgba(0,0,0,0.4); border-radius:6px;"/>`;
+      document.body.appendChild(preview);
+      previewRef.current = preview;
+      draggingRef.current.active = true;
+      previewCreated = true;
+
+      // dispatch global start event
+      document.body.dispatchEvent(new CustomEvent('saboteur-dragstart', { detail: { card: card, cardIndex: index } }));
+    };
+
+    const onPointerMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      const dist = Math.hypot(dx, dy);
+
+      // Crear el preview solo cuando el usuario se haya movido más allá del umbral (evita que clicks/doble-clicks activen el arrastre)
+      if (!previewCreated) {
+        if (dist < MOVE_THRESHOLD) return;
+        createPreview(ev);
+      }
+
+      if (!previewRef.current) return;
+      previewRef.current.style.left = `${ev.clientX + 8}px`;
+      previewRef.current.style.top = `${ev.clientY + 8}px`;
+
+      // encontrar el elemento bajo el puntero y despachar enter/leave
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      const cell = under && under.closest && under.closest('.board-cell');
+      if (cell !== lastHover) {
+        if (lastHover) lastHover.dispatchEvent(new CustomEvent('saboteur-dragleave'));
+        if (cell) cell.dispatchEvent(new CustomEvent('saboteur-dragenter'));
+        lastHover = cell;
+        draggingRef.current.hoveredEl = cell;
+      }
+    };
+
+    const endPointerDrag = (ev) => {
+      if (previewCreated) {
+        draggingRef.current.active = false;
+        document.body.dispatchEvent(new CustomEvent('saboteur-dragend'));
+        // realizar el drop sobre el elemento resaltado si existe
+        const target = draggingRef.current.hoveredEl;
+        if (target) {
+          const detail = { card: card, cardIndex: cardIndexStr };
+          target.dispatchEvent(new CustomEvent('saboteur-drop', { detail }));
+        }
+      }
+
+      // limpieza
+      try { document.removeEventListener('pointermove', onPointerMove); } catch (e) {}
+      try { document.removeEventListener('pointerup', endPointerDrag); } catch (e) {}
+      if (previewRef.current) {
+        try { previewRef.current.remove(); } catch (e) {}
+        previewRef.current = null;
+      }
+      if (lastHover) lastHover.dispatchEvent(new CustomEvent('saboteur-dragleave'));
+      draggingRef.current.hoveredEl = null;
+    };
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', endPointerDrag, { once: true });
   };
 
   const handleClick = () => {
@@ -159,7 +239,6 @@ export default function InteractiveCard({
   const isClickableAction = isActionCard(card);
   const isClickableCollapse = isCollapseCard(card);
   const isClickableMap = isMapCard(card);
-  const canDrag = isDraggableTunnel && isMyTurn;
 
   let cardClass = 'interactive-card';
   let cardTitle = 'Not your turn';
@@ -187,8 +266,8 @@ export default function InteractiveCard({
     <div className="interactive-card-wrapper">
       <div
         className={cardClass}
-        draggable={canDrag}
-        onDragStart={handleDragStart}
+        draggable={false}
+        onPointerDown={startPointerDrag}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}

@@ -28,6 +28,8 @@ import Stats from "./lobbies/profiles/Stats";
 import GameInvitationListener from "./components/GameInvitationListener";
 import Ranking from "./lobbies/ranking/Ranking";
 import ReadMe from "./lobbies/ReadMe";
+import BackgroundMusic from "./components/BackgroundMusic";
+import SaboteurCursor from "./components/SaboteurCursor";
 
 function StrictInGameRedirect({ jwt, children }) {
   const location = useLocation();
@@ -44,17 +46,18 @@ function StrictInGameRedirect({ jwt, children }) {
     savedGameData = null;
   }
 
-  const activeBoardId = savedGameData?.round?.board;
-  const winner = savedGameData?.game?.winner;
+  const activeBoardId = savedGameData?.round?.board?.id ?? savedGameData?.round?.board;
+  const isSpectator = savedGameData?.isSpectator === true;
 
-  if (!activeBoardId) {
+  // Los espectadores pueden navegar libremente
+  if (!activeBoardId || isSpectator) {
     return children;
   }
 
   const boardMatch = matchPath('/board/:boardId', location.pathname);
   if (boardMatch) {
     const currentBoardId = boardMatch.params?.boardId;
-    if (currentBoardId && winner === null && String(currentBoardId) !== String(activeBoardId)) {
+    if (currentBoardId && String(currentBoardId) !== String(activeBoardId)) {
       return <Navigate to={`/board/${activeBoardId}`} replace />;
     }
     return children;
@@ -74,6 +77,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 }
 
 function App() {
+  const location = useLocation();
   const jwt = tokenService.getLocalAccessToken();
   let roles = []
   if (jwt) {
@@ -83,6 +87,7 @@ function App() {
   function getRolesFromJWT(jwt) {
     return jwt_decode(jwt).authorities;
   }
+
 
   let adminRoutes = <></>;
   let ownerRoutes = <></>;
@@ -135,8 +140,11 @@ function App() {
   return (
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback} >
+        <SaboteurCursor />
+        
         <AppNavbar />
         {jwt && <GameInvitationListener />}
+        <BackgroundMusic />
         <ToastContainer 
           position="top-right" 
           autoClose={2500} 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { canPlaceCard, validateCardPlacement } from '../utils/cardUtils';
+import React, { useState, useRef, useEffect } from 'react';
+import { validateCardPlacement } from '../utils/cardUtils';
 import { toast } from 'react-toastify';
 
 export default function DroppableCell({ 
@@ -15,6 +15,48 @@ export default function DroppableCell({
   isDestroying
 }) {
   const [isDragOver, setIsDragOver] = useState(false); // Resalto de la celda cuando se ha arrastrado sobre la misma.
+  const rootRef = useRef(null);
+
+  // Escuchando eventos personalizados de arrastre basados en punteros enviados por InteractiveCard
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const onCustomEnter = (e) => {
+      if (!isMyTurn) return;
+      setIsDragOver(true);
+    };
+    const onCustomLeave = () => {
+      setIsDragOver(false);
+    };
+    const onCustomDrop = (e) => {
+      if (!isMyTurn) return;
+      setIsDragOver(false);
+      const detail = e.detail || {};
+      const { card, cardIndex } = detail;
+      try {
+        const validation = validateCardPlacement(board, row, col, card);
+        if (validation.valid) {
+          if (onDrop) onDrop(row, col, card, parseInt(cardIndex), cell?.squareId);
+        } else {
+          toast.warning(validation.message);
+        }
+      } catch (err) {
+        console.error('Error handling custom drop', err);
+        toast.error('❌ Error placing the selected card');
+      }
+    };
+
+    el.addEventListener('saboteur-dragenter', onCustomEnter);
+    el.addEventListener('saboteur-dragleave', onCustomLeave);
+    el.addEventListener('saboteur-drop', onCustomDrop);
+
+    return () => {
+      el.removeEventListener('saboteur-dragenter', onCustomEnter);
+      el.removeEventListener('saboteur-dragleave', onCustomLeave);
+      el.removeEventListener('saboteur-drop', onCustomDrop);
+    };
+  }, [board, row, col, isMyTurn, onDrop, cell]);
 
   const handleDragOver = (e) => { 
     e.preventDefault();
@@ -102,6 +144,9 @@ export default function DroppableCell({
 
   return (
     <div
+      ref={rootRef}
+      data-row={row}
+      data-col={col}
       className={`board-cell ${cell ? 'occupied' : 'empty'} ${isDragOver ? 'drag-over' : ''} ${isDestroyable ? 'destroyable' : ''} ${cannotDestroy ? 'cannot-destroy' : ''} ${isDestroying ? 'cell-destroying' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

@@ -61,6 +61,27 @@
   position: relative;
   z-index: 10;
   backdrop-filter: blur(6px) saturate(120%);
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.creategame-card::-webkit-scrollbar {
+  width: 10px;
+}
+
+.creategame-card::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+}
+
+.creategame-card::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+  border-radius: 5px;
+}
+
+.creategame-card::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffd54f, #ff6b3b);
 }
 
 
@@ -199,23 +220,7 @@ input:checked + .slider:before {
 
 .player-card2:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(0,0,0,0.55); }
 
-/*
-.player-avatar {
-  background: transparent;
-  box-shadow: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex: 0 0 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
-  color: #222;
-  font-weight: 800;
-}
-*/
+
 /* Estilo para los nuevos avatares en la lista de jugadores */
 .player-avatar-img {
   width: 45px;
@@ -243,6 +248,28 @@ input:checked + .slider:before {
   align-items: stretch;
   gap: 10px;
   margin-top: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Estilos para el scrollbar */
+.active-players-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.active-players-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.active-players-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+  border-radius: 4px;
+}
+
+.active-players-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffd54f, #ff6b3b);
 }
 
 .expel-player-btn {

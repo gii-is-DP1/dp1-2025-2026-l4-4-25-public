@@ -97,8 +97,6 @@ public class DeckRestController {
     return new ResponseEntity<>(savedDeck, HttpStatus.CREATED);
     }
 
-    //Revisar el PATCH
-
     
     @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -115,17 +113,6 @@ public class DeckRestController {
         deckService.deleteDeck(id);
         return new ResponseEntity<>(new MessageResponse("Deck deleted!"), HttpStatus.OK);
     }
-/* 
-    @PatchMapping(value = "{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Deck> patch(@PathVariable("id") Integer id, @RequestBody Map<String, Object> updates) throws JsonMappingException{
-        RestPreconditions.checkNotNull(deckService.findDeck(id), "Deck", "ID", id);
-        Deck deck = deckService.findDeck(id);
-        Deck deckPatched = objectMapper.updateValue(deck, updates);
-        deckService.updateDeck(deckPatched, id);
-        return new ResponseEntity<>(deckPatched, HttpStatus.OK);
-    }
-*/
 
 @PatchMapping(value = "{id}")
 @ResponseStatus(HttpStatus.OK)

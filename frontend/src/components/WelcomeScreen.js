@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../static/css/components/welcomeScreen.css';
-import minerRol from '../game/cards-images/roles/minerRol.png';
-import saboteurRol from '../game/cards-images/roles/saboteurRol.png';
 import audioBackground from './audiobackground.mp3';
 
 export default function WelcomeScreen({ username, onComplete }) {
@@ -32,6 +30,8 @@ export default function WelcomeScreen({ username, onComplete }) {
       if (audio) {
         audio.pause();
         audio.currentTime = 0;
+        try { audio.src = ''; } catch (e) {}
+        audioRef.current = null;
       } 
       if (onComplete) {
         onComplete();
@@ -43,6 +43,8 @@ export default function WelcomeScreen({ username, onComplete }) {
       if (audio) {
         audio.pause();
         audio.currentTime = 0;
+        try { audio.src = ''; } catch (e) {}
+        audioRef.current = null;
       }
     };
   }, [onComplete]);

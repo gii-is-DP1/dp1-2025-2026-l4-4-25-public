@@ -1,8 +1,11 @@
 package es.us.dp1.l4_04_24_25.saboteur.round;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,10 @@ import jakarta.validation.Valid;
 public class RoundRestController {
 
     private static final Logger log = LoggerFactory.getLogger(RoundRestController.class);
+
+    // Map para trackear qué jugadores están listos por cada ronda
+    // Key: roundId, Value: Set de usernames que ya están listos
+    private static final Map<Integer, Set<String>> readyPlayersByRound = new ConcurrentHashMap<>();
 
     private final RoundService roundService;
     private final ObjectMapper objectMapper;
@@ -184,15 +191,45 @@ public class RoundRestController {
         return new ResponseEntity<>(payload, HttpStatus.OK);
     }
 
-    /*
-     * @PostMapping("/initialize/{gameId}")
-     * public ResponseEntity<Round> initializeRound(@PathVariable Integer gameId) {
-     * Game game = gameService.findGame(gameId);
-     * 
-     * // Suponemos que siempre se crea la primera ronda (por ahora)
-     * Round round = roundService.initializeRound(game, 1);
-     * 
-     * return ResponseEntity.ok(round);
-     * }
-     */
+    // Endpoint para que cada jugador notifique que está listo
+    @PostMapping("/playerReady")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Map<String, Object>> playerReady(@RequestBody Map<String, Object> body) {
+        Integer roundId = (Integer) body.get("roundId");
+        String username = (String) body.get("username");
+
+        Round round = roundService.findRound(roundId);
+        RestPreconditions.checkNotNull(round, "Round", "ID", roundId);
+
+        Integer gameId = round.getGame().getId();
+        // Usar el número REAL de jugadores activos, no el máximo permitido
+        int expectedPlayers = round.getGame().getActivePlayers().size();
+
+        // Añadir jugador al set de listos
+        readyPlayersByRound.computeIfAbsent(roundId, k -> new HashSet<>()).add(username);
+        Set<String> readyPlayers = readyPlayersByRound.get(roundId);
+
+        log.info(">>> Player {} ready for round {}. Ready: {}/{}", username, roundId, readyPlayers.size(), expectedPlayers);
+        log.info(">>> Active players for game {}: {}", gameId, round.getGame().getActivePlayers());
+        log.info(">>> Ready players set for round {}: {}", roundId, readyPlayers);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("readyCount", readyPlayers.size());
+        response.put("expectedPlayers", expectedPlayers);
+
+        // Si todos los jugadores están listos, emitir WebSocket
+        if (readyPlayers.size() >= expectedPlayers) {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("action", "ALL_PLAYERS_READY");
+            payload.put("roundId", roundId);
+
+            log.info(">>> WS: Enviando ALL_PLAYERS_READY a /topic/game/{}", gameId);
+            messagingTemplate.convertAndSend("/topic/game/" + gameId, payload);
+
+            // Limpiar el set para esta ronda (ya no lo necesitamos)
+            readyPlayersByRound.remove(roundId);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

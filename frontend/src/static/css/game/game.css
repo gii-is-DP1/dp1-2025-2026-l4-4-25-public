@@ -14,7 +14,8 @@
 
 .logo-container {
   position: absolute;
-  top: 10px;
+  /* ajustar para que no entre en el letrero de ronda */
+  top: 60px;
   left: 10px;
 }
 
@@ -191,6 +192,7 @@
   position: absolute;
   top: 370px;
   left: 45px;
+  z-index: 9001;
   background: #dabb40;
   border: 2px solid #c0af11;
   border-radius: 8px;
@@ -238,6 +240,29 @@
   display: flex;
   align-items: left;
   gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.time-card.timer-active {
+  background: linear-gradient(135deg, #2e2e2e 0%, #1a3a1a 100%);
+  border-color: #4caf50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+.time-card.timer-frozen {
+  background: linear-gradient(135deg, #2e2e2e 0%, #3a3a1a 100%);
+  border-color: #ff9800;
+  opacity: 0.8;
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+  }
 }
 
 .round-box {
@@ -350,18 +375,21 @@
 }
 
 .chat-box {
-  top: 555px;
-  position: absolute;
-  bottom: 40px;
-  right: 25px;
-  width: 260px;
+  /* Arreglar bottom-left navegadores (evitar cortar input) */
+  position: fixed;
+  left: 24px;
+  bottom: 110px;
+  width: min(340px, calc(100vw - 48px));
+  height: clamp(180px, 28vh, 320px);
+  box-sizing: border-box;
   color: rgb(255, 255, 255);
-  height: 280px;
   background: rgba(85, 85, 85, 0.7);
   border: 1px solid #555;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  z-index: 9000;
 }
 
 .chat-header {
@@ -379,21 +407,32 @@
   color: rgb(255, 255, 255);
   font-size: 12px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .chat-input {
   border-top: 1px solid #555;
-  padding: 6px;
+  padding: 8px;
+  flex: 0 0 auto;
+  background: rgba(85, 85, 85, 0.7);
 }
 
 .chat-input input {
   width: 100%;
-  padding: 5px;
+  box-sizing: border-box;
+  padding: 8px 10px;
   background: rgba(85, 85, 85, 0.7);
   border: 1px solid rgb(13, 14, 12);
   border-radius: 4px;
   color: rgb(255, 255, 255);
   font-size: 12px;
+}
+
+@media (max-height: 720px) {
+  .chat-box {
+    bottom: 90px;
+    height: clamp(160px, 26vh, 280px);
+  }
 }
 
 
@@ -450,6 +489,7 @@
   position: absolute;
   top: 10px;
   right: 30px;
+  z-index: 200;
   display: flex;
   flex-wrap: nowrap;
   gap: 12px;
@@ -520,10 +560,16 @@
 .game-log {
   position: absolute;
   right: 30px;
-  top: 40%;
-  transform: translateY(-50%);
+  top: 190px;
+  bottom: 100px;
+  transform: none;
   width: 220px;
-  height: 280px;
+  height: auto;
+  min-height: 280px;
+  max-height: 520px;
+  max-height: min(520px, calc(100vh - 240px));
+  max-height: min(520px, calc(100dvh - 240px));
+  z-index: 150;
   background: rgba(20, 20, 20, 0.7);
   border: 1px solid #555;
   border-radius: 10px;
@@ -589,6 +635,8 @@
 .game-log-messages {
   margin: 0;
   padding: 2px 0;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -850,6 +898,14 @@
   border-color: #88cc88;
   box-shadow: 0 0 10px rgba(136, 204, 136, 0.6);
   transform: scale(1.05);
+}
+
+/* Drag preview used by pointer-based dragging */
+.card-drag-preview img {
+  width: 64px;
+  height: auto;
+  display: block;
+  pointer-events: none;
 }
 
 .board-cell.destroyable {
@@ -1437,3 +1493,24 @@
   font-weight: bold;
   color: #ffd700;
 }
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+

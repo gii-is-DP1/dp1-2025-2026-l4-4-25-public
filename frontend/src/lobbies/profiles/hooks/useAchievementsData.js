@@ -8,10 +8,14 @@ const useAchievementsData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const jwt = tokenService.getLocalAccessToken();
+  // Get JWT dynamically to avoid stale token issues
+  const getJwt = () => tokenService.getLocalAccessToken();
 
   useEffect(() => {
     const fetchProfile = async () => {
+      const jwt = getJwt();
+      if (!jwt) return;
+      
       try {
         const user = tokenService.getUser();
         if (!user?.username) throw new Error("Username not found");
@@ -35,9 +39,12 @@ const useAchievementsData = () => {
     };
     
     fetchProfile();
-  }, [jwt]);
+  }, []);
 
   useEffect(() => {
+    const jwt = getJwt();
+    if (!jwt) return;
+    
     try {
       const payload = JSON.parse(atob(jwt.split('.')[1]));
       setIsAdmin(payload.authorities?.includes("ADMIN") || false);
@@ -45,11 +52,14 @@ const useAchievementsData = () => {
       console.error("Error checking admin status:", error);
       setIsAdmin(false);
     }
-  }, [jwt]);
+  }, []);
 
   useEffect(() => {
     const fetchAchievements = async () => {
       if (!profile) return;
+      
+      const jwt = getJwt();
+      if (!jwt) return;
       
       try {
         setLoading(true);
@@ -130,15 +140,14 @@ const useAchievementsData = () => {
     };
     
     fetchAchievements();
-  }, [jwt, profile]);
+  }, [profile]);
 
   return {
     achievements,
     profile,
     isAdmin,
     loading,
-    error,
-    jwt
+    error
   };
 };
 

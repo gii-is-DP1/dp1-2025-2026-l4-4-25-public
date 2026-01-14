@@ -6,14 +6,14 @@ import "../../static/css/admin/adminPage.css";
 import "../../static/css/auth/authPage.css";
 import "../../static/css/auth/authButton.css";
 import getErrorModal from "../../util/getErrorModal";
-import getIdFromUrl from "../../util/getIdFromUrl";
 import useFetchData from "../../util/useFetchData";
 import useFetchState from "../../util/useFetchState";
 import getIconImage from "../../util/getIconImage";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png";
 import { useParams } from "react-router-dom";
 
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 const loggedInUser = tokenService.getUser(); 
 
 export default function UserEditAdmin() {
@@ -34,13 +34,13 @@ export default function UserEditAdmin() {
 
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
-  const [user, setUser] = useFetchState(emptyItem, id ? `/api/v1/users/${id}` : null, jwt, setMessage, setVisible, id);
+  const [user, setUser] = useFetchState(emptyItem, id ? `/api/v1/users/${id}` : null, getJwt(), setMessage, setVisible, id);
 
   const [profileImage, setProfileImage] = useState(defaultProfileAvatar);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-  const auths = useFetchData(`/api/v1/users/authorities`, jwt); 
+  const auths = useFetchData(`/api/v1/users/authorities`, getJwt()); 
 
   useEffect(() => {
     if (typeof user.authority === 'string' && auths.length > 0) {
@@ -96,7 +96,7 @@ export default function UserEditAdmin() {
     fetch("/api/v1/users" + (user.id ? "/" + user.id : ""), {
       method: user.id ? "PUT" : "POST",
       headers: {
-        Authorization: `Bearer ${jwt}`,
+        Authorization: `Bearer ${getJwt()}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },

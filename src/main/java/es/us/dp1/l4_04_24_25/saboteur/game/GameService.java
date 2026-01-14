@@ -81,12 +81,6 @@ public class GameService {
         return games;
 }
 
-    /* 
-    @Transactional(readOnly = true)
-    public Iterable<Game> findAllByAdminUsername(String adminUsername) {
-        return gameRepository.findAllByAdminUsername(adminUsername);
-    }
-*/
     @Transactional(readOnly = true)
     public Iterable<Game> findAllPublicGames() {
         return gameRepository.findAllPublicGames();

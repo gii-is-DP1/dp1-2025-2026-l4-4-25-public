@@ -3,7 +3,7 @@
 **Curso académico:** 2025/2026 
 **Grupo/Equipo:** L4-4  
 **Nombre del proyecto:** Saboteur 
-**Versión documento:** v3.2 *(24-11-2025)* 
+**Versión documento:** v4.1 *(12-01-2026)* 
 **Repositorio:** (https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/tree/main)
 **Integrantes (máx. 6):** 
 
@@ -70,15 +70,6 @@ El vencedor será el jugador que **más** pepitas de oro haya conseguido, que se
    **- Nota:** El lobby se organiza en varias secciones. La sección "Amigos en partida" se ha optado por suprimirse.
 En la zona superior central se ubica la "SECCIÓN AMIGOS", que lista a los amigos con su estado actual (ej. Alejandro – Activo, Luis – Ausente, Marcos – Inactivo, con puntos de color verde, naranja y rojo, respectivamente). Esta sección incluye opciones para Solicitudes de amistad (desplegable) y Buscar jugador (barra de búsqueda), además de mostrar notificaciones (ej. "Carlos quiere ser tu amigo") tienes entonces la opcion de aceptar o denegar la solicitud de amistad. La zona superior derecha contiene el botón "MI PERFIL" y una notificación de invitación (rosa) de Alejandro para unirse a la partida #1022, con el botón de acción "UNIRSE A LA PARTIDA".
 Las acciones principales del lobby se encuentran en la zona inferior central, destacadas con dos grandes botones amarillos: "CREAR PARTIDA" y "UNIRSE A UNA PARTIDA". En la zona inferior izquierda presenta un único botón con icono de trofeo para acceder al "RANKING" general de jugadores.En la zona inferior derecha se encuentra el panel "ESTADÍSTICAS GLOBALES", este se ha decidido de colocar en *Stats* de un jugador para la limpieza de esta pantalla de información.
-
-
-
-
-![prueba](D1_images/HU-2.png)
-
-
-
-
 
 ---
 
@@ -315,7 +306,7 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 | "Como jugador, quiero que el sistema posea una sección de amigos para ver todos tus amigos, ver si están conectados o no y poder acceder a sus perfiles personales." 
 |----| 
 | ![Acceda al MockUp HD-37](D1_images/HU-37.png)|
-| En este caso, la interfaz de usuario cuenta con un botón llamado “Sección de amigos”. Al pulsar sobre dicho botón se mostrará un componente (modal) con todos los amigos del jugador. Debajo del nombre de usuario de cada amigo, se indicará el estado en el que se encuentra: Activo (verde), Ausente (naranja) e Inactivo (rojo). Además, se presentará un desplegable que contendrá las solicitudes de amistad al jugador listadas, así como un buscador que permita introducir el nombre de un jugador para enviarle solicitud de amistad.
+| En este caso, la interfaz de usuario cuenta con un botón llamado “Sección de amigos”. Al pulsar sobre dicho botón se mostrará un componente (modal) con todos los amigos del jugador. Además, se presentará un desplegable que contendrá las solicitudes de amistad al jugador listadas, así como un buscador que permita introducir el nombre de un jugador para enviarle solicitud de amistad.
 
 
 ### HU-38 (ISSUE#84): ➕PETICIONES DE AMISTAD: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/84))
@@ -351,13 +342,13 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 | La interfaz de usuario muestra dentro de la sección “Amigos en partida” las partidas que están jugando cada uno de nuestros amigos conectados. Nos permitirá saber si las partidas ya están empezadas (“En curso”) o si aún podemos solicitar la unión (“Solicitar unirse”). Este último caso es el que nos interesa para esta historia de usuario, pues observamos que existe un botón (“SOLICITAR UNIRSE”) que, al ser pulsado, se enviará una solicitud al jugador correspondiente.|
 
 
-### HU-43 (ISSUE#89): 👁MODO ESPECTADOR: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/89))
+### HU-42 (ISSUE#89): 👁MODO ESPECTADOR: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/89))
 | "Como jugador, quiero que el sistema tenga un modo espectador para ver las partidas de otros jugadores sin jugar, siempre y cuando la partida ya haya comenzado y sea amigo de uno de los jugadores de la misma. "
 |----| 
 |![Acceda al MockUp HD-43](D1_images/HU-43.png)|
 |En este caso, la interfaz de usuario permitirá al espectador observar la partida, pero con diferencias notables respecto a los jugadores que participan en ella: La interfaz no hará visible para el espectador los mazos del resto de jugadores, hará que pueda observar el chat pero no escribir en él y, obviamente, no le permitirá interactuar de ninguna forma en la partida (solo visionarla). Esto ocurrirá cuando la partida esté empezada *(ONGOING)* y seas amigo de un jugador que esté dentro de la misma. Se implementará la opción de solicitar entrar como espectador, que tiene que ser aprobada por el creador de la partida. |
 
-### HU-44 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90))
+### HU-43 (ISSUE#90): 🔊CHAT ENTRE LOS JUGADORES EN LA PARTIDA: ([Enlace ISSUE](https://github.com/gii-is-DP1/dp1-2025-2026-l4-4-25/issues/90))
 | "Como jugador, quiero que el sistema tenga un chat entre los jugadores de la partida durante la misma para poder comentar en él con los demás jugadores suposiciones sobre quién puede/n ser el/los saboteador/es, jugadas colaborativas, etc." 
 |----| 
 |![Acceda al MockUp HD-44](D1_images/HU-44.png)|
@@ -369,7 +360,7 @@ Una vez aplicados los filtros se mostrarán los jugadores en el ranking, princip
 
 ## 4️⃣ Diagrama conceptual del sistema
 
-![Acceda al Diagrama Conceptual](D1_images/Diagrama_conceptual_Sprint3.svg)
+![Acceda al Diagrama Conceptual](D1_images/Diagrama_conceptual_Sprint4.svg)
 > [ACCEDA AL ENLACE DE NUESTRO DIAGRAMA EN DRAW.IO PARA UNA MEJOR VISIÓN INTERACTIVA](https://drive.google.com/file/d/1iKzdVrxEugiz7iYnUBxZkghGzazHpXUN/view?usp=sharing)
 
 >💡 Para acceder correctamente al enlace es necesario estar registrado en Draw.io. Este enlace llevará a una pantalla de Google Drive en la que habrá que seleccionar la opción "Abrir con - Draw.io"
@@ -463,7 +454,7 @@ Por ejemplo: Luis juega derrumbe frente a sí mismo y elige una carta del túnel
 ### R15 – No mover cartas en tablero
 Un jugador no podrá mover ninguna carta que ya haya sido puesta en el tablero, excepto si se usa un carta de derrumbe como se menciona en el R14.
 
-Por ejemplo: En una partida donde participan 4 jugadores: Marcos, Luis, Alejandro y Carlos. Ningún jugador podrá cambiar la posición de una carta túnel colocada previamente en el tablero ni manipularla de ninguna forma (como girarla), excepto si se usa una carta de derrumbe.
+Por ejemplo: En una partida donde participan 4 jugadores: Marcos, Luis, Alejandro y Carlos. Ningún jugador podrá cambiar la posición de una carta túnel colocada previamente en el tablero ni manipularla de ninguna forma (como girarla), excepto si se usa una carta de derrumbe.   
 
 ### R16 – Uso de cartas de destrucción
 Una carta de destrucción de herramienta solo puede usarse si el objetivo tiene esa herramienta funcional.

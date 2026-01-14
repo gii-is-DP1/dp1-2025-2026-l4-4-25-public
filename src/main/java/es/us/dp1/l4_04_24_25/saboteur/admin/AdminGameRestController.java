@@ -3,7 +3,6 @@ package es.us.dp1.l4_04_24_25.saboteur.admin;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

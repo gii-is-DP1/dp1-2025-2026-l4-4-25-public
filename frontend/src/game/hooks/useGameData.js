@@ -3,7 +3,26 @@ import tokenService from '../../services/token.service';
 import { toast } from 'react-toastify';
 import avatar from '../../static/images/icons/1.jpeg';
 
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
+
+// Pausa pequeña
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Wrapper genérico con reintentos y backoff
+const withRetries = async (fn, { attempts = 3, delay = 300 } = {}) => {
+  let lastError = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      const backoff = delay * Math.pow(2, i);
+      await sleep(backoff);
+    }
+  }
+  throw lastError;
+};
 
 export const useGameData = (game) => {
   const [activePlayers, setActivePlayers] = useState([]);
@@ -15,34 +34,75 @@ export const useGameData = (game) => {
 
   const fetchPlayerByUsername = async (username) => {
     try {
-      const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        return data;
-      } else {
-        console.error('Response not OK:', response.status);
-        toast.error('Error to obtain player.');
-      }
+      return await withRetries(async () => {
+        const response = await fetch(`/api/v1/players/byUsername?username=${username}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getJwt()}`,
+          },
+        });
+        if (response.ok) {
+          return await response.json();
+        }
+        const text = await response.text();
+        const err = new Error(`Response not OK: ${response.status} ${text}`);
+        err.status = response.status;
+        throw err;
+      }, { attempts: 3, delay: 300 });
     } catch (error) {
       console.error('A problem with the fetch request:', error);
       toast.error('Network error. Could not connect to the server.');
+      return null;
     }
   };
 
   const loadActivePlayers = async () => {
     const initialPlayers = game?.activePlayers || [];
-    
+
     if (initialPlayers.length === 0) {
+      setActivePlayers([]);
       return;
     }
 
-    const fetchedPlayers = await Promise.all(initialPlayers.map(async (username) => {
+    // Normaliza entradas: acepta username (string), objeto con `username` o `user.username`, o id numérico
+    const resolveEntryToUsername = async (entry) => {
+      try {
+        if (!entry && entry !== 0) return null;
+        if (typeof entry === 'string') return entry;
+        if (typeof entry === 'number') {
+          // entry looks like an activePlayer id
+          const ap = await getActivePlayersbyId(entry);
+          return ap?.username ?? null;
+        }
+        if (typeof entry === 'object') {
+          if (entry.username) return entry.username;
+          if (entry.user && entry.user.username) return entry.user.username;
+          if (entry.id) {
+            const ap = await getActivePlayersbyId(entry.id);
+            return ap?.username ?? null;
+          }
+        }
+        return null;
+      } catch (e) {
+        console.warn('Error resolving player entry to username:', entry, e);
+        return null;
+      }
+    };
+
+    const usernameList = [];
+    for (const entry of initialPlayers) {
+      const u = await resolveEntryToUsername(entry);
+      if (u) usernameList.push(u);
+    }
+
+    if (usernameList.length === 0) {
+      console.warn('loadActivePlayers: no usernames resolved from game.activePlayers', initialPlayers);
+      setActivePlayers([]);
+      return;
+    }
+
+    const fetchedPlayers = await Promise.all(usernameList.map(async (username) => {
       try {
         const activePlayer = await fetchActivePlayerByUsername(username);
         if (activePlayer) {
@@ -59,7 +119,7 @@ export const useGameData = (game) => {
             goldNugget: activePlayer.goldNugget || 0,
           };
         }
-
+        return null;
       } catch (err) {
         console.error(`Error loading data for ${username}:`, err);
         return null;
@@ -71,22 +131,33 @@ export const useGameData = (game) => {
   };
 
   const getChat = async () => {
+    if (!game?.chat && !chat?.id) {
+      console.warn('getChat: no chat id available');
+      return null;
+    }
+
     try {
-      const response = await fetch(`/api/v1/chats/${game.chat}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
-        },
-      });
-      if (response.ok) {
-        const chatData = await response.json();
-        setChat(chatData);
-      } else {
-        console.error('Error getting chat:', response.status);
-      }
+      const chatId = game?.chat ?? chat?.id ?? game?.chatId;
+      const result = await withRetries(async () => {
+        const response = await fetch(`/api/v1/chats/${chatId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getJwt()}`,
+          },
+        });
+        if (response.ok) return await response.json();
+        const text = await response.text();
+        const err = new Error(`Chat fetch failed: ${response.status} ${text}`);
+        err.status = response.status;
+        throw err;
+      }, { attempts: 3, delay: 300 });
+
+      setChat(result);
+      return result;
     } catch (error) {
       console.error('Network error getting chat:', error);
+      return null;
     }
   };
 
@@ -96,7 +167,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         }
       });
       const data = await response.json();
@@ -123,7 +194,7 @@ export const useGameData = (game) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify(body)
       });
@@ -147,7 +218,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
 
@@ -178,7 +249,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
 
@@ -205,7 +276,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
 
@@ -225,7 +296,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify({ cards: cardIds }),
       });
@@ -257,7 +328,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -278,7 +349,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
       });
       if (response.ok) {
@@ -300,7 +371,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       }); 
@@ -323,7 +394,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       }); 
@@ -346,7 +417,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
       }); 
       if (response.ok) {
@@ -371,7 +442,7 @@ export const useGameData = (game) => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
+            "Authorization": `Bearer ${getJwt()}`
           },
         }
       );
@@ -401,7 +472,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
       }); 
       if (response.ok) {
@@ -423,7 +494,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       }); 
@@ -446,7 +517,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
       });
       if (response.ok) {
@@ -468,7 +539,7 @@ export const useGameData = (game) => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
+        Authorization: `Bearer ${getJwt()}`,
       },
       body: JSON.stringify(data),
     });
@@ -493,7 +564,7 @@ export const useGameData = (game) => {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         },
         body: JSON.stringify(updates),
       });
@@ -516,7 +587,7 @@ export const useGameData = (game) => {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         }
       });
       if (response.ok) {
@@ -540,7 +611,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         }
       });
       if (response.ok) {
@@ -560,7 +631,7 @@ export const useGameData = (game) => {
         method: "GET",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwt}` 
+          "Authorization": `Bearer ${getJwt()}` 
         }
       });
       if (response.ok) {
@@ -580,7 +651,7 @@ export const useGameData = (game) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${getJwt()}`,
         },
         body: JSON.stringify(roundEndData)
       });
@@ -600,24 +671,24 @@ export const useGameData = (game) => {
 
   const getActivePlayersbyId = async (activePlayerId) => {
   try {
-    const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
-      method: "GET",
-      headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
-          },
-        });
-        if (response.ok) {
-          const activePlayer = await response.json();
-          return activePlayer;
-        } else {
-          console.error('Response not OK getting activePlayer by ID:', response.status);
-          return null;
-        }
-      } catch (error) {
-        console.error('Network error getting activePlayer by ID:', error);
-        return null;
-      }
+    return await withRetries(async () => {
+      const response = await fetch(`/api/v1/activePlayers/${activePlayerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getJwt()}`,
+        },
+      });
+      if (response.ok) return await response.json();
+      const text = await response.text();
+      const err = new Error(`ActivePlayer fetch failed: ${response.status} ${text}`);
+      err.status = response.status;
+      throw err;
+    }, { attempts: 3, delay: 300 });
+  } catch (error) {
+    console.error('Network error getting activePlayer by ID:', error);
+    return null;
+  }
     };
 
   return {

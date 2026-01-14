@@ -8,7 +8,7 @@ export default function GameControls({
   handleDiscard, 
   isSpectator,
   isCreator,
-  handleForceEndRound
+  isMyTurn
 }) {
   return (
     <>
@@ -23,17 +23,12 @@ export default function GameControls({
         📥 Discard
       </button>
 
-      <button
-        className="n-reveal"
-        onClick={handleForceEndRound}
-        disabled={isSpectator || !isCreator}
-        style={isSpectator || !isCreator ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-        title={isCreator ? 'Reveal gold and force end of round' : 'Only the game creator can force end round'}
-      >
-        🔎 Reveal & End Round
-      </button>
+      {/* Botón de revelar y forzar fin de ronda eliminado */}
       
-      <div className="time-card">⏰ {formatTime(cont)}</div>
+      <div className={`time-card ${isMyTurn ? 'timer-active' : 'timer-frozen'}`}
+           title={isMyTurn ? 'Your turn - timer running' : 'Waiting for your turn'}>
+        {isMyTurn ? '⏰' : '⏸️'} {formatTime(cont)}
+      </div>
       <div className="round-box">🕓·ROUND {numRound}/3</div>
     </>
   );

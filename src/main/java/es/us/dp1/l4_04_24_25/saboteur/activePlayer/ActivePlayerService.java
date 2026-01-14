@@ -108,13 +108,6 @@ public class ActivePlayerService {
         return activePlayerRepository.findByPickaxeState(cartState);
     }
 
-    /*
-    @Transactional(readOnly = true)
-    public Iterable<ActivePlayer>  findByGameId(Integer gameId) {
-        return activePlayerRepository.findByGameId(gameId);
-    }
-    */
-
     @Transactional
     public ActivePlayer saveActivePlayer(ActivePlayer activePlayer)  throws DataAccessException{
         activePlayerRepository.save(activePlayer);
@@ -184,13 +177,6 @@ public class ActivePlayerService {
 
         // El Player y User permanecen intactos con el MISMO ID
     }
-
-    /*
-    @Transactional(readOnly = true)
-    public ActivePlayer findWinnerByGameId(Integer gameId) {
-        return activePlayerRepository.findWinnerByGameId(gameId).orElseThrow(()-> new ResourceNotFoundException("GameId","id",gameId));
-    }
-    */
 
     @Transactional
     public ActivePlayer patchActivePlayer(Integer id, Map<String, Object> updates) {

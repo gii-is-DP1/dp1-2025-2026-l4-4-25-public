@@ -30,8 +30,15 @@ export const applyFilters = (games, filters, onlyFriend, friendsList) => {
     filtered = filtered.filter(
       (g) =>
         g.creator?.username?.toLowerCase().includes(term) ||
-        g.id?.toString().includes(term));}
-  if (onlyFriend && friendsList.length > 0) {
+        g.id?.toString().includes(term)
+    );
+  }
+
+  if (onlyFriend) {
+    if (friendsList.length === 0) {
+      return [];
+    }
+    
     const friendUsernames = friendsList.map((f) => 
       typeof f === 'string' ? f.toLowerCase() : f.username?.toLowerCase()
     ).filter(Boolean);
@@ -96,7 +103,6 @@ export const isSpectatorRequestAccepted = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
-  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 
@@ -111,7 +117,6 @@ export const isSpectatorRequestDenied = (message, username, gameId) => {
   const parts = message.content.split(':');
   const targetUser = parts[1];
   const targetGameId = parts[2];
-  const targetRequestId = parts[3];
 
   return (
     targetUser === username && 

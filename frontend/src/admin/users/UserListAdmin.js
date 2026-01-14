@@ -9,16 +9,17 @@ import getErrorModal from "../../util/getErrorModal";
 import useFetchState from "../../util/useFetchState";
 import defaultProfileAvatar from "../../static/images/icons/default_profile_avatar.png"
 
-const jwt = tokenService.getLocalAccessToken(); 
-const loggedInUser = tokenService.getUser(); 
+const getJwt = () => tokenService.getLocalAccessToken();
 
 export default function UserListAdmin() {
+  const loggedInUser = tokenService.getUser();
+  
   const [message, setMessage] = useState(null);
   const [visible, setVisible] = useState(false);
   const [users, setUsers] = useFetchState(
     [],
     `/api/v1/users`,
-    jwt, 
+    getJwt(), 
     setMessage,
     setVisible
   );
@@ -31,7 +32,7 @@ export default function UserListAdmin() {
       const response = await fetch(`/api/v1/users/${user.id}/inActiveGame`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${jwt}`,
+          "Authorization": `Bearer ${getJwt()}`,
           Accept: "application/json",
           "Content-Type": "application/json",
         },

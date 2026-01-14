@@ -2,7 +2,8 @@ import tokenService from '../../services/token.service';
 
 import { hasPathFromStart, canExitToDirection } from './cardUtils';
 
-const jwt = tokenService.getLocalAccessToken();
+// Helper function to get JWT dynamically (prevents stale token issues)
+const getJwt = () => tokenService.getLocalAccessToken();
 
 
   const getActivePlayerDeck = async (activePlayerId) => {
@@ -11,7 +12,7 @@ const jwt = tokenService.getLocalAccessToken();
       method: "GET",
       headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
+            Authorization: `Bearer ${getJwt()}`,
           },
         });
         if (response.ok) {
@@ -33,7 +34,7 @@ const patchActivePlayer = async (activePlayerId, data) => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
+        Authorization: `Bearer ${getJwt()}`,
       },
       body: JSON.stringify(data),
     });
@@ -143,7 +144,7 @@ const fetchCurrentGoldNuggets = async (playerId) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
+        Authorization: `Bearer ${getJwt()}`,
       },
     });
 
@@ -251,7 +252,7 @@ const fetchActivePlayerById = async (playerId) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
+        Authorization: `Bearer ${getJwt()}`,
       },
     });
 
@@ -281,7 +282,6 @@ export const resetToolsForNewRound = async (players) => {
       }
       
       const currentGoldNuggets = currentPlayerData.goldNugget || 0;
-      const currentRol = currentPlayerData.rol !== undefined ? currentPlayerData.rol : false;
       
       console.log(`🔧 Resetting tools for ${currentPlayerData.username || currentPlayerData.user?.username} - Current gold from backend: ${currentGoldNuggets}`);
       

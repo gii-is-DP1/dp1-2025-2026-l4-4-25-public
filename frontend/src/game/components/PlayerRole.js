@@ -1,15 +1,27 @@
 import React from 'react';
 import minerRol from '../cards-images/roles/minerRol.png';
+import saboteurRol from '../cards-images/roles/saboteurRol.png';
 
-export default function PlayerRole({ playerRol, loggedInUser, isSpectator }) {
+export default function PlayerRole({ playerRol, activePlayers, loggedInUser, isSpectator }) {
   if (isSpectator) return null;
 
-  const currentPlayerRole = Array.isArray(playerRol) 
-    ? playerRol.find(p => p.username === loggedInUser.username)
+  const username = loggedInUser?.username;
+
+  const currentPlayerRole = Array.isArray(playerRol) && username
+    ? playerRol.find(p => p.username === username)
     : null;
 
-  const roleImg = currentPlayerRole?.roleImg || minerRol;
-  const roleName = currentPlayerRole?.roleName || 'MINER';
+  // Fallback: cuando playerRol está desactualizado/vacío (p. ej., justo después de recargar NEW_ROUND),
+  // derivar el rol directamente desde activePlayers.
+  const backendPlayer = Array.isArray(activePlayers) && username
+    ? activePlayers.find(p => p.username === username)
+    : null;
+
+  const fallbackRoleName = backendPlayer?.rol === true ? 'SABOTEUR' : 'MINER';
+  const fallbackRoleImg = backendPlayer?.rol === true ? saboteurRol : minerRol;
+
+  const roleName = currentPlayerRole?.roleName || fallbackRoleName;
+  const roleImg = currentPlayerRole?.roleImg || fallbackRoleImg;
 
   const isSaboteur = roleName === 'SABOTEUR';
 

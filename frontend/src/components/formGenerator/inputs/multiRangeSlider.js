@@ -9,13 +9,13 @@ const MultiRangeSlider = ({ min, max, onChange, sliderTrackColor }) => {
   const maxValRef = useRef(max);
   const range = useRef(null);
 
-  // Convert to percentage
+  // Convertir a porcentaje
   const getPercent = useCallback(
     (value) => Math.round(((value - min) / (max - min)) * 100),
     [min, max]
   );
 
-  // Set width of the range to decrease from the left side
+  // Ajustar el ancho del rango disminuyendo desde el lado izquierdo
   useEffect(() => {
     const minPercent = getPercent(minVal);
     const maxPercent = getPercent(maxValRef.current);
@@ -26,7 +26,7 @@ const MultiRangeSlider = ({ min, max, onChange, sliderTrackColor }) => {
     }
   }, [minVal, getPercent]);
 
-  // Set width of the range to decrease from the right side
+  // Ajustar el ancho del rango disminuyendo desde el lado derecho
   useEffect(() => {
     const minPercent = getPercent(minValRef.current);
     const maxPercent = getPercent(maxVal);
@@ -36,7 +36,7 @@ const MultiRangeSlider = ({ min, max, onChange, sliderTrackColor }) => {
     }
   }, [maxVal, getPercent]);
 
-  // Get min and max values when their state changes
+  // Obtener valores min y max cuando su estado cambia
   useEffect(() => {
     onChange({ min: minVal, max: maxVal });
   }, [minVal, maxVal, onChange]);

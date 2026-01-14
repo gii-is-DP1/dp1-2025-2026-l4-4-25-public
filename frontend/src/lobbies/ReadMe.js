@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import '../App.css';
 import '../static/css/home/home.css';
 import { Link } from 'react-router-dom';
 
 export default function ReadMe() {
+    useEffect(() => {
+        try { localStorage.setItem('readmeSeen', 'true'); } catch (e) { /* ignore */ }
+    }, []);
     return (
         <div className="home-page-lobby-container">
             <div className="logo-container">
@@ -100,7 +103,7 @@ export default function ReadMe() {
                             <strong>👤Players:</strong> 3 to 12 players
                         </div>
                         <div className="config-item">
-                            <strong>⏰Duration:</strong> Approximately 30-45 minutes per round
+                            <strong>⏰Duration:</strong> Approximately 15-25 minutes per round
                         </div>
                         <div className="config-item">
                             <strong>⌛Rounds:</strong> 3 rounds per game
@@ -111,11 +114,68 @@ export default function ReadMe() {
                     </div>
                 </div>
 
-                <div className="info-section footer-section">
-                    <p className="footer-text">
-                        💻 L4 Group of Design and Testing I of Engineering of Software, US 💻
-                    </p>
+                <div className="info-section">
+                    <h2 className="info-title">📺 How to Play 📺</h2>
+                    <div className="video-container" style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+                        <iframe
+                            width="560"
+                            height="315"
+                            src="https://www.youtube.com/embed/RCmJwPnkGHA"
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
                 </div>
+
+                <div className="info-section issues-section">
+                    <h2 className="info-title">⚠️ Potential Issues & Fixes</h2>
+                    <div className="top-issues-badges">
+                        <div className="badge-card badge-firefox">
+                            <strong>Top — Use Firefox</strong>
+                            <div className="badge-text">Prefer Firefox / Firefox Developer Edition for best rendering and performance. Other browsers work but may be slower.</div>
+                        </div>
+                        <div className="badge-card badge-timer">
+                            <strong>Top — Timer Freeze</strong>
+                            <div className="badge-text">If timers freeze after reload, refresh the browser of the player who started the match. If unknown, refresh all browsers.</div>
+                        </div>
+                        <div className="badge-card badge-loading">
+                            <strong>Top — Loading Patience</strong>
+                            <div className="badge-text">Loading screens may take longer; please be patient while all players load game data.</div>
+                        </div>
+                        <div className="badge-card badge-earlyjoin">
+                            <strong>Top — Early Join in 2nd Match</strong>
+                            <div className="badge-text">If a player enters the second match early and causes desync, refresh all players' browsers to re-sync.</div>
+                        </div>
+                    </div>
+
+                    <div className="issues-list" style={{lineHeight:1.6}}>
+                        <p>Please review the known or potential issues and recommended workarounds before playing. Spanish version available in repository at <strong>docs/POTENTIAL_ISSUES_ES.md</strong> (plain path, not a link).</p>
+                        <ul>
+                            <li><strong>Performance</strong> and resource usage increase as more browsers and players connect simultaneously.</li>
+                            <li>If an error occurs during a match (unlikely), <strong>refresh</strong> the page — most issues resolve after a <strong>reload</strong>.</li>
+                            <li>Opening multiple browsers or sharing multiple screens can break layout: the <strong>CSS</strong> may not adapt to very large or unusual viewports. For testing, prefer a <strong>single display</strong> and use <strong>Ctrl + '-'</strong> to adjust <strong>zoom</strong> if needed.</li>
+                            <li>Browsers tested: <strong>Firefox</strong> and <strong>Firefox Developer Edition</strong> (recommended). Edge, Chrome and Opera work but may render slower.</li>
+                            <li>If a visual object appears <strong>cut off</strong>, it is likely a browser compatibility/layout issue — reduce the <strong>zoom</strong>.</li>
+                            <li>The <strong>draw pile</strong> size is calculated per game rules from the number of players — this is expected behaviour, not a bug.</li>
+                            <li>On Firefox, disabling sidebars/toolbars can provide a fuller view; alternatively reduce <strong>zoom</strong> — the game still functions correctly without disabling UI elements.</li>
+                            <li>If a card placed in another browser doesn't appear after refreshing, try <strong>refreshing again</strong> (clients are designed to recover on reload).</li>
+                            <li>Loading screens may take longer because the match waits for all players to join — please <strong>be patient</strong> and observe each player's loading bar reach 100%.</li>
+                            <li>If a player advances to the second screen before others, refresh all browsers to re-synchronize.</li>
+                            <li>If the in-game <strong>timer freezes</strong> after a reload, refresh the browser of the <strong>first player who started the match</strong> (their timer activates); if unknown, refresh all browsers.</li>
+                            <li>If you change a player's <strong>username</strong>, log in again to avoid inconsistencies during a live match.</li>
+                            <li>On the <strong>CreateGame</strong> screen, if you see a "Connect with The server" error, refresh the page (very rare but safe to retry).</li>
+                            <li>If a player enters before others, refresh all browsers to synchronize the match (implementation prefers that all players be active before rounds proceed).</li>
+                            <li><strong>Background music</strong> behaviour: use the Enable button or Reset Prefs; music may play on some screens and not others. When testing with multiple browsers, background music will play simultaneously in each — this is expected. Mute extra browsers or use the in-app audio controls. If autoplay issues occur, you can always toggle music manually.</li>
+                        </ul>
+                    </div>
+                </div>
+                    <div className="info-section footer-section" style={{marginTop:'1.25rem'}}>
+                        <p className="footer-text" style={{textAlign:'center', opacity:0.9}}>
+                            💻 L4 Group of Design and Testing I of Engineering of Software, US 💻
+                        </p>
+                    </div>
             </div>
         </div>
     );

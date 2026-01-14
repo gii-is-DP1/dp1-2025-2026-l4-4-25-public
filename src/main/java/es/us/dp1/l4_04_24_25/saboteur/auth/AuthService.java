@@ -2,22 +2,19 @@ package es.us.dp1.l4_04_24_25.saboteur.auth;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-
-import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
+import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.auth.payload.request.SignupRequest;
 import es.us.dp1.l4_04_24_25.saboteur.user.Authorities;
 import es.us.dp1.l4_04_24_25.saboteur.user.AuthoritiesService;
-import es.us.dp1.l4_04_24_25.saboteur.user.User;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayer;
-import es.us.dp1.l4_04_24_25.saboteur.activePlayer.ActivePlayerService;
 import es.us.dp1.l4_04_24_25.saboteur.user.UserService;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
 public class AuthService {
@@ -56,17 +53,7 @@ public class AuthService {
 		}
 		
 		//CreateUser modificado para que cree un ActivePlayer, estos datos se extenderán a la tabla Player y User
-		/*
-		User user = new User();
-		user.setUsername(request.getUsername());
-		user.setPassword(encoder.encode(request.getPassword()));
-		user.setName(request.getName());
-		user.setBirthDate(request.getBirthDate());
-		user.setImage(request.getImage());
-		user.setEmail(request.getEmail());
-		String strRoles = request.getAuthority();
-		Authorities role;
-		*/
+
 		ActivePlayer activePlayer = new ActivePlayer();
 		activePlayer.setUsername(request.getUsername());
 		activePlayer.setPassword(encoder.encode(request.getPassword()));
@@ -87,15 +74,6 @@ public class AuthService {
 			role = authoritiesService.findByAuthority("PLAYER");
 			activePlayer.setAuthority(role);
 			activePlayerService.saveActivePlayer(activePlayer);
-			/*Player player = new Player();
-			player.setFirstName(request.getFirstName());
-			player.setLastName(request.getLastName());
-			player.setAddress(request.getAddress());
-			player.setCity(request.getCity());
-			player.setTelephone(request.getTelephone());
-			player.setUser(user);
-			playerService.savePlayer(player);
-			*/
 		}
 	}
 
