@@ -1,6 +1,7 @@
 package es.us.dp1.l4_04_24_25.saboteur.square;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,11 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import es.us.dp1.l4_04_24_25.saboteur.board.Board;
 import es.us.dp1.l4_04_24_25.saboteur.board.BoardService;
 import es.us.dp1.l4_04_24_25.saboteur.card.Card;
-import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
 import es.us.dp1.l4_04_24_25.saboteur.exceptions.ResourceNotFoundException;
+import es.us.dp1.l4_04_24_25.saboteur.tunnel.Tunnel;
 import jakarta.validation.Valid;
-import java.util.HashMap;
-import es.us.dp1.l4_04_24_25.saboteur.square.GoalType;
 
 
 @Service
@@ -113,7 +112,6 @@ public class SquareService {
         Board board = squarePatched.getBoard();
         Integer boardId = board.getId();
 
-        // 1️⃣ CARD_PLACED / CARD_DESTROYED
         String action = (squarePatched.getCard() != null)
                 ? "CARD_PLACED"
                 : "CARD_DESTROYED";
@@ -126,11 +124,9 @@ public class SquareService {
         payload.put("squareId", squarePatched.getId());
 
 
-        // 2️⃣ CHECK GOAL - Enviar todos los objetivos adyacentes
         List<Map<String, Object>> goalReveals = getGoalReveals(squarePatched); 
         if (goalReveals != null && !goalReveals.isEmpty()) {
             payload.put("goalReveals", goalReveals);
-            // Mantener compatibilidad con el campo singular (primer objetivo)
             payload.put("goalReveal", goalReveals.get(0));
         }
 
@@ -146,14 +142,13 @@ public class SquareService {
         Board board = placedSquare.getBoard(); 
         Card card = placedSquare.getCard();
 
-        // Verificar si la carta colocada es un túnel
         if (!(card instanceof Tunnel)) {
-            return null; // No es un túnel, no puede revelar objetivos
+            return null;
         }
         
         Tunnel tunnel = (Tunnel) card;
         
-        // Si el túnel tiene el centro bloqueado, no puede atravesarse y por tanto no puede revelar objetivos
+
         if (tunnel.isCentro()) {
             return null;
         }
@@ -181,19 +176,15 @@ public class SquareService {
                 hasConnectionInDirection = tunnel.isArriba();
             }
             
-            // Si el túnel no tiene conexión en esta dirección, no puede revelar el objetivo en esta dirección
             if (!hasConnectionInDirection) {
                 continue;
             }
 
-            //Buscamos si hay un cuadrado vecino en esa coordenada
             Square neighbor = squareRepository.findByCoordinateXAndCoordinateYAndBoard(targetX, targetY, board);
             if (neighbor != null && neighbor.getType() == type.GOAL){
                 GoalType goalType = neighbor.getGoalType(); 
                 if (goalType == null) continue; 
 
-                
-                // Preparamos el mensaje para el Frontend
                 Map<String, Object> goal = new HashMap<>();
                 goal.put("row", targetY);
                 goal.put("col", targetX); 
